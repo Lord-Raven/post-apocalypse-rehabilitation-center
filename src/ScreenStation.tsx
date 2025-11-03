@@ -1,6 +1,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { ScreenBase } from './ScreenBase';
+import { Layout, Module, createModule } from './Module';
 
 /*
  * This screen allows the player to manage their space station, including viewing resources, upgrading facilities, or visiting locations (transitioning to vignette scenes).
@@ -11,30 +12,16 @@ import { ScreenBase } from './ScreenBase';
  * Extends ScreenBase.
  */
 
-interface Module {
-    id: string;
-    type: 'command' | 'power' | 'habitat' | 'research' | 'storage' | 'empty';
-    x: number;
-    y: number;
-    connections?: string[];
-}
-
 interface StationScreenProps {
     // will implicitly accept ScreenBaseProps.stage
 }
 
 interface StationScreenState {
-    modules: Module[];
     selectedMenu: string;
 }
 
 export default class ScreenStation extends ScreenBase {
     state: StationScreenState = {
-        modules: [
-            { id: 'command-1', type: 'command', x: 2, y: 2 },
-            { id: 'power-1', type: 'power', x: 1, y: 2 },
-            { id: 'habitat-1', type: 'habitat', x: 3, y: 2 },
-        ],
         selectedMenu: 'resources',
     };
 
@@ -48,18 +35,19 @@ export default class ScreenStation extends ScreenBase {
     }
 
     addModule = (x: number, y: number) => {
-        const newModule: Module = {
-            id: `module-${Date.now()}`,
-            // temporary default type for added modules
-            type: 'habitat',
-            x,
-            y,
-        };
-        this.setState((prev: StationScreenState) => ({ modules: [...prev.modules, newModule] }));
+        const newModule: Module = createModule('quarters');
+        // Write into the Stage's layout and force a re-render
+        if (this.stage && typeof (this.stage as any).setModuleAt === 'function') {
+            (this.stage as any).setModuleAt(x, y, newModule);
+            this.forceUpdate();
+        }
     };
 
     getModuleAt = (x: number, y: number) => {
-        return this.state.modules.find(module => module.x === x && module.y === y);
+        if (this.stage && typeof (this.stage as any).getModuleAt === 'function') {
+            return (this.stage as any).getModuleAt(x, y);
+        }
+        return undefined;
     };
 
     canPlaceModule = (x: number, y: number) => {
@@ -67,23 +55,25 @@ export default class ScreenStation extends ScreenBase {
         return !this.getModuleAt(x, y);
     };
 
-    getAdjacentPositions = (module: Module) => {
+    getAdjacentPositions = (layout: Layout, module: Module) => {
+        const {x, y} = layout.getModuleCoordinates(module);
         return [
-            { x: module.x + 1, y: module.y },
-            { x: module.x - 1, y: module.y },
-            { x: module.x, y: module.y + 1 },
-            { x: module.x, y: module.y - 1 },
+            { x: x + 1, y: y },
+            { x: x - 1, y: y },
+            { x: x, y: y + 1 },
+            { x: x, y: y - 1 },
         ].filter(pos => this.canPlaceModule(pos.x, pos.y));
     };
 
     renderGrid() {
         const cells: React.ReactNode[] = [];
+        const layout = this.stage.getLayout();
         for (let y = 0; y < this.gridSize; y++) {
             for (let x = 0; x < this.gridSize; x++) {
-                const module = this.getModuleAt(x, y);
+                const module = layout.getModuleAt(x, y);
                 cells.push(
                     <div
-                        key={`${x}-${y}`}
+                        key={`cell_${x}-${y}`}
                         className="grid-cell"
                         style={{
                             position: 'absolute',
@@ -124,8 +114,11 @@ export default class ScreenStation extends ScreenBase {
                             </motion.div>
                         ) : null}
 
-                        {/* Render + placeholders for adjacent empty spaces as a full darkened dotted box */}
-                        {this.state.modules.some(m => Math.abs(m.x - x) + Math.abs(m.y - y) === 1) && !module && (
+                        {/* Render + placeholders for adjacent empty spaces as a full darkened dotted box. Test that there is a neighboring module */}
+                        {layout.flat().some((m: Module) => {
+                            const {x: mx, y: my} = layout.getModuleCoordinates(m);
+                            return Math.abs(mx - x) + Math.abs(my - y) === 1;
+                        }) && !module && (
                             <motion.div
                                 className="add-module-placeholder"
                                 onClick={() => this.addModule(x, y)}
@@ -160,12 +153,9 @@ export default class ScreenStation extends ScreenBase {
     }
 
     render() {
-        const { selectedMenu } = this.state;
+    const { selectedMenu } = this.state;
         const gridSize = this.gridSize;
         const cellSize = this.cellSize;
-
-        // Example use: this.stage (if the parent passed a stage prop into ScreenStation)
-        // console.log('stage from ScreenBase:', this.stage);
 
         return (
             <div className="station-screen" style={{ display: 'flex', height: '100vh' }}>
@@ -253,7 +243,7 @@ export default class ScreenStation extends ScreenBase {
 
                     <div style={{ marginTop: '40px', color: '#00ff88', fontSize: '14px' }}>
                         <p>Selected: {selectedMenu}</p>
-                        <p>Modules: {this.state.modules.length}</p>
+                        <p>Modules: {(this.stage && (this.stage as any).layout) ? ( (this.stage as any).layout.getLayout().flat().filter((m: Module) => m.type !== 'empty').length ) : 0}</p>
                     </div>
                 </div>
             </div>
