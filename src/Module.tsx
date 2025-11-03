@@ -39,39 +39,35 @@ export const DEFAULT_GRID_SIZE = 6;
 export type LayoutChangeHandler = (grid: Module[]) => void;
 
 export class Layout {
-    public grid: Module[][];
+    public grid: (Module | null)[][];
     public gridSize: number;
-    private onChange?: (grid: Module[][]) => void;
+    private onChange?: (grid: (Module | null)[][]) => void;
 
-    constructor(gridSize: number = DEFAULT_GRID_SIZE, initial?: Module[][], onChange?: (grid: Module[][]) => void) {
+    constructor(gridSize: number = DEFAULT_GRID_SIZE, initial?: (Module | null)[][], onChange?: (grid: (Module | null)[][]) => void) {
         this.gridSize = gridSize;
         this.onChange = onChange;
-        if (initial && initial.length && initial[0].length) {
-            this.grid = initial;
-        } else {
-            this.grid = Array.from({ length: this.gridSize }, (_, y) =>
-                Array.from({ length: this.gridSize }, (_, x) => createModule('empty', { id: `empty-${x}-${y}`, connections: [], attributes: {} }))
-            );
-        }
+        this.grid = initial || Array.from({ length: this.gridSize }, () =>
+            Array.from({ length: this.gridSize }, () => null)
+        );
     }
 
-    getLayout(): Module[][] {
+    getLayout(): (Module | null)[][] {
         return this.grid;
     }
 
-    setLayout(layout: Module[][]) {
+    setLayout(layout: (Module | null)[][]) {
         this.grid = layout;
         this.onChange?.(this.grid);
     }
 
-    getModuleAt(x: number, y: number): Module | undefined {
-        return this.grid[y]?.[x];
+    getModuleAt(x: number, y: number): Module | null {
+        return this.grid[y]?.[x] ?? null;
     }
 
     getModuleCoordinates(module: Module): { x: number; y: number } {
         for (let y = 0; y < this.gridSize; y++) {
             for (let x = 0; x < this.gridSize; x++) {
-                if (this.grid[y][x].id === module.id) {
+                if (this.grid[y][x]?.id === module.id) {
                     return { x, y };
                 }
             }
@@ -86,6 +82,6 @@ export class Layout {
     }
 
     countNonEmpty(): number {
-        return this.grid.flat().filter(m => m.type !== 'empty').length;
+        return this.grid.flat().filter(m => m?.type !== 'empty').length;
     }
 }

@@ -46,7 +46,7 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
         if (!this.saves.length) {
             const layout = new Layout();
             layout.setModuleAt(DEFAULT_GRID_SIZE/2, DEFAULT_GRID_SIZE/2, createModule('command', { id: `command-${DEFAULT_GRID_SIZE/2}-${DEFAULT_GRID_SIZE/2}`, connections: [], attributes: {} }));
-            this.saves.push({ messageTree: null as any, currentMessageId: '', actors: {}, layout });
+            this.saves.push({ messageTree: null as any, currentMessageId: '', actors: {}, layout: layout });
         }
 
         // initialize Layout manager for the active save (index 0)
