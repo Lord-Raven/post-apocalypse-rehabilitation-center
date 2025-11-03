@@ -27,7 +27,6 @@ export default class ScreenStation extends ScreenBase {
     };
 
     private gridSize = 6;
-    // increase cell size ~3x for a larger grid feel
     private cellSize = 240;
 
     constructor(props: StationScreenProps) {
@@ -38,10 +37,7 @@ export default class ScreenStation extends ScreenBase {
     addModule = (x: number, y: number) => {
         const newModule: Module = createModule('quarters');
         // Write into the Stage's layout and force a re-render
-        if (this.stage && typeof (this.stage as any).setModuleAt === 'function') {
-            (this.stage as any).setModuleAt(x, y, newModule);
-            this.forceUpdate();
-        }
+        this.stage?.layout?.setModuleAt(x, y, newModule);
     };
 
     getModuleAt = (x: number, y: number) => {
@@ -95,7 +91,7 @@ export default class ScreenStation extends ScreenBase {
                                 style={{
                                     width: '100%',
                                     height: '100%',
-                                    border: '2px solid rgba(0, 255, 136, 0.9)',
+                                    border: '3px solid rgba(0, 255, 136, 0.9)',
                                     borderRadius: 10,
                                     background: 'linear-gradient(180deg, rgba(0,0,0,0.25), rgba(0,0,0,0.15))',
                                     display: 'flex',
@@ -110,7 +106,7 @@ export default class ScreenStation extends ScreenBase {
                                 }}
                             >
                                 <div style={{ textAlign: 'center', pointerEvents: 'none' }}>
-                                    {module.type === 'empty' ? 'empty' : module.type}
+                                    {module.type}
                                 </div>
                             </motion.div>
                         ) : null}
@@ -133,7 +129,7 @@ export default class ScreenStation extends ScreenBase {
                                     height: '100%',
                                     borderRadius: 10,
                                     background: 'rgba(0,0,0,0.45)',
-                                    border: '2px dotted rgba(255,255,255,0.18)',
+                                    border: '3px dashed rgba(0, 255, 136, 0.9)',
                                     display: 'flex',
                                     flexDirection: 'column',
                                     alignItems: 'center',
@@ -230,7 +226,7 @@ export default class ScreenStation extends ScreenBase {
                                 background: selectedMenu === item.toLowerCase()
                                     ? 'rgba(0, 255, 136, 0.2)'
                                     : 'transparent',
-                                border: '1px solid #00ff88',
+                                border: '3px solid #00ff88',
                                 borderRadius: '5px',
                                 color: '#00ff88',
                                 fontSize: '16px',
@@ -244,7 +240,7 @@ export default class ScreenStation extends ScreenBase {
 
                     <div style={{ marginTop: '40px', color: '#00ff88', fontSize: '14px' }}>
                         <p>Selected: {selectedMenu}</p>
-                        <p>Modules: {(this.stage?.layout?.getLayout().flat().filter((m: Module) => m.type !== 'empty').length) || 0}</p>
+                        <p>Modules: {(this.stage?.layout?.getLayout().flat().filter((m: Module) => m).length) || 0}</p>
                     </div>
                 </div>
             </div>

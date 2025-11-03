@@ -26,6 +26,11 @@ tags:
  - 'Game'
  - 'Sci-fi'
 
+creator_notes: |
+  This is a simulation game where you run a rehabilitation clinic
+  for survivors of an apocalypse. Manage resources, help patients
+  recover, and rebuild society in a post-apocalyptic world.
+
 # The schema of any user-supplied config.
 # If your stage requires a configuration but has no
 #   defined schema, it won't work.

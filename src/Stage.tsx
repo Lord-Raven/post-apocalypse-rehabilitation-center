@@ -17,7 +17,7 @@ type SaveType = {
     messageTree: MessageTree;
     currentMessageId: string;
     actors: {[key: string]: Actor};
-    layout: Layout; // 2D grid of Module objects for the station's layout
+    layout: Layout;
 }
 
 export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateType, ConfigType> {

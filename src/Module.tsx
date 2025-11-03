@@ -1,4 +1,4 @@
-export type ModuleType = 'command' | 'generator' | 'quarters' | 'common' | 'empty';
+export type ModuleType = 'command' | 'generator' | 'quarters' | 'common';
 
 export interface ModuleIntrinsic {
     power: number;
@@ -11,8 +11,7 @@ export const MODULE_DEFAULTS: Record<ModuleType, ModuleIntrinsic> = {
     command: { power: 0, maintenance: 0 },
     generator: { power: 5, maintenance: 1 },
     quarters: { power: -1, maintenance: 2, capacity: 2 },
-    common: { power: 0, maintenance: 1 },
-    empty: { power: 0, maintenance: 0 },
+    common: { power: 0, maintenance: 1 }
 };
 
 export interface Module<T extends ModuleType = ModuleType> {
@@ -72,16 +71,12 @@ export class Layout {
                 }
             }
         }
-        return {x: 0, y: 0};
+        return {x: -1000, y: -1000};
     }
 
     setModuleAt(x: number, y: number, module: Module) {
         if (!this.grid[y]) return;
         this.grid[y][x] = module;
         this.onChange?.(this.grid);
-    }
-
-    countNonEmpty(): number {
-        return this.grid.flat().filter(m => m?.type !== 'empty').length;
     }
 }
