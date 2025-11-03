@@ -66,7 +66,7 @@ export class Layout {
     getModuleCoordinates(module: Module | null): { x: number; y: number } {
         for (let y = 0; y < this.gridSize; y++) {
             for (let x = 0; x < this.gridSize; x++) {
-                if (this.grid[y][x]?.id === module?.id) {
+                if (module && this.grid[y][x]?.id === module?.id) {
                     return { x, y };
                 }
             }

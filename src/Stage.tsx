@@ -3,7 +3,7 @@ import {StageBase, StageResponse, InitialData, Message} from "@chub-ai/stages-ts
 import {LoadResponse} from "@chub-ai/stages-ts/dist/types/load";
 import ScreenStation from "./ScreenStation";
 import Actor from "./Actor";
-import { Module, DEFAULT_GRID_SIZE, Layout, createModule } from './Module';
+import { DEFAULT_GRID_SIZE, Layout, createModule } from './Module';
 
 
 type MessageStateType = any;

@@ -122,9 +122,6 @@ export default class ScreenStation extends ScreenBase {
                                 whileHover={{ scale: 1.02 }}
                                 whileTap={{ scale: 0.98 }}
                                 style={{
-                                    position: 'absolute',
-                                    top: 0,
-                                    left: 0,
                                     width: '100%',
                                     height: '100%',
                                     borderRadius: 10,
