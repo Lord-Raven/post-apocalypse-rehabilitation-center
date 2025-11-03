@@ -2,6 +2,7 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { ScreenBase } from './ScreenBase';
 import { Layout, Module, createModule } from './Module';
+import { M } from 'vite/dist/node/types.d-aGj9QkWt';
 
 /*
  * This screen allows the player to manage their space station, including viewing resources, upgrading facilities, or visiting locations (transitioning to vignette scenes).
@@ -67,7 +68,7 @@ export default class ScreenStation extends ScreenBase {
 
     renderGrid() {
         const cells: React.ReactNode[] = [];
-        const layout = this.stage.getLayout();
+        const layout: Layout = this.stage.getLayout();
         for (let y = 0; y < this.gridSize; y++) {
             for (let x = 0; x < this.gridSize; x++) {
                 const module = layout.getModuleAt(x, y);
@@ -115,7 +116,7 @@ export default class ScreenStation extends ScreenBase {
                         ) : null}
 
                         {/* Render + placeholders for adjacent empty spaces as a full darkened dotted box. Test that there is a neighboring module */}
-                        {layout.flat().some((m: Module) => {
+                        {layout.getLayout().flat().some(m => {
                             const {x: mx, y: my} = layout.getModuleCoordinates(m);
                             return Math.abs(mx - x) + Math.abs(my - y) === 1;
                         }) && !module && (
@@ -243,7 +244,7 @@ export default class ScreenStation extends ScreenBase {
 
                     <div style={{ marginTop: '40px', color: '#00ff88', fontSize: '14px' }}>
                         <p>Selected: {selectedMenu}</p>
-                        <p>Modules: {(this.stage && (this.stage as any).layout) ? ( (this.stage as any).layout.getLayout().flat().filter((m: Module) => m.type !== 'empty').length ) : 0}</p>
+                        <p>Modules: {(this.stage?.layout?.getLayout().flat().filter((m: Module) => m.type !== 'empty').length) || 0}</p>
                     </div>
                 </div>
             </div>
