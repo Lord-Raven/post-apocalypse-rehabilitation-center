@@ -16,23 +16,28 @@ type SaveType = {
     messageTree: MessageTree;
     currentMessageId: string;
     actors: {[key: string]: Actor};
+    stationState: string[][]; // 2D array of module IDs for the station's layout
 }
 
 export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateType, ConfigType> {
+
+    private saves: SaveType[];
 
 
     constructor(data: InitialData<InitStateType, ChatStateType, MessageStateType, ConfigType>) {
 
         super(data);
         const {
-            characters,         // @type:  { [key: string]: Character }
-            users,                  // @type:  { [key: string]: User}
-            config,                                 //  @type:  ConfigType
-            messageState,                           //  @type:  MessageStateType
-            environment,                     // @type: Environment (which is a string)
-            initState,                             // @type: null | InitStateType
-            chatState                              // @type: null | ChatStateType
+            characters,
+            users,
+            config,
+            messageState,
+            environment,
+            initState,
+            chatState
         } = data;
+
+        this.saves = chatState?.saves || [];
     }
 
     async load(): Promise<Partial<LoadResponse<InitStateType, ChatStateType, MessageStateType>>> {

@@ -39,7 +39,8 @@ export default class ScreenStation extends ScreenBase {
     };
 
     private gridSize = 6;
-    private cellSize = 80;
+    // increase cell size ~3x for a larger grid feel
+    private cellSize = 240;
 
     constructor(props: StationScreenProps) {
         super(props as any);
@@ -49,7 +50,8 @@ export default class ScreenStation extends ScreenBase {
     addModule = (x: number, y: number) => {
         const newModule: Module = {
             id: `module-${Date.now()}`,
-            type: 'empty',
+            // temporary default type for added modules
+            type: 'habitat',
             x,
             y,
         };
@@ -84,10 +86,13 @@ export default class ScreenStation extends ScreenBase {
                         key={`${x}-${y}`}
                         className="grid-cell"
                         style={{
+                            position: 'absolute',
                             left: x * this.cellSize,
                             top: y * this.cellSize,
                             width: this.cellSize,
                             height: this.cellSize,
+                            boxSizing: 'border-box',
+                            padding: 6,
                         }}
                     >
                         {module ? (
@@ -95,50 +100,57 @@ export default class ScreenStation extends ScreenBase {
                                 className={`module module-${module.type}`}
                                 initial={{ scale: 0 }}
                                 animate={{ scale: 1 }}
-                                whileHover={{ scale: 1.05 }}
+                                whileHover={{ scale: 1.03 }}
                                 style={{
                                     width: '100%',
                                     height: '100%',
-                                    border: '2px solid #00ff88',
-                                    borderRadius: '8px',
-                                    background: 'rgba(0, 255, 136, 0.1)',
+                                    border: '2px solid rgba(0, 255, 136, 0.9)',
+                                    borderRadius: 10,
+                                    background: 'linear-gradient(180deg, rgba(0,0,0,0.25), rgba(0,0,0,0.15))',
                                     display: 'flex',
                                     alignItems: 'center',
                                     justifyContent: 'center',
                                     cursor: 'pointer',
+                                    color: '#dfffe6',
+                                    fontWeight: 700,
+                                    fontSize: '18px',
+                                    textTransform: 'capitalize',
+                                    textShadow: '0 1px 0 rgba(0,0,0,0.6)'
                                 }}
                             >
-                                {module.type}
+                                <div style={{ textAlign: 'center', pointerEvents: 'none' }}>
+                                    {module.type === 'empty' ? 'empty' : module.type}
+                                </div>
                             </motion.div>
                         ) : null}
 
-                        {/* Render + buttons for adjacent empty spaces */}
+                        {/* Render + placeholders for adjacent empty spaces as a full darkened dotted box */}
                         {this.state.modules.some(m => Math.abs(m.x - x) + Math.abs(m.y - y) === 1) && !module && (
-                            <motion.button
-                                className="add-module-btn"
+                            <motion.div
+                                className="add-module-placeholder"
                                 onClick={() => this.addModule(x, y)}
-                                whileHover={{ scale: 1.2 }}
-                                whileTap={{ scale: 0.9 }}
+                                whileHover={{ scale: 1.02 }}
+                                whileTap={{ scale: 0.98 }}
                                 style={{
                                     position: 'absolute',
-                                    top: '50%',
-                                    left: '50%',
-                                    transform: 'translate(-50%, -50%)',
-                                    width: '30px',
-                                    height: '30px',
-                                    borderRadius: '50%',
-                                    border: '2px solid #00ff88',
-                                    background: 'rgba(0, 255, 136, 0.2)',
-                                    color: '#00ff88',
-                                    fontSize: '20px',
-                                    cursor: 'pointer',
+                                    top: 0,
+                                    left: 0,
+                                    width: '100%',
+                                    height: '100%',
+                                    borderRadius: 10,
+                                    background: 'rgba(0,0,0,0.45)',
+                                    border: '2px dotted rgba(255,255,255,0.18)',
                                     display: 'flex',
+                                    flexDirection: 'column',
                                     alignItems: 'center',
                                     justifyContent: 'center',
+                                    color: 'rgba(255,255,255,0.95)',
+                                    cursor: 'pointer',
                                 }}
                             >
-                                +
-                            </motion.button>
+                                <div style={{ fontSize: 28, lineHeight: 1, fontWeight: 800 }}>+</div>
+                                <div style={{ fontSize: 12, marginTop: 6, opacity: 0.9 }}>Add module</div>
+                            </motion.div>
                         )}
                     </div>
                 );
@@ -177,10 +189,11 @@ export default class ScreenStation extends ScreenBase {
                             right: 0,
                             bottom: 0,
                             backgroundImage: `
-                                linear-gradient(rgba(0, 255, 136, 0.1) 1px, transparent 1px),
-                                linear-gradient(90deg, rgba(0, 255, 136, 0.1) 1px, transparent 1px)
-                            `,
-                            backgroundSize: '40px 40px',
+                                    linear-gradient(rgba(0, 255, 136, 0.08) 1px, transparent 1px),
+                                    linear-gradient(90deg, rgba(0, 255, 136, 0.08) 1px, transparent 1px)
+                                `,
+                            // grid lines should match the station cell size so the background aligns
+                            backgroundSize: `${this.cellSize}px ${this.cellSize}px`,
                         }}
                     />
 
