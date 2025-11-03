@@ -2,10 +2,10 @@
 #   in which case these values can be managed in the UI.
 
 # The name of the stage.
-project_name: "Apocalypse Rehabilitation Clinic"
+project_name: "Post-Apocalypse Rehabilitation Clinic"
 
 # A short tagline to show in search.
-tagline: "A multiverse of new beginnings."
+tagline: "Surviving the Apocalypse is a walk in the PARC"
 
 # 'PUBLIC', 'PRIVATE', or 'UNLISTED'.
 visibility: 'PRIVATE'
@@ -74,10 +74,4 @@ state_schema:
 #    you should not make or set this value.
 # github_path will be added if it does not exist. It is the URL of the repo.
 
-
-
-github_path: 'https://github.com/Lord-Raven/apocalypse-rehabilitation-center'
-
-
-extension_id: 'apocalypse-rehabilitation-center-57a3748f5772'
 
