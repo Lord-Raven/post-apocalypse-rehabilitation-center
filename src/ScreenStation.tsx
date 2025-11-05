@@ -2,7 +2,6 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { ScreenBase } from './ScreenBase';
 import { Layout, MODULE_DEFAULTS, Module, createModule } from './Module';
-import { c } from 'vite/dist/node/types.d-aGj9QkWt';
 
 /*
  * This screen allows the player to manage their space station, including viewing resources, upgrading facilities, or visiting locations (transitioning to vignette scenes).
