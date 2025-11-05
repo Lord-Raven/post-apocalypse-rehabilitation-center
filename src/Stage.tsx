@@ -4,6 +4,8 @@ import {LoadResponse} from "@chub-ai/stages-ts/dist/types/load";
 import ScreenStation from "./ScreenStation";
 import Actor from "./Actor";
 import { DEFAULT_GRID_SIZE, Layout, createModule } from './Module';
+import { ScreenBase } from "./ScreenBase";
+import ScreenCryo from "./ScreenCryo";
 
 
 type MessageStateType = any;
@@ -27,6 +29,8 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
     // Expose a simple grid size (can be tuned)
     public gridSize = DEFAULT_GRID_SIZE;
 
+    // screen should be a type that extends ScreenBase; not an instance but a class reference to allow instantiation. For instance, screen should be ScreenStation by default.
+    screen: typeof ScreenBase = ScreenStation;
 
     constructor(data: InitialData<InitStateType, ChatStateType, MessageStateType, ConfigType>) {
 
@@ -104,7 +108,12 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
             display: 'grid',
             alignItems: 'stretch'
         }}>
-            <ScreenStation stage={this} />
+            {this.screen == ScreenStation &&
+                <ScreenStation stage={this} />
+            }
+            {this.screen == ScreenCryo && 
+                <ScreenCryo stage={this} pods={['Cryo Pod A', 'Cryo Pod B', 'Cryo Pod C']} onAccept={() => this.screen = ScreenStation} onCancel={() => this.screen = ScreenStation} />
+            }
         </div>;
     }
 

@@ -2,7 +2,6 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { ScreenBase } from './ScreenBase';
 import { Layout, Module, createModule } from './Module';
-import { M } from 'vite/dist/node/types.d-aGj9QkWt';
 
 /*
  * This screen allows the player to manage their space station, including viewing resources, upgrading facilities, or visiting locations (transitioning to vignette scenes).
@@ -88,12 +87,18 @@ export default class ScreenStation extends ScreenBase {
                                 initial={{ scale: 0 }}
                                 animate={{ scale: 1 }}
                                 whileHover={{ scale: 1.03 }}
+                                onClick={() => {
+                                    // Trigger module action if defined
+                                    if (module.attributes?.action) {
+                                        module.attributes.action(module, this.stage);
+                                    }
+                                }}
                                 style={{
                                     width: '100%',
                                     height: '100%',
                                     border: '3px solid rgba(0, 255, 136, 0.9)',
                                     borderRadius: 10,
-                                    background: 'linear-gradient(180deg, rgba(0,0,0,0.25), rgba(0,0,0,0.15))',
+                                    background: `url(${module.attributes?.defaultImageUrl}) center center / contain no-repeat`,
                                     display: 'flex',
                                     alignItems: 'center',
                                     justifyContent: 'center',
@@ -163,25 +168,7 @@ export default class ScreenStation extends ScreenBase {
                         overflow: 'hidden',
                     }}
                 >
-                    {/* Space background grid */}
-                    <div
-                        className="space-grid"
-                        style={{
-                            position: 'absolute',
-                            top: 0,
-                            left: 0,
-                            right: 0,
-                            bottom: 0,
-                            backgroundImage: `
-                                    linear-gradient(rgba(0, 255, 136, 0.08) 1px, transparent 1px),
-                                    linear-gradient(90deg, rgba(0, 255, 136, 0.08) 1px, transparent 1px)
-                                `,
-                            // grid lines should match the station cell size so the background aligns
-                            backgroundSize: `${this.cellSize}px ${this.cellSize}px`,
-                        }}
-                    />
-
-                    {/* Station modules */}
+                    {/* Station modules (background grid moved onto this element so it moves with the centered content) */}
                     <div
                         className="station-modules"
                         style={{
@@ -191,6 +178,14 @@ export default class ScreenStation extends ScreenBase {
                             transform: 'translate(-50%, -50%)',
                             width: gridSize * cellSize,
                             height: gridSize * cellSize,
+                            // move the subtle grid onto the centered modules container so lines align with cells
+                            backgroundImage: `
+                                linear-gradient(rgba(0, 255, 136, 0.08) 1px, transparent 1px),
+                                linear-gradient(90deg, rgba(0, 255, 136, 0.08) 1px, transparent 1px)
+                            `,
+                            backgroundSize: `${this.cellSize}px ${this.cellSize}px`,
+                            backgroundPosition: '0 0',
+                            backgroundRepeat: 'repeat',
                         }}
                     >
                         {this.renderGrid()}
