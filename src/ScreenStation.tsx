@@ -2,6 +2,7 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { ScreenBase } from './ScreenBase';
 import { Layout, Module, createModule } from './Module';
+import { c } from 'vite/dist/node/types.d-aGj9QkWt';
 
 /*
  * This screen allows the player to manage their space station, including viewing resources, upgrading facilities, or visiting locations (transitioning to vignette scenes).
@@ -34,6 +35,7 @@ export default class ScreenStation extends ScreenBase {
     }
 
     addModule = (x: number, y: number) => {
+        console.log(`Adding module at ${x}, ${y}`);
         const newModule: Module = createModule('quarters');
         // Write into the Stage's layout and force a re-render
         this.stage?.layout?.setModuleAt(x, y, newModule);
@@ -89,6 +91,7 @@ export default class ScreenStation extends ScreenBase {
                                 whileHover={{ scale: 1.03 }}
                                 onClick={() => {
                                     // Trigger module action if defined
+                                    console.log(`Clicked module ${module.id} of type ${module.type}`);
                                     if (module.attributes?.action) {
                                         module.attributes.action(module, this.stage);
                                     }
