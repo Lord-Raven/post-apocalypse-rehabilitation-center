@@ -23,7 +23,8 @@ export const MODULE_DEFAULTS: Record<ModuleType, ModuleIntrinsic> = {
         action: (module: Module, stage: Stage) => {
             // Open the station management screen
             console.log("Opening cryo screen from command module:", stage);
-            stage.screen = ScreenCryo;
+            // Use Stage API so any mounted UI can react to the change
+            stage.setScreen(ScreenCryo);
         }
     },
     generator: {
