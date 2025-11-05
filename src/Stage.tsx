@@ -112,7 +112,9 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
                 <ScreenStation stage={this} />
             }
             {this.screen == ScreenCryo && 
-                <ScreenCryo stage={this} pods={['Cryo Pod A', 'Cryo Pod B', 'Cryo Pod C']} onAccept={() => this.screen = ScreenStation} onCancel={() => this.screen = ScreenStation} />
+                <ScreenCryo stage={this} pods={['Cryo Pod A', 'Cryo Pod B', 'Cryo Pod C']} 
+                    onAccept={(selected) => {console.log(`onAccept(${selected})`); this.screen = ScreenStation}} 
+                    onCancel={() => {console.log(`onCancel()`); this.screen = ScreenStation}} />
             }
         </div>;
     }

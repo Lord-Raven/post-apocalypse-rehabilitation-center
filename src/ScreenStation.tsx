@@ -37,30 +37,9 @@ export default class ScreenStation extends ScreenBase {
         console.log(`Adding module at ${x}, ${y}`);
         const newModule: Module = createModule('quarters');
         // Write into the Stage's layout and force a re-render
+        console.log(`this.stage.layout: `, this.stage?.layout);
         this.stage?.layout?.setModuleAt(x, y, newModule);
         this.forceUpdate();
-    };
-
-    getModuleAt = (x: number, y: number) => {
-        if (this.stage && typeof (this.stage as any).getModuleAt === 'function') {
-            return (this.stage as any).getModuleAt(x, y);
-        }
-        return undefined;
-    };
-
-    canPlaceModule = (x: number, y: number) => {
-        if (x < 0 || x >= this.gridSize || y < 0 || y >= this.gridSize) return false;
-        return !this.getModuleAt(x, y);
-    };
-
-    getAdjacentPositions = (layout: Layout, module: Module) => {
-        const {x, y} = layout.getModuleCoordinates(module);
-        return [
-            { x: x + 1, y: y },
-            { x: x - 1, y: y },
-            { x: x, y: y + 1 },
-            { x: x, y: y - 1 },
-        ].filter(pos => this.canPlaceModule(pos.x, pos.y));
     };
 
     renderGrid() {

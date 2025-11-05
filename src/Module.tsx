@@ -108,9 +108,10 @@ export class Layout {
     }
 
     setModuleAt(x: number, y: number, module: Module) {
-        if (!this.grid[y]) return;
         console.log(`Setting module at (${x}, ${y}):`, module);
+        if (!this.grid[y]) return;
         this.grid[y][x] = module;
+        console.log(`Module set. Current module at (${x}, ${y}):`, this.grid[y][x]);
         this.onChange?.(this.grid);
     }
 }
