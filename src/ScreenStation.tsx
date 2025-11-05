@@ -37,8 +37,8 @@ export default class ScreenStation extends ScreenBase {
         console.log(`Adding module at ${x}, ${y}`);
         const newModule: Module = createModule('quarters');
         // Write into the Stage's layout and force a re-render
-        console.log(`this.stage.layout: `, this.stage?.layout);
-        this.stage?.layout?.setModuleAt(x, y, newModule);
+        console.log(`this.stage.layout: `, this.stage?.getLayout());
+        this.stage?.getLayout()?.setModuleAt(x, y, newModule);
         this.forceUpdate();
     };
 

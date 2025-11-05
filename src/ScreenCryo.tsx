@@ -5,12 +5,13 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { ScreenBase } from './ScreenBase';
+import { Stage } from './Stage';
 
 interface ScreenCryoProps {
 	stage?: any;
 	pods: string[]; // array of labels for each cryo pod
-	onAccept?: (selected: string | null) => void;
-	onCancel?: () => void;
+	onAccept?: (selected: string | null, stage: Stage) => void;
+	onCancel?: (stage: Stage) => void;
 }
 
 interface ScreenCryoState {
@@ -33,11 +34,11 @@ export default class ScreenCryo extends ScreenBase {
 	accept = () => {
 		const { selectedIndex } = this.state;
 		const selected = selectedIndex != null ? this.props.pods[selectedIndex] : null;
-		if (this.props.onAccept) this.props.onAccept(selected);
+		if (this.props.onAccept) this.props.onAccept(selected, this.props.stage);
 	};
 
 	cancel = () => {
-		if (this.props.onCancel) this.props.onCancel();
+		if (this.props.onCancel) this.props.onCancel(this.props.stage);
 	};
 
 	render(): React.ReactNode {

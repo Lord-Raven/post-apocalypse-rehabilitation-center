@@ -99,7 +99,6 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
         };
     }
 
-
     render(): ReactElement {
 
         return <div style={{
@@ -113,8 +112,8 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
             }
             {this.screen == ScreenCryo && 
                 <ScreenCryo stage={this} pods={['Cryo Pod A', 'Cryo Pod B', 'Cryo Pod C']} 
-                    onAccept={(selected) => {console.log(`onAccept(${selected})`); this.screen = ScreenStation}} 
-                    onCancel={() => {console.log(`onCancel()`); this.screen = ScreenStation}} />
+                    onAccept={(selected, stage) => {console.log(`onAccept(${selected})`); stage.screen = ScreenStation}} 
+                    onCancel={(stage) => {console.log(`onCancel()`); stage.screen = ScreenStation}} />
             }
         </div>;
     }
