@@ -1,7 +1,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { ScreenBase } from './ScreenBase';
-import { Layout, Module, createModule } from './Module';
+import { Layout, MODULE_DEFAULTS, Module, createModule } from './Module';
 import { c } from 'vite/dist/node/types.d-aGj9QkWt';
 
 /*
@@ -39,6 +39,7 @@ export default class ScreenStation extends ScreenBase {
         const newModule: Module = createModule('quarters');
         // Write into the Stage's layout and force a re-render
         this.stage?.layout?.setModuleAt(x, y, newModule);
+        this.forceUpdate();
     };
 
     getModuleAt = (x: number, y: number) => {
@@ -92,8 +93,8 @@ export default class ScreenStation extends ScreenBase {
                                 onClick={() => {
                                     // Trigger module action if defined
                                     console.log(`Clicked module ${module.id} of type ${module.type}`);
-                                    if (module.attributes?.action) {
-                                        module.attributes.action(module, this.stage);
+                                    if (MODULE_DEFAULTS[module.type]?.action) {
+                                        MODULE_DEFAULTS[module.type].action!(module, this.stage);
                                     }
                                 }}
                                 style={{
