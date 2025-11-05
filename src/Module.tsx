@@ -22,7 +22,7 @@ export const MODULE_DEFAULTS: Record<ModuleType, ModuleIntrinsic> = {
         defaultImageUrl: 'https://media.charhub.io/026ae01a-7dc8-472d-bfea-61548b87e6ef/84990780-8260-4833-ac0b-79c1a15ddb9e.png',
         action: (module: Module, stage: Stage) => {
             // Open the station management screen
-            console.log("Opening cryo screen from command module.");
+            console.log("Opening cryo screen from command module:", stage);
             stage.screen = ScreenCryo;
         }
     },
