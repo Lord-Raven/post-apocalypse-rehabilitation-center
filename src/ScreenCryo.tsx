@@ -6,11 +6,12 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { ScreenBase } from './ScreenBase';
 import { Stage } from './Stage';
+import Actor from './Actor';
 
 interface ScreenCryoProps {
 	stage?: any;
-	pods: string[]; // array of labels for each cryo pod
-	onAccept?: (selected: string | null, stage: Stage) => void;
+	candidates: Actor[]; // array of labels for each cryo pod
+	onAccept?: (selected: Actor | null, stage: Stage) => void;
 	onCancel?: (stage: Stage) => void;
 }
 
@@ -33,7 +34,7 @@ export default class ScreenCryo extends ScreenBase {
 
 	accept = () => {
 		const { selectedIndex } = this.state;
-		const selected = selectedIndex != null ? this.props.pods[selectedIndex] : null;
+		const selected = selectedIndex != null ? this.props.candidates[selectedIndex] : null;
 		if (this.props.onAccept) this.props.onAccept(selected, this.props.stage);
 	};
 
@@ -42,7 +43,7 @@ export default class ScreenCryo extends ScreenBase {
 	};
 
 	render(): React.ReactNode {
-		const pods = this.props.pods || [];
+		const pods = this.props.candidates || [];
 		const { selectedIndex } = this.state;
 
 		return (
@@ -50,7 +51,7 @@ export default class ScreenCryo extends ScreenBase {
 				{/* Main centered area for pods */}
 				<div style={{ flex: '1 1 auto', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '40px' }}>
 					<div style={{ display: 'flex', gap: 24, alignItems: 'flex-end', justifyContent: 'center' }}>
-						{pods.map((label, idx) => {
+						{pods.map((actor, idx) => {
 							const isSelected = selectedIndex === idx;
 							return (
 								<motion.div
@@ -69,17 +70,16 @@ export default class ScreenCryo extends ScreenBase {
 										alignItems: 'stretch',
 										borderRadius: 12,
 										overflow: 'hidden',
-										background: isSelected ? 'linear-gradient(180deg, rgba(0,255,136,0.06), rgba(0,255,136,0.02))' : 'linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01))',
+										backgroundImage: `url(${actor.avatarImageUrl})`,
+										backgroundSize: 'cover',
+										backgroundPosition: 'center',
 										border: isSelected ? '3px solid #00ff88' : '2px solid rgba(255,255,255,0.06)',
 										boxShadow: isSelected ? '0 8px 30px rgba(0,255,136,0.12)' : '0 6px 18px rgba(0,0,0,0.4)'
 									}}
 								>
-									{/* Placeholder interior — later will be an image */}
-									<div style={{ flex: 1, background: 'transparent' }} />
-
 									{/* Label across bottom */}
 									<div style={{ padding: '12px 10px', background: 'rgba(0,0,0,0.45)', color: '#e9fff0', fontWeight: 700, textAlign: 'center', fontSize: 16 }}>
-										{label}
+										{actor.name}
 									</div>
 								</motion.div>
 							);

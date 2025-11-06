@@ -233,7 +233,7 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
                 {stage.screen == ScreenCryo && 
                     <ScreenCryo
                         stage={stage}
-                        pods={this.potentialActors.map(actor => actor.name)}
+                        candidates={this.potentialActors}
                         onAccept={(selected, s) => {
                             console.log(`onAccept(${selected})`);
                             // use stage API so UI will update
