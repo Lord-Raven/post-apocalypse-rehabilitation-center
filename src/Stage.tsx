@@ -29,8 +29,9 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
     private potentialActorsLoading: boolean = false;
     private potentialActorsLoadPromise?: Promise<void>;
     readonly FETCH_AT_TIME = 3;
-    readonly characterSearchQuery = `https://inference.chub.ai/search?first=${this.FETCH_AT_TIME}&exclude_tags=child%2Cteenager%2Cnarrator&page=1&sort=random&asc=false&include_forks=false&nsfw=true&nsfl=false&nsfw_only=false&require_images=false&require_example_dialogues=false&require_alternate_greetings=false&require_custom_prompt=false&exclude_mine=false&min_tokens=200&max_tokens=10000&require_expressions=false&require_lore=false&mine_first=false&require_lore_embedded=false&require_lore_linked=false&my_favorites=false&username=bananabot&inclusive_or=true&recommended_verified=false&count=false`;
+    readonly characterSearchQuery = `https://inference.chub.ai/search?first=${this.FETCH_AT_TIME}&exclude_tags=child%2Cteenager%2Cnarrator&page={pageNumber}&sort=random&asc=false&include_forks=false&nsfw=true&nsfl=false&nsfw_only=false&require_images=false&require_example_dialogues=false&require_alternate_greetings=false&require_custom_prompt=false&exclude_mine=false&min_tokens=200&max_tokens=10000&require_expressions=false&require_lore=false&mine_first=false&require_lore_embedded=false&require_lore_linked=false&my_favorites=false&username=bananabot&inclusive_or=true&recommended_verified=false&count=false`;
     readonly characterDetailQuery = 'https://inference.chub.ai/api/characters/{fullPath}?full=true';
+    private pageNumber: number = Math.ceil(Math.random() * 100);
 
     // Expose a simple grid size (can be tuned)
     public gridSize = DEFAULT_GRID_SIZE;
@@ -108,7 +109,8 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
         this.potentialActorsLoadPromise = (async () => {
             try {
                 // Populate potentialActors; this is loaded with data from a service, calling the characterServiceQuery URL:
-                const response = await fetch(this.characterSearchQuery);
+                const response = await fetch(this.characterSearchQuery.replace('{pageNumber}', this.pageNumber.toString()));
+                this.pageNumber++;
                 const searchResults = await response.json();
                 console.log(searchResults);
                 // Need to do a secondary lookup for each character in searchResults, to get the details we actually care about:
@@ -118,11 +120,12 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
                 const newActors: Actor[] = await Promise.all(basicCharacterData.map(async (fullPath: string) => {
                     const response = await fetch(this.characterDetailQuery.replace('{fullPath}', fullPath));
                     const item = await response.json();
+                    const name = item.node.definition.name.replaceAll('{{char}}', item.node.definition.name).replaceAll('{{user}}', 'Individual X');
                     const data = {
-                        name: item.node.definition.name,
-                        description: item.node.definition.description,
-                        personality: item.node.definition.personality,
-                        avatar: item.node.definition.avatar
+                        name,
+                        description: item.node.definition.description.replaceAll('{{char}}', name).replaceAll('{{user}}', 'Individual X'),
+                        personality: item.node.definition.personality.replaceAll('{{char}}', name).replaceAll('{{user}}', 'Individual X'),
+                        avatar: item.node.definition.max_res_url
                     };
                     // Take this data and use text generation to get an updated distillation of this character, including a physical description.
                     const generatedResponse = await this.generator.textGen({
