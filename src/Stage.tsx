@@ -28,8 +28,8 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
     // Flag/promise to avoid redundant concurrent requests for potential actors
     private potentialActorsLoading: boolean = false;
     private potentialActorsLoadPromise?: Promise<void>;
-    readonly FETCH_AT_TIME = 15;
-    readonly PER_PAGE = 3;
+    readonly FETCH_AT_TIME = 20;
+    readonly PER_PAGE = 4;
     readonly PAGES = Math.ceil(this.FETCH_AT_TIME / this.PER_PAGE);
     readonly characterSearchQuery = `https://inference.chub.ai/search?first=${this.FETCH_AT_TIME}&exclude_tags=child%2Cteenager%2Cnarrator&page=1&sort=random&asc=false&include_forks=false&nsfw=true&nsfl=false&nsfw_only=false&require_images=false&require_example_dialogues=false&require_alternate_greetings=false&require_custom_prompt=false&exclude_mine=false&min_tokens=200&max_tokens=10000&require_expressions=false&require_lore=false&mine_first=false&require_lore_embedded=false&require_lore_linked=false&my_favorites=false&username=bananabot&inclusive_or=true&recommended_verified=false&count=false`;
     readonly characterDetailQuery = 'https://inference.chub.ai/api/characters/{fullPath}?full=true';
@@ -135,7 +135,7 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
                         name,
                         description: item.node.definition.description.replaceAll('{{char}}', name).replaceAll('{{user}}', 'Individual X'),
                         personality: item.node.definition.personality.replaceAll('{{char}}', name).replaceAll('{{user}}', 'Individual X'),
-                        avatar: item.node.definition.max_res_url
+                        avatar: item.node.max_res_url
                     };
                     // Take this data and use text generation to get an updated distillation of this character, including a physical description.
                     const generatedResponse = await this.generator.textGen({
@@ -143,7 +143,7 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
                             `The following is a description for a random character or scenario from this multiverse's past. This response must digest and distill this description to suit the game's narrative, ` +
                             `in which this character has been rematerialized into a new timeline. The provided description may reference 'Individual X' who no longer exists in this timeline; ` +
                             `you should give this individual a name if they are relevant to the distillation. ` +
-                            `In addition to name, physical description, and personality, you will score the character with a simple 1-10 for the following traits: CONDITION, RESILIENCE, BEAUTY, PERSONALITY, CAPABILITY, INTELLIGENCE, and COMPLIANCE.\n` +
+                            `In addition to name, physical description, and personality, you will score the character with a simple 1-10 for the following traits: CONDITION, RESILIENCE, BEAUTY, CHARISMA, CAPABILITY, INTELLIGENCE, and COMPLIANCE.\n` +
                             `Bear in mind the character's current state and not necessarily their original potential when scoring these traits; some characters may not respond well to being essentially resurrected into a new timeline.\n\n` +
                             `Original details about ${data.name}:\nDescription: ${data.description} ${data.personality}\n\n` +
                             `After carefully considering this description, provide a concise breakdown in the following format:\n` +
@@ -152,10 +152,10 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
                             `PERSONALITY: A brief summary of the character's key personality traits and behaviors.\n` +
                             `CONDITION: 1-10 scoring of their relative physical condition, with 10 being peak condition and 1 being critically impaired.\n` +
                             `RESILIENCE: 1-10 scoring of their mental resilience, with 10 being highly resilient and 1 being easily broken.\n` +
-                            `SEXUALITY: 1-10 scoring of their physical lustiness, with 10 being abjectly lewd and 1 being utterly assexual.\n` +
-                            `PERSONALITY: 1-10 scoring of their personality appeal, with 10 being extremely charming and 1 being off-putting.\n` +
                             `CAPABILITY: 1-10 scoring of their overall capability to contribute meaningfully to the crew, with 10 being highly capable and 1 being a liability.\n` +
                             `INTELLIGENCE: 1-10 scoring of their intelligence level, with 10 being genius-level intellect and 1 being below average intelligence.\n` +
+                            `CHARISMA: 1-10 scoring of their personality appeal, with 10 being extremely charming and 1 being off-putting.\n` +
+                            `SEXUALITY: 1-10 scoring of their physical lustiness, with 10 being abjectly lewd and 1 being utterly assexual.\n` +
                             `COMPLIANCE: 1-10 scoring of their willingness to comply with authority, with 10 being highly compliant and 1 being rebellious.\n` +
                             `#END#`,
                         stop: ['#END'],
@@ -182,7 +182,7 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
                         parseInt(parsedData['intelligence']) || DEFAULT_TRAIT_SCORE,
                         parseInt(parsedData['condition']) || DEFAULT_TRAIT_SCORE,
                         parseInt(parsedData['resilience']) || DEFAULT_TRAIT_SCORE,
-                        parseInt(parsedData['personality']) || DEFAULT_TRAIT_SCORE,
+                        parseInt(parsedData['charisma']) || DEFAULT_TRAIT_SCORE,
                         parseInt(parsedData['sexuality']) || DEFAULT_TRAIT_SCORE,
                         parseInt(parsedData['compliance']) || DEFAULT_TRAIT_SCORE,
                     );

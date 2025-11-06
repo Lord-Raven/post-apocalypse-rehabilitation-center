@@ -16,12 +16,12 @@ class Actor {
     intelligence: number; // Intelligence grade 1-10
     condition: number; // Condition grade 1-10
     resilience: number; // Resilience grade 1-10
-    personality: number; // Personality grade 1-10
+    charisma: number; // Personality grade 1-10
     sexuality: number; // Sexuality grade 1-10
     compliance: number; // Compliance grade 1-10
 
     constructor(id: string, name: string, avatarImageUrl: string, physicalDescription: string, personalityDescription: string, emotionPack: EmotionPack, 
-            capability: number, intelligence: number, condition: number, resilience: number, personality: number, sexuality: number, compliance: number) {
+            capability: number, intelligence: number, condition: number, resilience: number, charisma: number, sexuality: number, compliance: number) {
         this.id = id;
         this.name = name;
         this.avatarImageUrl = avatarImageUrl;
@@ -32,7 +32,7 @@ class Actor {
         this.intelligence = intelligence;
         this.condition = condition;
         this.resilience = resilience;
-        this.personality = personality;
+        this.charisma = charisma;
         this.sexuality = sexuality;
         this.compliance = compliance;
     }
