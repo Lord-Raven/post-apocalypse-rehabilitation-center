@@ -70,13 +70,11 @@ export default class ScreenCryo extends ScreenBase {
 										alignItems: 'stretch',
 										borderRadius: 12,
 										overflow: 'hidden',
-										border: isSelected ? '3px solid #00ff88' : '2px solid rgba(255,255,255,0.06)',
+										background: `url(${actor.avatarImageUrl})`, backgroundSize: 'cover', backgroundPosition: 'center top',
+										border: isSelected ? '5px solid #ffffff' : '3px solid #00ff88',
 										boxShadow: isSelected ? '0 8px 30px rgba(0,255,136,0.12)' : '0 6px 18px rgba(0,0,0,0.4)'
 									}}
 								>
-									{/* Use actor.avatarImageUrl */}
-									<div style={{ flex: 1, background: `url(${actor.avatarImageUrl})`, backgroundSize: 'cover', backgroundPosition: 'center top' }} />
-
 									{/* actor.name label across top center of parent div */}
 									<div style={{ padding: '12px 16px', background: 'rgba(0,0,0,0.6)', color: '#fff', textAlign: 'center', fontWeight: 600, fontSize: 18 }}>
 										{actor.name}

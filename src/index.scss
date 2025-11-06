@@ -10,7 +10,7 @@ html, body, #root {
   padding: 0;
 }
 
-/* Stylized stat/grade display (Persona / DMC-inspired) */
+/* Stylized stat/grade display: jauntily-angled large letters with sharp drop shadow */
 .stat-list {
   color: #e6fff0;
 }
@@ -23,53 +23,40 @@ html, body, #root {
 }
 .stat-label {
   font-size: 12px;
-  color: rgba(255,255,255,0.85);
+  color: rgba(255,255,255,0.9);
   text-transform: uppercase;
   letter-spacing: 1px;
   font-weight: 600;
   opacity: 0.95;
 }
 .stat-grade {
-  /* big, bold, showy letter */
+  /* big, bold, skewed/rotated letter with a crisp drop shadow */
   font-weight: 900;
-  font-size: 2.6rem;
+  font-size: 3.2rem;
   line-height: 1;
   display: inline-block;
-  padding: 2px 6px;
-  border-radius: 4px;
-  -webkit-text-stroke: 1px rgba(0,0,0,0.6);
-  text-shadow: 0 6px 18px rgba(0,0,0,0.6), 0 0 8px rgba(255,255,255,0.06);
-  transform: translateY(-2px);
-  /* default gradient */
-  background: linear-gradient(180deg, #ffffff 0%, #e6e6ff 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
+  padding: 0 4px;
+  border-radius: 2px;
+  /* slight stroke to help separation */
+  -webkit-text-stroke: 0.6px rgba(0,0,0,0.85);
+  /* crisp drop-shadow (no blur) for a sharp cutout look */
+  text-shadow: 6px 6px 0 rgba(0,0,0,0.88);
+  /* jaunty tilt */
+  transform: skewX(-12deg) rotate(-8deg);
+  transform-origin: 50% 50%;
+  /* use solid color fill per grade variants below */
+  color: #ffffff;
 }
 
-/* grade color variants (match first letter) */
-.stat-grade[data-grade^="A"] {
-  background: linear-gradient(180deg, #ffd86b 0%, #ff7a18 100%);
-  text-shadow: 0 8px 20px rgba(255,122,24,0.18), 0 0 14px rgba(255,200,80,0.12);
-}
-.stat-grade[data-grade^="B"] {
-  background: linear-gradient(180deg, #8ef7ff 0%, #3bd3ff 100%);
-  text-shadow: 0 8px 20px rgba(59,211,255,0.12), 0 0 14px rgba(100,230,255,0.08);
-}
-.stat-grade[data-grade^="C"] {
-  background: linear-gradient(180deg, #d6d6d6 0%, #bfbfbf 100%);
-  text-shadow: 0 6px 14px rgba(0,0,0,0.35);
-}
-.stat-grade[data-grade^="D"] {
-  background: linear-gradient(180deg, #ffd1a8 0%, #ff9a4a 100%);
-  text-shadow: 0 6px 14px rgba(0,0,0,0.36);
-}
-.stat-grade[data-grade^="F"] {
-  background: linear-gradient(180deg, #ffb3b3 0%, #ff5a5a 100%);
-  text-shadow: 0 8px 22px rgba(255,90,90,0.14), 0 0 12px rgba(255,130,130,0.06);
-}
+/* grade color variants (solid fills) */
+.stat-grade[data-grade^="A"] { color: #ff9f2f; }
+.stat-grade[data-grade^="B"] { color: #3bd3ff; }
+.stat-grade[data-grade^="C"] { color: #d0d0d0; }
+.stat-grade[data-grade^="D"] { color: #ffb47a; }
+.stat-grade[data-grade^="F"] { color: #ff6b6b; }
 
-/* Responsive: scale down on small cards */
+/* reduce size a bit on small screens */
 @media (max-width: 420px) {
-  .stat-grade { font-size: 2rem; }
+  .stat-grade { font-size: 2.4rem; transform: skewX(-10deg) rotate(-6deg); }
   .stat-label { font-size: 11px; }
 }
