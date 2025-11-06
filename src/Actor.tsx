@@ -36,6 +36,12 @@ class Actor {
         this.sexuality = sexuality;
         this.compliance = compliance;
     }
+
+    scoreToGrade(score: number): string {
+        const scoreClamped = Math.max(1, Math.min(10, score));
+        const scoreArray = ['F', 'D', 'C', 'C+', 'B-', 'B', 'B+', 'A-', 'A', 'A+'];
+        return scoreArray[scoreClamped - 1];
+    }
 }
 
 export default Actor;

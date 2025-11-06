@@ -77,10 +77,31 @@ export default class ScreenCryo extends ScreenBase {
 									{/* Use actor.avatarImageUrl */}
 									<div style={{ flex: 1, background: `url(${actor.avatarImageUrl})`, backgroundSize: 'cover', backgroundPosition: 'center top' }} />
 
-									{/* Label across bottom */}
-									<div style={{ padding: '12px 10px', background: 'rgba(0,0,0,0.45)', color: '#e9fff0', fontWeight: 700, textAlign: 'center', fontSize: 16 }}>
+									{/* actor.name label across top center of parent div */}
+									<div style={{ padding: '12px 16px', background: 'rgba(0,0,0,0.6)', color: '#fff', textAlign: 'center', fontWeight: 600, fontSize: 18 }}>
 										{actor.name}
 									</div>
+									{/* Lay out actor property scores with large stylized letter grades */}
+									<div className="stat-list" style={{ padding: '8px 12px', background: 'rgba(0,0,0,0.8)' }}>
+										{[
+											['Condition', actor.condition],
+											['Capability', actor.capability],
+											['Intelligence', actor.intelligence],
+											['Resilience', actor.resilience],
+											['Charisma', actor.charisma],
+											['Sexuality', actor.sexuality],
+											['Compliance', actor.compliance]
+										].map(([label, value]) => {
+											const grade = actor.scoreToGrade(value as number);
+											return (
+												<div className="stat-row" key={`${actor.id}_${label}`}>
+													<span className="stat-label">{label}</span>
+													<span className="stat-grade" data-grade={grade}>{grade}</span>
+												</div>
+											);
+										})}
+									</div>
+									
 								</motion.div>
 							);
 						})}
