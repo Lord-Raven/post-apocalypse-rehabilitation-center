@@ -28,8 +28,8 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
     // Flag/promise to avoid redundant concurrent requests for potential actors
     private potentialActorsLoading: boolean = false;
     private potentialActorsLoadPromise?: Promise<void>;
-    readonly FETCH_AT_TIME = 100;
-    readonly PER_PAGE = 4;
+    readonly FETCH_AT_TIME = 15;
+    readonly PER_PAGE = 3;
     readonly PAGES = Math.ceil(this.FETCH_AT_TIME / this.PER_PAGE);
     readonly characterSearchQuery = `https://inference.chub.ai/search?first=${this.FETCH_AT_TIME}&exclude_tags=child%2Cteenager%2Cnarrator&page=1&sort=random&asc=false&include_forks=false&nsfw=true&nsfl=false&nsfw_only=false&require_images=false&require_example_dialogues=false&require_alternate_greetings=false&require_custom_prompt=false&exclude_mine=false&min_tokens=200&max_tokens=10000&require_expressions=false&require_lore=false&mine_first=false&require_lore_embedded=false&require_lore_linked=false&my_favorites=false&username=bananabot&inclusive_or=true&recommended_verified=false&count=false`;
     readonly characterDetailQuery = 'https://inference.chub.ai/api/characters/{fullPath}?full=true';
