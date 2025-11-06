@@ -89,6 +89,16 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
 
     async load(): Promise<Partial<LoadResponse<InitStateType, ChatStateType, MessageStateType>>> {
 
+        return {
+            success: true,
+            error: null,
+            initState: null,
+            chatState: null,
+        };
+    }
+
+    async loadPotentialActors() {
+        
         // Populate potentialActors; this is loaded with data from a service, calling the characterServiceQuery URL:
         const response = await fetch(this.characterSearchQuery);
         const searchResults = await response.json();
@@ -112,7 +122,7 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
                     `The following is a description for a random character or scenario from this multiverse's past. This response must digest and distill this description to suit the game's narrative, ` +
                     `in which this character has been rematerialized into a new timeline. The provided description may reference 'Individual X' who no longer exists in this timeline; ` +
                     `you should give this individual a name if they are relevant to the distillation. ` +
-                    `In addition to name, physical description, and personality, you will score the character between 1 and 10 on the following traits: CONDITION, RESILIENCE, BEAUTY, PERSONALITY, CAPABILITY, and INTELLIGENCE.\n` +
+                    `In addition to name, physical description, and personality, you will score the character with a simple 1-10 for the following traits: CONDITION, RESILIENCE, BEAUTY, PERSONALITY, CAPABILITY, INTELLIGENCE, and COMPLIANCE.\n` +
                     `Bear in mind the character's current state and not necessarily their original potential when scoring these traits; some characters may not respond well to being essentially resurrected into a new timeline.\n\n` +
                     `Original details about ${data.name}:\nDescription: ${data.description} ${data.personality}\n\n` +
                     `After carefully considering this description, provide a concise breakdown in the following format:\n` +
@@ -125,6 +135,7 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
                     `PERSONALITY: 1-10 scoring of their personality appeal, with 10 being extremely charming and 1 being off-putting.\n` +
                     `CAPABILITY: 1-10 scoring of their overall capability to contribute meaningfully to the crew, with 10 being highly capable and 1 being a liability.\n` +
                     `INTELLIGENCE: 1-10 scoring of their intelligence level, with 10 being genius-level intellect and 1 being below average intelligence.\n` +
+                    `COMPLIANCE: 1-10 scoring of their willingness to comply with authority, with 10 being highly compliant and 1 being rebellious.\n` +
                     `#END#`,
                     stop: ['#END'],
                     max_tokens: 700,
@@ -138,19 +149,21 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
                 }
             }
             // Create an Actor instance from the parsed data; ID should be generated uniquely
+            const DEFAULT_TRAIT_SCORE = 4;
             const newActor = new Actor(
                 `actor-${Date.now()}-${Math.floor(Math.random() * 10000)}`,
                 parsedData['name'] || data.name,
                 data.avatar || '',
                 parsedData['description'] || data.description,
                 parsedData['personality'] || data.personality,
-                {},
-                parsedData['condition'] || 4,
-                parsedData['resilience'] || 4,
-                parsedData['sexuality'] || 4,
-                parsedData['personality'] || 4,
-                parsedData['capability'] || 4,
-                parsedData['intelligence'] || 4
+                {}, 
+                parseInt(parsedData['capability']) || DEFAULT_TRAIT_SCORE,
+                parseInt(parsedData['intelligence']) || DEFAULT_TRAIT_SCORE,
+                parseInt(parsedData['condition']) || DEFAULT_TRAIT_SCORE,
+                parseInt(parsedData['resilience']) || DEFAULT_TRAIT_SCORE,
+                parseInt(parsedData['personality']) || DEFAULT_TRAIT_SCORE,
+                parseInt(parsedData['sexuality']) || DEFAULT_TRAIT_SCORE,
+                parseInt(parsedData['compliance']) || DEFAULT_TRAIT_SCORE,
             );
             console.log(`Loaded new actor: ${newActor.name} (ID: ${newActor.id})`);
             console.log(newActor);
@@ -158,13 +171,6 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
         }));
 
         this.potentialActors = [...this.potentialActors, ...newActors];
-
-        return {
-            success: true,
-            error: null,
-            initState: null,
-            chatState: null,
-        };
     }
 
     getLayout(): Layout {
@@ -172,7 +178,8 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
     }
 
     async setState(state: MessageStateType): Promise<void> {
-
+        console.log('setState');
+        await this.loadPotentialActors();
     }
 
     async beforePrompt(userMessage: Message): Promise<Partial<StageResponse<ChatStateType, MessageStateType>>> {
