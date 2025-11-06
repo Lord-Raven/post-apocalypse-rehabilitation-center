@@ -25,6 +25,9 @@ type SaveType = {
 export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateType, ConfigType> {
 
     private saves: SaveType[];
+    // Flag/promise to avoid redundant concurrent requests for potential actors
+    private potentialActorsLoading: boolean = false;
+    private potentialActorsLoadPromise?: Promise<void>;
     readonly FETCH_AT_TIME = 3;
     readonly characterSearchQuery = `https://inference.chub.ai/search?first=${this.FETCH_AT_TIME}&exclude_tags=child%2Cteenager%2Cnarrator&page=1&sort=random&asc=false&include_forks=false&nsfw=true&nsfl=false&nsfw_only=false&require_images=false&require_example_dialogues=false&require_alternate_greetings=false&require_custom_prompt=false&exclude_mine=false&min_tokens=200&max_tokens=10000&require_expressions=false&require_lore=false&mine_first=false&require_lore_embedded=false&require_lore_linked=false&my_favorites=false&username=bananabot&inclusive_or=true&recommended_verified=false&count=false`;
     readonly characterDetailQuery = 'https://inference.chub.ai/api/characters/{fullPath}?full=true';
@@ -98,79 +101,96 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
     }
 
     async loadPotentialActors() {
-        
-        // Populate potentialActors; this is loaded with data from a service, calling the characterServiceQuery URL:
-        const response = await fetch(this.characterSearchQuery);
-        const searchResults = await response.json();
-        console.log(searchResults);
-        // Need to do a secondary lookup for each character in searchResults, to get the details we actually care about:
-        const basicCharacterData = searchResults.data?.nodes.map((item: any) => item.fullPath) || [];
-        console.log(basicCharacterData);
+        // If a load is already in-flight, return the existing promise to dedupe concurrent calls
+        if (this.potentialActorsLoadPromise) return this.potentialActorsLoadPromise;
 
-        const newActors: Actor[] = await Promise.all(basicCharacterData.map(async (fullPath: string) => {
-            const response = await fetch(this.characterDetailQuery.replace('{fullPath}', fullPath));
-            const item = await response.json();
-            const data = {
-                name: item.node.definition.name,
-                description: item.node.definition.description,
-                personality: item.node.definition.personality,
-                avatar: item.node.definition.avatar
-            };
-            // Take this data and use text generation to get an updated distillation of this character, including a physical description.
-            const generatedResponse = await this.generator.textGen({
-                prompt: `This is a preparatory request for formatted content for a video game set in a futuristic multiverse setting that pulls characters from across eras and timelines and settings. ` +
-                    `The following is a description for a random character or scenario from this multiverse's past. This response must digest and distill this description to suit the game's narrative, ` +
-                    `in which this character has been rematerialized into a new timeline. The provided description may reference 'Individual X' who no longer exists in this timeline; ` +
-                    `you should give this individual a name if they are relevant to the distillation. ` +
-                    `In addition to name, physical description, and personality, you will score the character with a simple 1-10 for the following traits: CONDITION, RESILIENCE, BEAUTY, PERSONALITY, CAPABILITY, INTELLIGENCE, and COMPLIANCE.\n` +
-                    `Bear in mind the character's current state and not necessarily their original potential when scoring these traits; some characters may not respond well to being essentially resurrected into a new timeline.\n\n` +
-                    `Original details about ${data.name}:\nDescription: ${data.description} ${data.personality}\n\n` +
-                    `After carefully considering this description, provide a concise breakdown in the following format:\n` +
-                    `NAME: The character's full, given name.\n` +
-                    `DESCRIPTION: A vivid description of the character's physical appearance, attire, and any distinguishing features.\n` +
-                    `PERSONALITY: A brief summary of the character's key personality traits and behaviors.\n` +
-                    `CONDITION: 1-10 scoring of their relative physical condition, with 10 being peak condition and 1 being critically impaired.\n` +
-                    `RESILIENCE: 1-10 scoring of their mental resilience, with 10 being highly resilient and 1 being easily broken.\n` +
-                    `SEXUALITY: 1-10 scoring of their physical lustiness, with 10 being abjectly lewd and 1 being utterly assexual.\n` +
-                    `PERSONALITY: 1-10 scoring of their personality appeal, with 10 being extremely charming and 1 being off-putting.\n` +
-                    `CAPABILITY: 1-10 scoring of their overall capability to contribute meaningfully to the crew, with 10 being highly capable and 1 being a liability.\n` +
-                    `INTELLIGENCE: 1-10 scoring of their intelligence level, with 10 being genius-level intellect and 1 being below average intelligence.\n` +
-                    `COMPLIANCE: 1-10 scoring of their willingness to comply with authority, with 10 being highly compliant and 1 being rebellious.\n` +
-                    `#END#`,
-                    stop: ['#END'],
-                    max_tokens: 700,
-            });
-            const lines = generatedResponse?.result.split('\n').map((line: string) => line.trim()) || [];
-            const parsedData: any = {};
-            for (const line of lines) {
-                const [key, ...rest] = line.split(':');
-                if (key && rest.length) {
-                    parsedData[key.toLowerCase()] = rest.join(':').trim();
-                }
+        this.potentialActorsLoading = true;
+        this.potentialActorsLoadPromise = (async () => {
+            try {
+                // Populate potentialActors; this is loaded with data from a service, calling the characterServiceQuery URL:
+                const response = await fetch(this.characterSearchQuery);
+                const searchResults = await response.json();
+                console.log(searchResults);
+                // Need to do a secondary lookup for each character in searchResults, to get the details we actually care about:
+                const basicCharacterData = searchResults.data?.nodes.map((item: any) => item.fullPath) || [];
+                console.log(basicCharacterData);
+
+                const newActors: Actor[] = await Promise.all(basicCharacterData.map(async (fullPath: string) => {
+                    const response = await fetch(this.characterDetailQuery.replace('{fullPath}', fullPath));
+                    const item = await response.json();
+                    const data = {
+                        name: item.node.definition.name,
+                        description: item.node.definition.description,
+                        personality: item.node.definition.personality,
+                        avatar: item.node.definition.avatar
+                    };
+                    // Take this data and use text generation to get an updated distillation of this character, including a physical description.
+                    const generatedResponse = await this.generator.textGen({
+                        prompt: `This is a preparatory request for formatted content for a video game set in a futuristic multiverse setting that pulls characters from across eras and timelines and settings. ` +
+                            `The following is a description for a random character or scenario from this multiverse's past. This response must digest and distill this description to suit the game's narrative, ` +
+                            `in which this character has been rematerialized into a new timeline. The provided description may reference 'Individual X' who no longer exists in this timeline; ` +
+                            `you should give this individual a name if they are relevant to the distillation. ` +
+                            `In addition to name, physical description, and personality, you will score the character with a simple 1-10 for the following traits: CONDITION, RESILIENCE, BEAUTY, PERSONALITY, CAPABILITY, INTELLIGENCE, and COMPLIANCE.\n` +
+                            `Bear in mind the character's current state and not necessarily their original potential when scoring these traits; some characters may not respond well to being essentially resurrected into a new timeline.\n\n` +
+                            `Original details about ${data.name}:\nDescription: ${data.description} ${data.personality}\n\n` +
+                            `After carefully considering this description, provide a concise breakdown in the following format:\n` +
+                            `NAME: The character's full, given name.\n` +
+                            `DESCRIPTION: A vivid description of the character's physical appearance, attire, and any distinguishing features.\n` +
+                            `PERSONALITY: A brief summary of the character's key personality traits and behaviors.\n` +
+                            `CONDITION: 1-10 scoring of their relative physical condition, with 10 being peak condition and 1 being critically impaired.\n` +
+                            `RESILIENCE: 1-10 scoring of their mental resilience, with 10 being highly resilient and 1 being easily broken.\n` +
+                            `SEXUALITY: 1-10 scoring of their physical lustiness, with 10 being abjectly lewd and 1 being utterly assexual.\n` +
+                            `PERSONALITY: 1-10 scoring of their personality appeal, with 10 being extremely charming and 1 being off-putting.\n` +
+                            `CAPABILITY: 1-10 scoring of their overall capability to contribute meaningfully to the crew, with 10 being highly capable and 1 being a liability.\n` +
+                            `INTELLIGENCE: 1-10 scoring of their intelligence level, with 10 being genius-level intellect and 1 being below average intelligence.\n` +
+                            `COMPLIANCE: 1-10 scoring of their willingness to comply with authority, with 10 being highly compliant and 1 being rebellious.\n` +
+                            `#END#`,
+                        stop: ['#END'],
+                        max_tokens: 700,
+                    });
+                    const lines = generatedResponse?.result.split('\n').map((line: string) => line.trim()) || [];
+                    const parsedData: any = {};
+                    for (const line of lines) {
+                        const [key, ...rest] = line.split(':');
+                        if (key && rest.length) {
+                            parsedData[key.toLowerCase()] = rest.join(':').trim();
+                        }
+                    }
+                    // Create an Actor instance from the parsed data; ID should be generated uniquely
+                    const DEFAULT_TRAIT_SCORE = 4;
+                    const newActor = new Actor(
+                        `actor-${Date.now()}-${Math.floor(Math.random() * 10000)}`,
+                        parsedData['name'] || data.name,
+                        data.avatar || '',
+                        parsedData['description'] || data.description,
+                        parsedData['personality'] || data.personality,
+                        {}, 
+                        parseInt(parsedData['capability']) || DEFAULT_TRAIT_SCORE,
+                        parseInt(parsedData['intelligence']) || DEFAULT_TRAIT_SCORE,
+                        parseInt(parsedData['condition']) || DEFAULT_TRAIT_SCORE,
+                        parseInt(parsedData['resilience']) || DEFAULT_TRAIT_SCORE,
+                        parseInt(parsedData['personality']) || DEFAULT_TRAIT_SCORE,
+                        parseInt(parsedData['sexuality']) || DEFAULT_TRAIT_SCORE,
+                        parseInt(parsedData['compliance']) || DEFAULT_TRAIT_SCORE,
+                    );
+                    console.log(`Loaded new actor: ${newActor.name} (ID: ${newActor.id})`);
+                    console.log(newActor);
+                    return newActor;
+                }));
+
+                this.potentialActors = [...this.potentialActors, ...newActors];
+                // Notify the UI wrapper that actors are now loaded so it can re-render
+                this.requestUpdate();
+            } catch (err) {
+                console.error('Error loading potential actors', err);
+            } finally {
+                this.potentialActorsLoading = false;
+                // clear the promise so future loads can be attempted if needed
+                this.potentialActorsLoadPromise = undefined;
             }
-            // Create an Actor instance from the parsed data; ID should be generated uniquely
-            const DEFAULT_TRAIT_SCORE = 4;
-            const newActor = new Actor(
-                `actor-${Date.now()}-${Math.floor(Math.random() * 10000)}`,
-                parsedData['name'] || data.name,
-                data.avatar || '',
-                parsedData['description'] || data.description,
-                parsedData['personality'] || data.personality,
-                {}, 
-                parseInt(parsedData['capability']) || DEFAULT_TRAIT_SCORE,
-                parseInt(parsedData['intelligence']) || DEFAULT_TRAIT_SCORE,
-                parseInt(parsedData['condition']) || DEFAULT_TRAIT_SCORE,
-                parseInt(parsedData['resilience']) || DEFAULT_TRAIT_SCORE,
-                parseInt(parsedData['personality']) || DEFAULT_TRAIT_SCORE,
-                parseInt(parsedData['sexuality']) || DEFAULT_TRAIT_SCORE,
-                parseInt(parsedData['compliance']) || DEFAULT_TRAIT_SCORE,
-            );
-            console.log(`Loaded new actor: ${newActor.name} (ID: ${newActor.id})`);
-            console.log(newActor);
-            return newActor;
-        }));
+        })();
 
-        this.potentialActors = [...this.potentialActors, ...newActors];
+        return this.potentialActorsLoadPromise;
     }
 
     getLayout(): Layout {
@@ -178,8 +198,6 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
     }
 
     async setState(state: MessageStateType): Promise<void> {
-        console.log('setState');
-        await this.loadPotentialActors();
     }
 
     async beforePrompt(userMessage: Message): Promise<Partial<StageResponse<ChatStateType, MessageStateType>>> {
@@ -220,6 +238,23 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
                     stage.setRenderCallback(undefined);
                 };
             }, [stage]);
+
+            // If there are no potential actors, kick off a load — but only if a load is not already in progress.
+            useEffect(() => {
+                let cancelled = false;
+                if (stage.potentialActors.length === 0 && !(stage as any).potentialActorsLoading) {
+                    // call but don't block render
+                    (async () => {
+                        try {
+                            await stage.loadPotentialActors();
+                        } catch (err) {
+                            // swallow — loadPotentialActors already logs errors
+                            if (!cancelled) console.debug('loadPotentialActors failed', err);
+                        }
+                    })();
+                }
+                return () => { cancelled = true; };
+            }, [stage, stage.potentialActors.length]);
 
             return <div style={{
                 width: '100vw',
