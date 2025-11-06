@@ -61,7 +61,7 @@ export default class ScreenCryo extends ScreenBase {
 									whileTap={{ scale: 0.98 }}
 									style={{
 										cursor: 'pointer',
-										width: '10vw',
+										width: '15vw',
 										height: '80vh',
 										minHeight: 360,
 										display: 'flex',

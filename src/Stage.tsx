@@ -6,6 +6,7 @@ import Actor from "./Actor";
 import { DEFAULT_GRID_SIZE, Layout, createModule } from './Module';
 import { ScreenBase } from "./ScreenBase";
 import ScreenCryo from "./ScreenCryo";
+import { v4 as generateUuid } from 'uuid';
 
 
 type MessageStateType = any;
@@ -20,6 +21,8 @@ type SaveType = {
     currentMessageId: string;
     actors: {[key: string]: Actor};
     layout: Layout;
+    day: number;
+    phase: number;
 }
 
 export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateType, ConfigType> {
@@ -64,7 +67,7 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
         if (!this.saves.length) {
             const layout = new Layout();
             layout.setModuleAt(DEFAULT_GRID_SIZE/2, DEFAULT_GRID_SIZE/2, createModule('command', { id: `command-${DEFAULT_GRID_SIZE/2}-${DEFAULT_GRID_SIZE/2}`, connections: [], attributes: {} }));
-            this.saves.push({ messageTree: null as any, currentMessageId: '', actors: {}, layout: layout });
+            this.saves.push({ messageTree: null as any, currentMessageId: '', actors: {}, layout: layout, day: 1, phase: 1 });
         }
 
         // initialize Layout manager for the active save (index 0)
@@ -91,6 +94,19 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
     setScreen(screenClass: typeof ScreenBase) {
         this.screen = screenClass;
         this.requestUpdate();
+    }
+
+    incPhase(numberOfPhases: number = 1) {
+        const save = this.getSave();
+        save.phase += numberOfPhases;
+        if (save.phase > 4) {
+            save.phase = 1;
+            save.day += 1;
+        }
+    }
+
+    getSave(): SaveType {
+        return this.saves[0];
     }
 
     async load(): Promise<Partial<LoadResponse<InitStateType, ChatStateType, MessageStateType>>> {
@@ -164,7 +180,7 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
                     // Create an Actor instance from the parsed data; ID should be generated uniquely
                     const DEFAULT_TRAIT_SCORE = 4;
                     const newActor = new Actor(
-                        `actor-${Date.now()}-${Math.floor(Math.random() * 10000)}`,
+                        generateUuid(),
                         parsedData['name'] || data.name,
                         data.avatar || '',
                         parsedData['description'] || data.description,

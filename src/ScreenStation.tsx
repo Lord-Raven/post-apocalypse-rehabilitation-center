@@ -26,7 +26,7 @@ export default class ScreenStation extends ScreenBase {
     };
 
     private gridSize = 6;
-    private cellSize = 240;
+    private cellSize = '10vmin';
 
     constructor(props: StationScreenProps) {
         super(props as any);
@@ -39,8 +39,29 @@ export default class ScreenStation extends ScreenBase {
         // Write into the Stage's layout and force a re-render
         console.log(`this.stage.layout: `, this.stage?.getLayout());
         this.stage?.getLayout()?.setModuleAt(x, y, newModule);
+        this.stage?.incPhase(1);
         this.forceUpdate();
     };
+
+    renderPhaseCircles = (phase: number | undefined) => {
+        const circles = [];
+        for (let i = 0; i < 4; i++) {
+            circles.push(
+                <span
+                    key={`phase_circle_${i}`}
+                    style={{
+                        display: 'inline-block',
+                        width: 12,
+                        height: 12,
+                        marginRight: 6,
+                        borderRadius: '50%',
+                        backgroundColor: i < (phase || 0) ? '#00ff88' : 'rgba(0, 255, 136, 0.3)',
+                    }}
+                ></span>
+            );
+        }
+        return circles;
+    }
 
     renderGrid() {
         const cells: React.ReactNode[] = [];
@@ -54,8 +75,8 @@ export default class ScreenStation extends ScreenBase {
                         className="grid-cell"
                         style={{
                             position: 'absolute',
-                            left: x * this.cellSize,
-                            top: y * this.cellSize,
+                            left: `calc(${x} * ${this.cellSize})`,
+                            top: `calc(${y} * ${this.cellSize})`,
                             width: this.cellSize,
                             height: this.cellSize,
                             boxSizing: 'border-box',
@@ -158,14 +179,13 @@ export default class ScreenStation extends ScreenBase {
                             top: '50%',
                             left: '50%',
                             transform: 'translate(-50%, -50%)',
-                            width: gridSize * cellSize,
-                            height: gridSize * cellSize,
+                            width: `calc(${gridSize} * ${cellSize})`,
+                            height: `calc(${gridSize} * ${cellSize})`,
                             // move the subtle grid onto the centered modules container so lines align with cells
                             backgroundImage: `
                                 linear-gradient(rgba(0, 255, 136, 0.08) 1px, transparent 1px),
                                 linear-gradient(90deg, rgba(0, 255, 136, 0.08) 1px, transparent 1px)
                             `,
-                            backgroundSize: `${this.cellSize}px ${this.cellSize}px`,
                             backgroundPosition: '0 0',
                             backgroundRepeat: 'repeat',
                         }}
@@ -185,6 +205,11 @@ export default class ScreenStation extends ScreenBase {
                     }}
                 >
                     <h2 style={{ color: '#00ff88', marginBottom: '30px' }}>Station Control</h2>
+                    {/* Display stage.getSave().day and stage.getSave().phase (day is displayed as a number, phase is a set of four of filled/unfilled circles) */}
+                    <div style={{ color: '#00ff88', fontSize: '14px' }}>
+                        <p>Day: {this.stage?.getSave().day}</p>
+                        <p>Phase: {this.renderPhaseCircles(this.stage?.getSave().phase)}</p>
+                    </div>
 
                     {['Resources', 'Crew', 'Upgrades', 'Missions'].map(item => (
                         <motion.button
