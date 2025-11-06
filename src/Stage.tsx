@@ -117,7 +117,12 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
                 console.log(searchResults);
                 // Need to do a secondary lookup for each character in searchResults, to get the details we actually care about:
                 const basicCharacterData = searchResults.data?.nodes
-                        .filter((item: any, index: number) => index >= this.pageNumber * this.PER_PAGE && index < (this.pageNumber + 1) * this.PER_PAGE)
+                        // I want to filter to only the current page's worth of results, by index within nodes:
+                        .filter((_: any, index: number) => {
+                            const startIdx = this.pageNumber * this.PER_PAGE;
+                            const endIdx = startIdx + this.PER_PAGE;
+                            return index >= startIdx && index < endIdx;
+                        })
                         .map((item: any) => item.fullPath) || [];
                 this.pageNumber++;
                 console.log(basicCharacterData);
