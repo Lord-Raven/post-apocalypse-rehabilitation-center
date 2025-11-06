@@ -75,7 +75,7 @@ export default class ScreenCryo extends ScreenBase {
 									}}
 								>
 									{/* Use actor.avatarImageUrl */}
-									<div style={{ flex: 1, background: `url(${actor.avatarImageUrl})`, backgroundSize: 'cover', backgroundPosition: 'top-center' }} />
+									<div style={{ flex: 1, background: `url(${actor.avatarImageUrl})`, backgroundSize: 'cover', backgroundPosition: 'center top' }} />
 
 									{/* Label across bottom */}
 									<div style={{ padding: '12px 10px', background: 'rgba(0,0,0,0.45)', color: '#e9fff0', fontWeight: 700, textAlign: 'center', fontSize: 16 }}>
