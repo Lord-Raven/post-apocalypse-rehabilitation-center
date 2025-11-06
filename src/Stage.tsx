@@ -28,13 +28,12 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
     // Flag/promise to avoid redundant concurrent requests for potential actors
     private potentialActorsLoading: boolean = false;
     private potentialActorsLoadPromise?: Promise<void>;
-    readonly FETCH_AT_TIME = 20;
-    readonly PER_PAGE = 4;
-    readonly PAGES = Math.ceil(this.FETCH_AT_TIME / this.PER_PAGE);
-    readonly characterSearchQuery = `https://inference.chub.ai/search?first=${this.FETCH_AT_TIME}&exclude_tags=child%2Cteenager%2Cnarrator&page=1&sort=random&asc=false&include_forks=false&nsfw=true&nsfl=false&nsfw_only=false&require_images=false&require_example_dialogues=false&require_alternate_greetings=false&require_custom_prompt=false&exclude_mine=false&min_tokens=200&max_tokens=10000&require_expressions=false&require_lore=false&mine_first=false&require_lore_embedded=false&require_lore_linked=false&my_favorites=false&username=bananabot&inclusive_or=true&recommended_verified=false&count=false`;
+    readonly FETCH_AT_TIME = 3;
+    readonly MAX_PAGES = 100;
+    readonly characterSearchQuery = `https://inference.chub.ai/search?first=${this.FETCH_AT_TIME}&exclude_tags=child%2Cteenager%2Cnarrator&page={pageNumber}&sort=random&asc=false&include_forks=false&nsfw=true&nsfl=false&nsfw_only=false&require_images=false&require_example_dialogues=false&require_alternate_greetings=false&require_custom_prompt=false&exclude_mine=false&min_tokens=200&max_tokens=10000&require_expressions=false&require_lore=false&mine_first=false&require_lore_embedded=false&require_lore_linked=false&my_favorites=false&inclusive_or=true&recommended_verified=false&count=false`;
     readonly characterDetailQuery = 'https://inference.chub.ai/api/characters/{fullPath}?full=true';
 
-    private pageNumber = Math.floor(Math.random() * this.PAGES);
+    private pageNumber = Math.floor(Math.random() * this.MAX_PAGES);
 
     // Expose a simple grid size (can be tuned)
     public gridSize = DEFAULT_GRID_SIZE;
@@ -112,19 +111,12 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
         this.potentialActorsLoadPromise = (async () => {
             try {
                 // Populate potentialActors; this is loaded with data from a service, calling the characterServiceQuery URL:
-                const response = await fetch(this.characterSearchQuery);
+                const response = await fetch(this.characterSearchQuery.replace('{pageNumber}', this.pageNumber.toString()));
                 const searchResults = await response.json();
                 console.log(searchResults);
                 // Need to do a secondary lookup for each character in searchResults, to get the details we actually care about:
-                const basicCharacterData = searchResults.data?.nodes
-                        // I want to filter to only the current page's worth of results, by index within nodes:
-                        .filter((_: any, index: number) => {
-                            const startIdx = this.pageNumber * this.PER_PAGE;
-                            const endIdx = startIdx + this.PER_PAGE;
-                            return index >= startIdx && index < endIdx;
-                        })
-                        .map((item: any) => item.fullPath) || [];
-                this.pageNumber++;
+                const basicCharacterData = searchResults.data?.nodes.map((item: any) => item.fullPath) || [];
+                this.pageNumber = (this.pageNumber % this.MAX_PAGES) + 1;
                 console.log(basicCharacterData);
 
                 const newActors: Actor[] = await Promise.all(basicCharacterData.map(async (fullPath: string) => {
