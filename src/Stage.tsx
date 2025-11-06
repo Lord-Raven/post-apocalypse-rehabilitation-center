@@ -92,8 +92,10 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
         // Populate potentialActors; this is loaded with data from a service, calling the characterServiceQuery URL:
         const response = await fetch(this.characterSearchQuery);
         const searchResults = await response.json();
+        console.log(searchResults);
         // Need to do a secondary lookup for each character in searchResults, to get the details we actually care about:
-        const basicCharacterData = searchResults.results?.data?.nodes.map((item: any) => item.fullPath) || [];
+        const basicCharacterData = searchResults.data?.nodes.map((item: any) => item.fullPath) || [];
+        console.log(basicCharacterData);
 
         const newActors: Actor[] = await Promise.all(basicCharacterData.map(async (fullPath: string) => {
             const response = await fetch(this.characterDetailQuery.replace('{fullPath}', fullPath));
