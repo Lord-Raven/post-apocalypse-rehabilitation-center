@@ -33,7 +33,7 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
     private potentialActorsLoadPromise?: Promise<void>;
     readonly FETCH_AT_TIME = 5;
     readonly MAX_PAGES = 100;
-    readonly characterSearchQuery = `https://inference.chub.ai/search?first=${this.FETCH_AT_TIME}&exclude_tags=child%2Cteenager%2Cnarrator&page={pageNumber}&sort=random&asc=false&include_forks=false&nsfw=true&nsfl=false&nsfw_only=false&require_images=false&require_example_dialogues=false&require_alternate_greetings=false&require_custom_prompt=false&exclude_mine=false&min_tokens=200&max_tokens=10000&require_expressions=false&require_lore=false&mine_first=false&require_lore_embedded=false&require_lore_linked=false&my_favorites=false&inclusive_or=true&recommended_verified=false&count=false`;
+    readonly characterSearchQuery = `https://inference.chub.ai/search?first=${this.FETCH_AT_TIME}&exclude_tags=child%2Cteenager%2Cnarrator%2Cunderage%2CMultiple%20Character&page={pageNumber}&sort=random&asc=false&include_forks=false&nsfw=true&nsfl=false&nsfw_only=false&require_images=false&require_example_dialogues=false&require_alternate_greetings=false&require_custom_prompt=false&exclude_mine=false&min_tokens=200&max_tokens=10000&require_expressions=false&require_lore=false&mine_first=false&require_lore_embedded=false&require_lore_linked=false&my_favorites=false&inclusive_or=true&recommended_verified=false&count=false`;
     readonly characterDetailQuery = 'https://inference.chub.ai/api/characters/{fullPath}?full=true';
 
     private pageNumber = Math.floor(Math.random() * this.MAX_PAGES);
@@ -172,12 +172,21 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
                         include_history: true, // There won't be any history, but if this is true, the front-end doesn't automatically apply pre-/post-history prompts.
                         max_tokens: 700,
                     });
+                    console.log('Generated character distillation:');
+                    console.log(generatedResponse);
+                    // Parse the generated response into components:
                     const lines = generatedResponse?.result.split('\n').map((line: string) => line.trim()) || [];
                     const parsedData: any = {};
+                    // data could be erroneously formatted (for instance, "1. Name:" or "-Description:"), so be resilient:
                     for (const line of lines) {
-                        const [key, ...rest] = line.split(':');
-                        if (key && rest.length) {
-                            parsedData[key.toLowerCase()] = rest.join(':').trim();
+                        const colonIndex = line.indexOf(':');
+                        if (colonIndex > 0) {
+                            // Find last word before : and use that as the key. Ignore 1., -, *. There might not be a space before the word:
+                            const keyMatch = line.substring(0, colonIndex).trim().match(/(\w+)$/);
+                            if (!keyMatch) continue;
+                            const key = keyMatch[1].toLowerCase();
+                            const value = line.substring(colonIndex + 1).trim();
+                            parsedData[key] = value;
                         }
                     }
                     // Create an Actor instance from the parsed data; ID should be generated uniquely
