@@ -157,16 +157,17 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
                             `After carefully considering this description, provide a concise breakdown in the following format:\n` +
                             `NAME: The character's full, given name.\n` +
                             `DESCRIPTION: A vivid description of the character's physical appearance, attire, and any distinguishing features.\n` +
-                            `PERSONALITY: A brief summary of the character's key personality traits and behaviors.\n` +
+                            `PROFILE: A brief summary of the character's key personality traits and behaviors.\n` +
                             `CONDITION: 1-10 scoring of their relative physical condition, with 10 being peak condition and 1 being critically impaired.\n` +
                             `RESILIENCE: 1-10 scoring of their mental resilience, with 10 being highly resilient and 1 being easily broken.\n` +
-                            `CAPABILITY: 1-10 scoring of their overall capability to contribute meaningfully to the crew, with 10 being highly capable and 1 being a liability.\n` +
-                            `INTELLIGENCE: 1-10 scoring of their intelligence level, with 10 being genius-level intellect and 1 being below average intelligence.\n` +
+                            `CAPABILITY: 1-10 scoring of their overall capability to contribute meaningfully to the crew, with 10 being highly skilled and 1 being a liability.\n` +
+                            `INTELLIGENCE: 1-10 scoring of their intelligence level, with 10 being genius-level intellect and 1 being dumb as rocks.\n` +
                             `CHARISMA: 1-10 scoring of their personality appeal, with 10 being extremely charming and 1 being off-putting.\n` +
                             `SEXUALITY: 1-10 scoring of their physical lustiness, with 10 being abjectly lewd and 1 being utterly assexual.\n` +
-                            `COMPLIANCE: 1-10 scoring of their willingness to comply with authority, with 10 being highly compliant and 1 being rebellious.\n` +
+                            `COMPLIANCE: 1-10 scoring of their willingness to comply with authority, with 10 being unquestioningly obedient and 1 being rebellious.\n` +
                             `#END#`,
                         stop: ['#END'],
+                        include_history: true, // There won't be any history, but if this is true, the front-end doesn't automatically apply pre-/post-history prompts.
                         max_tokens: 700,
                     });
                     const lines = generatedResponse?.result.split('\n').map((line: string) => line.trim()) || [];
@@ -183,8 +184,8 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
                         generateUuid(),
                         parsedData['name'] || data.name,
                         data.avatar || '',
-                        parsedData['description'] || data.description,
-                        parsedData['personality'] || data.personality,
+                        parsedData['description'] || '',
+                        parsedData['profile'] || '',
                         {}, 
                         parseInt(parsedData['capability']) || DEFAULT_TRAIT_SCORE,
                         parseInt(parsedData['intelligence']) || DEFAULT_TRAIT_SCORE,

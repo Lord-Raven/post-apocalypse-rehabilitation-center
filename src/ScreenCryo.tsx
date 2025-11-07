@@ -9,7 +9,7 @@ import { Stage } from './Stage';
 import Actor from './Actor';
 
 interface ScreenCryoProps {
-	stage?: any;
+	stage: Stage;
 	candidates: Actor[]; // array of labels for each cryo pod
 	onAccept?: (selected: Actor | null, stage: Stage) => void;
 	onCancel?: (stage: Stage) => void;
@@ -20,8 +20,8 @@ interface ScreenCryoState {
 }
 
 export default class ScreenCryo extends ScreenBase {
-	props: ScreenCryoProps;
 	state: ScreenCryoState = { selectedIndex: null };
+	props: ScreenCryoProps;
 
 	constructor(props: ScreenCryoProps) {
 		super(props as any);
@@ -35,16 +35,26 @@ export default class ScreenCryo extends ScreenBase {
 	accept = () => {
 		const { selectedIndex } = this.state;
 		const selected = selectedIndex != null ? this.props.candidates[selectedIndex] : null;
-		if (this.props.onAccept) this.props.onAccept(selected, this.props.stage);
+		const firstRoom = this.stage.getSave().layout.getModulesWhere(m => m?.type === 'quarters' && !m?.ownerId)[0] || null;
+		if (selected && firstRoom) {
+			// Assign the selected actor to the first available room
+			firstRoom.ownerId = selected.id;
+			selected.locationId = firstRoom.id;
+			this.stage.getSave().actors[selected.id] = selected;
+			this.stage.potentialActors = this.stage.potentialActors.filter(a => a.id !== selected.id);
+			// Possibly set other properties on the selected actor as needed
+		}
+		if (this.props.onAccept) this.props.onAccept(selected, this.stage);
 	};
 
 	cancel = () => {
-		if (this.props.onCancel) this.props.onCancel(this.props.stage);
+		if (this.props.onCancel) this.props.onCancel(this.stage);
 	};
 
 	render(): React.ReactNode {
 		const pods = this.props.candidates || [];
 		const { selectedIndex } = this.state;
+		const availableRooms = this.stage.getSave().layout.getModulesWhere(m => m?.type === 'quarters' && !m?.ownerId) || [];
 
 		return (
 			<div style={{ display: 'flex', flexDirection: 'column', height: '100vh', width: '100vw' }}>
@@ -137,9 +147,9 @@ export default class ScreenCryo extends ScreenBase {
 							fontWeight: 800,
 							cursor: selectedIndex != null ? 'pointer' : 'not-allowed'
 						}}
-						disabled={selectedIndex == null}
+						disabled={selectedIndex == null || availableRooms.length === 0}
 					>
-						Accept
+						{availableRooms.length === 0 ? 'No Available Quarters' : (selectedIndex == null ? 'Select a Candidate' : 'Accept Candidate')}
 					</motion.button>
 				</div>
 			</div>

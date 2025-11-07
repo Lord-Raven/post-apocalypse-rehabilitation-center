@@ -95,6 +95,19 @@ export class Layout {
         this.onChange?.(this.grid);
     }
 
+    getModulesWhere(predicate: (module: Module) => boolean): Module[] {
+        const modules: Module[] = [];
+        for (let y = 0; y < this.gridSize; y++) {
+            for (let x = 0; x < this.gridSize; x++) {
+                const module = this.grid[y][x];
+                if (module && predicate(module)) {
+                    modules.push(module);
+                }
+            }
+        }
+        return modules;
+    }
+
     getModuleAt(x: number, y: number): Module | null {
         return this.grid[y]?.[x] ?? null;
     }

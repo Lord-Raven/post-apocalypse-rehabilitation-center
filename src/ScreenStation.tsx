@@ -12,23 +12,23 @@ import { Layout, MODULE_DEFAULTS, Module, createModule } from './Module';
  * Extends ScreenBase.
  */
 
-interface StationScreenProps {
+interface ScreenStationProps {
     // will implicitly accept ScreenBaseProps.stage
 }
 
-interface StationScreenState {
+interface ScreenStationState {
     selectedMenu: string;
 }
 
 export default class ScreenStation extends ScreenBase {
-    state: StationScreenState = {
+    state: ScreenStationState = {
         selectedMenu: 'resources',
     };
 
     private gridSize = 6;
     private cellSize = '10vmin';
 
-    constructor(props: StationScreenProps) {
+    constructor(props: ScreenStationProps) {
         super(props as any);
         // this.stage is now available from ScreenBase (if provided by parent)
     }
@@ -239,7 +239,6 @@ export default class ScreenStation extends ScreenBase {
 
                     <div style={{ marginTop: '40px', color: '#00ff88', fontSize: '14px' }}>
                         <p>Selected: {selectedMenu}</p>
-                        <p>Modules: {(this.stage?.layout?.getLayout().flat().filter((m: Module) => m).length) || 0}</p>
                     </div>
                 </div>
             </div>

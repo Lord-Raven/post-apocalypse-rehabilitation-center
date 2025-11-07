@@ -3,9 +3,10 @@ import { EmotionPack } from "./Emotion";
 class Actor {
     id: string;
     name: string;
+    locationId: string;
     avatarImageUrl: string;
-    physicalDescription: string;
-    personalityDescription: string;
+    description: string;
+    profile: string;
     emotionPack: EmotionPack;
 
     // Characters are candidates for a rehabilitation program; the are coming into the program from a vast range of past life situations.
@@ -20,13 +21,13 @@ class Actor {
     sexuality: number; // Sexuality grade 1-10
     compliance: number; // Compliance grade 1-10
 
-    constructor(id: string, name: string, avatarImageUrl: string, physicalDescription: string, personalityDescription: string, emotionPack: EmotionPack, 
+    constructor(id: string, name: string, avatarImageUrl: string, description: string, profile: string, emotionPack: EmotionPack, 
             capability: number, intelligence: number, condition: number, resilience: number, charisma: number, sexuality: number, compliance: number) {
         this.id = id;
         this.name = name;
         this.avatarImageUrl = avatarImageUrl;
-        this.physicalDescription = physicalDescription;
-        this.personalityDescription = personalityDescription;
+        this.description = description;
+        this.profile = profile;
         this.emotionPack = emotionPack;
         this.capability = capability;
         this.intelligence = intelligence;
@@ -35,6 +36,7 @@ class Actor {
         this.charisma = charisma;
         this.sexuality = sexuality;
         this.compliance = compliance;
+        this.locationId = '';
     }
 
     scoreToGrade(score: number): string {
