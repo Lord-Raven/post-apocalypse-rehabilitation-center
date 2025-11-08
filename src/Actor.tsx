@@ -90,7 +90,9 @@ export async function loadReserveActor(fullPath: string, stage: Stage): Promise<
     const lines = generatedResponse?.result.split('\n').map((line: string) => line.trim()) || [];
     const parsedData: any = {};
     // data could be erroneously formatted (for instance, "1. Name:" or "-Description:"), so be resilient:
-    for (const line of lines) {
+    for (let line of lines) {
+        // strip ** from line:
+        line = line.replace(/\*\*/g, '');
         const colonIndex = line.indexOf(':');
         if (colonIndex > 0) {
             // Find last word before : and use that as the key. Ignore 1., -, *. There might not be a space before the word:
@@ -137,14 +139,14 @@ export async function populateActorImages(actor: Actor, stage: Stage): Promise<v
             console.log(`Generating neutral emotion image for actor ${actor.name} from description`);
             // Use stage.makeImage to create a neutral expression based on the description
             imageUrl = await stage.makeImage({
-                prompt: `A high-quality portrait of a character with the following description: ${actor.description}. The character should have a neutral expression.`
+                prompt: `A high-quality visual-novel-style waist-up, upper-body portrait of a character with the following description: ${actor.description}\nThe character should have a neutral expression.`
             }, '');
         }
 
         // Use stage.makeImageFromImage to create a neutral expression based on imageUrl or the avatar image
         imageUrl = await stage.makeImageFromImage({
             image: imageUrl || actor.avatarImageUrl,
-            prompt: `Create a waist-up standing portrait of the character described as: ${actor.description}\nThey should have a calm and neutral (yet characteristic) expression. On a white background.`,
+            prompt: `Create a waist-up, upper-body portrait of this character, described as: ${actor.description}\nThey should have a calm and neutral (yet characteristic) expression. On a white background.`,
             remove_background: true,
             transfer_type: 'edit'
         }, `actors/${actor.id}/neutral.png`, '');
