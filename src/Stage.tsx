@@ -2,11 +2,12 @@ import {ReactElement, useEffect, useState} from "react";
 import {StageBase, StageResponse, InitialData, Message} from "@chub-ai/stages-ts";
 import {LoadResponse} from "@chub-ai/stages-ts/dist/types/load";
 import ScreenStation from "./ScreenStation";
-import Actor from "./Actor";
+import Actor, { loadReserveActor, populateActorImages } from "./Actor";
 import { DEFAULT_GRID_SIZE, Layout, createModule } from './Module';
 import { ScreenBase } from "./ScreenBase";
 import ScreenCryo from "./ScreenCryo";
-import { v4 as generateUuid } from 'uuid';
+import {Client} from "@gradio/client";
+
 
 
 type MessageStateType = any;
@@ -28,10 +29,10 @@ type SaveType = {
 export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateType, ConfigType> {
 
     private saves: SaveType[];
-    // Flag/promise to avoid redundant concurrent requests for potential actors
-    private potentialActorsLoading: boolean = false;
-    private potentialActorsLoadPromise?: Promise<void>;
-    readonly FETCH_AT_TIME = 5;
+    // Flag/promise to avoid redundant concurrent requests for reserve actors
+    private reserveActorsLoadPromise?: Promise<void>;
+    readonly RESERVE_ACTORS = 5;
+    readonly FETCH_AT_TIME = 15;
     readonly MAX_PAGES = 100;
     readonly characterSearchQuery = `https://inference.chub.ai/search?first=${this.FETCH_AT_TIME}&exclude_tags=child%2Cteenager%2Cnarrator%2Cunderage%2CMultiple%20Character&page={pageNumber}&sort=random&asc=false&include_forks=false&nsfw=true&nsfl=false&nsfw_only=false&require_images=false&require_example_dialogues=false&require_alternate_greetings=false&require_custom_prompt=false&exclude_mine=false&min_tokens=200&max_tokens=10000&require_expressions=false&require_lore=false&mine_first=false&require_lore_embedded=false&require_lore_linked=false&my_favorites=false&inclusive_or=true&recommended_verified=false&count=false`;
     readonly characterDetailQuery = 'https://inference.chub.ai/api/characters/{fullPath}?full=true';
@@ -44,10 +45,13 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
     // screen should be a type that extends ScreenBase; not an instance but a class reference to allow instantiation. For instance, screen should be ScreenStation by default.
     screen: typeof ScreenBase = ScreenStation;
 
-    potentialActors: Actor[] = [];
+    reserveActors: Actor[] = [];
 
     // Internal render callback registered by the UI wrapper so the Stage can request re-renders when internal state (like `screen`) changes.
     private renderCallback?: () => void;
+
+    emotionPipeline: any;
+    imagePipeline: any;
 
     constructor(data: InitialData<InitStateType, ChatStateType, MessageStateType, ConfigType>) {
 
@@ -72,8 +76,8 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
             this.saves.push({ messageTree: null as any, currentMessageId: '', actors: {}, layout: layout, day: 1, phase: 1 });
         }
 
-        // initialize Layout manager for the active save (index 0)
-        const initial = this.saves[0].layout;
+        this.emotionPipeline = null;
+        this.imagePipeline = null;
     }
 
     /**
@@ -113,6 +117,13 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
 
     async load(): Promise<Partial<LoadResponse<InitStateType, ChatStateType, MessageStateType>>> {
 
+        try {
+            this.emotionPipeline = await Client.connect("ravenok/emotions");
+            this.imagePipeline = await Client.connect("ravenok/Depth-Anything-V2");
+        } catch (exception: any) {
+            console.error(`Error loading HuggingFace pipelines, error: ${exception}`);
+        }
+
         return {
             success: true,
             error: null,
@@ -121,109 +132,45 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
         };
     }
 
-    async loadPotentialActors() {
+
+
+    async loadReserveActors() {
         // If a load is already in-flight, return the existing promise to dedupe concurrent calls
-        if (this.potentialActorsLoadPromise) return this.potentialActorsLoadPromise;
+        if (this.reserveActorsLoadPromise) return this.reserveActorsLoadPromise;
 
-        this.potentialActorsLoading = true;
-        this.potentialActorsLoadPromise = (async () => {
+        this.reserveActorsLoadPromise = (async () => {
             try {
-                // Populate potentialActors; this is loaded with data from a service, calling the characterServiceQuery URL:
-                const response = await fetch(this.characterSearchQuery.replace('{pageNumber}', this.pageNumber.toString()));
-                const searchResults = await response.json();
-                console.log(searchResults);
-                // Need to do a secondary lookup for each character in searchResults, to get the details we actually care about:
-                const basicCharacterData = searchResults.data?.nodes.map((item: any) => item.fullPath) || [];
-                this.pageNumber = (this.pageNumber % this.MAX_PAGES) + 1;
-                console.log(basicCharacterData);
+                while (this.reserveActors.length < this.RESERVE_ACTORS) {
+                    // Populate reserveActors; this is loaded with data from a service, calling the characterServiceQuery URL:
+                    const response = await fetch(this.characterSearchQuery.replace('{pageNumber}', this.pageNumber.toString()));
+                    const searchResults = await response.json();
+                    console.log(searchResults);
+                    // Need to do a secondary lookup for each character in searchResults, to get the details we actually care about:
+                    const basicCharacterData = searchResults.data?.nodes.filter((item: string, index: number) => index < this.RESERVE_ACTORS - this.reserveActors.length).map((item: any) => item.fullPath) || [];
+                    this.pageNumber = (this.pageNumber % this.MAX_PAGES) + 1;
+                    console.log(basicCharacterData);
 
-                const newActors: Actor[] = await Promise.all(basicCharacterData.map(async (fullPath: string) => {
-                    const response = await fetch(this.characterDetailQuery.replace('{fullPath}', fullPath));
-                    const item = await response.json();
-                    const name = item.node.definition.name.replaceAll('{{char}}', item.node.definition.name).replaceAll('{{user}}', 'Individual X');
-                    const data = {
-                        name,
-                        description: item.node.definition.description.replaceAll('{{char}}', name).replaceAll('{{user}}', 'Individual X'),
-                        personality: item.node.definition.personality.replaceAll('{{char}}', name).replaceAll('{{user}}', 'Individual X'),
-                        avatar: item.node.max_res_url
-                    };
-                    // Take this data and use text generation to get an updated distillation of this character, including a physical description.
-                    const generatedResponse = await this.generator.textGen({
-                        prompt: `{{messages}}\n\nThis is a preparatory request for formatted content for a video game set in a futuristic multiverse setting that pulls characters from across eras and timelines and settings. ` +
-                            `The following is a description for a random character or scenario from this multiverse's past. This response must digest and distill this description to suit the game's narrative, ` +
-                            `in which this character has been rematerialized into a new timeline. The provided description may reference 'Individual X' who no longer exists in this timeline; ` +
-                            `you should give this individual a name if they are relevant to the distillation. ` +
-                            `In addition to name, physical description, and personality, you will score the character with a simple 1-10 for the following traits: CONDITION, RESILIENCE, BEAUTY, CHARISMA, CAPABILITY, INTELLIGENCE, and COMPLIANCE.\n` +
-                            `Bear in mind the character's current state and not necessarily their original potential when scoring these traits; some characters may not respond well to being essentially resurrected into a new timeline.\n\n` +
-                            `Original details about ${data.name}:\nDescription: ${data.description} ${data.personality}\n\n` +
-                            `After carefully considering this description, provide a concise breakdown in the following format:\n` +
-                            `NAME: The character's full, given name.\n` +
-                            `DESCRIPTION: A vivid description of the character's physical appearance, attire, and any distinguishing features.\n` +
-                            `PROFILE: A brief summary of the character's key personality traits and behaviors.\n` +
-                            `CONDITION: 1-10 scoring of their relative physical condition, with 10 being peak condition and 1 being critically impaired.\n` +
-                            `RESILIENCE: 1-10 scoring of their mental resilience, with 10 being highly resilient and 1 being easily broken.\n` +
-                            `CAPABILITY: 1-10 scoring of their overall capability to contribute meaningfully to the crew, with 10 being highly skilled and 1 being a liability.\n` +
-                            `INTELLIGENCE: 1-10 scoring of their intelligence level, with 10 being genius-level intellect and 1 being dumb as rocks.\n` +
-                            `CHARISMA: 1-10 scoring of their personality appeal, with 10 being extremely charming and 1 being off-putting.\n` +
-                            `SEXUALITY: 1-10 scoring of their physical lustiness, with 10 being abjectly lewd and 1 being utterly assexual.\n` +
-                            `COMPLIANCE: 1-10 scoring of their willingness to comply with authority, with 10 being unquestioningly obedient and 1 being rebellious.\n` +
-                            `#END#`,
-                        stop: ['#END'],
-                        include_history: true, // There won't be any history, but if this is true, the front-end doesn't automatically apply pre-/post-history prompts.
-                        max_tokens: 700,
-                    });
-                    console.log('Generated character distillation:');
-                    console.log(generatedResponse);
-                    // Parse the generated response into components:
-                    const lines = generatedResponse?.result.split('\n').map((line: string) => line.trim()) || [];
-                    const parsedData: any = {};
-                    // data could be erroneously formatted (for instance, "1. Name:" or "-Description:"), so be resilient:
-                    for (const line of lines) {
-                        const colonIndex = line.indexOf(':');
-                        if (colonIndex > 0) {
-                            // Find last word before : and use that as the key. Ignore 1., -, *. There might not be a space before the word:
-                            const keyMatch = line.substring(0, colonIndex).trim().match(/(\w+)$/);
-                            if (!keyMatch) continue;
-                            const key = keyMatch[1].toLowerCase();
-                            const value = line.substring(colonIndex + 1).trim();
-                            parsedData[key] = value;
-                        }
-                    }
-                    // Create an Actor instance from the parsed data; ID should be generated uniquely
-                    const DEFAULT_TRAIT_SCORE = 4;
-                    const newActor = new Actor(
-                        generateUuid(),
-                        parsedData['name'] || data.name,
-                        data.avatar || '',
-                        parsedData['description'] || '',
-                        parsedData['profile'] || '',
-                        {}, 
-                        parseInt(parsedData['capability']) || DEFAULT_TRAIT_SCORE,
-                        parseInt(parsedData['intelligence']) || DEFAULT_TRAIT_SCORE,
-                        parseInt(parsedData['condition']) || DEFAULT_TRAIT_SCORE,
-                        parseInt(parsedData['resilience']) || DEFAULT_TRAIT_SCORE,
-                        parseInt(parsedData['charisma']) || DEFAULT_TRAIT_SCORE,
-                        parseInt(parsedData['sexuality']) || DEFAULT_TRAIT_SCORE,
-                        parseInt(parsedData['compliance']) || DEFAULT_TRAIT_SCORE,
-                    );
-                    console.log(`Loaded new actor: ${newActor.name} (ID: ${newActor.id})`);
-                    console.log(newActor);
-                    return newActor;
-                }));
+                    const newActors: Actor[] = await Promise.all(basicCharacterData.map(async (fullPath: string) => {
+                        return loadReserveActor(fullPath, this);
+                    }));
 
-                this.potentialActors = [...this.potentialActors, ...newActors];
+                    this.reserveActors = [...this.reserveActors, ...newActors];
+                }
                 // Notify the UI wrapper that actors are now loaded so it can re-render
-                this.requestUpdate();
+                // this.requestUpdate();
             } catch (err) {
-                console.error('Error loading potential actors', err);
+                console.error('Error loading reserve actors', err);
             } finally {
-                this.potentialActorsLoading = false;
                 // clear the promise so future loads can be attempted if needed
-                this.potentialActorsLoadPromise = undefined;
+                this.reserveActorsLoadPromise = undefined;
             }
         })();
+        for (const actor of this.reserveActors) {
+            // Don't await. Just kick these off.
+            populateActorImages(actor, this);
+        }
 
-        return this.potentialActorsLoadPromise;
+        return this.reserveActorsLoadPromise;
     }
 
     getLayout(): Layout {
@@ -257,6 +204,53 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
         };
     }
 
+        async makeImage(imageRequest: Object, defaultUrl: string): Promise<string> {
+        return (await this.generator.makeImage(imageRequest))?.url ?? defaultUrl;
+    }
+
+    async makeImageFromImage(imageToImageRequest: any, storageName: string, defaultUrl: string): Promise<string> {
+
+        const imageUrl = (await this.generator.imageToImage(imageToImageRequest))?.url ?? defaultUrl;
+        if (imageToImageRequest.remove_background && imageUrl != defaultUrl && this.imagePipeline) {
+            try {
+                return this.removeBackground(imageUrl, storageName);
+            } catch (exception: any) {
+                console.error(`Error removing background from image, error: ${exception}`);
+                return imageUrl;
+            }
+        }
+        return imageUrl;
+    }
+
+    async removeBackground(imageUrl: string, storageName: string) {
+        if (!imageUrl || !this.imagePipeline) return imageUrl;
+        console.log(`removeBackground(${imageUrl}, ${storageName})`);
+        try {
+            const response = await fetch(imageUrl);
+            const backgroundlessResponse = await this.imagePipeline.predict("/remove_background", {image: await response.blob()});
+            // Depth URL is the HF URL; back it up to Chub by creating a File from the image data:
+            return await this.uploadBlob(storageName, await (await fetch(backgroundlessResponse.data[1].url)).blob(), {type: 'image/png'});
+        } catch (error) {
+            console.error(`Error removing background or storing result: ${error}`);
+            return imageUrl;
+        }
+    }
+
+    async uploadBlob(fileName: string, blob: Blob, propertyBag: BlobPropertyBag): Promise<string> {
+        const file: File = new File([blob], fileName, propertyBag);
+        return this.uploadFile(fileName, file);
+    }
+
+    async uploadFile(fileName: string, file: File): Promise<string> {
+        // Don't honor filename; want to overwrite existing content that may have had a different actual name.
+        const updateResponse = await this.storage.set(fileName, file).forUser();
+        if (!updateResponse.data || updateResponse.data.length == 0) {
+            throw new Error('Failed to upload file to storage.');
+        }
+        return updateResponse.data[0].value;
+    }
+
+
     render(): ReactElement {
 
         // Render a small functional wrapper component that can register a render callback
@@ -275,11 +269,11 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
             // If there are no potential actors, kick off a load — but only if a load is not already in progress.
             useEffect(() => {
                 let cancelled = false;
-                if (stage.potentialActors.length === 0 && !(stage as any).potentialActorsLoading) {
+                if (stage.reserveActors.length === 0 && !(stage as any).potentialActorsLoading) {
                     // call but don't block render
                     (async () => {
                         try {
-                            await stage.loadPotentialActors();
+                            await stage.loadReserveActors();
                         } catch (err) {
                             // swallow — loadPotentialActors already logs errors
                             if (!cancelled) console.debug('loadPotentialActors failed', err);
@@ -287,7 +281,7 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
                     })();
                 }
                 return () => { cancelled = true; };
-            }, [stage, stage.potentialActors.length]);
+            }, [stage, stage.reserveActors.length]);
 
             return <div style={{
                 width: '100vw',
@@ -301,7 +295,7 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
                 {stage.screen == ScreenCryo && 
                     <ScreenCryo
                         stage={stage}
-                        candidates={this.potentialActors}
+                        candidates={this.reserveActors}
                         onAccept={(selected, s) => {
                             console.log(`onAccept(${selected})`);
                             // use stage API so UI will update

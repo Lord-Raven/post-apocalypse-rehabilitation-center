@@ -41,7 +41,7 @@ export default class ScreenCryo extends ScreenBase {
 			firstRoom.ownerId = selected.id;
 			selected.locationId = firstRoom.id;
 			this.stage.getSave().actors[selected.id] = selected;
-			this.stage.potentialActors = this.stage.potentialActors.filter(a => a.id !== selected.id);
+			this.stage.reserveActors = this.stage.reserveActors.filter(a => a.id !== selected.id);
 			// Possibly set other properties on the selected actor as needed
 		}
 		if (this.props.onAccept) this.props.onAccept(selected, this.stage);
@@ -80,7 +80,7 @@ export default class ScreenCryo extends ScreenBase {
 										alignItems: 'stretch',
 										borderRadius: 12,
 										overflow: 'hidden',
-										background: `url(${actor.avatarImageUrl})`, backgroundSize: 'cover', backgroundPosition: 'center top',
+										background: `url(${actor.emotionPack['neutral'] || actor.avatarImageUrl})`, backgroundSize: 'cover', backgroundPosition: 'center top',
 										border: isSelected ? '5px solid #ffffff' : '3px solid #00ff88',
 										boxShadow: isSelected ? '0 8px 30px rgba(0,255,136,0.12)' : '0 6px 18px rgba(0,0,0,0.4)'
 									}}
