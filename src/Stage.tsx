@@ -73,7 +73,7 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
             layout.setModuleAt(DEFAULT_GRID_SIZE/2, DEFAULT_GRID_SIZE/2, createModule('command', { id: `command-${DEFAULT_GRID_SIZE/2}-${DEFAULT_GRID_SIZE/2}`, connections: [], attributes: {} }));
             layout.setModuleAt(DEFAULT_GRID_SIZE/2 - 1, DEFAULT_GRID_SIZE/2, createModule("common", { id: `common-${DEFAULT_GRID_SIZE/2 - 1}-${DEFAULT_GRID_SIZE/2}`, connections: [], attributes: {} }));
             layout.setModuleAt(DEFAULT_GRID_SIZE/2, DEFAULT_GRID_SIZE/2 - 1, createModule("generator", { id: `generator-${DEFAULT_GRID_SIZE/2}-${DEFAULT_GRID_SIZE/2 - 1}`, connections: [], attributes: {} }));
-            this.saves.push({ messageTree: null as any, currentMessageId: '', actors: {}, layout: layout, day: 1, phase: 1 });
+            this.saves.push({ messageTree: null as any, currentMessageId: '', actors: {}, layout: layout, day: 1, phase: 0 });
         }
 
         this.emotionPipeline = null;
