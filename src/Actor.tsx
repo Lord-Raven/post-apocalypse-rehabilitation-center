@@ -127,14 +127,16 @@ export async function loadReserveActor(fullPath: string, stage: Stage): Promise<
 }
 
 export async function populateActorImages(actor: Actor, stage: Stage): Promise<void> {
+    console.log(`Populating images for actor ${actor.name} (ID: ${actor.id})`);
     // If the actor has no neutral emotion image in their emotion pack, generate one based on their description or from the existing avatar image
     if (!actor.emotionPack['neutral']) {
+        console.log(`Generating neutral emotion image for actor ${actor.name}`);
         let imageUrl = '';
         if (!actor.avatarImageUrl) {
+            console.log(`Generating neutral emotion image for actor ${actor.name} from description`);
             // Use stage.makeImage to create a neutral expression based on the description
             imageUrl = await stage.makeImage({
-                prompt: `A high-quality portrait of a character with the following description: ${actor.description}. The character should have a neutral expression.`,
-                remove_background: true,
+                prompt: `A high-quality portrait of a character with the following description: ${actor.description}. The character should have a neutral expression.`
             }, '');
         }
 
