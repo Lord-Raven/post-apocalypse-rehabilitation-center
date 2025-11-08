@@ -115,12 +115,12 @@ export default class ScreenStation extends ScreenBase {
                                     textShadow: '0 1px 0 rgba(0,0,0,0.6)'
                                 }}
                             >
-                                <div style={{ position: 'absolute', left: '50%', transform: 'translateX(-50%)' }}>
+                                <div style={{ position: 'relative', left: '50%', transform: 'translateX(-50%)' }}>
                                     {/*Find any actors assigned to this module (by module ID in their locationId), display their image at 60% of the height of the containing module, aligned to the bottom of the module */}
                                     {Object.values(this.stage.getSave().actors).filter(actor => actor.locationId === module.id).map((actor, index) => {
                                         const actorsPresent = Object.values(this.stage.getSave().actors).filter(actor => actor.locationId === module.id).length;
                                         /* Spacing each actor image evenly across the bottom of the module; they may overlap. */
-                                        return <img key={actor.id} src={actor.emotionPack['neutral']} alt={actor.name} style={{ height: `calc(${this.cellSize} * 0.6)`, objectFit: 'contain', left: `${index * (80 / actorsPresent)}%`}} />
+                                        return <img key={actor.id} src={actor.emotionPack['neutral']} alt={actor.name} style={{ position: 'absolute', height: `calc(${this.cellSize} * 0.6)`, objectFit: 'contain', left: `${index * (80 / actorsPresent)}%`}} />
                                     })}
                                     {/* Give module label a shaded strip of background and align near the bottom of the module */}
                                     <div style={{ textAlign: 'center', pointerEvents: 'none', background: 'rgba(0, 0, 0, 0.5)', padding: '2px 4px', borderRadius: '4px', position: 'absolute', bottom: '6px'}}>
