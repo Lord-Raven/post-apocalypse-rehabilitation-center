@@ -59,6 +59,10 @@ export async function loadReserveActor(fullPath: string, stage: Stage): Promise<
         personality: item.node.definition.personality.replaceAll('{{char}}', dataName).replaceAll('{{user}}', 'Individual X'),
         avatar: item.node.max_res_url
     };
+    // if data.name, data.description, or data.personality contain any "{" or "}" at this point, discard this actor by returning null
+    if (data.name.includes('{') || data.name.includes('}') || data.description.includes('{') || data.description.includes('}') || data.personality.includes('{') || data.personality.includes('}')) {
+        return null;
+    }
     // Take this data and use text generation to get an updated distillation of this character, including a physical description.
     const generatedResponse = await stage.generator.textGen({
         prompt: `{{messages}}\n\nThis is a preparatory request for formatted content for a video game set in a futuristic multiverse setting that pulls characters from across eras and timelines and settings. ` +
