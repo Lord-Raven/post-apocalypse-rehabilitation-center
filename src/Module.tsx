@@ -53,7 +53,6 @@ export interface Module<T extends ModuleType = ModuleType> {
     type: T;
     connections?: string[];
     ownerId?: string;
-    guestIds?: string[];
     // merged intrinsic properties for this module (defaults from type + instance overrides)
     attributes?: Partial<ModuleIntrinsic> & { [key: string]: any };
 }

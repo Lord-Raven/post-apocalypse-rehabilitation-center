@@ -9,6 +9,10 @@ html, body, #root {
   margin: 0;
   padding: 0;
 }
+/* make box-sizing consistent so borders/padding don't add to element width and cause scrollbars */
+*, *::before, *::after {
+  box-sizing: border-box;
+}
 
 /* Stylized stat/grade display: jauntily-angled large letters with sharp drop shadow */
 .stat-list {

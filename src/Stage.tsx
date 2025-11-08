@@ -109,6 +109,12 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
             save.phase = 1;
             save.day += 1;
         }
+
+        // When incrementing phase, maybe move some actors around in the layout.
+        for (const actorId in save.actors) {
+            const actor = save.actors[actorId];
+            actor.locationId = save.layout.getModulesWhere(m => ['command', 'common', 'generator'].includes(m.type) || m.ownerId == actorId)![0]?.id || '';
+        }
     }
 
     getSave(): SaveType {

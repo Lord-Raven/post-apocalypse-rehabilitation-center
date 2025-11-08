@@ -52,6 +52,7 @@ export async function loadReserveActor(fullPath: string, stage: Stage): Promise<
     const response = await fetch(stage.characterDetailQuery.replace('{fullPath}', fullPath));
     const item = await response.json();
     const dataName = item.node.definition.name.replaceAll('{{char}}', item.node.definition.name).replaceAll('{{user}}', 'Individual X');
+    const bannedWords = ['underage', 'minor', 'child', 'infant', 'baby', 'toddler', 'youngster', 'highschool', 'teen', 'adolescent'];
     const data = {
         name: dataName,
         description: item.node.definition.description.replaceAll('{{char}}', dataName).replaceAll('{{user}}', 'Individual X'),
@@ -120,7 +121,7 @@ export async function loadReserveActor(fullPath: string, stage: Stage): Promise<
     console.log(`Loaded new actor: ${newActor.name} (ID: ${newActor.id})`);
     console.log(newActor);
     // If name, description, or profile are missing, discard this actor by returning null
-    if (newActor.name && newActor.description && newActor.profile) {
+    if (newActor.name && newActor.description && newActor.profile && bannedWords.every(word => !newActor.description.toLowerCase().includes(word))) {
         return newActor;
     }
     return null;
