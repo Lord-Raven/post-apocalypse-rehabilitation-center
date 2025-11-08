@@ -145,6 +145,7 @@ export async function populateActorImages(actor: Actor, stage: Stage): Promise<v
             image: imageUrl || actor.avatarImageUrl,
             prompt: `Create a waist-up standing portrait of the character described as: ${actor.description}\nThey should have a calm and neutral (yet characteristic) expression. On a white background.`,
             remove_background: true,
+            transfer_type: 'edit'
         }, `actors/${actor.id}/neutral.png`, '');
         console.log(`Generated neutral emotion image for actor ${actor.name} from avatar image: ${imageUrl || ''}`);
         
