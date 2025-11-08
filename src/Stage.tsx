@@ -154,7 +154,7 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
                         return loadReserveActor(fullPath, this);
                     }));
 
-                    this.reserveActors = [...this.reserveActors, ...newActors];
+                    this.reserveActors = [...this.reserveActors, ...newActors.filter(a => a !== null)];
                 }
                 // Notify the UI wrapper that actors are now loaded so it can re-render
                 // this.requestUpdate();
