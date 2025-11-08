@@ -55,6 +55,7 @@ export default class ScreenStation extends ScreenBase {
                         height: i == phase ? '0.5rem' :'1rem',
                         marginRight: i == phase ? '0.5rem' :'0.25rem',
                         marginLeft: i == phase ? '0.5rem' :'0.25rem',
+                        marginBottom: i == phase ? '0.25rem' : '0rem',
                         borderRadius: '50%',
                         backgroundColor: i <= (phase || 0) ? '#00ff88' : 'rgba(0, 255, 136, 0.3)',
                     }}
@@ -104,30 +105,70 @@ export default class ScreenStation extends ScreenBase {
                                     border: '3px solid rgba(0, 255, 136, 0.9)',
                                     borderRadius: 10,
                                     background: `url(${module.attributes?.defaultImageUrl}) center center / contain no-repeat`,
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    justifyContent: 'center',
                                     cursor: 'pointer',
                                     color: '#dfffe6',
                                     fontWeight: 700,
                                     fontSize: '18px',
                                     textTransform: 'capitalize',
-                                    textShadow: '0 1px 0 rgba(0,0,0,0.6)'
+                                    textShadow: '0 1px 0 rgba(0,0,0,0.6)',
+                                    overflow: 'hidden',
                                 }}
                             >
-                                <div style={{ position: 'relative', left: '50%', transform: 'translateX(-50%)' }}>
-                                    {/*Find any actors assigned to this module (by module ID in their locationId), display their image at 60% of the height of the containing module, aligned to the bottom of the module */}
-                                    {Object.values(this.stage.getSave().actors).filter(actor => actor.locationId === module.id).map((actor, index) => {
-                                        const actorsPresent = Object.values(this.stage.getSave().actors).filter(actor => actor.locationId === module.id).length;
-                                        /* Spacing each actor image evenly across the bottom of the module; they may overlap. */
-                                        return <img key={actor.id} src={actor.emotionPack['neutral']} alt={actor.name} style={{ position: 'absolute', height: `calc(${this.cellSize} * 0.6)`, objectFit: 'contain', left: `${index * (80 / actorsPresent)}%`}} />
-                                    })}
-                                    {/* Give module label a shaded strip of background and align near the bottom of the module */}
-                                    <div style={{ textAlign: 'center', pointerEvents: 'none', background: 'rgba(0, 0, 0, 0.5)', padding: '2px 4px', borderRadius: '4px', position: 'absolute', bottom: '6px'}}>
-                                        {module.type}
-                                    </div>
-                                </div>
+                                <div style={{ position: 'relative', width: '100%', height: '100%' }}>
+                                    {/* Compute actors once for this module */}
+                                    {(() => {
+                                        const actors = Object.values(this.stage.getSave().actors).filter(a => a.locationId === module.id);
+                                        const actorsPresent = actors.length;
+                                        return (
+                                            <>
+                                                {/* Actor strip: spaced evenly across the tile, aligned to the bottom (slightly above the label) */}
+                                                <div style={{
+                                                    position: 'absolute',
+                                                    left: 0,
+                                                    right: 0,
+                                                    bottom: '28px',
+                                                    display: 'flex',
+                                                    justifyContent: actorsPresent <= 1 ? 'center' : 'space-evenly',
+                                                    alignItems: 'flex-end',
+                                                    padding: '0 6px',
+                                                    pointerEvents: 'none',
+                                                }}>
+                                                    {actors.map((actor) => (
+                                                        <img
+                                                            key={actor.id}
+                                                            src={actor.emotionPack?.neutral}
+                                                            alt={actor.name}
+                                                            style={{
+                                                                height: '60%',
+                                                                maxHeight: 'calc(100% - 40px)',
+                                                                objectFit: 'contain',
+                                                                userSelect: 'none',
+                                                                pointerEvents: 'none',
+                                                            }}
+                                                        />
+                                                    ))}
+                                                </div>
 
+                                                {/* Label bar: shaded, spans full width, overlays above actors (z-index) and is bottom-aligned */}
+                                                <div style={{
+                                                    position: 'absolute',
+                                                    left: 0,
+                                                    right: 0,
+                                                    bottom: '6px',
+                                                    width: '100%',
+                                                    background: 'linear-gradient(180deg, rgba(0,0,0,0.0), rgba(0,0,0,0.6))',
+                                                    color: '#dfffe6',
+                                                    padding: '6px 8px',
+                                                    textAlign: 'center',
+                                                    fontWeight: 700,
+                                                    textTransform: 'capitalize',
+                                                    pointerEvents: 'none',
+                                                    zIndex: 2,
+                                                }}>{module.type}</div>
+                                            </>
+                                        );
+                                    })()}
+                                </div>
                             </motion.div>
                         ) : null}
 
