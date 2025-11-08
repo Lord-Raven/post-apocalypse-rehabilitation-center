@@ -55,6 +55,7 @@ export default class ScreenCryo extends ScreenBase {
 		const pods = this.props.candidates || [];
 		const { selectedIndex } = this.state;
 		const availableRooms = this.stage.getSave().layout.getModulesWhere(m => m?.type === 'quarters' && !m?.ownerId) || [];
+		const acceptable = selectedIndex != null && availableRooms.length > 0;
 
 		return (
 			<div style={{ display: 'flex', flexDirection: 'column', height: '100vh', width: '100vw' }}>
@@ -136,18 +137,18 @@ export default class ScreenCryo extends ScreenBase {
 
 					<motion.button
 						onClick={this.accept}
-						whileHover={{ scale: selectedIndex != null ? 1.03 : 1 }}
-						whileTap={{ scale: selectedIndex != null ? 0.98 : 1 }}
+						whileHover={{ scale: acceptable ? 1.03 : 1 }}
+						whileTap={{ scale: acceptable ? 0.98 : 1 }}
 						style={{
 							padding: '12px 18px',
 							borderRadius: 8,
 							border: '2px solid rgba(0,255,136,0.15)',
-							background: selectedIndex != null ? '#00ff88' : 'rgba(255,255,255,0.06)',
-							color: selectedIndex != null ? '#002210' : '#9aa0a6',
+							background: acceptable ? '#00ff88' : 'rgba(255,255,255,0.06)',
+							color: acceptable ? '#002210' : '#9aa0a6',
 							fontWeight: 800,
-							cursor: selectedIndex != null ? 'pointer' : 'not-allowed'
+							cursor: acceptable ? 'pointer' : 'not-allowed'
 						}}
-						disabled={selectedIndex == null || availableRooms.length === 0}
+						disabled={!acceptable}
 					>
 						{availableRooms.length === 0 ? 'No Available Quarters' : (selectedIndex == null ? 'Select a Candidate' : 'Accept Candidate')}
 					</motion.button>

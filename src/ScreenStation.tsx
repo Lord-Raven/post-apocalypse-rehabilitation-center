@@ -51,9 +51,10 @@ export default class ScreenStation extends ScreenBase {
                     key={`phase_circle_${i}`}
                     style={{
                         display: 'inline-block',
-                        width: 12,
-                        height: 12,
-                        marginRight: 6,
+                        width: i == phase ? '0.5rem' :'1rem',
+                        height: i == phase ? '0.5rem' :'1rem',
+                        marginRight: i == phase ? '0.5rem' :'0.25rem',
+                        marginLeft: i == phase ? '0.5rem' :'0.25rem',
                         borderRadius: '50%',
                         backgroundColor: i < (phase || 0) ? '#00ff88' : 'rgba(0, 255, 136, 0.3)',
                     }}
