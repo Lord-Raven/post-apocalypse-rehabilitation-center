@@ -105,8 +105,8 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
     incPhase(numberOfPhases: number = 1) {
         const save = this.getSave();
         save.phase += numberOfPhases;
-        if (save.phase > 4) {
-            save.phase = 1;
+        if (save.phase >= 4) {
+            save.phase = 0;
             save.day += 1;
         }
 

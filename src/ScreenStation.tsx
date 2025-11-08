@@ -56,7 +56,7 @@ export default class ScreenStation extends ScreenBase {
                         marginRight: i == phase ? '0.5rem' :'0.25rem',
                         marginLeft: i == phase ? '0.5rem' :'0.25rem',
                         borderRadius: '50%',
-                        backgroundColor: i < (phase || 0) ? '#00ff88' : 'rgba(0, 255, 136, 0.3)',
+                        backgroundColor: i <= (phase || 0) ? '#00ff88' : 'rgba(0, 255, 136, 0.3)',
                     }}
                 ></span>
             );
@@ -114,11 +114,11 @@ export default class ScreenStation extends ScreenBase {
                                     textShadow: '0 1px 0 rgba(0,0,0,0.6)'
                                 }}
                             >
-                                {/* Look through stage.actors and find any actors assigned to this module (by module ID in their locationId), then display their emotionPack['neutral'] image, if it exists, at 60% of the height of this module, aligned to the bottom of the module */}
+                                {/*Find any actors assigned to this module (by module ID in their locationId), display their image at 60% of the height of the containing module, aligned to the bottom of the module */}
                                 <div style={{ position: 'absolute', bottom: '6px', left: '50%', transform: 'translateX(-50%)' }}>
                                     {Object.values(this.stage.getSave().actors).filter(actor => actor.locationId === module.id).map(actor => (
                                         /* Spacing each actor image evenly across the bottom of the module; they may overlap. */
-                                        <img key={actor.id} src={actor.emotionPack['neutral']} alt={actor.name} style={{ height: '60%', objectFit: 'contain', margin: '0 2px' }} />
+                                        <img key={actor.id} src={actor.emotionPack['neutral']} alt={actor.name} style={{ height: `calc(${this.cellSize} * 0.6)`, objectFit: 'contain', margin: '0 2px' }} />
                                     ))}
                                 </div>
                                 {/* Give module label a shaded strip of background and align near the bottom of the module */}
