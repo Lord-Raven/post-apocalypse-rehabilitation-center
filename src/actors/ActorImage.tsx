@@ -128,11 +128,7 @@ const ActorImage: FC<ActorImageProps> = ({
                             height: '100%',
                             filter: 'blur(2.5px)',
                             zIndex: 4,
-                            transform: `translate(calc(${modX}vw - 50%), ${modY}vh)`,
-                            ...(isTalking && {
-                                WebkitMaskImage: 'linear-gradient(to bottom, black 95%, transparent 100%)',
-                                maskImage: 'linear-gradient(to bottom, black 95%, transparent 100%)'
-                            })
+                            transform: `translate(calc(${modX}vw - 50%), ${modY}vh)`
                         }}
                         alt={`${actor.name} (${emotion}) previous`}
                     />
@@ -154,11 +150,7 @@ const ActorImage: FC<ActorImageProps> = ({
                             height: '100%',
                             filter: 'blur(2.5px)',
                             zIndex: 4,
-                            transform: `translate(calc(${modX}vw - 50%), ${modY}vh)`,
-                            ...(isTalking && {
-                                WebkitMaskImage: 'linear-gradient(to bottom, black 95%, transparent 100%)',
-                                maskImage: 'linear-gradient(to bottom, black 95%, transparent 100%)'
-                            })
+                            transform: `translate(calc(${modX}vw - 50%), ${modY}vh)`
                         }}
                         alt={`${actor.name} (${emotion}) background`}
                     />
@@ -180,11 +172,7 @@ const ActorImage: FC<ActorImageProps> = ({
                             height: '100%',
                             opacity: 0.75,
                             zIndex: 5,
-                            transform: `translate(calc(${modX}vw - 50%), ${modY}vh)`,
-                            ...(isTalking && {
-                                WebkitMaskImage: 'linear-gradient(to bottom, black 95%, transparent 100%)',
-                                maskImage: 'linear-gradient(to bottom, black 95%, transparent 100%)'
-                            })
+                            transform: `translate(calc(${modX}vw - 50%), ${modY}vh)`
                         }}
                         alt={`${actor.name} (${emotion})`}
                     />

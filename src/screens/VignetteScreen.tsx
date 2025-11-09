@@ -14,7 +14,12 @@ import { Emotion } from '../Emotion';
 
 // Cache generated scripts by a composite key so we don't re-run generation when the
 // component is remounted or updated repeatedly. Key format: `${type}:${moduleId}:${actorId}`
-const vignetteScriptCache: Map<string, string[]> = new Map();
+// ScriptEntry stores the speaker name and the message body separately.
+interface ScriptEntry {
+    speaker: string;
+    message: string;
+}
+const vignetteScriptCache: Map<string, ScriptEntry[]> = new Map();
 
 interface VignetteScreenProps {
     stage: Stage;
@@ -28,7 +33,7 @@ interface VignetteScreenProps {
 interface VignetteScreenState {
     index: number; // current script index
     inputText: string;
-    script: string[];
+    script: ScriptEntry[];
     loading: boolean;
     loadingDots: number;
 }
@@ -96,7 +101,7 @@ export default class VignetteScreen extends BaseScreen {
 
         // If we already have a cached script for this context, use it and skip generation.
         if (vignetteScriptCache.has(key)) {
-            const cached = vignetteScriptCache.get(key) || ["(No script available.)"];
+            const cached = vignetteScriptCache.get(key) || [{ speaker: 'NARRATOR', message: '(No script available.)' }];
             this.setState({ script: cached, index: 0, loading: false });
             return;
         }
@@ -111,13 +116,13 @@ export default class VignetteScreen extends BaseScreen {
         try {
             console.log('Generating vignette script for context:', ctx);
             const script = await this.generateVignetteScript(ctx.type, ctx, false);
-            const final = (script && script.length > 0) ? script : ["(No script could be generated.)"];
+            const final = (script && script.length > 0) ? script : [{ speaker: 'NARRATOR', message: '(No script could be generated.)' }];
             // cache for future mounts
             vignetteScriptCache.set(key, final);
             this.setState({ script: final, index: 0, loading: false });
         } catch (err) {
             console.error('Failed to generate vignette script', err);
-            const fallback = ["(Failed to generate script.)"];
+            const fallback: ScriptEntry[] = [{ speaker: 'NARRATOR', message: '(Failed to generate script.)' }];
             vignetteScriptCache.set(key, fallback);
             this.setState({ script: fallback, loading: false });
         } finally {
@@ -166,15 +171,16 @@ export default class VignetteScreen extends BaseScreen {
         }
     }
 
-    async generateVignetteScript(type: VignetteType, context: any, continuing: boolean) {
-        const fullPrompt = `Premise:\nThis is a sci-fi visual novel game set on a space station that resurrects and rehabilitates patients who died in the multiverse-wide apocalypse. ` +
-            `The thrust of the game has the player, ${this.stage.getSave().player.name}, managing this station and interacting with patients and crew, as they navigate this complex futuristic universe together. ` +
+    async generateVignetteScript(type: VignetteType, context: any, continuing: boolean): Promise<ScriptEntry[]> {
+        const fullPrompt = `{{messages}}\nPremise:\nThis is a sci-fi visual novel game set on a space station that resurrects and rehabilitates patients who died in the multiverse-wide apocalypse: ` +
+            `the Post-Apocalyptic Rehabilitation Center. ` +
+            `The thrust of the game has the player character, ${this.stage.getSave().player.name}, managing this station and interacting with patients and crew, as they navigate this complex futuristic universe together. ` +
             `\n\nCrew:\nAt this point in the story, the player is running the operation on their own, with no fellow crew members. ` +
             `\n\nPatients:\n${Object.values(this.stage.getSave().actors).map(actor => `${actor.name} - ${actor.description} - ${actor.profile}`).join('\n')}` +
             `\n\nScene Prompt:\n${this.generateVignettePrompt(type, context, continuing)}` +
             `\n\nExample Script Format:\n` +
             'System: CHARACTER NAME: Action in pose. "Dialogue in quotation marks."\nANOTHER CHARACTER NAME: "Dialogue in quotation marks."\nNARRATOR: Descriptive content that is not attributed to a character.' +
-            `\n\nScriptlog:\n{{messages}}` +
+            `\n\nScript Log:\n(None so far)` +
             `\n\nInstruction:\nAt the "System:" prompt, generate a short scene script based upon this scenario, and the specified Scene Prompt. Follow the structure of the strict Example Script Format above.`
         // Retry logic if response is null or response.result is empty
         let retries = 3;
@@ -189,31 +195,40 @@ export default class VignetteScreen extends BaseScreen {
                 if (response && response.result && response.result.trim().length > 0) {
                     // Parse response based on format "NAME: content"; content could be multi-line. We want to ensure that lines that don't start with a name are appended to the previous line.
                     const lines = response.result.split('\n');
-                    const script: string[] = [];
+                    const combinedLines: string[] = [];
                     let currentLine = '';
                     for (const line of lines) {
                         if (line.includes(':')) {
                             // New line
                             if (currentLine) {
-                                script.push(currentLine.trim());
+                                combinedLines.push(currentLine.trim());
                             }
                             currentLine = line;
                         } else {
                             // Continuation of previous line
                             currentLine += '\n' + line;
-                        } 
+                        }
                     }
                     if (currentLine) {
-                        script.push(currentLine.trim());
+                        combinedLines.push(currentLine.trim());
                     }
-                    return script;
+
+                    // Convert combined lines into ScriptEntry objects by splitting at first ':'
+                    const scriptEntries: ScriptEntry[] = combinedLines.map(l => {
+                        const idx = l.indexOf(':');
+                        if (idx === -1) return { speaker: 'NARRATOR', message: l };
+                        const sp = l.slice(0, idx).trim();
+                        const msg = l.slice(idx + 1).trim();
+                        return { speaker: sp, message: msg };
+                    });
+                    return scriptEntries;
                 }
             } catch (error) {
                 console.error('Error generating vignette script:', error);
             }
             retries--;
         }
-        return [];
+        return [] as ScriptEntry[];
     }
 
     next = () => {
@@ -224,12 +239,14 @@ export default class VignetteScreen extends BaseScreen {
         this.setState((prevState: VignetteScreenState) => ({ index: Math.max(prevState.index - 1, 0) }));
     };
 
-    renderActors(module: Module | null, actors: Actor[]) {
+    renderActors(module: Module | null, actors: Actor[], currentSpeaker?: string) {
         // Display actors centered across the scene bottom. Use neutral emotion image where possible
         return actors.map((actor, i) => {
             const imageUrl = actor.emotionPack?.neutral || actor.avatarImageUrl || '';
             const increment = actors.length > 1 ? (i / (actors.length - 1)) : 0.5;
             const xPosition = Math.round(increment * 80) + 10;
+            // Determine if this actor should be rendered as speaking. Compare names case-insensitively.
+            const isSpeaking = !!currentSpeaker && !!actor.name && (actor.name.trim().toLowerCase() === currentSpeaker.trim().toLowerCase());
             return (
                 <ActorImage
                     actor={actor}
@@ -238,7 +255,7 @@ export default class VignetteScreen extends BaseScreen {
                     xPosition={xPosition}
                     yPosition={0}
                     zIndex={1}
-                    isTalking={false}
+                    isTalking={isSpeaking}
                     highlightColor="rgba(255,255,255,0)"
                     panX={0}
                     panY={0}
@@ -251,13 +268,15 @@ export default class VignetteScreen extends BaseScreen {
         // Pull actors from save if available
         const actors = Object.values(this.stage.getSave().actors).filter(actor => actor.locationId === this.props.vignetteContext.moduleId) || [];
 
-        const { index, inputText, script, loading } = this.state;
+    const { index, inputText, script, loading } = this.state;
 
         const module = this.stage.getSave().layout.getModuleById(this.props.vignetteContext.moduleId || '');
 
         const backgroundUrl = (module?.attributes?.defaultImageUrl || '');
 
-        const isFinal = !loading && index === script.length - 1;
+    const isFinal = !loading && index === script.length - 1;
+    const currentEntry = (!loading && script && script.length > 0) ? script[index] : undefined;
+    const currentSpeaker = currentEntry ? currentEntry.speaker : undefined;
 
         return (
             <div style={{ position: 'relative', width: '100vw', height: '100vh', overflow: 'hidden', background: '#000' }}>
@@ -279,16 +298,20 @@ export default class VignetteScreen extends BaseScreen {
                 <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, rgba(0,0,0,0.2) 0%, rgba(0,0,0,0.6) 60%)' }} />
 
                 {/* Actors */}
-                <div style={{ position: 'absolute', inset: 0 }}>
-                    {this.renderActors(module, actors as Actor[])}
+                <div style={{ position: 'absolute', inset: 0, zIndex: 1, pointerEvents: 'none' }}>
+                    {this.renderActors(module, actors as Actor[], currentSpeaker)}
                 </div>
 
                 {/* Bottom text window */}
-                <div style={{ position: 'absolute', left: '5%', right: '5%', bottom: '4%', background: 'rgba(10,20,30,0.9)', border: '2px solid rgba(0,255,136,0.12)', borderRadius: 12, padding: '18px', boxSizing: 'border-box', color: '#e8fff0' }}>
+                <div style={{ position: 'absolute', left: '5%', right: '5%', bottom: '4%', background: 'rgba(10,20,30,0.9)', border: '2px solid rgba(0,255,136,0.12)', borderRadius: 12, padding: '18px', boxSizing: 'border-box', color: '#e8fff0', zIndex: 2 }}>
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                         <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
                             <button onClick={this.prev} style={{ padding: '8px 12px', background: 'transparent', border: '1px solid rgba(255,255,255,0.06)', color: '#cfe', cursor: 'pointer' }} disabled={index === 0}>{'⟨'}</button>
                             <button onClick={this.next} style={{ padding: '8px 12px', background: 'transparent', border: '1px solid rgba(255,255,255,0.06)', color: '#cfe', cursor: 'pointer' }} disabled={index === this.state.script.length - 1}>{'⟩'}</button>
+                            {/* Speaker name shown to the right of the navigation arrows when present and not NARRATOR */}
+                            {(!loading && currentSpeaker && currentSpeaker.trim().toUpperCase() !== 'NARRATOR') ? (
+                                <div style={{ marginLeft: 8, fontSize: 13, fontWeight: 700, color: '#dfffe6' }}>{currentSpeaker}</div>
+                            ) : null}
                         </div>
 
                         <div style={{ fontSize: 12, opacity: 0.8, visibility: !loading ? 'visible' : 'hidden' }}>{`${index + 1} / ${script.length}`}{loading ? <span style={{ marginLeft: 6 }}>{'.'.repeat(this.state.loadingDots)}</span> : null}</div>
@@ -299,7 +322,7 @@ export default class VignetteScreen extends BaseScreen {
                             <span style={{ display: 'inline-block' }}>
                                 Generating scene{'.'.repeat(this.state.loadingDots)}
                             </span>
-                        ) : (script[index] || '')}
+                        ) : (currentEntry ? currentEntry.message : '')}
                     </div>
 
                     {/* Chat input shown (enabled) only when at final message */}
