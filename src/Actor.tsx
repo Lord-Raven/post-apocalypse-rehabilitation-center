@@ -65,12 +65,15 @@ export async function loadReserveActor(fullPath: string, stage: Stage): Promise<
     }
     // Take this data and use text generation to get an updated distillation of this character, including a physical description.
     const generatedResponse = await stage.generator.textGen({
-        prompt: `{{messages}}\n\nThis is a preparatory request for formatted content for a video game set in a futuristic multiverse setting that pulls characters from across eras and timelines and settings. ` +
-            `The following is a description for a random character or scenario from this multiverse's past. This response must digest and distill this description to suit the game's narrative, ` +
-            `in which this character has been rematerialized into a new timeline. The provided description may reference 'Individual X' who no longer exists in this timeline; ` +
-            `you should give this individual a name if they are relevant to the distillation. ` +
-            `In addition to name, physical description, and personality, you will score the character with a simple 1-10 for the following traits: CONDITION, RESILIENCE, BEAUTY, CHARISMA, CAPABILITY, INTELLIGENCE, and COMPLIANCE.\n` +
-            `Bear in mind the character's current state and not necessarily their original potential when scoring these traits; some characters may not respond well to being essentially resurrected into a new timeline.\n\n` +
+        prompt: `{{messages}}This is a preparatory request for formatted content for a video game set in a futuristic multiverse setting that pulls characters from across eras and timelines and settings. ` +
+            `The following is a description for a random character or scenario from another universe. This response must digest and distill this description to suit the game's narrative, ` +
+            `in which this character has been rematerialized into this universe through an "echo chamber," their essence reconstituted from the whispers of a black hole. ` +
+            `As a result of this process, many of this character's traits may have changed, including the loss of most supernatural or arcane abilities, which functioned only within the rules of their former universe. ` +
+            `Their new description and profile should reflect these possible changes and their impact.\n\n` +
+            `The provided character description may reference 'Individual X' who no longer exists in this timeline; ` +
+            `if Individual X remains relevant to this character, you should give Individual X an appropriate name in the distillation.\n\n` +
+            `In addition to name, physical description, and personality, you will score the character with a simple 1-10 for the following traits: CONDITION, RESILIENCE, CAPABILITY, INTELLIGENCE, CHARISMA, SEXUALITY, and COMPLIANCE.\n` +
+            `Bear in mind the character's current, diminished state—as a newly reconstituted and relatively powerless individual—and not their original potential when scoring these traits; some characters may not respond well to being essentially resurrected into a new timeline.\n\n` +
             `Original details about ${data.name}:\nDescription: ${data.description} ${data.personality}\n\n` +
             `After carefully considering this description, provide a concise breakdown in the following format:\n` +
             `NAME: The character's full, given name.\n` +

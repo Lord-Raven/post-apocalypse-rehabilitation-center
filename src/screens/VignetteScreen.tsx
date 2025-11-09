@@ -224,19 +224,19 @@ export default class VignetteScreen extends BaseScreen {
         return visibleActors.map((actor, i) => {
             const src = actor.emotionPack?.neutral || actor.avatarImageUrl || '';
             const percent = visibleActors.length > 1 ? (i / (visibleActors.length - 1)) : 0.5;
-            const left = `${Math.round(percent * 80) + 10}%`; // 10%..90%
+            const xPosition = `${Math.round(percent * 80) + 10}vw`; // 10%..90%
             return (
                 <motion.img
                     key={actor.id}
                     src={src}
                     alt={actor.name}
-                    initial={{ opacity: 0, scale: 0.9, x: '150vw' }}
-                    animate={{ opacity: 1, scale: 1, y: 0 }}
+                    initial={{ opacity: 0, scale: 0.9, x: '150vw', y: 0 }}
+                    animate={{ opacity: 1, scale: 1, x: xPosition, y: 0 }}
                     transition={{ type: 'spring', stiffness: 120, damping: 18, delay: i * 0.08 }}
                     style={{
                         position: 'absolute',
                         bottom: 0,
-                        left,
+                        left: 0,
                         transform: 'translateX(-50%)',
                         maxHeight: '80vh',
                         pointerEvents: 'none',
