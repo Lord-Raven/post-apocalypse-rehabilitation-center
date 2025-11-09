@@ -163,4 +163,35 @@ export async function populateActorImages(actor: Actor, stage: Stage): Promise<v
     }
 }
 
+export function namesMatch(name: string, possibleName: string): boolean {
+
+    name = name.toLowerCase();
+    possibleName = possibleName.toLowerCase();
+
+    const names = name.split(' ');
+    // If the possible name contains at least half of the parts of the character name, then close enough.
+    if (names.filter(namePart => !possibleName.includes(namePart)).length <= Math.floor(names.length / 2)) {
+        return true;
+    }
+
+    // Otherwise, use Levenshtein distance to determine if an input string is referring to this character's name
+    const matrix = Array.from({ length: name.length + 1 }, () => Array(possibleName.length + 1).fill(0));
+    for (let i = 0; i <= name.length; i++) {
+        for (let j = 0; j <= possibleName.length; j++) {
+            if (i === 0) {
+                matrix[i][j] = j;
+            } else if (j === 0) {
+                matrix[i][j] = i;
+            } else {
+                matrix[i][j] = Math.min(
+                    matrix[i - 1][j] + 1,
+                    matrix[i][j - 1] + 1,
+                    matrix[i - 1][j - 1] + (name[i - 1] === possibleName[j - 1] ? 0 : 1)
+                );
+            }
+        }
+    }
+    return matrix[name.length][possibleName.length] < Math.min(name.length / 2, possibleName.length / 2);
+}
+
 export default Actor;

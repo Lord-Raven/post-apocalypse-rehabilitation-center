@@ -6,7 +6,7 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { BaseScreen } from './BaseScreen';
 import { Module } from '../Module';
-import Actor from '../actors/Actor';
+import Actor, { namesMatch } from '../actors/Actor';
 import { Stage } from '../Stage';
 import StationScreen from './StationScreen';
 import ActorImage from '../actors/ActorImage';
@@ -246,7 +246,9 @@ export default class VignetteScreen extends BaseScreen {
             const increment = actors.length > 1 ? (i / (actors.length - 1)) : 0.5;
             const xPosition = Math.round(increment * 80) + 10;
             // Determine if this actor should be rendered as speaking. Compare names case-insensitively.
-            const isSpeaking = !!currentSpeaker && !!actor.name && (actor.name.trim().toLowerCase() === currentSpeaker.trim().toLowerCase());
+            // Need some sort of 'close enough' name comparison because there can be significant variations (like only showing a first name or nickname).
+
+            const isSpeaking = !!currentSpeaker && !!actor.name && namesMatch(actor.name.trim().toLowerCase(), currentSpeaker.trim().toLowerCase());
             return (
                 <ActorImage
                     actor={actor}
