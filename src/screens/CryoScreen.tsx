@@ -40,11 +40,13 @@ export default class CryoScreen extends BaseScreen {
 		if (selected && firstRoom) {
 			// Assign the selected actor to the first available room
 			firstRoom.ownerId = selected.id;
-			selected.locationId = firstRoom.id;
+			// Set the actor's location to the command room:
+			const sceneRoom = this.stage.getSave().layout.getModulesWhere(m => m.type === 'command')[0] || firstRoom;
+			selected.locationId = sceneRoom?.id || '';
 			this.stage.getSave().actors[selected.id] = selected;
 			this.stage.reserveActors = this.stage.reserveActors.filter(a => a.id !== selected.id);
 			// Possibly set other properties on the selected actor as needed
-			this.stage.setScreen(VignetteScreen, {vignetteContext: {vignetteType: 'INTRO CHARACTER', actorId: selected.id, moduleId: this.stage.getSave().layout.getModulesWhere(m => m.type === 'command')[0]?.id || ''}});
+			this.stage.setScreen(VignetteScreen, {vignetteContext: {vignetteType: 'INTRO CHARACTER', actorId: selected.id, moduleId: sceneRoom?.id}});
 		}
 	};
 

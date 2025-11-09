@@ -53,9 +53,13 @@ export default class VignetteScreen extends BaseScreen {
     async componentDidMount() {
         // Generate the vignette script when the screen opens. Use the provided vignetteContext.
         try {
-            const ctx = this.props.vignetteContext || { type: VignetteType.INTRO_CHARACTER };
-            const script = await this.generateVignetteScript(ctx.type, ctx, false);
-            this.setState({ script: (script && script.length > 0) ? script : ["(No script could be generated.)"], index: 0, loading: false });
+            if (this.state.script.length == 0) {
+                const ctx = this.props.vignetteContext || { type: VignetteType.INTRO_CHARACTER };
+                console.log('Generating vignette script for context:', ctx);
+                const script = await this.generateVignetteScript(ctx.type, ctx, false);
+                console.log('Generated vignette script:', script);
+                this.setState({ script: (script && script.length > 0) ? script : ["(No script could be generated.)"], index: 0, loading: false });
+            }
         } catch (err) {
             console.error('Failed to generate vignette script on mount', err);
             this.setState({ script: ["(Failed to generate script.)"], loading: false });
