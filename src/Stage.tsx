@@ -19,6 +19,7 @@ type ChatStateType = {
 }
 
 type SaveType = {
+    player: {name: string};
     messageTree: MessageTree;
     currentMessageId: string;
     actors: {[key: string]: Actor};
@@ -75,7 +76,7 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
             layout.setModuleAt(DEFAULT_GRID_SIZE/2, DEFAULT_GRID_SIZE/2, createModule('command', { id: `command-${DEFAULT_GRID_SIZE/2}-${DEFAULT_GRID_SIZE/2}`, connections: [], attributes: {} }));
             layout.setModuleAt(DEFAULT_GRID_SIZE/2 - 1, DEFAULT_GRID_SIZE/2, createModule("common", { id: `common-${DEFAULT_GRID_SIZE/2 - 1}-${DEFAULT_GRID_SIZE/2}`, connections: [], attributes: {} }));
             layout.setModuleAt(DEFAULT_GRID_SIZE/2, DEFAULT_GRID_SIZE/2 - 1, createModule("generator", { id: `generator-${DEFAULT_GRID_SIZE/2}-${DEFAULT_GRID_SIZE/2 - 1}`, connections: [], attributes: {} }));
-            this.saves.push({ messageTree: null as any, currentMessageId: '', actors: {}, layout: layout, day: 1, phase: 0 });
+            this.saves.push({ player: {name: Object.values(users)[0].name}, messageTree: null as any, currentMessageId: '', actors: {}, layout: layout, day: 1, phase: 0 });
         }
 
         this.emotionPipeline = null;
@@ -116,8 +117,9 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
         // When incrementing phase, maybe move some actors around in the layout.
         for (const actorId in save.actors) {
             const actor = save.actors[actorId];
-            actor.locationId = save.layout.getModulesWhere(m => ['command', 'common', 'generator'].includes(m.type) || m.ownerId == actorId)![0]?.id || '';
+            actor.locationId = save.layout.getModulesWhere(m => ['command', 'common', 'generator'].includes(m.type) || m.ownerId == actorId).sort(() => Math.random() - 0.5)[0]?.id || '';
         }
+        this.requestUpdate();
     }
 
     getSave(): SaveType {

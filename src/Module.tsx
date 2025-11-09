@@ -42,8 +42,10 @@ export const MODULE_DEFAULTS: Record<ModuleType, ModuleIntrinsic> = {
         defaultImageUrl: 'https://media.charhub.io/99ffcdf5-a01b-43cf-81e5-e7098d8058f5/d1ec2e67-9124-4b8b-82d9-9685cfb973d2.png',
         action: (module: Module, stage: Stage) => {
             // Open the vignette screen to manage occupants
-            console.log("Opening vignette.");
-            stage.setScreen(VignetteScreen, { module: module, intent: 'manageOccupants' });
+            if (module.ownerId) {
+                console.log("Opening vignette.");
+                stage.setScreen(VignetteScreen, { module: module, vignetteContext: { type: 'VISIT CHARACTER', actorId: module.ownerId, moduleId: module.id } });
+            }
         }
     },
     common: { 
@@ -111,6 +113,18 @@ export class Layout {
             }
         }
         return modules;
+    }
+
+    getModuleById(id: string): Module | null {
+        for (let y = 0; y < this.gridSize; y++) {
+            for (let x = 0; x < this.gridSize; x++) {
+                const module = this.grid[y][x];
+                if (module && module.id === id) {
+                    return module;
+                }
+            }
+        }
+        return null;
     }
 
     getModuleAt(x: number, y: number): Module | null {

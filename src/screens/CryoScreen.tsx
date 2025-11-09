@@ -7,6 +7,7 @@ import { motion } from 'framer-motion';
 import { BaseScreen } from './BaseScreen';
 import { Stage } from '../Stage';
 import Actor from '../Actor';
+import VignetteScreen from './VignetteScreen';
 
 interface CryoScreenProps {
 	stage: Stage;
@@ -43,8 +44,8 @@ export default class CryoScreen extends BaseScreen {
 			this.stage.getSave().actors[selected.id] = selected;
 			this.stage.reserveActors = this.stage.reserveActors.filter(a => a.id !== selected.id);
 			// Possibly set other properties on the selected actor as needed
+			this.stage.setScreen(VignetteScreen, {vignetteType: 'INTRO CHARACTER', actorId: selected.id, moduleId: this.stage.getSave().layout.getModulesWhere(m => m.type === 'command')[0]?.id || ''});
 		}
-		if (this.props.onAccept) this.props.onAccept(selected, this.stage);
 	};
 
 	cancel = () => {
