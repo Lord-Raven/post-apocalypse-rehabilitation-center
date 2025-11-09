@@ -251,13 +251,14 @@ export default class VignetteScreen extends BaseScreen {
             const isSpeaking = !!currentSpeaker && !!actor.name && namesMatch(actor.name.trim().toLowerCase(), currentSpeaker.trim().toLowerCase());
             return (
                 <ActorImage
+                    key={actor.id}
                     actor={actor}
                     emotion={Emotion.neutral}
                     imageUrl={imageUrl}
                     xPosition={xPosition}
                     yPosition={0}
                     zIndex={1}
-                    isTalking={isSpeaking}
+                    speaker={isSpeaking}
                     highlightColor="rgba(255,255,255,0)"
                     panX={0}
                     panY={0}
@@ -308,18 +309,24 @@ export default class VignetteScreen extends BaseScreen {
                 <div style={{ position: 'absolute', left: '5%', right: '5%', bottom: '4%', background: 'rgba(10,20,30,0.9)', border: '2px solid rgba(0,255,136,0.12)', borderRadius: 12, padding: '18px', boxSizing: 'border-box', color: '#e8fff0', zIndex: 2 }}>
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                         <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
-                            <button onClick={this.prev} style={{ padding: '8px 12px', background: 'transparent', border: '1px solid rgba(255,255,255,0.06)', color: '#cfe', cursor: 'pointer' }} disabled={index === 0}>{'⟨'}</button>
-                            <button onClick={this.next} style={{ padding: '8px 12px', background: 'transparent', border: '1px solid rgba(255,255,255,0.06)', color: '#cfe', cursor: 'pointer' }} disabled={index === this.state.script.length - 1}>{'⟩'}</button>
+                            <button onClick={this.prev} style={{ padding: '10px 14px', background: 'transparent', border: '1px solid rgba(255,255,255,0.08)', color: '#cfe', cursor: 'pointer', fontSize: 16, borderRadius: 8 }} disabled={index === 0}>{'⟨'}</button>
+
+                            {/* Move the X/Y indicator between the left/right arrows */}
+                            <div style={{ minWidth: 72, textAlign: 'center', fontSize: 14, fontWeight: 700, color: '#bfffd0', background: 'rgba(255,255,255,0.02)', padding: '6px 10px', borderRadius: 8, border: '1px solid rgba(255,255,255,0.03)' }}>{`${index + 1} / ${script.length}`}{loading ? <span style={{ marginLeft: 6 }}>{'.'.repeat(this.state.loadingDots)}</span> : null}</div>
+
+                            <button onClick={this.next} style={{ padding: '10px 14px', background: 'transparent', border: '1px solid rgba(255,255,255,0.08)', color: '#cfe', cursor: 'pointer', fontSize: 16, borderRadius: 8 }} disabled={index === this.state.script.length - 1}>{'⟩'}</button>
+
                             {/* Speaker name shown to the right of the navigation arrows when present and not NARRATOR */}
                             {(!loading && currentSpeaker && currentSpeaker.trim().toUpperCase() !== 'NARRATOR') ? (
-                                <div style={{ marginLeft: 8, fontSize: 13, fontWeight: 700, color: '#dfffe6' }}>{currentSpeaker}</div>
+                                <div style={{ marginLeft: 12, fontSize: 15, fontWeight: 800, color: '#eafff0', letterSpacing: '0.6px', textShadow: '0 1px 0 rgba(0,0,0,0.6)' }}>{currentSpeaker}</div>
                             ) : null}
                         </div>
 
-                        <div style={{ fontSize: 12, opacity: 0.8, visibility: !loading ? 'visible' : 'hidden' }}>{`${index + 1} / ${script.length}`}{loading ? <span style={{ marginLeft: 6 }}>{'.'.repeat(this.state.loadingDots)}</span> : null}</div>
+                        {/* right side reserved for future controls; keep it visually quiet */}
+                        <div style={{ fontSize: 12, opacity: 0.65, visibility: 'hidden' }}></div>
                     </div>
 
-                    <div style={{ marginTop: 12, minHeight: '3.5rem', fontSize: '1.05rem', lineHeight: 1.4 }}>
+                            <div style={{ marginTop: 14, minHeight: '4rem', fontSize: '1.18rem', lineHeight: 1.55, fontFamily: 'Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial', color: '#e9fff7' }}>
                         {loading ? (
                             <span style={{ display: 'inline-block' }}>
                                 Generating scene{'.'.repeat(this.state.loadingDots)}
@@ -328,12 +335,12 @@ export default class VignetteScreen extends BaseScreen {
                     </div>
 
                     {/* Chat input shown (enabled) only when at final message */}
-                    <div style={{ marginTop: 12, display: 'flex', gap: 8, alignItems: 'center' }}>
+                    <div style={{ marginTop: 14, display: 'flex', gap: 10, alignItems: 'center' }}>
                         <input
                             value={inputText}
                             onChange={(e) => this.setState({ inputText: e.target.value })}
                             placeholder={isFinal ? 'Type your course of action...' : (loading ? 'Generating...' : 'Advance to the final line...')}
-                            style={{ flex: 1, padding: '10px 12px', borderRadius: 8, border: '1px solid rgba(255,255,255,0.06)', background: 'rgba(255,255,255,0.02)', color: '#dfffe6' }}
+                            style={{ flex: 1, padding: '12px 14px', borderRadius: 10, border: '1px solid rgba(255,255,255,0.08)', background: 'linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01))', color: '#eafff2', fontSize: 15 }}
                             disabled={!isFinal}
                         />
                         <button
@@ -344,7 +351,7 @@ export default class VignetteScreen extends BaseScreen {
                                 return;
                             }}
                             disabled={!isFinal || inputText.trim().length === 0}
-                            style={{ padding: '10px 14px', borderRadius: 8, background: isFinal ? 'linear-gradient(90deg,#00ff88,#00b38f)' : 'rgba(255,255,255,0.04)', border: 'none', color: '#00221a', cursor: isFinal ? 'pointer' : 'not-allowed', fontWeight: 700 }}
+                            style={{ padding: '10px 16px', borderRadius: 10, background: isFinal ? 'linear-gradient(90deg,#00ff88,#00b38f)' : 'rgba(255,255,255,0.04)', border: 'none', color: '#00221a', cursor: isFinal ? 'pointer' : 'not-allowed', fontWeight: 800, fontSize: 15 }}
                         >Send</button>
                     </div>
                 </div>

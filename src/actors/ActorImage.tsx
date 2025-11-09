@@ -3,8 +3,8 @@ import {FC, useState, useEffect, useRef} from "react";
 import Actor from "./Actor";
 import { Emotion } from "../Emotion";
 
-const IDLE_HEIGHT: number = 70;
-const SPEAKING_HEIGHT: number = 80;
+const IDLE_HEIGHT: number = 80;
+const SPEAKING_HEIGHT: number = 90;
 
 interface ActorImageProps {
     actor: Actor;
@@ -13,7 +13,8 @@ interface ActorImageProps {
     xPosition: number;
     yPosition: number;
     zIndex: number;
-    isTalking: boolean;
+    // 'speaker' indicates whether this actor is currently speaking and should be emphasized
+    speaker?: boolean;
     highlightColor: string;
     panX: number;
     panY: number;
@@ -26,7 +27,7 @@ const ActorImage: FC<ActorImageProps> = ({
     xPosition,
     yPosition,
     zIndex,
-    isTalking,
+    speaker,
     highlightColor,
     panX,
     panY
@@ -67,8 +68,8 @@ const ActorImage: FC<ActorImageProps> = ({
     }, [imageUrl, processedImageUrl]);
 
     // Calculate final parallax position
-    const baseX = isTalking ? 50 : xPosition;
-    const baseY = (isTalking ? 0 : (2 + yPosition));
+    const baseX = speaker ? 50 : xPosition;
+    const baseY = yPosition;
     const depth = (50 - baseY) / 50;
     const modX = ((panX * depth * 1.8) * 100);
     const modY = ((panY * depth * 1.8) * 100);
@@ -109,7 +110,7 @@ const ActorImage: FC<ActorImageProps> = ({
             variants={variants}
             initial='absent'
             exit='absent'
-            animate={isTalking ? 'talking' : 'idle'}
+            animate={speaker ? 'talking' : 'idle'}
             style={{position: 'absolute', width: 'auto', aspectRatio, overflow: 'visible'}}>
             {/* Blurred background layer */}
             <AnimatePresence>

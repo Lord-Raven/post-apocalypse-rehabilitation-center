@@ -153,7 +153,7 @@ export async function populateActorImages(actor: Actor, stage: Stage): Promise<v
         // Use stage.makeImageFromImage to create a neutral expression based on imageUrl or the avatar image
         imageUrl = await stage.makeImageFromImage({
             image: imageUrl || actor.avatarImageUrl,
-            prompt: `Create an upper-body, anime, visual-novel-style portrait of this character, described as: ${actor.description}\nThey should have a calm and neutral expression. Set this waist-up portrait against a white background.`,
+            prompt: `Create an upper-body, anime, visual-novel-style portrait of this character, described as: ${actor.description}\nThey should have a calm and neutral expression. This waist-up portrait is set against a white background.`,
             remove_background: true,
             transfer_type: 'edit'
         }, `actors/${actor.id}/neutral.png`, '');
