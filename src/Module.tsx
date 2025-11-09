@@ -1,8 +1,8 @@
-import CryoScreen from "./screens/CryoScreen";
+import EchoScreen from "./screens/EchoScreen";
 import VignetteScreen from "./screens/VignetteScreen";
 import { Stage } from "./Stage";
 
-export type ModuleType = 'command' | 'generator' | 'quarters' | 'common';
+export type ModuleType = 'echo' | 'generator' | 'quarters' | 'common';
 
 export interface ModuleIntrinsic {
     power: number;
@@ -16,16 +16,16 @@ export interface ModuleIntrinsic {
 }
 
 export const MODULE_DEFAULTS: Record<ModuleType, ModuleIntrinsic> = {
-    command: { 
+    echo: { 
         power: -1, 
         maintenance: -1,
         baseImageUrl: 'https://media.charhub.io/2f92a39f-02be-41fd-b61d-56de04a9ecc4/62d30715-01e1-4581-beb4-61cf31134955.png',
         defaultImageUrl: 'https://media.charhub.io/026ae01a-7dc8-472d-bfea-61548b87e6ef/84990780-8260-4833-ac0b-79c1a15ddb9e.png',
         action: (module: Module, stage: Stage) => {
             // Open the station management screen
-            console.log("Opening cryo screen from command module.");
+            console.log("Opening echo screen from command module.");
             // Use Stage API so any mounted UI can react to the change
-            stage.setScreen(CryoScreen);
+            stage.setScreen(EchoScreen);
         }
     },
     generator: {

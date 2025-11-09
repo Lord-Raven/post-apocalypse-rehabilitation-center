@@ -1,5 +1,5 @@
 /*
- * This is the screen where the player can view available cryo pods and choose to wake a character.
+ * This is the screen where the player can view available echo pods and choose to wake a character.
  * Extends ScreenBase.
  */
 import React from 'react';
@@ -9,22 +9,22 @@ import { Stage } from '../Stage';
 import Actor from '../Actor';
 import VignetteScreen from './VignetteScreen';
 
-interface CryoScreenProps {
+interface EchoScreenProps {
 	stage: Stage;
-	candidates: Actor[]; // array of labels for each cryo pod
+	candidates: Actor[]; // array of labels for each echo pod
 	onAccept?: (selected: Actor | null, stage: Stage) => void;
 	onCancel?: (stage: Stage) => void;
 }
 
-interface CryoScreenState {
+interface EchoScreenState {
 	selectedIndex: number | null;
 }
 
-export default class CryoScreen extends BaseScreen {
-	state: CryoScreenState = { selectedIndex: null };
-	props: CryoScreenProps;
+export default class EchoScreen extends BaseScreen {
+	state: EchoScreenState = { selectedIndex: null };
+	props: EchoScreenProps;
 
-	constructor(props: CryoScreenProps) {
+	constructor(props: EchoScreenProps) {
 		super(props as any);
 		this.props = props;
 	}
@@ -40,8 +40,8 @@ export default class CryoScreen extends BaseScreen {
 		if (selected && firstRoom) {
 			// Assign the selected actor to the first available room
 			firstRoom.ownerId = selected.id;
-			// Set the actor's location to the command room:
-			const sceneRoom = this.stage.getSave().layout.getModulesWhere(m => m.type === 'command')[0] || firstRoom;
+			// Set the actor's location to the echo room:
+			const sceneRoom = this.stage.getSave().layout.getModulesWhere(m => m.type === 'echo')[0] || firstRoom;
 			selected.locationId = sceneRoom?.id || '';
 			this.stage.getSave().actors[selected.id] = selected;
 			this.stage.reserveActors = this.stage.reserveActors.filter(a => a.id !== selected.id);
@@ -69,7 +69,7 @@ export default class CryoScreen extends BaseScreen {
 							const isSelected = selectedIndex === idx;
 							return (
 								<motion.div
-									key={`cryo_${idx}`}
+									key={`pod_${idx}`}
 									onClick={() => this.selectIndex(idx)}
 									whileHover={{ scale: 1.02 }}
 									whileTap={{ scale: 0.98 }}

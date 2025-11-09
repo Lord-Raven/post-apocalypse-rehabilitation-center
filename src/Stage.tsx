@@ -5,7 +5,7 @@ import StationScreen from "./screens/StationScreen";
 import Actor, { loadReserveActor, populateActorImages } from "./Actor";
 import { DEFAULT_GRID_SIZE, Layout, createModule } from './Module';
 import { BaseScreen } from "./screens/BaseScreen";
-import CryoScreen from "./screens/CryoScreen";
+import EchoScreen from "./screens/EchoScreen";
 import {Client} from "@gradio/client";
 import VignetteScreen from "./screens/VignetteScreen";
 
@@ -73,7 +73,7 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
         // ensure at least one save exists and has a layout
         if (!this.saves.length) {
             const layout = new Layout();
-            layout.setModuleAt(DEFAULT_GRID_SIZE/2, DEFAULT_GRID_SIZE/2, createModule('command', { id: `command-${DEFAULT_GRID_SIZE/2}-${DEFAULT_GRID_SIZE/2}`, connections: [], attributes: {} }));
+            layout.setModuleAt(DEFAULT_GRID_SIZE/2, DEFAULT_GRID_SIZE/2, createModule('echo', { id: `echo-${DEFAULT_GRID_SIZE/2}-${DEFAULT_GRID_SIZE/2}`, connections: [], attributes: {} }));
             layout.setModuleAt(DEFAULT_GRID_SIZE/2 - 1, DEFAULT_GRID_SIZE/2, createModule("common", { id: `common-${DEFAULT_GRID_SIZE/2 - 1}-${DEFAULT_GRID_SIZE/2}`, connections: [], attributes: {} }));
             layout.setModuleAt(DEFAULT_GRID_SIZE/2, DEFAULT_GRID_SIZE/2 - 1, createModule("generator", { id: `generator-${DEFAULT_GRID_SIZE/2}-${DEFAULT_GRID_SIZE/2 - 1}`, connections: [], attributes: {} }));
             this.saves.push({ player: {name: Object.values(users)[0].name}, messageTree: null as any, currentMessageId: '', actors: {}, layout: layout, day: 1, phase: 0 });
@@ -117,7 +117,7 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
         // When incrementing phase, maybe move some actors around in the layout.
         for (const actorId in save.actors) {
             const actor = save.actors[actorId];
-            actor.locationId = save.layout.getModulesWhere(m => ['command', 'common', 'generator'].includes(m.type) || m.ownerId == actorId).sort(() => Math.random() - 0.5)[0]?.id || '';
+            actor.locationId = save.layout.getModulesWhere(m => ['echo', 'common', 'generator'].includes(m.type) || m.ownerId == actorId).sort(() => Math.random() - 0.5)[0]?.id || '';
         }
         this.requestUpdate();
     }
@@ -303,8 +303,8 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
                 {stage.screen == StationScreen &&
                     <StationScreen stage={stage} {...stage.screenProps}/>
                 }
-                {stage.screen == CryoScreen && 
-                    <CryoScreen
+                {stage.screen == EchoScreen && 
+                    <EchoScreen
                         stage={stage}
                         candidates={this.reserveActors}
                         onAccept={(selected, s) => {

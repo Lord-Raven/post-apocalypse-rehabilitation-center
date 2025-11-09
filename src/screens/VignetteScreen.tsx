@@ -35,7 +35,7 @@ interface VignetteScreenState {
 
 // Need a little enum for Vignette types: 
 enum VignetteType {
-    INTRO_CHARACTER = 'INTRO CHARACTER', // Introducing a new de-cryoed character
+    INTRO_CHARACTER = 'INTRO CHARACTER', // Introducing a new candidate fresh from the echo chamber
     VISIT_CHARACTER = 'VISIT CHARACTER', // Visiting a character in their quarters
     RANDOM_ENCOUNTER = 'RANDOM ENCOUNTER' // A chance meeting with a character in another un-owned module
 }
@@ -230,7 +230,7 @@ export default class VignetteScreen extends BaseScreen {
                     key={actor.id}
                     src={src}
                     alt={actor.name}
-                    initial={{ opacity: 0, scale: 0.9, y: 30 }}
+                    initial={{ opacity: 0, scale: 0.9, x: '150vw' }}
                     animate={{ opacity: 1, scale: 1, y: 0 }}
                     transition={{ type: 'spring', stiffness: 120, damping: 18, delay: i * 0.08 }}
                     style={{
@@ -238,7 +238,7 @@ export default class VignetteScreen extends BaseScreen {
                         bottom: 0,
                         left,
                         transform: 'translateX(-50%)',
-                        maxHeight: '70vh',
+                        maxHeight: '80vh',
                         pointerEvents: 'none',
                         userSelect: 'none',
                         borderRadius: 8,
@@ -293,7 +293,7 @@ export default class VignetteScreen extends BaseScreen {
                             <button onClick={this.next} style={{ padding: '8px 12px', background: 'transparent', border: '1px solid rgba(255,255,255,0.06)', color: '#cfe', cursor: 'pointer' }} disabled={index === this.state.script.length - 1}>{'⟩'}</button>
                         </div>
 
-                        <div style={{ fontSize: 12, opacity: 0.8 }}>{loading ? 'Loading' : `${index + 1} / ${script.length}`}{loading ? <span style={{ marginLeft: 6 }}>{'.'.repeat(this.state.loadingDots)}</span> : null}</div>
+                        <div style={{ fontSize: 12, opacity: 0.8, visibility: !loading ? 'visible' : 'hidden' }}>{`${index + 1} / ${script.length}`}{loading ? <span style={{ marginLeft: 6 }}>{'.'.repeat(this.state.loadingDots)}</span> : null}</div>
                     </div>
 
                     <div style={{ marginTop: 12, minHeight: '3.5rem', fontSize: '1.05rem', lineHeight: 1.4 }}>
@@ -309,7 +309,7 @@ export default class VignetteScreen extends BaseScreen {
                         <input
                             value={inputText}
                             onChange={(e) => this.setState({ inputText: e.target.value })}
-                            placeholder={isFinal ? 'Type your course of action...' : (loading ? 'Generating...' : 'Advance to the final line to chat')}
+                            placeholder={isFinal ? 'Type your course of action...' : (loading ? 'Generating...' : 'Advance to the final line...')}
                             style={{ flex: 1, padding: '10px 12px', borderRadius: 8, border: '1px solid rgba(255,255,255,0.06)', background: 'rgba(255,255,255,0.02)', color: '#dfffe6' }}
                             disabled={!isFinal}
                         />
