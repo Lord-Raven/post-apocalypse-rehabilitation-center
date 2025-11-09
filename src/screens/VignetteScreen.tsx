@@ -164,12 +164,14 @@ export default class VignetteScreen extends BaseScreen {
 
     async generateVignetteScript(type: VignetteType, context: any, continuing: boolean) {
         const fullPrompt = `Premise:\nThis is a sci-fi visual novel game set on a space station that resurrects and rehabilitates patients who died in the multiverse-wide apocalypse. ` +
-            `The thrust of the game has the player, ${this.stage.getSave().player.name}, managing this station and interacting with various patients and crew, as they navigate this complex future scenario.` +
-            `{{messages}}` +
+            `The thrust of the game has the player, ${this.stage.getSave().player.name}, managing this station and interacting with patients and crew, as they navigate this complex futuristic universe together. ` +
+            `\n\nCrew:\nAt this point in the story, the player is running the operation on their own, with no fellow crew members. ` +
+            `\n\nPatients:\n${Object.values(this.stage.getSave().actors).map(actor => `${actor.name} - ${actor.description} - ${actor.profile}`).join('\n')}` +
             `\n\nScene Prompt:\n${this.generateVignettePrompt(type, context, continuing)}` +
-            `\n\nInstruction:\nGenerate a short script based upon this scenario and scene prompt. Use the formatting guide below.` +
-            `\n\nResponse Format:\nCHARACTER NAME: Action in pose. "Dialogue in quotation marks."\nANOTHER CHARACTER NAME: "Dialogue in quotation marks."\nNARRATOR: Descriptive content that is not attributed to a character.`; 
-
+            `\n\nExample Script Format:\n` +
+            'System: CHARACTER NAME: Action in pose. "Dialogue in quotation marks."\nANOTHER CHARACTER NAME: "Dialogue in quotation marks."\nNARRATOR: Descriptive content that is not attributed to a character.' +
+            `\n\nScriptlog:\n{{messages}}` +
+            `\n\nInstruction:\nAt the "System:" prompt, generate a short scene script based upon this scenario, and the specified Scene Prompt. Follow the structure of the strict Example Script Format above.`
         // Retry logic if response is null or response.result is empty
         let retries = 3;
         while (retries > 0) {
