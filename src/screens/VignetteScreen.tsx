@@ -10,6 +10,10 @@ import Actor from '../Actor';
 import { Stage } from '../Stage';
 import StationScreen from './StationScreen';
 
+// Cache generated scripts by a composite key so we don't re-run generation when the
+// component is remounted or updated repeatedly. Key format: `${type}:${moduleId}:${actorId}`
+const vignetteScriptCache: Map<string, string[]> = new Map();
+
 interface VignetteScreenProps {
     stage: Stage;
     vignetteContext: {
@@ -24,6 +28,7 @@ interface VignetteScreenState {
     inputText: string;
     script: string[];
     loading: boolean;
+    loadingDots: number;
 }
 
 // Script will be generated when the vignette opens and stored in component state.
@@ -41,6 +46,7 @@ export default class VignetteScreen extends BaseScreen {
         inputText: '',
         script: [],
         loading: true,
+        loadingDots: 0,
     };
     props: VignetteScreenProps;
 
@@ -51,18 +57,85 @@ export default class VignetteScreen extends BaseScreen {
     }
 
     async componentDidMount() {
-        // Generate the vignette script when the screen opens. Use the provided vignetteContext.
+        // Kick off generation in a guarded way (ensureGeneration handles caching
+        // and prevents loops if the component is remounted frequently).
+        this.ensureGeneration();
+    }
+
+    componentDidUpdate(prevProps: VignetteScreenProps) {
+        // If the vignette context changed, generate a new script for the new context.
+        const prev = prevProps.vignetteContext || {} as any;
+        const cur = this.props.vignetteContext || {} as any;
+        if (prev.type !== cur.type || prev.moduleId !== cur.moduleId || prev.actorId !== cur.actorId) {
+            this.ensureGeneration();
+        }
+    }
+
+    componentWillUnmount() {
+        // cleanup interval if present
+        if ((this as any)._ellipsisTimer) {
+            clearInterval((this as any)._ellipsisTimer);
+            (this as any)._ellipsisTimer = undefined;
+        }
+    }
+
+    // Build a stable cache key for a given vignette context
+    private getContextKey(context: any, type?: VignetteType) {
+        const t = type || (context && context.type) || VignetteType.INTRO_CHARACTER;
+        const moduleId = (context && context.moduleId) || '';
+        const actorId = (context && context.actorId) || '';
+        return `${t}:${moduleId}:${actorId}`;
+    }
+
+    // Ensure generation runs once per context; uses module-level cache to survive remounts.
+    private async ensureGeneration() {
+        const ctx = this.props.vignetteContext || { type: VignetteType.INTRO_CHARACTER };
+        const key = this.getContextKey(ctx, ctx.type);
+
+        // If we already have a cached script for this context, use it and skip generation.
+        if (vignetteScriptCache.has(key)) {
+            const cached = vignetteScriptCache.get(key) || ["(No script available.)"];
+            this.setState({ script: cached, index: 0, loading: false });
+            return;
+        }
+
+        // If we're already loading for this instance, don't start another generation.
+        if (this.state.loading && this.state.script.length > 0) return;
+
+        // Start the ellipsis animation
+        this.startEllipsis();
+        this.setState({ loading: true });
+
         try {
-            if (this.state.script.length == 0) {
-                const ctx = this.props.vignetteContext || { type: VignetteType.INTRO_CHARACTER };
-                console.log('Generating vignette script for context:', ctx);
-                const script = await this.generateVignetteScript(ctx.type, ctx, false);
-                console.log('Generated vignette script:', script);
-                this.setState({ script: (script && script.length > 0) ? script : ["(No script could be generated.)"], index: 0, loading: false });
-            }
+            console.log('Generating vignette script for context:', ctx);
+            const script = await this.generateVignetteScript(ctx.type, ctx, false);
+            const final = (script && script.length > 0) ? script : ["(No script could be generated.)"];
+            // cache for future mounts
+            vignetteScriptCache.set(key, final);
+            this.setState({ script: final, index: 0, loading: false });
         } catch (err) {
-            console.error('Failed to generate vignette script on mount', err);
-            this.setState({ script: ["(Failed to generate script.)"], loading: false });
+            console.error('Failed to generate vignette script', err);
+            const fallback = ["(Failed to generate script.)"];
+            vignetteScriptCache.set(key, fallback);
+            this.setState({ script: fallback, loading: false });
+        } finally {
+            this.stopEllipsis();
+        }
+    }
+
+    private startEllipsis() {
+        // If timer already exists, don't start another
+        if ((this as any)._ellipsisTimer) return;
+        (this as any)._ellipsisTimer = setInterval(() => {
+            this.setState((s: VignetteScreenState) => ({ loadingDots: (s.loadingDots + 1) % 4 }));
+        }, 400) as unknown as number;
+    }
+
+    private stopEllipsis() {
+        if ((this as any)._ellipsisTimer) {
+            clearInterval((this as any)._ellipsisTimer);
+            (this as any)._ellipsisTimer = undefined;
+            this.setState({ loadingDots: 0 });
         }
     }
 
@@ -220,11 +293,15 @@ export default class VignetteScreen extends BaseScreen {
                             <button onClick={this.next} style={{ padding: '8px 12px', background: 'transparent', border: '1px solid rgba(255,255,255,0.06)', color: '#cfe', cursor: 'pointer' }} disabled={index === this.state.script.length - 1}>{'⟩'}</button>
                         </div>
 
-                        <div style={{ fontSize: 12, opacity: 0.8 }}>{loading ? 'Loading...' : `${index + 1} / ${script.length}`}</div>
+                        <div style={{ fontSize: 12, opacity: 0.8 }}>{loading ? 'Loading' : `${index + 1} / ${script.length}`}{loading ? <span style={{ marginLeft: 6 }}>{'.'.repeat(this.state.loadingDots)}</span> : null}</div>
                     </div>
 
                     <div style={{ marginTop: 12, minHeight: '3.5rem', fontSize: '1.05rem', lineHeight: 1.4 }}>
-                        {loading ? '(Generating scene...)' : (script[index] || '')}
+                        {loading ? (
+                            <span style={{ display: 'inline-block' }}>
+                                Generating scene{'.'.repeat(this.state.loadingDots)}
+                            </span>
+                        ) : (script[index] || '')}
                     </div>
 
                     {/* Chat input shown (enabled) only when at final message */}
