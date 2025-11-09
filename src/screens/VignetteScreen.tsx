@@ -118,7 +118,7 @@ export default class VignetteScreen extends BaseScreen {
 
                 {/* Actors */}
                 <div style={{ position: 'absolute', inset: 0 }}>
-                    {this.renderActors(module as any, actors as Actor[])}
+                    {this.renderActors(this.props.module, actors as Actor[])}
                 </div>
 
                 {/* Bottom text window */}
