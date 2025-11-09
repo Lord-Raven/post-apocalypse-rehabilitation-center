@@ -1,4 +1,5 @@
-import ScreenCryo from "./ScreenCryo";
+import CryoScreen from "./screens/CryoScreen";
+import VignetteScreen from "./screens/VignetteScreen";
 import { Stage } from "./Stage";
 
 export type ModuleType = 'command' | 'generator' | 'quarters' | 'common';
@@ -22,9 +23,9 @@ export const MODULE_DEFAULTS: Record<ModuleType, ModuleIntrinsic> = {
         defaultImageUrl: 'https://media.charhub.io/026ae01a-7dc8-472d-bfea-61548b87e6ef/84990780-8260-4833-ac0b-79c1a15ddb9e.png',
         action: (module: Module, stage: Stage) => {
             // Open the station management screen
-            console.log("Opening cryo screen from command module:", stage);
+            console.log("Opening cryo screen from command module.");
             // Use Stage API so any mounted UI can react to the change
-            stage.setScreen(ScreenCryo);
+            stage.setScreen(CryoScreen);
         }
     },
     generator: {
@@ -38,7 +39,12 @@ export const MODULE_DEFAULTS: Record<ModuleType, ModuleIntrinsic> = {
         maintenance: 2, 
         capacity: 2, 
         baseImageUrl: 'https://media.charhub.io/5e39db53-9d66-459d-8926-281b3b089b36/8ff20bdb-b719-4cf7-bf53-3326d6f9fcaa.png', 
-        defaultImageUrl: 'https://media.charhub.io/99ffcdf5-a01b-43cf-81e5-e7098d8058f5/d1ec2e67-9124-4b8b-82d9-9685cfb973d2.png'
+        defaultImageUrl: 'https://media.charhub.io/99ffcdf5-a01b-43cf-81e5-e7098d8058f5/d1ec2e67-9124-4b8b-82d9-9685cfb973d2.png',
+        action: (module: Module, stage: Stage) => {
+            // Open the vignette screen to manage occupants
+            console.log("Opening vignette.");
+            stage.setScreen(VignetteScreen, { module, intent: 'manageOccupants' });
+        }
     },
     common: { 
         power: -1, 

@@ -4,26 +4,26 @@
  */
 import React from 'react';
 import { motion } from 'framer-motion';
-import { ScreenBase } from './ScreenBase';
-import { Stage } from './Stage';
-import Actor from './Actor';
+import { BaseScreen } from './BaseScreen';
+import { Stage } from '../Stage';
+import Actor from '../Actor';
 
-interface ScreenCryoProps {
+interface CryoScreenProps {
 	stage: Stage;
 	candidates: Actor[]; // array of labels for each cryo pod
 	onAccept?: (selected: Actor | null, stage: Stage) => void;
 	onCancel?: (stage: Stage) => void;
 }
 
-interface ScreenCryoState {
+interface CryoScreenState {
 	selectedIndex: number | null;
 }
 
-export default class ScreenCryo extends ScreenBase {
-	state: ScreenCryoState = { selectedIndex: null };
-	props: ScreenCryoProps;
+export default class CryoScreen extends BaseScreen {
+	state: CryoScreenState = { selectedIndex: null };
+	props: CryoScreenProps;
 
-	constructor(props: ScreenCryoProps) {
+	constructor(props: CryoScreenProps) {
 		super(props as any);
 		this.props = props;
 	}

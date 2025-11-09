@@ -1,7 +1,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { BaseScreen } from './screens/BaseScreen';
-import { Layout, MODULE_DEFAULTS, Module, createModule } from './Module';
+import { BaseScreen } from './BaseScreen';
+import { Layout, MODULE_DEFAULTS, Module, createModule } from '../Module';
 
 /*
  * This screen allows the player to manage their space station, including viewing resources, upgrading facilities, or visiting locations (transitioning to vignette scenes).
@@ -12,23 +12,23 @@ import { Layout, MODULE_DEFAULTS, Module, createModule } from './Module';
  * Extends ScreenBase.
  */
 
-interface ScreenStationProps {
+interface StationScreenProps {
     // will implicitly accept ScreenBaseProps.stage
 }
 
-interface ScreenStationState {
+interface StationScreenState {
     selectedMenu: string;
 }
 
-export default class ScreenStation extends BaseScreen {
-    state: ScreenStationState = {
+export default class StationScreen extends BaseScreen {
+    state: StationScreenState = {
         selectedMenu: 'resources',
     };
 
     private gridSize = 6;
     private cellSize = '10vmin';
 
-    constructor(props: ScreenStationProps) {
+    constructor(props: StationScreenProps) {
         super(props as any);
         // this.stage is now available from ScreenBase (if provided by parent)
     }
@@ -139,9 +139,7 @@ export default class ScreenStation extends BaseScreen {
                                                             src={actor.emotionPack?.neutral}
                                                             alt={actor.name}
                                                             style={{
-                                                                height: '60%',
-                                                                maxHeight: 'calc(100% - 40px)',
-                                                                objectFit: 'contain',
+                                                                height: `calc(0.6 * ${this.cellSize})`,
                                                                 userSelect: 'none',
                                                                 pointerEvents: 'none',
                                                             }}

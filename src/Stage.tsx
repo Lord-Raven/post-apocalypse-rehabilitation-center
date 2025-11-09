@@ -1,12 +1,13 @@
 import {ReactElement, useEffect, useState} from "react";
 import {StageBase, StageResponse, InitialData, Message} from "@chub-ai/stages-ts";
 import {LoadResponse} from "@chub-ai/stages-ts/dist/types/load";
-import ScreenStation from "./ScreenStation";
+import StationScreen from "./screens/StationScreen";
 import Actor, { loadReserveActor, populateActorImages } from "./Actor";
 import { DEFAULT_GRID_SIZE, Layout, createModule } from './Module';
-import { ScreenBase } from "./ScreenBase";
-import ScreenCryo from "./ScreenCryo";
+import { BaseScreen } from "./screens/BaseScreen";
+import CryoScreen from "./screens/CryoScreen";
 import {Client} from "@gradio/client";
+import VignetteScreen from "./screens/VignetteScreen";
 
 
 
@@ -43,7 +44,8 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
     public gridSize = DEFAULT_GRID_SIZE;
 
     // screen should be a type that extends ScreenBase; not an instance but a class reference to allow instantiation. For instance, screen should be ScreenStation by default.
-    screen: typeof ScreenBase = ScreenStation;
+    screen: typeof BaseScreen = StationScreen;
+    screenProps: any = {};
 
     reserveActors: Actor[] = [];
 
@@ -97,8 +99,9 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
     /**
      * Change the active screen and request a UI update.
      */
-    setScreen(screenClass: typeof ScreenBase) {
+    setScreen(screenClass: typeof BaseScreen, props?: any) {
         this.screen = screenClass;
+        this.screenProps = props || {};
         this.requestUpdate();
     }
 
@@ -295,23 +298,27 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
                 display: 'grid',
                 alignItems: 'stretch'
             }}>
-                {stage.screen == ScreenStation &&
-                    <ScreenStation stage={stage} />
+                {stage.screen == StationScreen &&
+                    <StationScreen stage={stage} {...stage.screenProps}/>
                 }
-                {stage.screen == ScreenCryo && 
-                    <ScreenCryo
+                {stage.screen == CryoScreen && 
+                    <CryoScreen
                         stage={stage}
                         candidates={this.reserveActors}
                         onAccept={(selected, s) => {
                             console.log(`onAccept(${selected})`);
                             // use stage API so UI will update
-                            s.setScreen(ScreenStation);
+                            s.setScreen(StationScreen);
                         }}
                         onCancel={(s) => {
                             console.log(`onCancel()`);
-                            s.setScreen(ScreenStation);
+                            s.setScreen(StationScreen);
                         }}
+                        {...stage.screenProps}
                     />
+                }
+                {stage.screen == VignetteScreen && 
+                    <VignetteScreen stage={stage} {...stage.screenProps} />
                 }
             </div>;
         };
