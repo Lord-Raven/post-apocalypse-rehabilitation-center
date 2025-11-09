@@ -6,7 +6,7 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { BaseScreen } from './BaseScreen';
 import { Stage } from '../Stage';
-import Actor from '../Actor';
+import Actor from '../actors/Actor';
 import VignetteScreen from './VignetteScreen';
 
 interface EchoScreenProps {

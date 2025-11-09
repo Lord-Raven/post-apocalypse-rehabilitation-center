@@ -1,5 +1,5 @@
-import { EmotionPack } from "./Emotion";
-import { Stage } from "./Stage";
+import { EmotionPack } from "../Emotion";
+import { Stage } from "../Stage";
 import { v4 as generateUuid } from 'uuid';
 
 class Actor {

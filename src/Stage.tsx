@@ -2,7 +2,7 @@ import {ReactElement, useEffect, useState} from "react";
 import {StageBase, StageResponse, InitialData, Message} from "@chub-ai/stages-ts";
 import {LoadResponse} from "@chub-ai/stages-ts/dist/types/load";
 import StationScreen from "./screens/StationScreen";
-import Actor, { loadReserveActor, populateActorImages } from "./Actor";
+import Actor, { loadReserveActor, populateActorImages } from "./actors/Actor";
 import { DEFAULT_GRID_SIZE, Layout, createModule } from './Module';
 import { BaseScreen } from "./screens/BaseScreen";
 import EchoScreen from "./screens/EchoScreen";

@@ -6,9 +6,11 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { BaseScreen } from './BaseScreen';
 import { Module } from '../Module';
-import Actor from '../Actor';
+import Actor from '../actors/Actor';
 import { Stage } from '../Stage';
 import StationScreen from './StationScreen';
+import ActorImage from '../actors/ActorImage';
+import { Emotion } from '../Emotion';
 
 // Cache generated scripts by a composite key so we don't re-run generation when the
 // component is remounted or updated repeatedly. Key format: `${type}:${moduleId}:${actorId}`
@@ -147,15 +149,17 @@ export default class VignetteScreen extends BaseScreen {
         switch (type) {
             case VignetteType.INTRO_CHARACTER:
                 return !continuing ? 
-                    `This scene will introduce a new character, fresh from their echo chamber: ${actor.name}. Establish their personality and possibly some motivations.` :
+                    `This scene will introduce a new character, ${actor.name}, fresh from their echo chamber. ${actor.name} will have no knowledge of this universe. Establish their personality and possibly some motivations.` :
                     `Continue the introduction of ${actor.name}, expanding on their personality or motivations.`;
             case VignetteType.VISIT_CHARACTER:
                 return !continuing ?
-                    `This scene depicts the player's visit with ${actor.name} in ${actor.name}'s quarters. Potentially explore ${actor.name}'s thoughts, feelings, or troubles in this intimate setting.` :
+                    `This scene depicts the player's visit with ${actor.name} in ${actor.name}'s quarters. Bear in mind that ${actor.name} is from another universe, and may be unaware of details of this one. ` +
+                        `Potentially explore ${actor.name}'s thoughts, feelings, or troubles in this intimate setting.` :
                     `Continue this scene with ${actor.name}, potentially exploring their thoughts, feelings, or troubles in this intimate setting.`;
             case VignetteType.RANDOM_ENCOUNTER:
                 return !continuing ?
-                    `This scene depicts a chance encounter with ${actor.name} in the ${module?.type || 'unknown'} module. Explore the setting and what might arise from this unexpected meeting.` :
+                    `This scene depicts a chance encounter with ${actor.name} in the ${module?.type || 'unknown'} module. Bear in mind that ${actor.name} is from another universe, and may be unaware of details of this one. ` +
+                        `Explore the setting and what might arise from this unexpected meeting.` :
                     `Continue this chance encounter with ${actor.name} in the ${module?.type || 'unknown'} module, exploring what might arise from this unexpected meeting.`;
             default:
                 return '';
@@ -222,30 +226,22 @@ export default class VignetteScreen extends BaseScreen {
 
     renderActors(module: Module | null, actors: Actor[]) {
         // Display actors centered across the scene bottom. Use neutral emotion image where possible
-        const visibleActors = actors || [];
-        return visibleActors.map((actor, i) => {
-            const src = actor.emotionPack?.neutral || actor.avatarImageUrl || '';
-            const percent = visibleActors.length > 1 ? (i / (visibleActors.length - 1)) : 0.5;
-            const xPosition = `${Math.round(percent * 80) + 10}vw`; // 10%..90%
+        return actors.map((actor, i) => {
+            const imageUrl = actor.emotionPack?.neutral || actor.avatarImageUrl || '';
+            const increment = actors.length > 1 ? (i / (actors.length - 1)) : 0.5;
+            const xPosition = Math.round(increment * 80) + 10;
             return (
-                <motion.img
-                    key={actor.id}
-                    src={src}
-                    alt={actor.name}
-                    initial={{ opacity: 0, scale: 0.9, x: '150vw', y: 0 }}
-                    animate={{ opacity: 1, scale: 1, x: xPosition, y: 0 }}
-                    transition={{ type: 'spring', stiffness: 120, damping: 18, delay: i * 0.08 }}
-                    style={{
-                        position: 'absolute',
-                        bottom: 0,
-                        left: 0,
-                        transform: 'translateX(-50%)',
-                        maxHeight: '80vh',
-                        pointerEvents: 'none',
-                        userSelect: 'none',
-                        borderRadius: 8,
-                        objectFit: 'contain',
-                    }}
+                <ActorImage
+                    actor={actor}
+                    emotion={Emotion.neutral}
+                    imageUrl={imageUrl}
+                    xPosition={xPosition}
+                    yPosition={0}
+                    zIndex={1}
+                    isTalking={false}
+                    highlightColor="rgba(255,255,255,0)"
+                    panX={0}
+                    panY={0}
                 />
             );
         });
