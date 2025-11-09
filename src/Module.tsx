@@ -43,7 +43,7 @@ export const MODULE_DEFAULTS: Record<ModuleType, ModuleIntrinsic> = {
         action: (module: Module, stage: Stage) => {
             // Open the vignette screen to manage occupants
             console.log("Opening vignette.");
-            stage.setScreen(VignetteScreen, { module, intent: 'manageOccupants' });
+            stage.setScreen(VignetteScreen, { module: module, intent: 'manageOccupants' });
         }
     },
     common: { 
