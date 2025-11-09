@@ -43,10 +43,6 @@ export default class VignetteScreen extends BaseScreen {
     }
 
     next = () => {
-        if (this.state.index >= SCRIPT.length - 1) {
-            this.stage.setScreen(StationScreen);
-            return;
-        }
         this.setState((prevState: VignetteScreenState) => ({ index: Math.min(prevState.index + 1, SCRIPT.length - 1) }));
     };
 
@@ -58,7 +54,7 @@ export default class VignetteScreen extends BaseScreen {
         // Display actors centered across the scene bottom. Use neutral emotion image where possible
         const visibleActors = actors || [];
         return visibleActors.map((actor, i) => {
-            const src = (actor as any)?.emotionPack?.neutral || (actor as any)?.avatarImageUrl || '';
+            const src = actor.emotionPack?.neutral || actor.avatarImageUrl || '';
             const percent = visibleActors.length > 1 ? (i / (visibleActors.length - 1)) : 0.5;
             const left = `${Math.round(percent * 80) + 10}%`; // 10%..90%
             return (
@@ -71,14 +67,12 @@ export default class VignetteScreen extends BaseScreen {
                     transition={{ type: 'spring', stiffness: 120, damping: 18, delay: i * 0.08 }}
                     style={{
                         position: 'absolute',
-                        bottom: '14vh',
+                        bottom: 0,
                         left,
                         transform: 'translateX(-50%)',
-                        maxHeight: '45vh',
-                        maxWidth: '28vw',
+                        maxHeight: '70vh',
                         pointerEvents: 'none',
                         userSelect: 'none',
-                        boxShadow: '0 10px 30px rgba(0,0,0,0.6)',
                         borderRadius: 8,
                         objectFit: 'contain',
                     }}
@@ -144,7 +138,12 @@ export default class VignetteScreen extends BaseScreen {
                             disabled={!isFinal}
                         />
                         <button
-                            onClick={() => { /* We will handle the chat behavior later; for now just clear */ this.setState({ inputText: '' }); }}
+                            onClick={() => {
+                                this.setState({ inputText: '' });
+                                // For now, just go back to the station screen.
+                                this.stage.setScreen(StationScreen);
+                                return;
+                            }}
                             disabled={!isFinal || inputText.trim().length === 0}
                             style={{ padding: '10px 14px', borderRadius: 8, background: isFinal ? 'linear-gradient(90deg,#00ff88,#00b38f)' : 'rgba(255,255,255,0.04)', border: 'none', color: '#00221a', cursor: isFinal ? 'pointer' : 'not-allowed', fontWeight: 700 }}
                         >Send</button>

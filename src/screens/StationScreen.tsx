@@ -154,7 +154,7 @@ export default class StationScreen extends BaseScreen {
                                                     right: 0,
                                                     bottom: '6px',
                                                     width: '100%',
-                                                    background: 'rgba(0,0,0,0.6))',
+                                                    background: 'rgba(0,0,0,0.6)',
                                                     color: '#dfffe6',
                                                     padding: '6px 8px',
                                                     textAlign: 'center',
