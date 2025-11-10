@@ -276,7 +276,6 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
                 vignette.generating = false;
             });
         }
-        this.setScreen(VignetteScreen);
     }
 
     continueVignette(input: string) {
@@ -332,10 +331,13 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
                 display: 'grid',
                 alignItems: 'stretch'
             }}>
-                {stage.screen == StationScreen &&
+                {stage.getSave().currentVignette &&
+                    <VignetteScreen key='vignette-screen' stage={stage} vignette={stage.getSave().currentVignette as VignetteData} />
+                }
+                {stage.screen == StationScreen && !stage.getSave().currentVignette &&
                     <StationScreen key='station-screen' stage={stage} {...stage.screenProps}/>
                 }
-                {stage.screen == EchoScreen && 
+                {stage.screen == EchoScreen && !stage.getSave().currentVignette &&
                     <EchoScreen
                         key='echo-screen'
                         stage={stage}
@@ -352,9 +354,7 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
                         {...stage.screenProps}
                     />
                 }
-                {stage.screen == VignetteScreen && stage.getSave().currentVignette &&
-                    <VignetteScreen key='vignette-screen' stage={stage} vignette={stage.getSave().currentVignette as VignetteData} />
-                }
+
             </div>;
         };
 
