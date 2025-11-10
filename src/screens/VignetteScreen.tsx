@@ -3,11 +3,10 @@
  * Extends ScreenBase.
  */
 import React, { FC, useEffect } from 'react';
-import { BaseScreen } from './BaseScreen';
+import { BaseScreen, ScreenType } from './BaseScreen';
 import { Module } from '../Module';
 import Actor, { getStatDescription, namesMatch, Stat } from '../actors/Actor';
 import { Stage } from '../Stage';
-import StationScreen from './StationScreen';
 import { VignetteType, VignetteData } from '../Vignette';
 import ActorImage from '../actors/ActorImage';
 import { Emotion } from '../Emotion';
@@ -30,7 +29,8 @@ const LoadingEllipsis: React.FC<{ active?: boolean }> = ({ active }) => {
 };
 
 interface VignetteScreenProps {
-    stage: Stage;
+    stage: () => Stage;
+    setScreenType: (type: ScreenType) => void;
 }
 
 interface VignetteScreenState {
@@ -39,14 +39,14 @@ interface VignetteScreenState {
     sceneEnded?: boolean;
 }
 
-export const VignetteScreen: FC<VignetteScreenProps> = ({ stage }) => {
+export const VignetteScreen: FC<VignetteScreenProps> = ({ stage, setScreenType }) => {
     const [index, setIndex] = React.useState<number>(0);
     const [inputText, setInputText] = React.useState<string>('');
     const [sceneEnded, setSceneEnded] = React.useState<boolean>(false);
-    const [vignette, setVignette] = React.useState<VignetteData>(stage.getSave().currentVignette as VignetteData);
+    const [vignette, setVignette] = React.useState<VignetteData>(stage().getSave().currentVignette as VignetteData);
 
     useEffect(() => {
-        setVignette(stage.getSave().currentVignette as VignetteData);
+        setVignette(stage().getSave().currentVignette as VignetteData);
     }, [vignette]);
     
     const next = () => {
@@ -94,7 +94,7 @@ export const VignetteScreen: FC<VignetteScreenProps> = ({ stage }) => {
                 left: 0,
                 right: 0,
                 bottom: 0,
-                backgroundImage: `url(${(stage.getSave().layout.getModuleById(vignette.moduleId || '')?.attributes?.defaultImageUrl || '')})`,
+                backgroundImage: `url(${(stage().getSave().layout.getModuleById(vignette.moduleId || '')?.attributes?.defaultImageUrl || '')})`,
                 backgroundSize: 'cover',
                 backgroundPosition: 'center',
                 filter: 'blur(6px) brightness(0.6) contrast(1.05)',
@@ -106,7 +106,7 @@ export const VignetteScreen: FC<VignetteScreenProps> = ({ stage }) => {
 
             {/* Actors */}
             <div style={{ position: 'absolute', inset: 0, zIndex: 1, pointerEvents: 'none' }}>
-                {renderActors(stage.getSave().layout.getModuleById(vignette.moduleId || ''), Object.values(stage.getSave().actors).filter(actor => actor.locationId === (vignette.moduleId || '')) || [], vignette.script && vignette.script.length > 0 ? vignette.script[index]?.speaker : undefined)}
+                {renderActors(stage().getSave().layout.getModuleById(vignette.moduleId || ''), Object.values(stage().getSave().actors).filter(actor => actor.locationId === (vignette.moduleId || '')) || [], vignette.script && vignette.script.length > 0 ? vignette.script[index]?.speaker : undefined)}
             </div>
 
             {/* Bottom text window */}
@@ -162,18 +162,14 @@ export const VignetteScreen: FC<VignetteScreenProps> = ({ stage }) => {
     
     // Handle submission of player's guidance (or blank submit to continue the scene autonomously)
     function handleSubmit() {
-        stage.continueVignette(inputText);
+        stage().continueVignette(inputText);
     }
 
     function handleClose() {
         // When the scene is concluded, switch back to the Station screen
-        try {
-            // Output stat change for now:
-            console.log('Vignette concluded with stat changes:', vignette.endProperties || {});
-            stage.setScreen(StationScreen);
-        } catch (err) {
-            console.error('Failed to close vignette and return to StationScreen', err);
-        }
+        // Output stat change for now:
+        console.log('Vignette concluded with stat changes:', vignette.endProperties || {});
+        setScreenType(ScreenType.STATION);
     }
 }
 

@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { FC } from 'react';
 import { motion } from 'framer-motion';
-import { BaseScreen } from './BaseScreen';
+import { BaseScreen, ScreenType } from './BaseScreen';
 import { Layout, MODULE_DEFAULTS, Module, createModule } from '../Module';
+import { Stage } from '../Stage';
 
 /*
  * This screen allows the player to manage their space station, including viewing resources, upgrading facilities, or visiting locations (transitioning to vignette scenes).
@@ -13,37 +14,26 @@ import { Layout, MODULE_DEFAULTS, Module, createModule } from '../Module';
  */
 
 interface StationScreenProps {
-    // will implicitly accept ScreenBaseProps.stage
+    stage: () => Stage;
+    setScreenType: (type: ScreenType) => void;
 }
 
-interface StationScreenState {
-    selectedMenu: string;
-}
+export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType}) => {
+    const [selectedMenu, setSelectedMenu] = React.useState<string>('resources');
 
-export default class StationScreen extends BaseScreen {
-    state: StationScreenState = {
-        selectedMenu: 'resources',
-    };
+    const gridSize = 6;
+    const cellSize = '10vmin';
 
-    private gridSize = 6;
-    private cellSize = '10vmin';
-
-    constructor(props: StationScreenProps) {
-        super(props as any);
-        // this.stage is now available from ScreenBase (if provided by parent)
-    }
-
-    addModule = (x: number, y: number) => {
+    const addModule = (x: number, y: number) => {
         console.log(`Adding module at ${x}, ${y}`);
         const newModule: Module = createModule('quarters');
         // Write into the Stage's layout and force a re-render
-        console.log(`this.stage.layout: `, this.stage?.getLayout());
-        this.stage?.getLayout()?.setModuleAt(x, y, newModule);
-        this.stage?.incPhase(1);
-        this.forceUpdate();
+        console.log(`this.stage.layout: `, stage().getLayout());
+        stage().getLayout().setModuleAt(x, y, newModule);
+        stage().incPhase(1);
     };
 
-    renderPhaseCircles = (phase: number | undefined) => {
+    const renderPhaseCircles = (phase: number | undefined) => {
         const circles = [];
         for (let i = 0; i < 4; i++) {
             circles.push(
@@ -65,23 +55,23 @@ export default class StationScreen extends BaseScreen {
         return circles;
     }
 
-    renderGrid() {
+    const renderGrid = () => {
         const cells: React.ReactNode[] = [];
-        const layout: Layout = this.stage.getLayout();
-        for (let y = 0; y < this.gridSize; y++) {
-            for (let x = 0; x < this.gridSize; x++) {
+        const layout: Layout = stage()?.getLayout();
+        for (let y = 0; y < gridSize; y++) {
+            for (let x = 0; x < gridSize; x++) {
                 const module = layout.getModuleAt(x, y);
-                const actorsPresent = Object.values(this.stage.getSave().actors).filter((actor, index) => actor.locationId === module?.id).length;
+                const actorsPresent = Object.values(stage().getSave().actors).filter((actor, index) => actor.locationId === module?.id).length;
                 cells.push(
                     <div
                         key={`cell_${x}-${y}`}
                         className="grid-cell"
                         style={{
                             position: 'absolute',
-                            left: `calc(${x} * ${this.cellSize})`,
-                            top: `calc(${y} * ${this.cellSize})`,
-                            width: this.cellSize,
-                            height: this.cellSize,
+                            left: `calc(${x} * ${cellSize})`,
+                            top: `calc(${y} * ${cellSize})`,
+                            width: cellSize,
+                            height: cellSize,
                             boxSizing: 'border-box',
                             padding: 6,
                         }}
@@ -97,7 +87,7 @@ export default class StationScreen extends BaseScreen {
                                     // Trigger module action if defined
                                     console.log(`Clicked module ${module.id} of type ${module.type}`);
                                     if (MODULE_DEFAULTS[module.type]?.action) {
-                                        MODULE_DEFAULTS[module.type].action!(module, this.stage);
+                                        MODULE_DEFAULTS[module.type].action!(module, stage(), setScreenType);
                                     }
                                 }}
                                 style={{
@@ -118,7 +108,7 @@ export default class StationScreen extends BaseScreen {
                                 <div style={{ position: 'relative', width: '100%', height: '100%' }}>
                                     {/* Compute actors once for this module */}
                                     {(() => {
-                                        const actors = Object.values(this.stage.getSave().actors).filter(a => a.locationId === module.id);
+                                        const actors = Object.values(stage()?.getSave().actors).filter(a => a.locationId === module.id);
                                         const actorsPresent = actors.length;
                                         return (
                                             <>
@@ -140,7 +130,7 @@ export default class StationScreen extends BaseScreen {
                                                             src={actor.emotionPack?.neutral}
                                                             alt={actor.name}
                                                             style={{
-                                                                height: `calc(0.6 * ${this.cellSize})`,
+                                                                height: `calc(0.6 * ${cellSize})`,
                                                                 userSelect: 'none',
                                                                 pointerEvents: 'none',
                                                             }}
@@ -178,7 +168,7 @@ export default class StationScreen extends BaseScreen {
                         }) && !module && (
                             <motion.div
                                 className="add-module-placeholder"
-                                onClick={() => this.addModule(x, y)}
+                                onClick={() => addModule(x, y)}
                                 whileHover={{ scale: 1.02 }}
                                 whileTap={{ scale: 0.98 }}
                                 style={{
@@ -206,96 +196,90 @@ export default class StationScreen extends BaseScreen {
         return cells;
     }
 
-    render() {
-    const { selectedMenu } = this.state;
-        const gridSize = this.gridSize;
-        const cellSize = this.cellSize;
-
-        return (
-            <div className="station-screen" style={{ display: 'flex', height: '100vh', width: '100vw', overflow: 'hidden' }}>
-                {/* Main Grid Area - 80% left side */}
+    return (
+        <div className="station-screen" style={{ display: 'flex', height: '100vh', width: '100vw', overflow: 'hidden' }}>
+            {/* Main Grid Area - 80% left side */}
+            <div
+                className="station-grid-container"
+                style={{
+                    width: '80vw',
+                    boxSizing: 'border-box',
+                    background: 'linear-gradient(45deg, #001122 0%, #002244 100%)',
+                    position: 'relative',
+                    overflow: 'hidden',
+                }}
+            >
+                {/* Station modules (background grid moved onto this element so it moves with the centered content) */}
                 <div
-                    className="station-grid-container"
+                    className="station-modules"
                     style={{
-                        width: '80vw',
-                        boxSizing: 'border-box',
-                        background: 'linear-gradient(45deg, #001122 0%, #002244 100%)',
-                        position: 'relative',
-                        overflow: 'hidden',
+                        position: 'absolute',
+                        top: '50%',
+                        left: '50%',
+                        transform: 'translate(-50%, -50%)',
+                        width: `calc(${gridSize} * ${cellSize})`,
+                        height: `calc(${gridSize} * ${cellSize})`,
+                        // move the subtle grid onto the centered modules container so lines align with cells
+                        backgroundImage: `
+                            linear-gradient(rgba(0, 255, 136, 0.08) 1px, transparent 1px),
+                            linear-gradient(90deg, rgba(0, 255, 136, 0.08) 1px, transparent 1px)
+                        `,
+                        backgroundPosition: '0 0',
+                        backgroundRepeat: 'repeat',
                     }}
                 >
-                    {/* Station modules (background grid moved onto this element so it moves with the centered content) */}
-                    <div
-                        className="station-modules"
-                        style={{
-                            position: 'absolute',
-                            top: '50%',
-                            left: '50%',
-                            transform: 'translate(-50%, -50%)',
-                            width: `calc(${gridSize} * ${cellSize})`,
-                            height: `calc(${gridSize} * ${cellSize})`,
-                            // move the subtle grid onto the centered modules container so lines align with cells
-                            backgroundImage: `
-                                linear-gradient(rgba(0, 255, 136, 0.08) 1px, transparent 1px),
-                                linear-gradient(90deg, rgba(0, 255, 136, 0.08) 1px, transparent 1px)
-                            `,
-                            backgroundPosition: '0 0',
-                            backgroundRepeat: 'repeat',
-                        }}
-                    >
-                        {this.renderGrid()}
-                    </div>
-                </div>
-
-                {/* Side Menu - 20vw right side */}
-                <div
-                    className="station-menu"
-                    style={{
-                        width: '20vw',
-                        boxSizing: 'border-box',
-                        background: 'rgba(0, 20, 40, 0.9)',
-                        borderLeft: '2px solid #00ff88',
-                        padding: '20px',
-                    }}
-                >
-                    <h2 style={{ color: '#00ff88', marginBottom: '30px' }}>Station Control</h2>
-                    {/* Display stage.getSave().day and stage.getSave().phase (day is displayed as a number, phase is a set of four of filled/unfilled circles) */}
-                    <div style={{ color: '#00ff88', fontSize: '14px' }}>
-                        <p>Day: {this.stage?.getSave().day}</p>
-                        <p>Phase: {this.renderPhaseCircles(this.stage?.getSave().phase)}</p>
-                    </div>
-
-                    {['Resources', 'Crew', 'Upgrades', 'Missions'].map(item => (
-                        <motion.button
-                            key={item}
-                            onClick={() => this.setState({ selectedMenu: item.toLowerCase() })}
-                            whileHover={{ x: 10 }}
-                            whileTap={{ scale: 0.95 }}
-                            style={{
-                                display: 'block',
-                                width: '100%',
-                                padding: '15px',
-                                margin: '10px 0',
-                                background: selectedMenu === item.toLowerCase()
-                                    ? 'rgba(0, 255, 136, 0.2)'
-                                    : 'transparent',
-                                border: '3px solid #00ff88',
-                                borderRadius: '5px',
-                                color: '#00ff88',
-                                fontSize: '16px',
-                                cursor: 'pointer',
-                                textAlign: 'left',
-                            }}
-                        >
-                            {item}
-                        </motion.button>
-                    ))}
-
-                    <div style={{ marginTop: '40px', color: '#00ff88', fontSize: '14px' }}>
-                        <p>Selected: {selectedMenu}</p>
-                    </div>
+                    {renderGrid()}
                 </div>
             </div>
-        );
-    }
+
+            {/* Side Menu - 20vw right side */}
+            <div
+                className="station-menu"
+                style={{
+                    width: '20vw',
+                    boxSizing: 'border-box',
+                    background: 'rgba(0, 20, 40, 0.9)',
+                    borderLeft: '2px solid #00ff88',
+                    padding: '20px',
+                }}
+            >
+                <h2 style={{ color: '#00ff88', marginBottom: '30px' }}>Station Control</h2>
+                {/* Display stage.getSave().day and stage.getSave().phase (day is displayed as a number, phase is a set of four of filled/unfilled circles) */}
+                <div style={{ color: '#00ff88', fontSize: '14px' }}>
+                    <p>Day: {stage().getSave().day}</p>
+                    <p>Phase: {renderPhaseCircles(stage().getSave().phase)}</p>
+                </div>
+
+                {['Resources', 'Crew', 'Upgrades', 'Missions'].map(item => (
+                    <motion.button
+                        key={item}
+                        onClick={() => setSelectedMenu(item.toLowerCase())}
+                        whileHover={{ x: 10 }}
+                        whileTap={{ scale: 0.95 }}
+                        style={{
+                            display: 'block',
+                            width: '100%',
+                            padding: '15px',
+                            margin: '10px 0',
+                            background: selectedMenu === item.toLowerCase()
+                                ? 'rgba(0, 255, 136, 0.2)'
+                                : 'transparent',
+                            border: '3px solid #00ff88',
+                            borderRadius: '5px',
+                            color: '#00ff88',
+                            fontSize: '16px',
+                            cursor: 'pointer',
+                            textAlign: 'left',
+                        }}
+                    >
+                        {item}
+                    </motion.button>
+                ))}
+
+                <div style={{ marginTop: '40px', color: '#00ff88', fontSize: '14px' }}>
+                    <p>Selected: {selectedMenu}</p>
+                </div>
+            </div>
+        </div>
+    );
 }

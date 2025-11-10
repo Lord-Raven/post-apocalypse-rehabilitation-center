@@ -1,7 +1,6 @@
-import EchoScreen from "./screens/EchoScreen";
-import VignetteScreen from "./screens/VignetteScreen";
-import { VignetteData, VignetteType } from './Vignette';
+import { VignetteType } from './Vignette';
 import { Stage } from "./Stage";
+import { ScreenType } from './screens/BaseScreen';
 
 export type ModuleType = 'echo' | 'generator' | 'quarters' | 'common';
 
@@ -13,7 +12,7 @@ export interface ModuleIntrinsic {
     defaultImageUrl: string; // Default themed version of the module
     [key: string]: any; // Additional properties, if needed
     // Action method; each module has an action that will need to take the Module and Stage as contextual parameters:
-    action?: (module: Module, stage: Stage) => void;
+    action?: (module: Module, stage: Stage, setScreenType: (type: ScreenType) => void) => void;
 }
 
 export const MODULE_DEFAULTS: Record<ModuleType, ModuleIntrinsic> = {
@@ -22,11 +21,11 @@ export const MODULE_DEFAULTS: Record<ModuleType, ModuleIntrinsic> = {
         maintenance: -1,
         baseImageUrl: 'https://media.charhub.io/2f92a39f-02be-41fd-b61d-56de04a9ecc4/62d30715-01e1-4581-beb4-61cf31134955.png',
         defaultImageUrl: 'https://media.charhub.io/026ae01a-7dc8-472d-bfea-61548b87e6ef/84990780-8260-4833-ac0b-79c1a15ddb9e.png',
-        action: (module: Module, stage: Stage) => {
+        action: (module: Module, stage: Stage, setScreenType: (type: ScreenType) => void) => {
             // Open the station management screen
             console.log("Opening echo screen from command module.");
             // Use Stage API so any mounted UI can react to the change
-            stage.setScreen(EchoScreen);
+            setScreenType(ScreenType.ECHO);
         }
     },
     generator: {
@@ -41,7 +40,7 @@ export const MODULE_DEFAULTS: Record<ModuleType, ModuleIntrinsic> = {
         capacity: 2, 
         baseImageUrl: 'https://media.charhub.io/5e39db53-9d66-459d-8926-281b3b089b36/8ff20bdb-b719-4cf7-bf53-3326d6f9fcaa.png', 
         defaultImageUrl: 'https://media.charhub.io/99ffcdf5-a01b-43cf-81e5-e7098d8058f5/d1ec2e67-9124-4b8b-82d9-9685cfb973d2.png',
-        action: (module: Module, stage: Stage) => {
+        action: (module: Module, stage: Stage, setScreenType: (type: ScreenType) => void) => {
             // Open the vignette screen to manage occupants
             if (module.ownerId) {
                 console.log("Opening vignette.");
@@ -54,6 +53,7 @@ export const MODULE_DEFAULTS: Record<ModuleType, ModuleIntrinsic> = {
                     context: {},
                     endScene: false
                 });
+                setScreenType(ScreenType.VIGNETTE);
             }
         }
     },

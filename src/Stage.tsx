@@ -1,11 +1,9 @@
 import {ReactElement, useEffect, useState} from "react";
 import {StageBase, StageResponse, InitialData, Message} from "@chub-ai/stages-ts";
 import {LoadResponse} from "@chub-ai/stages-ts/dist/types/load";
-import StationScreen from "./screens/StationScreen";
 import Actor, { loadReserveActor, populateActorImages } from "./actors/Actor";
 import { DEFAULT_GRID_SIZE, Layout, createModule } from './Module';
 import { BaseScreen } from "./screens/BaseScreen";
-import EchoScreen from "./screens/EchoScreen";
 import {Client} from "@gradio/client";
 import VignetteScreen from "./screens/VignetteScreen";
 import { generateVignetteScript, VignetteData } from "./Vignette";
@@ -44,8 +42,6 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
     // Expose a simple grid size (can be tuned)
     public gridSize = DEFAULT_GRID_SIZE;
 
-    // screen should be a type that extends ScreenBase; not an instance but a class reference to allow instantiation. For instance, screen should be StationScreen by default.
-    screen: typeof BaseScreen = StationScreen;
     screenProps: any = {};
 
     reserveActors: Actor[] = [];
@@ -83,29 +79,6 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
         this.imagePipeline = null;
     }
 
-    /**
-     * Called by the UI wrapper to register a callback that will cause the mounted React view to re-render.
-     */
-    setRenderCallback(cb?: () => void) {
-        this.renderCallback = cb;
-    }
-
-    /**
-     * Request the UI wrapper to update. Safe to call from screens when they mutate the stage.
-     */
-    requestUpdate() {
-        if (this.renderCallback) this.renderCallback();
-    }
-
-    /**
-     * Change the active screen and request a UI update.
-     */
-    setScreen(screenClass: typeof BaseScreen, props?: any) {
-        this.screen = screenClass;
-        this.screenProps = props || {};
-        this.requestUpdate();
-    }
-
     incPhase(numberOfPhases: number = 1) {
         const save = this.getSave();
         save.phase += numberOfPhases;
@@ -119,7 +92,6 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
             const actor = save.actors[actorId];
             actor.locationId = save.layout.getModulesWhere(m => ['echo', 'common', 'generator'].includes(m.type) || m.ownerId == actorId).sort(() => Math.random() - 0.5)[0]?.id || '';
         }
-        this.requestUpdate();
     }
 
     getSave(): SaveType {
@@ -299,37 +271,7 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
             this.reserveActorsLoadPromise = this.loadReserveActors();
         }
 
-        return <div style={{
-            width: '100vw',
-            height: '100vh',
-            display: 'grid',
-            alignItems: 'stretch'
-        }}>
-            {this.getSave().currentVignette &&
-                <VignetteScreen key='vignette-screen' stage={this} />
-            }
-            {this.screen == StationScreen && !this.getSave().currentVignette &&
-                <StationScreen key='station-screen' stage={this} {...this.screenProps}/>
-            }
-            {this.screen == EchoScreen && !this.getSave().currentVignette &&
-                <EchoScreen
-                    key='echo-screen'
-                    stage={this}
-                    candidates={this.reserveActors}
-                    onAccept={(selected, s) => {
-                        console.log(`onAccept(${selected})`);
-                        // use stage API so UI will update
-                        s.setScreen(StationScreen);
-                    }}
-                    onCancel={(s) => {
-                        console.log(`onCancel()`);
-                        s.setScreen(StationScreen);
-                    }}
-                    {...this.screenProps}
-                />
-            }
-
-        </div>;
+        return <BaseScreen stage={() => this}/>;
     }
 
 }
