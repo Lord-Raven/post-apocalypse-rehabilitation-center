@@ -301,10 +301,11 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
                 alignItems: 'stretch'
             }}>
                 {stage.screen == StationScreen &&
-                    <StationScreen stage={stage} {...stage.screenProps}/>
+                    <StationScreen key='station-screen' stage={stage} {...stage.screenProps}/>
                 }
                 {stage.screen == EchoScreen && 
                     <EchoScreen
+                        key='echo-screen'
                         stage={stage}
                         candidates={this.reserveActors}
                         onAccept={(selected, s) => {
@@ -320,7 +321,7 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
                     />
                 }
                 {stage.screen == VignetteScreen && 
-                    <VignetteScreen stage={stage} {...stage.screenProps} />
+                    <VignetteScreen key='vignette-screen' stage={stage} {...stage.screenProps} />
                 }
             </div>;
         };

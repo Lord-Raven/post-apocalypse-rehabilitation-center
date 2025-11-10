@@ -56,7 +56,7 @@ export default class VignetteScreen extends BaseScreen {
         inputText: '',
         script: [],
         loading: true,
-        loadingDots: 0,
+        loadingDots: 1,
         sceneEnded: false,
         endProperties: {},
     };
@@ -144,7 +144,7 @@ export default class VignetteScreen extends BaseScreen {
         // If timer already exists, don't start another
         if ((this as any)._ellipsisTimer) return;
         (this as any)._ellipsisTimer = setInterval(() => {
-            this.setState((s: VignetteScreenState) => ({ loadingDots: (s.loadingDots + 1) % 4 }));
+            this.setState((s: VignetteScreenState) => ({ loadingDots: ((s.loadingDots + 1) % 3) + 1 }));
         }, 400) as unknown as number;
     }
 
@@ -152,7 +152,7 @@ export default class VignetteScreen extends BaseScreen {
         if ((this as any)._ellipsisTimer) {
             clearInterval((this as any)._ellipsisTimer);
             (this as any)._ellipsisTimer = undefined;
-            this.setState({ loadingDots: 0 });
+            this.setState({ loadingDots: 1 });
         }
     }
 
@@ -206,16 +206,17 @@ export default class VignetteScreen extends BaseScreen {
                 (`\n\nUser Action:\n${userAction && userAction.trim().length > 0 ? `The player directs ${playerName} to say or do the following: ${userAction.trim()}; incorporate these actions into the script if possible.` :
                     'The player did not provide specific guidance; simply continue the scene, portraying ${playerName} in accordance with their characterization.'}`) :
                 '') +
-            `\n\nExample Script Format:\n` +
+            `\n\nExample Mid Script Format:\n` +
             'System: CHARACTER NAME: Action in pose. "Dialogue in quotation marks."\nANOTHER CHARACTER NAME: "Dialogue in quotation marks."\nNARRATOR: Descriptive content that is not attributed to a character.' +
-            `\n[END]` +
-            `\n[CHARACTER NAME: STAT + 1]` +
+            `\n\nExample End Script Format:\n` +
+            'System: CHARACTER NAME: Action in pose. "Dialogue in quotation marks."\nNARRATOR: Conclusive ending to the scene in prose.' +
+            `\n[CHARACTER NAME: RELEVANT STAT + 1]` +
             `\n[END SCENE]` +
             `\n\nScript Log:\nSystem: ${scriptLog}` +
             `\n\nInstruction:\nAt the "System:" prompt, generate a short scene script based upon this scenario, and the specified Scene Prompt. Follow the structure of the strict Example Script Format above. ` +
-            `This segment of the scene can be concluded with [END], when it makes sense to give ${playerName} a chance to respond, ` +
-            `or, if the scene feels satisfactorily complete, the entire scene can be concluded with [END SCENE]. ` +
-            `Before an [END] tag, a [CHARACTER NAME - STAT + x] tag can be used to apply a stat change to the specified Present Character. These changes should reflect an outcome of the scene; ` +
+            `This response should end when it makes sense to give ${playerName} a chance to respond, ` +
+            `or, if the scene feels satisfactorily complete, the entire scene can be concluded with and "[END SCENE]" tag. ` +
+            `Before an "[END SCENE]" tag, a "[CHARACTER NAME: RELEVANT STAT + x]" tag can be used to apply a stat change to the specified Present Character. These changes should reflect an outcome of the scene; ` +
             `they should be small, typically (but not exclusively) positive, and applied sparingly (generally just before [END SCENE]).`;
 
         // Retry logic if response is null or response.result is empty
@@ -227,7 +228,7 @@ export default class VignetteScreen extends BaseScreen {
                     min_tokens: 100,
                     max_tokens: 700,
                     include_history: true,
-                    stop: ['[END]', '[END SCENE]'] // Only _closed_ END tags are stopping strings; we want the generator to finish, if it determines to include stat changes.
+                    stop: ['[END]', '[END SCENE]', '[DONE]']
                 });
                 if (response && response.result && response.result.trim().length > 0) {
                     // First, detect and parse any END tags and stat changes that may be embedded in the response.
@@ -237,16 +238,13 @@ export default class VignetteScreen extends BaseScreen {
                     const statChanges: { [actorId: string]: { [stat: string]: number } } = {};
 
                     // Detect [END SCENE] or [END] to determine whether the scene ends here
-                    const endSceneRegex = /\[END SCENE\]/i;
-                    const endMatchRegex = /\[END\]/i;
+                    const endSceneRegex = /\[(END|END SCENE|DONE)\]/i;
                     if (endSceneRegex.test(text)) {
                         endScene = true;
                     }
-                    // Remove END tags from the visible text
-                    text = text.replace(/\[END SCENE(?:[^\]]*)\]/ig, '').replace(/\[END\]/ig, '');
 
                     // Now detect separate stat-change tags of the form:
-                    // [Character Name: Stat +1 | AnotherStat -1]
+                    // [Character Name: Stat +1]
                     // or [Character Name - Stat +1]
                     // We'll look for any bracketed tag and attempt to parse it as a stat-change if the left side matches a present character.
                     const bracketTagRegex = /\[([^\]]+)\]/g;
@@ -290,6 +288,9 @@ export default class VignetteScreen extends BaseScreen {
                         text = text.replace(tagMatch[0], '');
                     }
 
+                    // Remove all tags ([]) from visible text:
+                    text = text.replace(/\[([^\]]+)\]/g, '');
+
                     // Parse response based on format "NAME: content"; content could be multi-line. We want to ensure that lines that don't start with a name are appended to the previous line.
                     const lines = text.split('\n');
                     const combinedLines: string[] = [];
@@ -297,7 +298,7 @@ export default class VignetteScreen extends BaseScreen {
                     for (const line of lines) {
                         // Skip any explicit END tags that might have survived splitting
                         const trimmed = line.trim();
-                        if (!trimmed || /^\[END( SCENE)?/.test(trimmed)) continue;
+                        if (!trimmed) continue;
 
                         if (line.includes(':')) {
                             // New line
