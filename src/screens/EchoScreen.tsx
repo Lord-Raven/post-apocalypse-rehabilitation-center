@@ -96,13 +96,14 @@ export default class EchoScreen extends BaseScreen {
 									{/* Lay out actor property scores with large stylized letter grades */}
 									<div className="stat-list" style={{ padding: '8px 12px', background: 'rgba(0,0,0,0.8)' }}>
 										{[
-											['Condition', actor.condition],
-											['Capability', actor.capability],
-											['Intelligence', actor.intelligence],
-											['Resilience', actor.resilience],
-											['Charisma', actor.charisma],
-											['Sexuality', actor.sexuality],
-											['Compliance', actor.compliance]
+											['Condition', actor.stats['condition']],
+											['Capability', actor.stats['capability']],
+											['Intelligence', actor.stats['intelligence']],
+											['Resilience', actor.stats['resilience']],
+											['Charisma', actor.stats['charisma']],
+											['Sexuality', actor.stats['sexuality']],
+											['Compliance', actor.stats['compliance']],
+											['Trust', actor.stats['trust']],
 										].map(([label, value]) => {
 											const grade = actor.scoreToGrade(value as number);
 											return (

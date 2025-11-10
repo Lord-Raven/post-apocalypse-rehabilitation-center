@@ -6,7 +6,7 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { BaseScreen } from './BaseScreen';
 import { Module } from '../Module';
-import Actor, { namesMatch } from '../actors/Actor';
+import Actor, { getStatDescription, namesMatch, Stat } from '../actors/Actor';
 import { Stage } from '../Stage';
 import StationScreen from './StationScreen';
 import ActorImage from '../actors/ActorImage';
@@ -37,7 +37,8 @@ interface VignetteScreenState {
     loading: boolean;
     loadingDots: number;
     sceneEnded?: boolean;
-    endProperties?: { [key: string]: number };
+    // Mapping of actorId -> { statName: delta }
+    endProperties?: { [actorId: string]: { [stat: string]: number } };
 }
 
 // Script will be generated when the vignette opens and stored in component state.
@@ -175,7 +176,7 @@ export default class VignetteScreen extends BaseScreen {
         }
     }
 
-    async generateVignetteScript(type: VignetteType, context: any, continuing: boolean, userAction?: string): Promise<{ entries: ScriptEntry[]; endScene: boolean; statChanges: { [key: string]: number } }> {
+    async generateVignetteScript(type: VignetteType, context: any, continuing: boolean, userAction?: string): Promise<{ entries: ScriptEntry[]; endScene: boolean; statChanges: { [actorId: string]: { [stat: string]: number } } }> {
         // Build a scene log when continuing so the generator can see prior script entries
         const scriptLog = (continuing && this.state && this.state.script && this.state.script.length > 0)
             ? this.state.script.map(e => `${e.speaker}: ${e.message}`).join('\n')
@@ -187,17 +188,25 @@ export default class VignetteScreen extends BaseScreen {
             `the Post-Apocalyptic Rehabilitation Center. ` +
             `The thrust of the game has the player character, ${this.stage.getSave().player.name}, managing this station and interacting with patients and crew, as they navigate this complex futuristic universe together. ` +
             `\n\nCrew:\nAt this point in the story, the player is running the operation on their own, with no fellow crew members. ` +
-            `\n\nPatients:\n${Object.values(this.stage.getSave().actors).map(actor => `${actor.name} - ${actor.description} - ${actor.profile}`).join('\n')}` +
+            // List patients who are here, along with full stat details:
+            `\n\nPresent Characters:\n${Object.values(this.stage.getSave().actors).map(actor => 
+                `${actor.name}\n  Description: ${actor.description}\n  Profile: ${actor.profile}\n  Stats:\n    ${Object.entries(actor.stats).map(([stat, value]) => `${stat}: ${value}`).join('\n    ')}`).join('\n')}` +
+            // List non-present patients for reference; just need description and profile:
+            `\n\nOther Patients:\n${Object.values(this.stage.getSave().actors).map(actor => `${actor.name}\n  ${actor.description}\n  ${actor.profile}`).join('\n')}` +
+            // List stat meanings, for reference:
+            `\n\nStats:\n${Object.values(Stat).map(stat => {getStatDescription(stat)}).join('\n')}` +
             `\n\nScene Prompt:\n${this.generateVignettePrompt(type, context, continuing)}` +
             `\n\nExample Script Format:\n` +
             'System: CHARACTER NAME: Action in pose. "Dialogue in quotation marks."\nANOTHER CHARACTER NAME: "Dialogue in quotation marks."\nNARRATOR: Descriptive content that is not attributed to a character.' +
             `\n[END]` +
-            `\n[END SCENE: Stat + 1 | Another Stat + 2]` +
+            `\n[CHARACTER NAME: STAT + 1]` +
+            `\n[END SCENE]` +
             `\n\nScript Log:\n${scriptLog}` +
             `\n\nInstruction:\nAt the "System:" prompt, generate a short scene script based upon this scenario, and the specified Scene Prompt. Follow the structure of the strict Example Script Format above. ` +
             `This segment of the scene can be concluded with [END], when it makes sense to give ${this.stage.getSave().player.name} a chance to respond, ` +
             `or, if the scene feels satisfactorily complete, the entire scene can be concluded with [END SCENE]. ` +
-            `The END tag—particularly the END SCENE tag—can include an optional set of stat changes (for ${targetActor.name}) that reflect the outcome of the scene; these should be small, typically (but not exclusively) positive, and applied sparingly.`;
+            `Before an [END] tag, a [CHARACTER NAME - STAT + x] tag can be used to apply a stat change to the specified Present Character. These changes should reflect an outcome of the scene; ` +
+            `they should be small, typically (but not exclusively) positive, and applied sparingly (generally just before [END SCENE]).`;
         // If the player supplied a guiding action, add it as a non-script guidance block so the generator can steer the continuation.
         if (userAction !== undefined) {
             fullPrompt += `\n\nPlayer Guidance:\n${userAction && userAction.trim().length > 0 ? `The player directs the characters to: ${userAction.trim()}` : 'The player did not provide specific guidance; continue the scene as if the player acted on their own.'}`;
@@ -217,37 +226,62 @@ export default class VignetteScreen extends BaseScreen {
                     // First, detect and parse any END tags and stat changes that may be embedded in the response.
                     let text = response.result;
                     let endScene = false;
-                    const statChanges: { [key: string]: number } = {};
+                    // Map actorId -> { statName: delta }
+                    const statChanges: { [actorId: string]: { [stat: string]: number } } = {};
 
                     // Detect [END SCENE: ...] (with optional stat list) or [END SCENE]
-                    const endSceneRegex = /\[END SCENE(?::\s*([^\]]+))?\]/i;
+                    // Detect [END SCENE] or [END] to determine whether the scene ends here
+                    const endSceneRegex = /\[END SCENE\]/i;
                     const endMatchRegex = /\[END\]/i;
-
-                    const esc = text.match(endSceneRegex);
-                    if (esc) {
+                    if (endSceneRegex.test(text)) {
                         endScene = true;
-                        const statStr = esc[1];
-                        if (statStr) {
-                            // Parse stat changes like "Stat + 1 | Another Stat + 2"
-                            const parts = statStr.split('|').map(p => p.trim()).filter(Boolean);
-                            for (const part of parts) {
-                                // Try to capture a name and a signed number (e.g., "Trust + 2" or "Mood -1")
-                                const m = part.match(/(.+?)\s*([+-]\s*\d+)/);
-                                if (m) {
-                                    const name = m[1].trim();
-                                    const num = parseInt(m[2].replace(/\s+/g, ''), 10) || 0;
-                                    statChanges[name] = (statChanges[name] || 0) + num;
-                                }
-                            }
-                        }
-                        // remove the tag from the text to avoid showing it
-                        text = text.replace(esc[0], '');
                     }
+                    // Remove END tags from the visible text
+                    text = text.replace(/\[END SCENE(?:[^\]]*)\]/ig, '').replace(/\[END\]/ig, '');
 
-                    // Detect a bare [END] and remove it
-                    const e = text.match(endMatchRegex);
-                    if (e) {
-                        text = text.replace(e[0], '');
+                    // Now detect separate stat-change tags of the form:
+                    // [Character Name: Stat +1 | AnotherStat -1]
+                    // or [Character Name - Stat +1]
+                    // We'll look for any bracketed tag and attempt to parse it as a stat-change if the left side matches a present character.
+                    const bracketTagRegex = /\[([^\]]+)\]/g;
+                    let tagMatch: RegExpExecArray | null;
+                    // Prepare list of present actors (based on module/location)
+                    const presentActors: Actor[] = Object.values(this.stage.getSave().actors).filter(a => a.locationId === (context.moduleId || ''));
+                    while ((tagMatch = bracketTagRegex.exec(response.result || text || '')) !== null) {
+                        const raw = tagMatch[1].trim();
+                        if (!raw) continue;
+                        const up = raw.toUpperCase();
+                        if (up === 'END' || up.startsWith('END SCENE')) continue;
+
+                        // Attempt to split into "name" and "stat payload" by first ':' or '-' delimiter
+                        const split = raw.split(/[:\-]/);
+                        if (split.length < 2) continue; // not in expected form
+                        const candidateName = split[0].trim();
+                        const payload = raw.substring(raw.indexOf(split[1])).trim();
+
+                        // Find matching present actor using namesMatch
+                        const matched = presentActors.find(a => namesMatch(a.name.toLowerCase(), candidateName.toLowerCase()));
+                        if (!matched) continue;
+
+                        // payload may contain multiple stat adjustments separated by '|' or ','
+                        const adjustments = payload.split('|').flatMap(p => p.split(',')).map(p => p.trim()).filter(Boolean);
+                        for (const adj of adjustments) {
+                            // Capture stat name and signed number e.g. "Trust + 2"
+                            const m = adj.match(/([A-Za-z\s]+)\s*([+-]\s*\d+)/i);
+                            if (!m) continue;
+                            const statNameRaw = m[1].trim();
+                            const num = parseInt(m[2].replace(/\s+/g, ''), 10) || 0;
+
+                            // Normalize stat name to possible Stat enum value if possible
+                            let statKey = statNameRaw.toLowerCase().trim();
+                            const enumMatch = Object.values(Stat).find(s => s.toLowerCase() === statKey || s.toLowerCase().includes(statKey) || statKey.includes(s.toLowerCase()));
+                            if (enumMatch) statKey = enumMatch;
+
+                            if (!statChanges[matched.id]) statChanges[matched.id] = {};
+                            statChanges[matched.id][statKey] = (statChanges[matched.id][statKey] || 0) + num;
+                        }
+                        // Remove this tag from visible text
+                        text = text.replace(tagMatch[0], '');
                     }
 
                     // Parse response based on format "NAME: content"; content could be multi-line. We want to ensure that lines that don't start with a name are appended to the previous line.
@@ -373,7 +407,7 @@ export default class VignetteScreen extends BaseScreen {
                             <button onClick={this.prev} style={{ padding: '10px 14px', background: 'transparent', border: '1px solid rgba(255,255,255,0.08)', color: '#cfe', cursor: 'pointer', fontSize: 16, borderRadius: 8 }} disabled={index === 0}>{'⟨'}</button>
 
                             {/* Move the X/Y indicator between the left/right arrows */}
-                            <div style={{ minWidth: 72, textAlign: 'center', fontSize: 14, fontWeight: 700, color: '#bfffd0', background: 'rgba(255,255,255,0.02)', padding: '6px 10px', borderRadius: 8, border: '1px solid rgba(255,255,255,0.03)' }}>{loading ? <span style={{ marginLeft: 6 }}>{'.'.repeat(this.state.loadingDots)}</span> : `${index + 1} / ${script.length}`}</div>
+                            <div style={{ minWidth: 72, textAlign: 'center', fontSize: 14, fontWeight: 700, color: '#bfffd0', background: 'rgba(255,255,255,0.02)', padding: '6px 10px', borderRadius: 8, border: '1px solid rgba(255,255,255,0.03)' }}>{loading ? <span>{'.'.repeat(this.state.loadingDots)}</span> : `${index + 1} / ${script.length}`}</div>
 
                             <button onClick={this.next} style={{ padding: '10px 14px', background: 'transparent', border: '1px solid rgba(255,255,255,0.08)', color: '#cfe', cursor: 'pointer', fontSize: 16, borderRadius: 8 }} disabled={index === this.state.script.length - 1}>{'⟩'}</button>
 

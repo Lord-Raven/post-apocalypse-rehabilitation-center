@@ -2,6 +2,18 @@ import { EmotionPack } from "../Emotion";
 import { Stage } from "../Stage";
 import { v4 as generateUuid } from 'uuid';
 
+// Core character stats as an enum so other parts of the app can reference them safely
+export enum Stat {
+    Capability = 'capability',
+    Intelligence = 'intelligence',
+    Condition = 'condition',
+    Resilience = 'resilience',
+    Charisma = 'charisma',
+    Sexuality = 'sexuality',
+    Compliance = 'compliance',
+    Trust = 'trust'
+}
+
 class Actor {
     id: string;
     name: string;
@@ -15,29 +27,17 @@ class Actor {
     // They may have trauma, mental health challenges, or other issues that the program is designed to help with.
     // They will be prepped for completely new lives in a sci-fi, dystopian future setting where they may be valued for different traits.
     // Graded stats from 1-10; these get translated to a letter grade in the UI
-    capability: number; // Skill grade 1-10
-    intelligence: number; // Intelligence grade 1-10
-    condition: number; // Condition grade 1-10
-    resilience: number; // Resilience grade 1-10
-    charisma: number; // Personality grade 1-10
-    sexuality: number; // Sexuality grade 1-10
-    compliance: number; // Compliance grade 1-10
+    stats: Record<Stat, number>;
 
-    constructor(id: string, name: string, avatarImageUrl: string, description: string, profile: string, emotionPack: EmotionPack, 
-            capability: number, intelligence: number, condition: number, resilience: number, charisma: number, sexuality: number, compliance: number) {
+    constructor(id: string, name: string, avatarImageUrl: string, description: string, profile: string, emotionPack: EmotionPack, stats: Record<Stat, number>) {
         this.id = id;
         this.name = name;
         this.avatarImageUrl = avatarImageUrl;
         this.description = description;
         this.profile = profile;
         this.emotionPack = emotionPack;
-        this.capability = capability;
-        this.intelligence = intelligence;
-        this.condition = condition;
-        this.resilience = resilience;
-        this.charisma = charisma;
-        this.sexuality = sexuality;
-        this.compliance = compliance;
+        // populate the consolidated mapping for easier, enum-based lookups
+        this.stats = stats;
         this.locationId = '';
     }
 
@@ -45,6 +45,30 @@ class Actor {
         const scoreClamped = Math.max(1, Math.min(10, score));
         const scoreArray = ['F', 'D', 'C', 'C+', 'B-', 'B', 'B+', 'A-', 'A', 'A+'];
         return scoreArray[scoreClamped - 1];
+    }
+}
+
+export function getStatDescription(stat: Stat | string): string {
+    const key = typeof stat === 'string' ? stat : stat;
+    switch (key) {
+        case Stat.Capability:
+            return 'overall capability to contribute meaningfully to the crew, with 10 being highly skilled and 1 being a liability.';
+        case Stat.Intelligence:
+            return 'intelligence level and problem-solving ability, with 10 being a genius and 1 being unable to think critically.';
+        case Stat.Condition:
+            return 'relative physical condition and health, with 10 being peak condition and 1 being critically impaired.';
+        case Stat.Resilience:
+            return 'mental resilience and ability to cope with stress, with 10 being highly resilient and 1 being easily overwhelmed.';
+        case Stat.Charisma:
+            return 'personality appeal and social skills, with 10 being extremely charismatic and 1 being socially inept.';
+        case Stat.Sexuality:
+            return 'physical lustiness and sexual confidence, with 10 being abjectly lewd and 1 being utterly asexual.';
+        case Stat.Compliance:
+            return 'willingness to comply with authority and rules, with 10 being highly compliant and 1 being completely rebellious.';
+        case Stat.Trust:
+            return 'level of trust in the player character, with 10 being fully trusting and 1 being completely distrustful.';
+        default:
+            return '';
     }
 }
 
@@ -72,20 +96,16 @@ export async function loadReserveActor(fullPath: string, stage: Stage): Promise<
             `Their new description and profile should reflect these possible changes and their impact.\n\n` +
             `The provided character description may reference 'Individual X' who no longer exists in this timeline; ` +
             `if Individual X remains relevant to this character, you should give Individual X an appropriate name in the distillation.\n\n` +
-            `In addition to name, physical description, and personality, you will score the character with a simple 1-10 for the following traits: CONDITION, RESILIENCE, CAPABILITY, INTELLIGENCE, CHARISMA, SEXUALITY, and COMPLIANCE.\n` +
+            `In addition to name, physical description, and personality, you will score the character with a simple 1-10 for the following traits: CONDITION, RESILIENCE, CAPABILITY, INTELLIGENCE, CHARISMA, SEXUALITY, COMPLIANCE, and TRUST.\n` +
             `Bear in mind the character's current, diminished state—as a newly reconstituted and relatively powerless individual—and not their original potential when scoring these traits; some characters may not respond well to being essentially resurrected into a new timeline.\n\n` +
             `Original details about ${data.name}:\nDescription: ${data.description} ${data.personality}\n\n` +
             `After carefully considering this description, provide a concise breakdown in the following format:\n` +
             `NAME: The character's full, given name.\n` +
             `DESCRIPTION: A vivid description of the character's physical appearance, attire, and any distinguishing features.\n` +
             `PROFILE: A brief summary of the character's key personality traits and behaviors.\n` +
-            `CONDITION: 1-10 scoring of their relative physical condition, with 10 being peak condition and 1 being critically impaired.\n` +
-            `RESILIENCE: 1-10 scoring of their mental resilience, with 10 being highly resilient and 1 being easily broken.\n` +
-            `CAPABILITY: 1-10 scoring of their overall capability to contribute meaningfully to the crew, with 10 being highly skilled and 1 being a liability.\n` +
-            `INTELLIGENCE: 1-10 scoring of their intelligence level, with 10 being genius-level intellect and 1 being dumb as rocks.\n` +
-            `CHARISMA: 1-10 scoring of their personality appeal, with 10 being extremely charming and 1 being off-putting.\n` +
-            `SEXUALITY: 1-10 scoring of their physical lustiness, with 10 being abjectly lewd and 1 being utterly assexual.\n` +
-            `COMPLIANCE: 1-10 scoring of their willingness to comply with authority, with 10 being unquestioningly obedient and 1 being rebellious.\n` +
+            Object.entries(Stat).map(([key, value]) => {
+                return `${key.toUpperCase()}: 1-10 scoring of ${getStatDescription(value).toLowerCase()}\n`;
+            }).join('\n') +
             `#END#`,
         stop: ['#END'],
         include_history: true, // There won't be any history, but if this is true, the front-end doesn't automatically apply pre-/post-history prompts.
@@ -119,13 +139,16 @@ export async function loadReserveActor(fullPath: string, stage: Stage): Promise<
         parsedData['description'] || '',
         parsedData['profile'] || '',
         {}, 
-        parseInt(parsedData['capability']) || DEFAULT_TRAIT_SCORE,
-        parseInt(parsedData['intelligence']) || DEFAULT_TRAIT_SCORE,
-        parseInt(parsedData['condition']) || DEFAULT_TRAIT_SCORE,
-        parseInt(parsedData['resilience']) || DEFAULT_TRAIT_SCORE,
-        parseInt(parsedData['charisma']) || DEFAULT_TRAIT_SCORE,
-        parseInt(parsedData['sexuality']) || DEFAULT_TRAIT_SCORE,
-        parseInt(parsedData['compliance']) || DEFAULT_TRAIT_SCORE,
+        {
+            ['capability']: parseInt(parsedData['capability']) || DEFAULT_TRAIT_SCORE,
+            ['intelligence']: parseInt(parsedData['intelligence']) || DEFAULT_TRAIT_SCORE,
+            ['condition']: parseInt(parsedData['condition']) || DEFAULT_TRAIT_SCORE,
+            ['resilience']: parseInt(parsedData['resilience']) || DEFAULT_TRAIT_SCORE,
+            ['charisma']: parseInt(parsedData['charisma']) || DEFAULT_TRAIT_SCORE,
+            ['sexuality']: parseInt(parsedData['sexuality']) || DEFAULT_TRAIT_SCORE,
+            ['compliance']: parseInt(parsedData['compliance']) || DEFAULT_TRAIT_SCORE,
+            ['trust']: parseInt(parsedData['trust']) || 1
+        }
     );
     console.log(`Loaded new actor: ${newActor.name} (ID: ${newActor.id})`);
     console.log(newActor);
