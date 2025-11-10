@@ -352,8 +352,8 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
                         {...stage.screenProps}
                     />
                 }
-                {stage.screen == VignetteScreen && 
-                    <VignetteScreen key='vignette-screen' stage={stage} {...stage.screenProps} />
+                {stage.screen == VignetteScreen && stage.getSave().currentVignette &&
+                    <VignetteScreen key='vignette-screen' stage={stage} vignette={stage.getSave().currentVignette as VignetteData} />
                 }
             </div>;
         };

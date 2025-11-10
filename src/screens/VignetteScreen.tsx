@@ -46,8 +46,8 @@ export default class VignetteScreen extends BaseScreen {
         inputText: '',
         sceneEnded: false,
     };
-
     props: VignetteScreenProps;
+
     vignette: VignetteData;
 
     // Props that a Vignette should accept (module for background, actors present, and an intent string)
@@ -94,15 +94,12 @@ export default class VignetteScreen extends BaseScreen {
     }
 
     render() {
-        // Pull vignette context from save so this screen only needs `stage` as a prop
-        const save = this.stage.getSave() as any;
-        const ctx: Partial<VignetteData> = save.vignette || { type: VignetteType.INTRO_CHARACTER, moduleId: '' };
         // Pull actors from save if available
-        const actors = Object.values(this.stage.getSave().actors).filter(actor => actor.locationId === (ctx.moduleId || '')) || [];
+        const actors = Object.values(this.stage.getSave().actors).filter(actor => actor.locationId === (this.vignette.moduleId || '')) || [];
 
         const { index, inputText, sceneEnded } = this.state;
 
-        const module = this.stage.getSave().layout.getModuleById(ctx.moduleId || '');
+        const module = this.stage.getSave().layout.getModuleById(this.vignette.moduleId || '');
 
         const backgroundUrl = (module?.attributes?.defaultImageUrl || '');
 

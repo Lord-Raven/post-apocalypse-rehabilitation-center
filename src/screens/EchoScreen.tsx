@@ -7,7 +7,6 @@ import { motion } from 'framer-motion';
 import { BaseScreen } from './BaseScreen';
 import { Stage } from '../Stage';
 import Actor from '../actors/Actor';
-import VignetteScreen from './VignetteScreen';
 import { VignetteType } from '../Vignette';
 
 interface EchoScreenProps {
