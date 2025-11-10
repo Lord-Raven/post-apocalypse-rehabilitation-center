@@ -2,7 +2,7 @@
  * This screen displays Visual Novel vignette scenes, displaying dialogue and characters as they interact with the player and each other.
  * Extends ScreenBase.
  */
-import React, { FC } from 'react';
+import React, { FC, useEffect } from 'react';
 import { BaseScreen } from './BaseScreen';
 import { Module } from '../Module';
 import Actor, { getStatDescription, namesMatch, Stat } from '../actors/Actor';
@@ -31,7 +31,6 @@ const LoadingEllipsis: React.FC<{ active?: boolean }> = ({ active }) => {
 
 interface VignetteScreenProps {
     stage: Stage;
-    vignette: VignetteData;
 }
 
 interface VignetteScreenState {
@@ -40,16 +39,18 @@ interface VignetteScreenState {
     sceneEnded?: boolean;
 }
 
-export const VignetteScreen: FC<VignetteScreenProps> = ({ stage, vignette }) => {
+export const VignetteScreen: FC<VignetteScreenProps> = ({ stage }) => {
     const [index, setIndex] = React.useState<number>(0);
     const [inputText, setInputText] = React.useState<string>('');
     const [sceneEnded, setSceneEnded] = React.useState<boolean>(false);
+    const [vignette, setVignette] = React.useState<VignetteData>(stage.getSave().currentVignette as VignetteData);
 
-    // Props that a Vignette should accept (module for background, actors present, and an intent string)
-    const currentVignette = vignette;
-
+    useEffect(() => {
+        setVignette(stage.getSave().currentVignette as VignetteData);
+    }, [vignette]);
+    
     const next = () => {
-        setIndex(prevIndex => Math.min(prevIndex + 1, currentVignette.script.length - 1));
+        setIndex(prevIndex => Math.min(prevIndex + 1, vignette.script.length - 1));
     };
 
     const prev = () => {
@@ -93,7 +94,7 @@ export const VignetteScreen: FC<VignetteScreenProps> = ({ stage, vignette }) => 
                 left: 0,
                 right: 0,
                 bottom: 0,
-                backgroundImage: `url(${(stage.getSave().layout.getModuleById(currentVignette.moduleId || '')?.attributes?.defaultImageUrl || '')})`,
+                backgroundImage: `url(${(stage.getSave().layout.getModuleById(vignette.moduleId || '')?.attributes?.defaultImageUrl || '')})`,
                 backgroundSize: 'cover',
                 backgroundPosition: 'center',
                 filter: 'blur(6px) brightness(0.6) contrast(1.05)',
@@ -105,7 +106,7 @@ export const VignetteScreen: FC<VignetteScreenProps> = ({ stage, vignette }) => 
 
             {/* Actors */}
             <div style={{ position: 'absolute', inset: 0, zIndex: 1, pointerEvents: 'none' }}>
-                {renderActors(stage.getSave().layout.getModuleById(currentVignette.moduleId || ''), Object.values(stage.getSave().actors).filter(actor => actor.locationId === (currentVignette.moduleId || '')) || [], currentVignette.script && currentVignette.script.length > 0 ? currentVignette.script[index]?.speaker : undefined)}
+                {renderActors(stage.getSave().layout.getModuleById(vignette.moduleId || ''), Object.values(stage.getSave().actors).filter(actor => actor.locationId === (vignette.moduleId || '')) || [], vignette.script && vignette.script.length > 0 ? vignette.script[index]?.speaker : undefined)}
             </div>
 
             {/* Bottom text window */}
@@ -115,13 +116,13 @@ export const VignetteScreen: FC<VignetteScreenProps> = ({ stage, vignette }) => 
                         <button onClick={prev} style={{ padding: '10px 14px', background: 'transparent', border: '1px solid rgba(255,255,255,0.08)', color: '#cfe', cursor: 'pointer', fontSize: 16, borderRadius: 8 }} disabled={index === 0}>{'⟨'}</button>
 
                         {/* Move the X/Y indicator between the left/right arrows */}
-                        <div style={{ minWidth: 72, textAlign: 'center', fontSize: 16, fontWeight: 700, color: '#bfffd0', background: 'rgba(255,255,255,0.02)', padding: '6px 10px', borderRadius: 8, border: '1px solid rgba(255,255,255,0.03)' }}>{currentVignette.generating ? <LoadingEllipsis active={currentVignette.generating} /> : `${index + 1} / ${currentVignette.script.length}`}</div>
+                        <div style={{ minWidth: 72, textAlign: 'center', fontSize: 16, fontWeight: 700, color: '#bfffd0', background: 'rgba(255,255,255,0.02)', padding: '6px 10px', borderRadius: 8, border: '1px solid rgba(255,255,255,0.03)' }}>{vignette.generating ? <LoadingEllipsis active={vignette.generating} /> : `${index + 1} / ${vignette.script.length}`}</div>
 
-                        <button onClick={next} style={{ padding: '10px 14px', background: 'transparent', border: '1px solid rgba(255,255,255,0.08)', color: '#cfe', cursor: 'pointer', fontSize: 16, borderRadius: 8 }} disabled={index === currentVignette.script.length - 1}>{'⟩'}</button>
+                        <button onClick={next} style={{ padding: '10px 14px', background: 'transparent', border: '1px solid rgba(255,255,255,0.08)', color: '#cfe', cursor: 'pointer', fontSize: 16, borderRadius: 8 }} disabled={index === vignette.script.length - 1}>{'⟩'}</button>
 
                         {/* Speaker name shown to the right of the navigation arrows when present and not NARRATOR */}
-                        {(currentVignette.script && !currentVignette.generating && currentVignette.script.length > 0 && currentVignette.script[index]?.speaker && currentVignette.script[index]?.speaker.trim().toUpperCase() !== 'NARRATOR') ? (
-                            <div style={{ marginLeft: 12, fontSize: 15, fontWeight: 800, color: '#eafff0', letterSpacing: '0.6px', textShadow: '0 1px 0 rgba(0,0,0,0.6)' }}>{currentVignette.script[index]?.speaker}</div>
+                        {(vignette.script && !vignette.generating && vignette.script.length > 0 && vignette.script[index]?.speaker && vignette.script[index]?.speaker.trim().toUpperCase() !== 'NARRATOR') ? (
+                            <div style={{ marginLeft: 12, fontSize: 15, fontWeight: 800, color: '#eafff0', letterSpacing: '0.6px', textShadow: '0 1px 0 rgba(0,0,0,0.6)' }}>{vignette.script[index]?.speaker}</div>
                         ) : null}
                     </div>
 
@@ -130,7 +131,7 @@ export const VignetteScreen: FC<VignetteScreenProps> = ({ stage, vignette }) => 
                 </div>
 
                         <div style={{ marginTop: 14, minHeight: '4rem', fontSize: '1.18rem', lineHeight: 1.55, fontFamily: 'Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial', color: '#e9fff7' }}>
-                    {!currentVignette.generating && currentVignette.script && currentVignette.script.length > 0 ? currentVignette.script[index].message : ''}
+                    {!vignette.generating && vignette.script && vignette.script.length > 0 ? vignette.script[index].message : ''}
                 </div>
 
                 {/* Chat input shown (enabled) only when at final message */}
@@ -141,18 +142,18 @@ export const VignetteScreen: FC<VignetteScreenProps> = ({ stage, vignette }) => 
                         onKeyDown={(e) => {
                             if (e.key === 'Enter') {
                                 e.preventDefault();
-                                if (index === currentVignette.script.length - 1 && !sceneEnded) handleSubmit();
+                                if (index === vignette.script.length - 1 && !sceneEnded) handleSubmit();
                                 else if (sceneEnded) handleClose();
                             }
                         }}
-                        placeholder={index === currentVignette.script.length - 1 ? (sceneEnded ? 'Scene concluded' : 'Type your course of action...') : (currentVignette.generating ? 'Generating...' : 'Advance to the final line...')}
+                        placeholder={index === vignette.script.length - 1 ? (sceneEnded ? 'Scene concluded' : 'Type your course of action...') : (vignette.generating ? 'Generating...' : 'Advance to the final line...')}
                         style={{ flex: 1, padding: '12px 14px', borderRadius: 10, border: '1px solid rgba(255,255,255,0.08)', background: 'linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01))', color: '#eafff2', fontSize: 15 }}
-                        disabled={!(index === currentVignette.script.length - 1) || !!sceneEnded}
+                        disabled={!(index === vignette.script.length - 1) || !!sceneEnded}
                     />
                     <button
                         onClick={() => { if (sceneEnded) handleClose(); else handleSubmit(); }}
-                        disabled={!(index === currentVignette.script.length - 1 || sceneEnded)}
-                        style={{ padding: '10px 16px', borderRadius: 10, background: (index === currentVignette.script.length - 1 && !sceneEnded) ? 'linear-gradient(90deg,#00ff88,#00b38f)' : (sceneEnded ? 'linear-gradient(90deg,#ff8c66,#ff5a3b)' : 'rgba(255,255,255,0.04)'), border: 'none', color: '#00221a', cursor: (index === currentVignette.script.length - 1 || sceneEnded) ? 'pointer' : 'not-allowed', fontWeight: 800, fontSize: 15 }}
+                        disabled={!(index === vignette.script.length - 1 || sceneEnded)}
+                        style={{ padding: '10px 16px', borderRadius: 10, background: (index === vignette.script.length - 1 && !sceneEnded) ? 'linear-gradient(90deg,#00ff88,#00b38f)' : (sceneEnded ? 'linear-gradient(90deg,#ff8c66,#ff5a3b)' : 'rgba(255,255,255,0.04)'), border: 'none', color: '#00221a', cursor: (index === vignette.script.length - 1 || sceneEnded) ? 'pointer' : 'not-allowed', fontWeight: 800, fontSize: 15 }}
                     >{sceneEnded ? 'Close' : 'Send'}</button>
                 </div>
             </div>
@@ -168,7 +169,7 @@ export const VignetteScreen: FC<VignetteScreenProps> = ({ stage, vignette }) => 
         // When the scene is concluded, switch back to the Station screen
         try {
             // Output stat change for now:
-            console.log('Vignette concluded with stat changes:', currentVignette.endProperties || {});
+            console.log('Vignette concluded with stat changes:', vignette.endProperties || {});
             stage.setScreen(StationScreen);
         } catch (err) {
             console.error('Failed to close vignette and return to StationScreen', err);

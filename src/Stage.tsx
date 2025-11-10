@@ -332,7 +332,7 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
                 alignItems: 'stretch'
             }}>
                 {stage.getSave().currentVignette &&
-                    <VignetteScreen key='vignette-screen' stage={stage} vignette={stage.getSave().currentVignette as VignetteData} />
+                    <VignetteScreen key='vignette-screen' stage={stage} />
                 }
                 {stage.screen == StationScreen && !stage.getSave().currentVignette &&
                     <StationScreen key='station-screen' stage={stage} {...stage.screenProps}/>
