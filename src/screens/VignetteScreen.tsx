@@ -373,7 +373,7 @@ export default class VignetteScreen extends BaseScreen {
                             <button onClick={this.prev} style={{ padding: '10px 14px', background: 'transparent', border: '1px solid rgba(255,255,255,0.08)', color: '#cfe', cursor: 'pointer', fontSize: 16, borderRadius: 8 }} disabled={index === 0}>{'⟨'}</button>
 
                             {/* Move the X/Y indicator between the left/right arrows */}
-                            <div style={{ minWidth: 72, textAlign: 'center', fontSize: 14, fontWeight: 700, color: '#bfffd0', background: 'rgba(255,255,255,0.02)', padding: '6px 10px', borderRadius: 8, border: '1px solid rgba(255,255,255,0.03)' }}>{`${index + 1} / ${script.length}`}{loading ? <span style={{ marginLeft: 6 }}>{'.'.repeat(this.state.loadingDots)}</span> : null}</div>
+                            <div style={{ minWidth: 72, textAlign: 'center', fontSize: 14, fontWeight: 700, color: '#bfffd0', background: 'rgba(255,255,255,0.02)', padding: '6px 10px', borderRadius: 8, border: '1px solid rgba(255,255,255,0.03)' }}>{loading ? <span style={{ marginLeft: 6 }}>{'.'.repeat(this.state.loadingDots)}</span> : `${index + 1} / ${script.length}`}</div>
 
                             <button onClick={this.next} style={{ padding: '10px 14px', background: 'transparent', border: '1px solid rgba(255,255,255,0.08)', color: '#cfe', cursor: 'pointer', fontSize: 16, borderRadius: 8 }} disabled={index === this.state.script.length - 1}>{'⟩'}</button>
 
@@ -388,11 +388,7 @@ export default class VignetteScreen extends BaseScreen {
                     </div>
 
                             <div style={{ marginTop: 14, minHeight: '4rem', fontSize: '1.18rem', lineHeight: 1.55, fontFamily: 'Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial', color: '#e9fff7' }}>
-                        {loading ? (
-                            <span style={{ display: 'inline-block' }}>
-                                Generating scene{'.'.repeat(this.state.loadingDots)}
-                            </span>
-                        ) : (currentEntry ? currentEntry.message : '')}
+                        {!loading  && currentEntry ? currentEntry.message : ''}
                     </div>
 
                     {/* Chat input shown (enabled) only when at final message */}
