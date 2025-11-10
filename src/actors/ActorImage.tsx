@@ -109,7 +109,7 @@ const ActorImage: FC<ActorImageProps> = ({
             key={`actor_motion_div_${actor.id}`}
             variants={variants}
             // Prevent automatic initial animation on remounts/refreshes; rely on animate to move between states
-            initial={false}
+            initial={'absent'}
             exit='absent'
             animate={speaker ? 'talking' : 'idle'}
             style={{position: 'absolute', width: 'auto', aspectRatio, overflow: 'visible'}}>

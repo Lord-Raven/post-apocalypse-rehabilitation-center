@@ -8,6 +8,7 @@ import { BaseScreen } from './BaseScreen';
 import { Stage } from '../Stage';
 import Actor from '../actors/Actor';
 import VignetteScreen from './VignetteScreen';
+import { VignetteType } from '../Vignette';
 
 interface EchoScreenProps {
 	stage: Stage;
@@ -46,7 +47,9 @@ export default class EchoScreen extends BaseScreen {
 			this.stage.getSave().actors[selected.id] = selected;
 			this.stage.reserveActors = this.stage.reserveActors.filter(a => a.id !== selected.id);
 			// Possibly set other properties on the selected actor as needed
-			this.stage.setScreen(VignetteScreen, {vignetteContext: {vignetteType: 'INTRO CHARACTER', actorId: selected.id, moduleId: sceneRoom?.id}});
+			const save = this.stage.getSave() as any;
+			save.vignette = { type: VignetteType.INTRO_CHARACTER, actorId: selected.id, moduleId: sceneRoom?.id };
+			this.stage.setScreen(VignetteScreen);
 		}
 	};
 

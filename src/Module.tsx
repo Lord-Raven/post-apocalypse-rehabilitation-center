@@ -1,5 +1,6 @@
 import EchoScreen from "./screens/EchoScreen";
 import VignetteScreen from "./screens/VignetteScreen";
+import { VignetteType } from './Vignette';
 import { Stage } from "./Stage";
 
 export type ModuleType = 'echo' | 'generator' | 'quarters' | 'common';
@@ -44,7 +45,11 @@ export const MODULE_DEFAULTS: Record<ModuleType, ModuleIntrinsic> = {
             // Open the vignette screen to manage occupants
             if (module.ownerId) {
                 console.log("Opening vignette.");
-                stage.setScreen(VignetteScreen, { module: module, vignetteContext: { type: 'VISIT CHARACTER', actorId: module.ownerId, moduleId: module.id } });
+                // Store vignette context on the active save so the VignetteScreen
+                // can pull it directly from stage.getSave().vignette
+                const save = stage.getSave() as any;
+                save.vignette = { type: VignetteType.VISIT_CHARACTER, actorId: module.ownerId, moduleId: module.id };
+                stage.setScreen(VignetteScreen);
             }
         }
     },

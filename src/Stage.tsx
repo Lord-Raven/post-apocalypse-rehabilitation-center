@@ -8,6 +8,7 @@ import { BaseScreen } from "./screens/BaseScreen";
 import EchoScreen from "./screens/EchoScreen";
 import {Client} from "@gradio/client";
 import VignetteScreen from "./screens/VignetteScreen";
+import { generateVignetteScript, VignetteData } from "./Vignette";
 
 
 
@@ -20,12 +21,11 @@ type ChatStateType = {
 
 type SaveType = {
     player: {name: string};
-    messageTree: MessageTree;
-    currentMessageId: string;
     actors: {[key: string]: Actor};
     layout: Layout;
     day: number;
     phase: number;
+    currentVignette?: VignetteData;
 }
 
 export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateType, ConfigType> {
@@ -76,7 +76,7 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
             layout.setModuleAt(DEFAULT_GRID_SIZE/2, DEFAULT_GRID_SIZE/2, createModule('echo', { id: `echo-${DEFAULT_GRID_SIZE/2}-${DEFAULT_GRID_SIZE/2}`, connections: [], attributes: {} }));
             layout.setModuleAt(DEFAULT_GRID_SIZE/2 - 1, DEFAULT_GRID_SIZE/2, createModule("common", { id: `common-${DEFAULT_GRID_SIZE/2 - 1}-${DEFAULT_GRID_SIZE/2}`, connections: [], attributes: {} }));
             layout.setModuleAt(DEFAULT_GRID_SIZE/2, DEFAULT_GRID_SIZE/2 - 1, createModule("generator", { id: `generator-${DEFAULT_GRID_SIZE/2}-${DEFAULT_GRID_SIZE/2 - 1}`, connections: [], attributes: {} }));
-            this.saves.push({ player: {name: Object.values(users)[0].name}, messageTree: null as any, currentMessageId: '', actors: {}, layout: layout, day: 1, phase: 0 });
+            this.saves.push({ player: {name: Object.values(users)[0].name}, actors: {}, layout: layout, day: 1, phase: 0, currentVignette: undefined });
         }
 
         this.emotionPipeline = null;
@@ -259,6 +259,38 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
             throw new Error('Failed to upload file to storage.');
         }
         return updateResponse.data[0].value;
+    }
+
+    startVignette(vignette: VignetteData) {
+        const save = this.getSave() as any;
+        save.currentVignette = vignette;
+        vignette.generating = vignette.script.length == 0;
+        if (vignette.generating) {
+            generateVignetteScript(vignette, this).then(({ entries, endScene, statChanges }) => {
+                vignette.script.push(...entries);
+                vignette.endScene = endScene;
+                vignette.endProperties = statChanges;
+                vignette.generating = false;
+            }).catch((err) => {
+                console.error('Error generating vignette script', err);
+                vignette.generating = false;
+            });
+        }
+        this.setScreen(VignetteScreen);
+    }
+
+    continueVignette(input: string) {
+        const vignette = (this.getSave() as any).currentVignette as VignetteData;
+        if (!vignette) return;
+        generateVignetteScript(vignette, this, input).then(({ entries, endScene, statChanges }) => {
+            vignette.script.push(...entries);
+            vignette.endScene = endScene;
+            vignette.endProperties = statChanges;
+            vignette.generating = false;
+        }).catch((err) => {
+            console.error('Error continuing vignette script', err);
+            vignette.generating = false;
+        });
     }
 
 
