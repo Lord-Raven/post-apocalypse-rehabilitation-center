@@ -1,5 +1,5 @@
 import {motion, Variants, easeOut, easeIn, AnimatePresence} from "framer-motion";
-import {FC, useState, useEffect, useRef} from "react";
+import {FC, useState, useEffect, useRef, useMemo, memo} from "react";
 import Actor from "./Actor";
 import { Emotion } from "../Emotion";
 
@@ -74,7 +74,7 @@ const ActorImage: FC<ActorImageProps> = ({
     const modX = ((panX * depth * 1.8) * 100);
     const modY = ((panY * depth * 1.8) * 100);
 
-    const variants: Variants = {
+    const variants: Variants = useMemo(() => ({
         absent: {
             opacity: 0,
             x: `150vw`,
@@ -102,13 +102,14 @@ const ActorImage: FC<ActorImageProps> = ({
             zIndex: zIndex,
             transition: { x: { ease: easeIn, duration: 0.3 }, bottom: { duration: 0.3 }, opacity: { ease: easeOut, duration: 0.3 } }
         }
-    };
+    }), [baseX, baseY, yPosition, zIndex]);
 
     return processedImageUrl ? (
         <motion.div
             key={`actor_motion_div_${actor.id}`}
             variants={variants}
-            initial='absent'
+            // Prevent automatic initial animation on remounts/refreshes; rely on animate to move between states
+            initial={false}
             exit='absent'
             animate={speaker ? 'talking' : 'idle'}
             style={{position: 'absolute', width: 'auto', aspectRatio, overflow: 'visible'}}>
@@ -206,4 +207,4 @@ const multiplyImageByColor = (img: HTMLImageElement, hex: string): string | null
     return canvas.toDataURL();
 };
 
-export default ActorImage;
+export default memo(ActorImage);

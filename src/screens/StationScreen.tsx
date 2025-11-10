@@ -88,6 +88,7 @@ export default class StationScreen extends BaseScreen {
                     >
                         {module ? (
                             <motion.div
+                                key={`cell_motion_${x}-${y}`}
                                 className={`module module-${module.type}`}
                                 initial={{ scale: 0 }}
                                 animate={{ scale: 1 }}

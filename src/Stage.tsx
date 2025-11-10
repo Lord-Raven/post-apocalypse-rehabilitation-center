@@ -44,7 +44,7 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
     // Expose a simple grid size (can be tuned)
     public gridSize = DEFAULT_GRID_SIZE;
 
-    // screen should be a type that extends ScreenBase; not an instance but a class reference to allow instantiation. For instance, screen should be ScreenStation by default.
+    // screen should be a type that extends ScreenBase; not an instance but a class reference to allow instantiation. For instance, screen should be StationScreen by default.
     screen: typeof BaseScreen = StationScreen;
     screenProps: any = {};
 
