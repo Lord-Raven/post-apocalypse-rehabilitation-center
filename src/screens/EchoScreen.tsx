@@ -47,9 +47,15 @@ export default class EchoScreen extends BaseScreen {
 			this.stage.getSave().actors[selected.id] = selected;
 			this.stage.reserveActors = this.stage.reserveActors.filter(a => a.id !== selected.id);
 			// Possibly set other properties on the selected actor as needed
-			const save = this.stage.getSave() as any;
-			save.vignette = { type: VignetteType.INTRO_CHARACTER, actorId: selected.id, moduleId: sceneRoom?.id };
-			this.stage.setScreen(VignetteScreen);
+			this.stage.startVignette({
+                    type: VignetteType.INTRO_CHARACTER,
+                    actorId: selected.id,
+                    moduleId: sceneRoom?.id,
+                    script: [],
+                    generating: true,
+                    context: {},
+                    endScene: false
+                });
 		}
 	};
 
