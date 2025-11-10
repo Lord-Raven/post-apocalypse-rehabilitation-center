@@ -202,10 +202,10 @@ export default class VignetteScreen extends BaseScreen {
             // List stat meanings, for reference:
             `\n\nStats:\n${Object.values(Stat).map(stat => {getStatDescription(stat)}).join('\n')}` +
             `\n\nScene Prompt:\n${this.generateVignettePrompt(type, context, continuing)}` +
-            (userAction !== undefined) ?
-                `\n\nUser Action:\n${userAction && userAction.trim().length > 0 ? `The player directs ${playerName} to say or do the following: ${userAction.trim()}; incorporate these actions into the script if possible.` :
-                    'The player did not provide specific guidance; simply continue the scene, portraying ${playerName} in accordance with their characterization.'}` :
-                '' +
+            (userAction !== undefined ?
+                (`\n\nUser Action:\n${userAction && userAction.trim().length > 0 ? `The player directs ${playerName} to say or do the following: ${userAction.trim()}; incorporate these actions into the script if possible.` :
+                    'The player did not provide specific guidance; simply continue the scene, portraying ${playerName} in accordance with their characterization.'}`) :
+                '') +
             `\n\nExample Script Format:\n` +
             'System: CHARACTER NAME: Action in pose. "Dialogue in quotation marks."\nANOTHER CHARACTER NAME: "Dialogue in quotation marks."\nNARRATOR: Descriptive content that is not attributed to a character.' +
             `\n[END]` +
