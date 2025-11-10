@@ -105,9 +105,14 @@ export default class VignetteScreen extends BaseScreen {
         const key = this.getContextKey(ctx, ctx.type);
 
         // If we already have a cached script for this context, use it and skip generation.
+        // Preserve the user's current position instead of forcibly resetting to the first line.
         if (vignetteScriptCache.has(key)) {
             const cached = vignetteScriptCache.get(key) || [{ speaker: 'NARRATOR', message: '(No script available.)' }];
-            this.setState({ script: cached, index: 0, loading: false });
+            // If we already had a script loaded and an index stored, keep the index (clamped to bounds).
+            // Only default to 0 when we truly have no prior script in state.
+            const currentIndex = (this.state && this.state.script && this.state.script.length > 0) ? (this.state.index || 0) : 0;
+            const clampedIndex = Math.max(0, Math.min(currentIndex, Math.max(0, cached.length - 1)));
+            this.setState({ script: cached, index: clampedIndex, loading: false });
             return;
         }
 
@@ -183,10 +188,11 @@ export default class VignetteScreen extends BaseScreen {
             : '(None so far)';
 
         const targetActor = this.stage.getSave().actors[context.actorId || ''];
+        const playerName = this.stage.getSave().player.name;
 
         let fullPrompt = `{{messages}}\nPremise:\nThis is a sci-fi visual novel game set on a space station that resurrects and rehabilitates patients who died in the multiverse-wide apocalypse: ` +
             `the Post-Apocalyptic Rehabilitation Center. ` +
-            `The thrust of the game has the player character, ${this.stage.getSave().player.name}, managing this station and interacting with patients and crew, as they navigate this complex futuristic universe together. ` +
+            `The thrust of the game has the player character, ${playerName}, managing this station and interacting with patients and crew, as they navigate this complex futuristic universe together. ` +
             `\n\nCrew:\nAt this point in the story, the player is running the operation on their own, with no fellow crew members. ` +
             // List patients who are here, along with full stat details:
             `\n\nPresent Characters:\n${Object.values(this.stage.getSave().actors).map(actor => 
@@ -196,21 +202,22 @@ export default class VignetteScreen extends BaseScreen {
             // List stat meanings, for reference:
             `\n\nStats:\n${Object.values(Stat).map(stat => {getStatDescription(stat)}).join('\n')}` +
             `\n\nScene Prompt:\n${this.generateVignettePrompt(type, context, continuing)}` +
+            (userAction !== undefined) ?
+                `\n\nUser Action:\n${userAction && userAction.trim().length > 0 ? `The player directs ${playerName} to say or do the following: ${userAction.trim()}; incorporate these actions into the script if possible.` :
+                    'The player did not provide specific guidance; simply continue the scene, portraying ${playerName} in accordance with their characterization.'}` :
+                '' +
             `\n\nExample Script Format:\n` +
             'System: CHARACTER NAME: Action in pose. "Dialogue in quotation marks."\nANOTHER CHARACTER NAME: "Dialogue in quotation marks."\nNARRATOR: Descriptive content that is not attributed to a character.' +
             `\n[END]` +
             `\n[CHARACTER NAME: STAT + 1]` +
             `\n[END SCENE]` +
-            `\n\nScript Log:\n${scriptLog}` +
+            `\n\nScript Log:\nSystem: ${scriptLog}` +
             `\n\nInstruction:\nAt the "System:" prompt, generate a short scene script based upon this scenario, and the specified Scene Prompt. Follow the structure of the strict Example Script Format above. ` +
-            `This segment of the scene can be concluded with [END], when it makes sense to give ${this.stage.getSave().player.name} a chance to respond, ` +
+            `This segment of the scene can be concluded with [END], when it makes sense to give ${playerName} a chance to respond, ` +
             `or, if the scene feels satisfactorily complete, the entire scene can be concluded with [END SCENE]. ` +
             `Before an [END] tag, a [CHARACTER NAME - STAT + x] tag can be used to apply a stat change to the specified Present Character. These changes should reflect an outcome of the scene; ` +
             `they should be small, typically (but not exclusively) positive, and applied sparingly (generally just before [END SCENE]).`;
-        // If the player supplied a guiding action, add it as a non-script guidance block so the generator can steer the continuation.
-        if (userAction !== undefined) {
-            fullPrompt += `\n\nPlayer Guidance:\n${userAction && userAction.trim().length > 0 ? `The player directs the characters to: ${userAction.trim()}` : 'The player did not provide specific guidance; continue the scene as if the player acted on their own.'}`;
-        }
+
         // Retry logic if response is null or response.result is empty
         let retries = 3;
         while (retries > 0) {
@@ -218,7 +225,7 @@ export default class VignetteScreen extends BaseScreen {
                 const response = await this.stage.generator.textGen({
                     prompt: fullPrompt,
                     min_tokens: 100,
-                    max_tokens: 600,
+                    max_tokens: 700,
                     include_history: true,
                     stop: ['[END]', '[END SCENE]'] // Only _closed_ END tags are stopping strings; we want the generator to finish, if it determines to include stat changes.
                 });
@@ -229,7 +236,6 @@ export default class VignetteScreen extends BaseScreen {
                     // Map actorId -> { statName: delta }
                     const statChanges: { [actorId: string]: { [stat: string]: number } } = {};
 
-                    // Detect [END SCENE: ...] (with optional stat list) or [END SCENE]
                     // Detect [END SCENE] or [END] to determine whether the scene ends here
                     const endSceneRegex = /\[END SCENE\]/i;
                     const endMatchRegex = /\[END\]/i;
@@ -407,7 +413,7 @@ export default class VignetteScreen extends BaseScreen {
                             <button onClick={this.prev} style={{ padding: '10px 14px', background: 'transparent', border: '1px solid rgba(255,255,255,0.08)', color: '#cfe', cursor: 'pointer', fontSize: 16, borderRadius: 8 }} disabled={index === 0}>{'⟨'}</button>
 
                             {/* Move the X/Y indicator between the left/right arrows */}
-                            <div style={{ minWidth: 72, textAlign: 'center', fontSize: 14, fontWeight: 700, color: '#bfffd0', background: 'rgba(255,255,255,0.02)', padding: '6px 10px', borderRadius: 8, border: '1px solid rgba(255,255,255,0.03)' }}>{loading ? <span>{'.'.repeat(this.state.loadingDots)}</span> : `${index + 1} / ${script.length}`}</div>
+                            <div style={{ minWidth: 72, textAlign: 'center', fontSize: 16, fontWeight: 700, color: '#bfffd0', background: 'rgba(255,255,255,0.02)', padding: '6px 10px', borderRadius: 8, border: '1px solid rgba(255,255,255,0.03)' }}>{loading ? <span>{' ' + '.'.repeat(this.state.loadingDots) + ' '}</span> : `${index + 1} / ${script.length}`}</div>
 
                             <button onClick={this.next} style={{ padding: '10px 14px', background: 'transparent', border: '1px solid rgba(255,255,255,0.08)', color: '#cfe', cursor: 'pointer', fontSize: 16, borderRadius: 8 }} disabled={index === this.state.script.length - 1}>{'⟩'}</button>
 
