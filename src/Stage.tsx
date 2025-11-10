@@ -295,70 +295,41 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
 
     render(): ReactElement {
 
-        // Render a small functional wrapper component that can register a render callback
-        // with this Stage instance. Screens may change `this.screen` and then call
-        // `stage.requestUpdate()` or `stage.setScreen(...)` to cause this wrapper to re-render.
-        const StageView: React.FC<{stage: Stage}> = ({stage}) => {
-            const [, setTick] = useState(0);
-            useEffect(() => {
-                // register a callback that bumps local state to force a re-render
-                stage.setRenderCallback(() => setTick(t => t + 1));
-                return () => {
-                    stage.setRenderCallback(undefined);
-                };
-            }, [stage]);
+        if (this.reserveActors.length < this.RESERVE_ACTORS && !this.reserveActorsLoadPromise) {
+            this.reserveActorsLoadPromise = this.loadReserveActors();
+        }
 
-            // If there are no potential actors, kick off a load — but only if a load is not already in progress.
-            useEffect(() => {
-                let cancelled = false;
-                if (stage.reserveActors.length === 0 && !(stage as any).potentialActorsLoading) {
-                    // call but don't block render
-                    (async () => {
-                        try {
-                            await stage.loadReserveActors();
-                        } catch (err) {
-                            // swallow — loadPotentialActors already logs errors
-                            if (!cancelled) console.debug('loadPotentialActors failed', err);
-                        }
-                    })();
-                }
-                return () => { cancelled = true; };
-            }, [stage, stage.reserveActors.length]);
+        return <div style={{
+            width: '100vw',
+            height: '100vh',
+            display: 'grid',
+            alignItems: 'stretch'
+        }}>
+            {this.getSave().currentVignette &&
+                <VignetteScreen key='vignette-screen' stage={this} />
+            }
+            {this.screen == StationScreen && !this.getSave().currentVignette &&
+                <StationScreen key='station-screen' stage={this} {...this.screenProps}/>
+            }
+            {this.screen == EchoScreen && !this.getSave().currentVignette &&
+                <EchoScreen
+                    key='echo-screen'
+                    stage={this}
+                    candidates={this.reserveActors}
+                    onAccept={(selected, s) => {
+                        console.log(`onAccept(${selected})`);
+                        // use stage API so UI will update
+                        s.setScreen(StationScreen);
+                    }}
+                    onCancel={(s) => {
+                        console.log(`onCancel()`);
+                        s.setScreen(StationScreen);
+                    }}
+                    {...this.screenProps}
+                />
+            }
 
-            return <div style={{
-                width: '100vw',
-                height: '100vh',
-                display: 'grid',
-                alignItems: 'stretch'
-            }}>
-                {stage.getSave().currentVignette &&
-                    <VignetteScreen key='vignette-screen' stage={stage} />
-                }
-                {stage.screen == StationScreen && !stage.getSave().currentVignette &&
-                    <StationScreen key='station-screen' stage={stage} {...stage.screenProps}/>
-                }
-                {stage.screen == EchoScreen && !stage.getSave().currentVignette &&
-                    <EchoScreen
-                        key='echo-screen'
-                        stage={stage}
-                        candidates={this.reserveActors}
-                        onAccept={(selected, s) => {
-                            console.log(`onAccept(${selected})`);
-                            // use stage API so UI will update
-                            s.setScreen(StationScreen);
-                        }}
-                        onCancel={(s) => {
-                            console.log(`onCancel()`);
-                            s.setScreen(StationScreen);
-                        }}
-                        {...stage.screenProps}
-                    />
-                }
-
-            </div>;
-        };
-
-        return <StageView stage={this} />;
+        </div>;
     }
 
 }
