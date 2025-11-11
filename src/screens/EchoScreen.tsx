@@ -34,7 +34,7 @@ export const EchoScreen: FC<EchoScreenProps> = ({stage, setScreenType}) => {
 			stage().getSave().actors[selected.id] = selected;
 			stage().reserveActors = stage().reserveActors.filter(a => a.id !== selected.id);
 			// Possibly set other properties on the selected actor as needed
-			stage().startVignette({
+			stage().setVignette({
                     type: VignetteType.INTRO_CHARACTER,
                     actorId: selected.id,
                     moduleId: sceneRoom?.id,

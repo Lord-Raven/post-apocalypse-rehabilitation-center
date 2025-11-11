@@ -44,7 +44,7 @@ export const MODULE_DEFAULTS: Record<ModuleType, ModuleIntrinsic> = {
             // Open the vignette screen to manage occupants
             if (module.ownerId) {
                 console.log("Opening vignette.");
-                stage.startVignette({
+                stage.setVignette({
                     type: VignetteType.VISIT_CHARACTER,
                     actorId: module.ownerId,
                     moduleId: module.id,

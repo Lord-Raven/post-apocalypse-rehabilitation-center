@@ -233,35 +233,26 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
         return updateResponse.data[0].value;
     }
 
-    startVignette(vignette: VignetteData) {
+    setVignette(vignette: VignetteData) {
         const save = this.getSave() as any;
         save.currentVignette = vignette;
-        vignette.generating = vignette.script.length == 0;
-        if (vignette.generating) {
-            generateVignetteScript(vignette, this).then(({ entries, endScene, statChanges }) => {
-                vignette.script.push(...entries);
-                vignette.endScene = endScene;
-                vignette.endProperties = statChanges;
-                vignette.generating = false;
-            }).catch((err) => {
-                console.error('Error generating vignette script', err);
-                vignette.generating = false;
-            });
-        }
     }
 
-    continueVignette() {
+    async continueVignette() {
         const vignette = (this.getSave() as any).currentVignette as VignetteData;
         if (!vignette) return;
-        generateVignetteScript(vignette, this).then(({ entries, endScene, statChanges }) => {
+        vignette.generating = true;
+        try {
+            const { entries, endScene, statChanges } = await generateVignetteScript(vignette, this);
             vignette.script.push(...entries);
             vignette.endScene = endScene;
             vignette.endProperties = statChanges;
-            vignette.generating = false;
-        }).catch((err) => {
+        } catch (err) {
             console.error('Error continuing vignette script', err);
+        } finally {
             vignette.generating = false;
-        });
+        }
+        return;
     }
 
 

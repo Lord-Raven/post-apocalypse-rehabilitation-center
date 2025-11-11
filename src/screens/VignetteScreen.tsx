@@ -44,21 +44,24 @@ export const VignetteScreen: FC<VignetteScreenProps> = ({ stage, setScreenType }
     const [inputText, setInputText] = React.useState<string>('');
     const [sceneEnded, setSceneEnded] = React.useState<boolean>(false);
     const [vignette, setVignette] = React.useState<VignetteData>(stage().getSave().currentVignette as VignetteData);
-    const [loading, setLoading] = React.useState<boolean>(vignette.generating || false);
-    const [stageRef] = React.useState<Stage>(stage());
+    const [loading, setLoading] = React.useState<boolean>(false);
 
     useEffect(() => {
+        if (vignette.script.length == 0) {
+            setLoading(true);
+            stage().continueVignette().then(() => {
+                setVignette({...stage().getSave().currentVignette as VignetteData});
+                setLoading(false);
+            });
+
+        }
         console.log('Vignette screen mounted or stage changed.');
         const wasAtEnd = index === vignette.script.length - 1;
-        setVignette(stageRef.getSave().currentVignette as VignetteData);
+        setVignette(stage().getSave().currentVignette as VignetteData);
         // If vignette script has advanced, update index to show latest line
         if (wasAtEnd) {
             setIndex(vignette.script.length - 1);
         }
-    }, [stageRef]);
-
-    useEffect(() => {
-        console.log('Vignette generating state changed:', vignette.generating);
         setLoading(vignette.generating || false);
     }, [vignette]);
     
@@ -179,7 +182,11 @@ export const VignetteScreen: FC<VignetteScreenProps> = ({ stage, setScreenType }
         vignette.script.push({ speaker: stage().getSave().player.name.toUpperCase(), message: inputText });
         setInputText('');
         setIndex(vignette.script.length - 1);
-        stage().continueVignette();
+        setLoading(true);
+        stage().continueVignette().then(() => {
+            setVignette({...stage().getSave().currentVignette as VignetteData});
+            setLoading(false);
+        });
     }
 
     function handleClose() {
