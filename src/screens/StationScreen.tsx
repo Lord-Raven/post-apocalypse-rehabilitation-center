@@ -25,14 +25,13 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType}) =>
     const gridSize = 6;
     const cellSize = '10vmin';
 
-    const addModule = (x: number, y: number) => {
+    const addModule = async (x: number, y: number) => {
         console.log(`Adding module at ${x}, ${y}`);
         const newModule: Module = createModule('quarters');
         // Write into the Stage's layout and force a re-render
         console.log(`this.stage.layout: `, stage().getLayout());
         stage().getLayout().setModuleAt(x, y, newModule);
         stage().incPhase(1);
-        setLayout(stage().getLayout());
     };
 
     const renderPhaseCircles = (phase: number | undefined) => {
@@ -169,7 +168,7 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType}) =>
                         }) && !module && (
                             <motion.div
                                 className="add-module-placeholder"
-                                onClick={() => addModule(x, y)}
+                                onClick={() => addModule(x, y).then(() => {setLayout(stage().getLayout());})}
                                 whileHover={{ scale: 1.02 }}
                                 whileTap={{ scale: 0.98 }}
                                 style={{
