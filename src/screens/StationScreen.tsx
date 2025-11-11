@@ -21,6 +21,8 @@ interface StationScreenProps {
 export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType}) => {
     const [selectedMenu, setSelectedMenu] = React.useState<string>('resources');
 
+    const [layout, setLayout] = React.useState<Layout>(stage()?.getLayout());
+
     const gridSize = 6;
     const cellSize = '10vmin';
 
@@ -57,7 +59,6 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType}) =>
 
     const renderGrid = () => {
         const cells: React.ReactNode[] = [];
-        const layout: Layout = stage()?.getLayout();
         for (let y = 0; y < gridSize; y++) {
             for (let x = 0; x < gridSize; x++) {
                 const module = layout.getModuleAt(x, y);

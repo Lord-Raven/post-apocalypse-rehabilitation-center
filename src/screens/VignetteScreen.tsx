@@ -47,6 +47,7 @@ export const VignetteScreen: FC<VignetteScreenProps> = ({ stage, setScreenType }
     const [loading, setLoading] = React.useState<boolean>(vignette.generating || false);
 
     useEffect(() => {
+        console.log('Vignette screen mounted or stage changed.');
         const wasAtEnd = index === vignette.script.length - 1;
         setVignette(stage().getSave().currentVignette as VignetteData);
         // If vignette script has advanced, update index to show latest line
@@ -56,6 +57,7 @@ export const VignetteScreen: FC<VignetteScreenProps> = ({ stage, setScreenType }
     }, [stage]);
 
     useEffect(() => {
+        console.log('Vignette generating state changed:', vignette.generating);
         setLoading(vignette.generating || false);
     }, [vignette]);
     
