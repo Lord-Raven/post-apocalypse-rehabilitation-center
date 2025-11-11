@@ -25,7 +25,7 @@ const LoadingEllipsis: React.FC<{ active?: boolean }> = ({ active }) => {
         const t = window.setInterval(() => setDots(d => ((d + 1) % 3) + 1), 400);
         return () => clearInterval(t);
     }, [active]);
-    return <span>{' ' + '.'.repeat(dots) + ' '}</span>;
+    return <span>{'.'.repeat(dots)}</span>;
 };
 
 interface VignetteScreenProps {

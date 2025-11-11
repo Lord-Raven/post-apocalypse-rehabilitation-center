@@ -60,10 +60,10 @@ export async function generateVignetteScript(vignette: VignetteData, stage: Stag
         `The thrust of the game has the player character, ${playerName}, managing this station and interacting with patients and crew, as they navigate this complex futuristic universe together. ` +
         `\n\nCrew:\nAt this point in the story, the player is running the operation on their own, with no fellow crew members. ` +
         // List patients who are here, along with full stat details:
-        `\n\nPresent Characters:\n${Object.values(stage.getSave().actors).filter(actor => actor.locationId == module.id).map(actor => 
+        `\n\nPresent Characters:\n${Object.values(stage.getSave().actors).filter(actor => actor.locationId == vignette.moduleId).map(actor => 
             `${actor.name}\n  Description: ${actor.description}\n  Profile: ${actor.profile}\n  Stats:\n    ${Object.entries(actor.stats).map(([stat, value]) => `${stat}: ${value}`).join('\n    ')}`).join('\n')}` +
         // List non-present patients for reference; just need description and profile:
-        `\n\nOther Patients:\n${Object.values(stage.getSave().actors).filter(actor => actor.locationId != module.id).map(actor => `${actor.name}\n  ${actor.description}\n  ${actor.profile}`).join('\n')}` +
+        `\n\nOther Patients:\n${Object.values(stage.getSave().actors).filter(actor => actor.locationId != vignette.moduleId).map(actor => `${actor.name}\n  ${actor.description}\n  ${actor.profile}`).join('\n')}` +
         // List stat meanings, for reference:
         `\n\nStats:\n${Object.values(Stat).map(stat => `${stat.toUpperCase()}: ${getStatDescription(stat)}`).join('\n')}` +
         `\n\nScene Prompt:\n${generateVignettePrompt(vignette, stage, vignette.script.length > 0)}` +
