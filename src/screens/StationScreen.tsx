@@ -10,7 +10,6 @@ import { Stage } from '../Stage';
  * The grid should house a couple of starter modules. Additional modules can be added by clicking "+" icons near modules with extendable sections.
  * It should be balanced and visually appealing, with a clear layout for each module.
  * The right side of the screen should have a vertical menu with buttons for different station management options: Resources, Crew, Upgrades, Missions.
- * Extends ScreenBase.
  */
 
 interface StationScreenProps {
@@ -25,8 +24,8 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType}) =>
 
     React.useEffect(() => {
         console.log('Station screen mounted or stage changed.');
-        setLayout(stage()?.getLayout());
-    }, [stage]);
+        setLayout(stage().getLayout());
+    }, [stage()]);
 
     const gridSize = 6;
     const cellSize = '10vmin';
