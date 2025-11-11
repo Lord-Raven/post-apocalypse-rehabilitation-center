@@ -22,11 +22,6 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType}) =>
 
     const [layout, setLayout] = React.useState<Layout>(stage()?.getLayout());
 
-    React.useEffect(() => {
-        console.log('Station screen mounted or stage changed.');
-        setLayout(stage().getLayout());
-    }, [stage()]);
-
     const gridSize = 6;
     const cellSize = '10vmin';
 
@@ -37,6 +32,7 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType}) =>
         console.log(`this.stage.layout: `, stage().getLayout());
         stage().getLayout().setModuleAt(x, y, newModule);
         stage().incPhase(1);
+        setLayout(stage().getLayout());
     };
 
     const renderPhaseCircles = (phase: number | undefined) => {

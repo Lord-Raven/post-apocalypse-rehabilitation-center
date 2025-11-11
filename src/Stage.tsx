@@ -198,7 +198,7 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
             try {
                 return this.removeBackground(imageUrl, storageName);
             } catch (exception: any) {
-                console.error(`Error removing background from image, error: ${exception}`);
+                console.error(`Error removing background from image, error`, exception);
                 return imageUrl;
             }
         }
@@ -214,7 +214,7 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
             // Depth URL is the HF URL; back it up to Chub by creating a File from the image data:
             return await this.uploadBlob(storageName, await (await fetch(backgroundlessResponse.data[1].url)).blob(), {type: 'image/png'});
         } catch (error) {
-            console.error(`Error removing background or storing result: ${error}`);
+            console.error(`Error removing background or storing result`, error);
             return imageUrl;
         }
     }

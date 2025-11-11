@@ -92,11 +92,9 @@ export type LayoutChangeHandler = (grid: Module[]) => void;
 export class Layout {
     public grid: (Module | null)[][];
     public gridSize: number;
-    private onChange?: (grid: (Module | null)[][]) => void;
 
-    constructor(gridSize: number = DEFAULT_GRID_SIZE, initial?: (Module | null)[][], onChange?: (grid: (Module | null)[][]) => void) {
+    constructor(gridSize: number = DEFAULT_GRID_SIZE, initial?: (Module | null)[][]) {
         this.gridSize = gridSize;
-        this.onChange = onChange;
         this.grid = initial || Array.from({ length: this.gridSize }, () =>
             Array.from({ length: this.gridSize }, () => null)
         );
@@ -108,7 +106,6 @@ export class Layout {
 
     setLayout(layout: (Module | null)[][]) {
         this.grid = layout;
-        this.onChange?.(this.grid);
     }
 
     getModulesWhere(predicate: (module: Module) => boolean): Module[] {
@@ -156,6 +153,5 @@ export class Layout {
         if (!this.grid[y]) return;
         this.grid[y][x] = module;
         console.log(`Module set. Current module at (${x}, ${y}):`, this.grid[y][x]);
-        this.onChange?.(this.grid);
     }
 }
