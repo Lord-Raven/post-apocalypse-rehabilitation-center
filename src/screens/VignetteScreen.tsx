@@ -16,16 +16,16 @@ import { Emotion } from '../Emotion';
 // frequent loading-dot updates from triggering re-renders that can reset
 // other animations in the scene.
 const LoadingEllipsis: React.FC<{ active?: boolean }> = ({ active }) => {
-    const [dots, setDots] = React.useState<number>(1);
+    const [dots, setDots] = React.useState<number>(0);
     React.useEffect(() => {
         if (!active) {
             setDots(1);
             return;
         }
-        const t = window.setInterval(() => setDots(d => ((d + 1) % 3) + 1), 400);
+        const t = window.setInterval(() => setDots(d => ((d + 1) % 3)), 400);
         return () => clearInterval(t);
     }, [active]);
-    return <span>{'.'.repeat(dots)}</span>;
+    return <span>{'.'.repeat(1 + dots)}</span>;
 };
 
 interface VignetteScreenProps {
@@ -179,9 +179,12 @@ export const VignetteScreen: FC<VignetteScreenProps> = ({ stage, setScreenType }
     // Handle submission of player's guidance (or blank submit to continue the scene autonomously)
     function handleSubmit() {
         // Add input text to vignette script as a player speaker action:
-        vignette.script.push({ speaker: stage().getSave().player.name.toUpperCase(), message: inputText });
+        const stageVignette = stage().getSave().currentVignette;
+        if (!stageVignette) return;
+        stageVignette?.script.push({ speaker: stage().getSave().player.name.toUpperCase(), message: inputText });
+        setVignette({...stageVignette as VignetteData});
         setInputText('');
-        setIndex(vignette.script.length - 1);
+        setIndex(stageVignette.script.length - 1);
         setLoading(true);
         stage().continueVignette().then(() => {
             setVignette({...stage().getSave().currentVignette as VignetteData});

@@ -52,8 +52,17 @@ export async function generateVignetteScript(vignette: VignetteData, stage: Stag
         ? vignette.script.map(e => `${e.speaker}: ${e.message}`).join('\n')
         : '(None so far)';
 
-    const targetActor = stage.getSave().actors[vignette.actorId || ''];
     const playerName = stage.getSave().player.name;
+
+    // There are two optional phrases for gently/more firmly prodding the model toward wrapping up the scene, and then we calculate one to show based on the vignette.script.length and some randomness:
+    const wrapUpPhrases = [
+        ' Consider whether the scene can reach a natural stopping point soon.', // Gently prod toward and ending.
+        ' The scene is getting long and should find a conclusion soon, ending with potential stat boosts ([CHARACTER NAME: RELEVANT STAT + 1]) and/or an [END SCENE] tag.' // Firmer prod
+    ];
+
+    // Use script length + random(1, 10) > 12 for gentle or > 24 for firm.
+    const scriptLengthFactor = vignette.script.length + Math.floor(Math.random() * 10) + 1;
+    const wrapupPrompt = scriptLengthFactor > 24 ? wrapUpPhrases[1] : (scriptLengthFactor > 12 ? wrapUpPhrases[0] : '');
 
     let fullPrompt = `{{messages}}\nPremise:\nThis is a sci-fi visual novel game set on a space station that resurrects and rehabilitates patients who died in the multiverse-wide apocalypse: ` +
         `the Post-Apocalyptic Rehabilitation Center. ` +
@@ -78,7 +87,7 @@ export async function generateVignetteScript(vignette: VignetteData, stage: Stag
         `This response should end when it makes sense to give ${playerName} a chance to respond, ` +
         `or, if the scene feels satisfactorily complete, the entire scene can be concluded with and "[END SCENE]" tag. ` +
         `Before an "[END SCENE]" tag, a "[CHARACTER NAME: RELEVANT STAT + x]" tag can be used to apply a stat change to the specified Present Character. These changes should reflect an outcome of the scene; ` +
-        `they should be small, typically (but not exclusively) positive, and applied sparingly (generally just before [END SCENE]).`;
+        `they should be small, typically (but not exclusively) positive, and applied sparingly (generally just before [END SCENE]).${wrapupPrompt}`;
 
     // Retry logic if response is null or response.result is empty
     let retries = 3;
