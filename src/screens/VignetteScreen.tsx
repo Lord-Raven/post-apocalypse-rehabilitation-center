@@ -10,6 +10,7 @@ import { Stage } from '../Stage';
 import { VignetteType, VignetteData } from '../Vignette';
 import ActorImage from '../actors/ActorImage';
 import { Emotion } from '../Emotion';
+import TypeIt from 'typeit-react'
 
 // Small component that animates an ellipsis without forcing the parent
 // component to update on every tick. This prevents the parent class's
@@ -137,7 +138,7 @@ export const VignetteScreen: FC<VignetteScreenProps> = ({ stage, setScreenType }
                         <button onClick={next} style={{ padding: '10px 14px', background: 'transparent', border: '1px solid rgba(255,255,255,0.08)', color: '#cfe', cursor: 'pointer', fontSize: 16, borderRadius: 8 }} disabled={index === vignette.script.length - 1}>{'⟩'}</button>
 
                         {/* Speaker name shown to the right of the navigation arrows when present and not NARRATOR */}
-                        {(vignette.script && !loading && vignette.script.length > 0 && vignette.script[index]?.speaker && vignette.script[index]?.speaker.trim().toUpperCase() !== 'NARRATOR') ? (
+                        {(vignette.script && vignette.script.length > 0 && vignette.script[index]?.speaker && vignette.script[index]?.speaker.trim().toUpperCase() !== 'NARRATOR') ? (
                             <div style={{ marginLeft: 12, fontSize: 15, fontWeight: 800, color: '#eafff0', letterSpacing: '0.6px', textShadow: '0 1px 0 rgba(0,0,0,0.6)' }}>{vignette.script[index]?.speaker}</div>
                         ) : null}
                     </div>
@@ -147,7 +148,20 @@ export const VignetteScreen: FC<VignetteScreenProps> = ({ stage, setScreenType }
                 </div>
 
                 <div style={{ marginTop: 14, minHeight: '4rem', fontSize: '1.18rem', lineHeight: 1.55, fontFamily: 'Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial', color: '#e9fff7' }}>
-                    {!loading && vignette.script && vignette.script.length > 0 ? vignette.script[index].message : ''}
+                    {!loading && vignette.script && vignette.script.length > 0 ? (
+                        <TypeIt
+                            key={`${index}-${vignette.script[index]?.message?.length || 0}`}
+                            options={{ speed: 30, cursor: true, cursorChar: '|' }}
+                            getBeforeInit={(instance: any) => {
+                                // Ensure instance is reset and type the current message.
+                                // Using the raw message; if you need HTML inside messages consider
+                                // enabling "lifeLike" or pre-processing the message into segments.
+                                const msg = vignette.script[index]?.message || '';
+                                instance.type(msg);
+                                return instance;
+                            }}
+                        />
+                    ) : ''}
                 </div>
 
                 {/* Chat input shown (enabled) only when at final message */}
@@ -164,11 +178,11 @@ export const VignetteScreen: FC<VignetteScreenProps> = ({ stage, setScreenType }
                         }}
                         placeholder={index === vignette.script.length - 1 ? (sceneEnded ? 'Scene concluded' : 'Type your course of action...') : (loading ? 'Generating...' : 'Advance to the final line...')}
                         style={{ flex: 1, padding: '12px 14px', borderRadius: 10, border: '1px solid rgba(255,255,255,0.08)', background: 'linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01))', color: '#eafff2', fontSize: 15 }}
-                        disabled={!(index === vignette.script.length - 1) || !!sceneEnded}
+                        disabled={!(index === vignette.script.length - 1) || !!sceneEnded || loading}
                     />
                     <button
                         onClick={() => { if (sceneEnded) handleClose(); else handleSubmit(); }}
-                        disabled={!(index === vignette.script.length - 1 || sceneEnded)}
+                        disabled={!(index === vignette.script.length - 1) || sceneEnded || loading}
                         style={{ padding: '10px 16px', borderRadius: 10, background: (index === vignette.script.length - 1 && !sceneEnded) ? 'linear-gradient(90deg,#00ff88,#00b38f)' : (sceneEnded ? 'linear-gradient(90deg,#ff8c66,#ff5a3b)' : 'rgba(255,255,255,0.04)'), border: 'none', color: '#00221a', cursor: (index === vignette.script.length - 1 || sceneEnded) ? 'pointer' : 'not-allowed', fontWeight: 800, fontSize: 15 }}
                     >{sceneEnded ? 'Close' : 'Send'}</button>
                 </div>
