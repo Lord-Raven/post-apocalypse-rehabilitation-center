@@ -28,11 +28,18 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType}) =>
     const addModule = async (x: number, y: number) => {
         console.log(`Adding module at ${x}, ${y}`);
         const newModule: Module = createModule('quarters');
-        // Write into the Stage's layout and force a re-render
+        // Write into the Stage's layout
         console.log(`this.stage.layout: `, stage().getLayout());
         stage().getLayout().setModuleAt(x, y, newModule);
         stage().incPhase(1);
+        // update local layout state so this component re-renders with the new module
+        setLayout(stage().getLayout());
     };
+
+    // Need to make sure re-renders when layout is updated.
+    React.useEffect(() => {
+        setLayout(stage().getLayout());
+    }, [stage().getLayout()]);
 
     const renderPhaseCircles = (phase: number | undefined) => {
         const circles = [];
@@ -168,7 +175,7 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType}) =>
                         }) && !module && (
                             <motion.div
                                 className="add-module-placeholder"
-                                onClick={() => addModule(x, y).then(() => {setLayout(stage().getLayout());})}
+                                onClick={() => addModule(x, y)}
                                 whileHover={{ scale: 1.02 }}
                                 whileTap={{ scale: 0.98 }}
                                 style={{
