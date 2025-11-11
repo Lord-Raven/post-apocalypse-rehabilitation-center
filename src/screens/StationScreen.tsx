@@ -19,13 +19,15 @@ interface StationScreenProps {
 
 export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType}) => {
     const [selectedMenu, setSelectedMenu] = React.useState<string>('resources');
+    const [day, setDay] = React.useState<number>(stage().getSave().day);
+    const [phase, setPhase] = React.useState<number>(stage().getSave().phase);
 
     const [layout, setLayout] = React.useState<Layout>(stage()?.getLayout());
 
     const gridSize = 6;
     const cellSize = '10vmin';
 
-    const addModule = async (x: number, y: number) => {
+    const addModule = (x: number, y: number) => {
         console.log(`Adding module at ${x}, ${y}`);
         const newModule: Module = createModule('quarters');
         // Write into the Stage's layout
@@ -34,6 +36,8 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType}) =>
         stage().incPhase(1);
         // update local layout state so this component re-renders with the new module
         setLayout(stage().getLayout());
+        setDay(stage().getSave().day);
+        setPhase(stage().getSave().phase);
     };
 
     // Need to make sure re-renders when layout is updated.
@@ -68,7 +72,6 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType}) =>
         for (let y = 0; y < gridSize; y++) {
             for (let x = 0; x < gridSize; x++) {
                 const module = layout.getModuleAt(x, y);
-                const actorsPresent = Object.values(stage().getSave().actors).filter((actor, index) => actor.locationId === module?.id).length;
                 cells.push(
                     <div
                         key={`cell_${x}-${y}`}
@@ -116,7 +119,7 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType}) =>
                                     {/* Compute actors once for this module */}
                                     {(() => {
                                         const actors = Object.values(stage()?.getSave().actors).filter(a => a.locationId === module.id);
-                                        const actorsPresent = actors.length;
+                                        const actorCount = actors.length;
                                         return (
                                             <>
                                                 {/* Actor strip: spaced evenly across the tile, aligned to the bottom (slightly above the label) */}
@@ -126,7 +129,7 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType}) =>
                                                     right: 0,
                                                     bottom: 0,
                                                     display: 'flex',
-                                                    justifyContent: actorsPresent <= 1 ? 'center' : 'space-evenly',
+                                                    justifyContent: actorCount <= 1 ? 'center' : 'space-evenly',
                                                     alignItems: 'flex-end',
                                                     padding: '0 6px',
                                                     pointerEvents: 'none',
