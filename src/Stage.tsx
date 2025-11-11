@@ -250,10 +250,10 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
         }
     }
 
-    continueVignette(input: string) {
+    continueVignette() {
         const vignette = (this.getSave() as any).currentVignette as VignetteData;
         if (!vignette) return;
-        generateVignetteScript(vignette, this, input).then(({ entries, endScene, statChanges }) => {
+        generateVignetteScript(vignette, this).then(({ entries, endScene, statChanges }) => {
             vignette.script.push(...entries);
             vignette.endScene = endScene;
             vignette.endProperties = statChanges;

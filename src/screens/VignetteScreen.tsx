@@ -44,9 +44,19 @@ export const VignetteScreen: FC<VignetteScreenProps> = ({ stage, setScreenType }
     const [inputText, setInputText] = React.useState<string>('');
     const [sceneEnded, setSceneEnded] = React.useState<boolean>(false);
     const [vignette, setVignette] = React.useState<VignetteData>(stage().getSave().currentVignette as VignetteData);
+    const [loading, setLoading] = React.useState<boolean>(vignette.generating || false);
 
     useEffect(() => {
+        const wasAtEnd = index === vignette.script.length - 1;
         setVignette(stage().getSave().currentVignette as VignetteData);
+        // If vignette script has advanced, update index to show latest line
+        if (wasAtEnd) {
+            setIndex(vignette.script.length - 1);
+        }
+    }, [stage]);
+
+    useEffect(() => {
+        setLoading(vignette.generating || false);
     }, [vignette]);
     
     const next = () => {
@@ -116,12 +126,12 @@ export const VignetteScreen: FC<VignetteScreenProps> = ({ stage, setScreenType }
                         <button onClick={prev} style={{ padding: '10px 14px', background: 'transparent', border: '1px solid rgba(255,255,255,0.08)', color: '#cfe', cursor: 'pointer', fontSize: 16, borderRadius: 8 }} disabled={index === 0}>{'⟨'}</button>
 
                         {/* Move the X/Y indicator between the left/right arrows */}
-                        <div style={{ minWidth: 72, textAlign: 'center', fontSize: 16, fontWeight: 700, color: '#bfffd0', background: 'rgba(255,255,255,0.02)', padding: '6px 10px', borderRadius: 8, border: '1px solid rgba(255,255,255,0.03)' }}>{vignette.generating ? <LoadingEllipsis active={vignette.generating} /> : `${index + 1} / ${vignette.script.length}`}</div>
+                        <div style={{ minWidth: 72, textAlign: 'center', fontSize: 16, fontWeight: 700, color: '#bfffd0', background: 'rgba(255,255,255,0.02)', padding: '6px 10px', borderRadius: 8, border: '1px solid rgba(255,255,255,0.03)' }}>{loading ? <LoadingEllipsis active={loading} /> : `${index + 1} / ${vignette.script.length}`}</div>
 
                         <button onClick={next} style={{ padding: '10px 14px', background: 'transparent', border: '1px solid rgba(255,255,255,0.08)', color: '#cfe', cursor: 'pointer', fontSize: 16, borderRadius: 8 }} disabled={index === vignette.script.length - 1}>{'⟩'}</button>
 
                         {/* Speaker name shown to the right of the navigation arrows when present and not NARRATOR */}
-                        {(vignette.script && !vignette.generating && vignette.script.length > 0 && vignette.script[index]?.speaker && vignette.script[index]?.speaker.trim().toUpperCase() !== 'NARRATOR') ? (
+                        {(vignette.script && !loading && vignette.script.length > 0 && vignette.script[index]?.speaker && vignette.script[index]?.speaker.trim().toUpperCase() !== 'NARRATOR') ? (
                             <div style={{ marginLeft: 12, fontSize: 15, fontWeight: 800, color: '#eafff0', letterSpacing: '0.6px', textShadow: '0 1px 0 rgba(0,0,0,0.6)' }}>{vignette.script[index]?.speaker}</div>
                         ) : null}
                     </div>
@@ -130,8 +140,8 @@ export const VignetteScreen: FC<VignetteScreenProps> = ({ stage, setScreenType }
                     <div style={{ fontSize: 12, opacity: 0.65, visibility: 'hidden' }}></div>
                 </div>
 
-                        <div style={{ marginTop: 14, minHeight: '4rem', fontSize: '1.18rem', lineHeight: 1.55, fontFamily: 'Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial', color: '#e9fff7' }}>
-                    {!vignette.generating && vignette.script && vignette.script.length > 0 ? vignette.script[index].message : ''}
+                <div style={{ marginTop: 14, minHeight: '4rem', fontSize: '1.18rem', lineHeight: 1.55, fontFamily: 'Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial', color: '#e9fff7' }}>
+                    {!loading && vignette.script && vignette.script.length > 0 ? vignette.script[index].message : ''}
                 </div>
 
                 {/* Chat input shown (enabled) only when at final message */}
@@ -146,7 +156,7 @@ export const VignetteScreen: FC<VignetteScreenProps> = ({ stage, setScreenType }
                                 else if (sceneEnded) handleClose();
                             }
                         }}
-                        placeholder={index === vignette.script.length - 1 ? (sceneEnded ? 'Scene concluded' : 'Type your course of action...') : (vignette.generating ? 'Generating...' : 'Advance to the final line...')}
+                        placeholder={index === vignette.script.length - 1 ? (sceneEnded ? 'Scene concluded' : 'Type your course of action...') : (loading ? 'Generating...' : 'Advance to the final line...')}
                         style={{ flex: 1, padding: '12px 14px', borderRadius: 10, border: '1px solid rgba(255,255,255,0.08)', background: 'linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01))', color: '#eafff2', fontSize: 15 }}
                         disabled={!(index === vignette.script.length - 1) || !!sceneEnded}
                     />
@@ -162,7 +172,11 @@ export const VignetteScreen: FC<VignetteScreenProps> = ({ stage, setScreenType }
     
     // Handle submission of player's guidance (or blank submit to continue the scene autonomously)
     function handleSubmit() {
-        stage().continueVignette(inputText);
+        // Add input text to vignette script as a player speaker action:
+        vignette.script.push({ speaker: stage().getSave().player.name.toUpperCase(), message: inputText });
+        setInputText('');
+        setIndex(vignette.script.length - 1);
+        stage().continueVignette();
     }
 
     function handleClose() {
