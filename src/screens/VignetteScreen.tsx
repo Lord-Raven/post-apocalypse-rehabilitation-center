@@ -53,17 +53,9 @@ export const VignetteScreen: FC<VignetteScreenProps> = ({ stage, setScreenType }
             stage().continueVignette().then(() => {
                 setVignette({...stage().getSave().currentVignette as VignetteData});
                 setLoading(false);
+                setSceneEnded(stage().getSave().currentVignette?.endScene || false);
             });
-
         }
-        console.log('Vignette screen mounted or stage changed.');
-        const wasAtEnd = index === vignette.script.length - 1;
-        setVignette(stage().getSave().currentVignette as VignetteData);
-        // If vignette script has advanced, update index to show latest line
-        if (wasAtEnd) {
-            setIndex(vignette.script.length - 1);
-        }
-        setLoading(vignette.generating || false);
     }, [vignette]);
     
     const next = () => {
@@ -197,13 +189,15 @@ export const VignetteScreen: FC<VignetteScreenProps> = ({ stage, setScreenType }
         const stageVignette = stage().getSave().currentVignette;
         if (!stageVignette) return;
         stageVignette?.script.push({ speaker: stage().getSave().player.name.toUpperCase(), message: inputText });
+        setLoading(true);
         setVignette({...stageVignette as VignetteData});
         setInputText('');
         setIndex(stageVignette.script.length - 1);
-        setLoading(true);
         stage().continueVignette().then(() => {
             setVignette({...stage().getSave().currentVignette as VignetteData});
+            setIndex(vignette.script.length - 1);
             setLoading(false);
+            setSceneEnded(stage().getSave().currentVignette?.endScene || false);
         });
     }
 
