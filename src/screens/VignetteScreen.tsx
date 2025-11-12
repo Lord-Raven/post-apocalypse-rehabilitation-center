@@ -50,11 +50,13 @@ export const VignetteScreen: FC<VignetteScreenProps> = ({ stage, setScreenType }
     useEffect(() => {
         if (vignette.script.length == 0) {
             setLoading(true);
+            console.log('Before');
             stage().continueVignette().then(() => {
                 setVignette({...stage().getSave().currentVignette as VignetteData});
                 setLoading(false);
                 setSceneEnded(stage().getSave().currentVignette?.endScene || false);
             });
+            console.log('After');
         }
     }, [vignette]);
     
@@ -187,12 +189,15 @@ export const VignetteScreen: FC<VignetteScreenProps> = ({ stage, setScreenType }
         setVignette({...stageVignette as VignetteData});
         setInputText('');
         setIndex(stageVignette.script.length - 1);
+        console.log('Before');
         stage().continueVignette().then(() => {
+            const newIndex = Math.min(vignette.script.length, (stage().getSave().currentVignette?.script.length || 1) - 1);
             setVignette({...stage().getSave().currentVignette as VignetteData});
-            setIndex(vignette.script.length - 1);
+            setIndex(newIndex);
             setLoading(false);
             setSceneEnded(stage().getSave().currentVignette?.endScene || false);
         });
+        console.log('After');
     }
 
     function handleClose() {
