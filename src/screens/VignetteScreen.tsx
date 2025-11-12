@@ -10,6 +10,7 @@ import { VignetteType, VignetteData } from '../Vignette';
 import ActorImage from '../actors/ActorImage';
 import { Emotion } from '../Emotion';
 import { TypeOut } from 'typingfx';
+import SingleTypeOut from "../SingleTypeOut";
 
 // Small component that animates an ellipsis without forcing the parent
 // component to update on every tick. This prevents the parent class's
@@ -141,10 +142,11 @@ export const VignetteScreen: FC<VignetteScreenProps> = ({ stage, setScreenType }
                 <div style={{ marginTop: 14, minHeight: '4rem', fontSize: '1.18rem', lineHeight: 1.55, fontFamily: 'Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial', color: '#e9fff7' }}>
                     {!loading && vignette.script && vignette.script.length > 0 ? (
                         //    vignette.script[index]?.message || ''
-                        <TypeOut
-                            key='message-typeit-${index}'
-                            steps={[vignette.script[index]?.message || '']}
-                            speed={25}
+                        <SingleTypeOut
+                            key={`message-box-${index}`}
+                            text={vignette.script[index]?.message || ''}
+                            speed={20}
+                            onAdvance={next}
                         />
                     ) : ''}
                 </div>
@@ -163,7 +165,7 @@ export const VignetteScreen: FC<VignetteScreenProps> = ({ stage, setScreenType }
                         }}
                         placeholder={index === vignette.script.length - 1 ? (sceneEnded ? 'Scene concluded' : 'Type your course of action...') : (loading ? 'Generating...' : 'Advance to the final line...')}
                         style={{ flex: 1, padding: '12px 14px', borderRadius: 10, border: '1px solid rgba(255,255,255,0.08)', background: 'linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01))', color: '#eafff2', fontSize: 15 }}
-                        disabled={!(index === vignette.script.length - 1) || !!sceneEnded || loading}
+                        disabled={!(index === vignette.script.length - 1) || sceneEnded || loading}
                     />
                     <button
                         onClick={() => { if (sceneEnded) handleClose(); else handleSubmit(); }}
