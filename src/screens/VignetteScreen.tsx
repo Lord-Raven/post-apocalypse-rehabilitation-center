@@ -1,6 +1,5 @@
 /*
  * This screen displays Visual Novel vignette scenes, displaying dialogue and characters as they interact with the player and each other.
- * Extends ScreenBase.
  */
 import React, { FC, useEffect } from 'react';
 import { BaseScreen, ScreenType } from './BaseScreen';
@@ -10,7 +9,7 @@ import { Stage } from '../Stage';
 import { VignetteType, VignetteData } from '../Vignette';
 import ActorImage from '../actors/ActorImage';
 import { Emotion } from '../Emotion';
-import TypeIt from 'typeit-react'
+import { TypeOut } from 'typingfx';
 
 // Small component that animates an ellipsis without forcing the parent
 // component to update on every tick. This prevents the parent class's
@@ -142,18 +141,10 @@ export const VignetteScreen: FC<VignetteScreenProps> = ({ stage, setScreenType }
                 <div style={{ marginTop: 14, minHeight: '4rem', fontSize: '1.18rem', lineHeight: 1.55, fontFamily: 'Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial', color: '#e9fff7' }}>
                     {!loading && vignette.script && vignette.script.length > 0 ? (
                         //    vignette.script[index]?.message || ''
-                        <TypeIt
+                        <TypeOut
                             key='message-typeit-${index}'
-                            options={{ speed: 30, cursor: true, cursorChar: '|' }}
-
-                            getAfterInit={(instance: any) => {
-                                // Ensure instance is reset and type the current message.
-                                // Using the raw message; if you need HTML inside messages consider
-                                // enabling "lifeLike" or pre-processing the message into segments.
-                                const msg = vignette.script[index]?.message || '';
-                                instance.type(msg);
-                                return instance;
-                            }}
+                            steps={[vignette.script[index]?.message || '']}
+                            speed={25}
                         />
                     ) : ''}
                 </div>
