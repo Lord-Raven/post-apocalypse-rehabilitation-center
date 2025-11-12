@@ -14,6 +14,19 @@ export enum Stat {
     Trust = 'trust'
 }
 
+// Re-imagining core stats with single-syllable words, each starting with a different letter
+/*export enum stat {
+    Might = 'might', // Physical condition and strength
+    Grit = 'grit', // Mental resilience and toughness
+    Spunk = 'spunk', // Enthusiasm and energy
+    Nerve = 'nerve', // Courage and confidence
+    Brains = 'brains', // Intelligence and problem-solving
+    Skill = 'skill', // Capability and dexterity
+    Charm = 'charm', // Charisma and social skills
+    Lust = 'lust', // Sexuality and physical desire
+    Faith = 'faith' // Compliance and trust
+}*/
+
 class Actor {
     id: string;
     name: string;
