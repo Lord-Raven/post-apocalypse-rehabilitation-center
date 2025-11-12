@@ -141,19 +141,20 @@ export const VignetteScreen: FC<VignetteScreenProps> = ({ stage, setScreenType }
 
                 <div style={{ marginTop: 14, minHeight: '4rem', fontSize: '1.18rem', lineHeight: 1.55, fontFamily: 'Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial', color: '#e9fff7' }}>
                     {!loading && vignette.script && vignette.script.length > 0 ? (
-                            vignette.script[index]?.message || ''
-                        /*<TypeIt
-                            key={`${index}-${vignette.script[index]?.message?.length || 0}`}
+                        //    vignette.script[index]?.message || ''
+                        <TypeIt
+                            key='message-typeit-${index}'
                             options={{ speed: 30, cursor: true, cursorChar: '|' }}
-                            getBeforeInit={(instance: any) => {
-                            // Ensure instance is reset and type the current message.
-                            // Using the raw message; if you need HTML inside messages consider
-                            // enabling "lifeLike" or pre-processing the message into segments.
-                            const msg = vignette.script[index]?.message || '';
-                            instance.type(msg);
-                            return instance;
-                        }}
-                        />*/
+
+                            getAfterInit={(instance: any) => {
+                                // Ensure instance is reset and type the current message.
+                                // Using the raw message; if you need HTML inside messages consider
+                                // enabling "lifeLike" or pre-processing the message into segments.
+                                const msg = vignette.script[index]?.message || '';
+                                instance.type(msg);
+                                return instance;
+                            }}
+                        />
                     ) : ''}
                 </div>
 
