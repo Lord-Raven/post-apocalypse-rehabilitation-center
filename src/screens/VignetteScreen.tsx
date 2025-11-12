@@ -142,7 +142,7 @@ export const VignetteScreen: FC<VignetteScreenProps> = ({ stage, setScreenType }
                 </div>
 
                 <div style={{ marginTop: 14, minHeight: '4rem', fontSize: '1.18rem', lineHeight: 1.55, fontFamily: 'Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial', color: '#e9fff7' }}>
-                    {!loading && vignette.script && vignette.script.length > 0 ? (
+                    {vignette.script && vignette.script.length > 0 ? (
                         //    vignette.script[index]?.message || ''
                         <SingleTypeOut
                             key={`message-box-${index}`}
@@ -185,13 +185,14 @@ export const VignetteScreen: FC<VignetteScreenProps> = ({ stage, setScreenType }
         const stageVignette = stage().getSave().currentVignette;
         if (!stageVignette) return;
         stageVignette?.script.push({ speaker: stage().getSave().player.name.toUpperCase(), message: inputText });
-        setLoading(true);
         setVignette({...stageVignette as VignetteData});
-        setInputText('');
+        setLoading(true);
         setIndex(stageVignette.script.length - 1);
+        setInputText('');
         console.log('Before');
         stage().continueVignette().then(() => {
             const newIndex = Math.min(vignette.script.length, (stage().getSave().currentVignette?.script.length || 1) - 1);
+            console.log(`newIndex: ${newIndex}`);
             setVignette({...stage().getSave().currentVignette as VignetteData});
             setIndex(newIndex);
             setLoading(false);
