@@ -26,7 +26,7 @@ import {
     Send,
     Close
 } from '@mui/icons-material';
-import { Typewriter } from 'react-simple-typewriter';
+import SingleTypeOut from '../SingleTypeOut';
 
 // Small component that shows a loading indicator
 const LoadingIndicator: React.FC<{ active?: boolean }> = ({ active }) => {
@@ -35,11 +35,7 @@ const LoadingIndicator: React.FC<{ active?: boolean }> = ({ active }) => {
 };
 
 // Helper function to format text with dialogue, italics, and bold styling
-const formatMessage = (text: string): string => {
-
-    // Just testing for a moment.
-    return '<b>' + text + '</b>';
-    /*
+const formatMessage = (text: string): JSX.Element => {
     if (!text) return <></>;
     
     // Split by dialogue (text in quotes) first
@@ -65,7 +61,7 @@ const formatMessage = (text: string): string => {
                 }
             })}
         </>
-    );*/
+    );
 };
 
 // Helper function to format bold and italic text
@@ -132,7 +128,7 @@ export const VignetteScreen: FC<VignetteScreenProps> = ({ stage, setScreenType }
     const [loading, setLoading] = React.useState<boolean>(false);
     const [speaker, setSpeaker] = React.useState<Actor|null>(null);
     const [displayName, setDisplayName] = React.useState<string>('');
-    const [displayMessage, setDisplayMessage] = React.useState<string>('');
+    const [displayMessage, setDisplayMessage] = React.useState<JSX.Element>(<></>);
     const [finishTyping, setFinishTyping] = React.useState<boolean>(false);
 
 
@@ -162,7 +158,7 @@ export const VignetteScreen: FC<VignetteScreenProps> = ({ stage, setScreenType }
         } else {
             setSpeaker(null);
             setDisplayName('');
-            setDisplayMessage('');
+            setDisplayMessage(<></>);
             setFinishTyping(false);
         }
 
@@ -349,12 +345,14 @@ export const VignetteScreen: FC<VignetteScreenProps> = ({ stage, setScreenType }
                         }}
                     >
                         {vignette.script && vignette.script.length > 0 ? (
-                            <Typewriter
+                            <SingleTypeOut
                                 key={`message-box-${index}`}
-                                words={[displayMessage || '']}
-                                typeSpeed={80}
-                                onLoopDone={() => setFinishTyping(true)}
-                            />
+                                speed={80}
+                                finishTyping={finishTyping}
+                                onTypingComplete={() => setFinishTyping(true)}
+                            >
+                                {displayMessage}
+                            </SingleTypeOut>
                         ) : ''}
                     </Typography>
                 </Box>
