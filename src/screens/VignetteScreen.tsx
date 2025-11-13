@@ -2,42 +2,40 @@
  * This screen displays Visual Novel vignette scenes, displaying dialogue and characters as they interact with the player and each other.
  */
 import React, { FC, useEffect } from 'react';
-import { BaseScreen, ScreenType } from './BaseScreen';
+import { ScreenType } from './BaseScreen';
 import { Module } from '../Module';
-import Actor, { getStatDescription, namesMatch, Stat } from '../actors/Actor';
+import Actor, { namesMatch } from '../actors/Actor';
 import { Stage } from '../Stage';
-import { VignetteType, VignetteData } from '../Vignette';
+import { VignetteData } from '../Vignette';
 import ActorImage from '../actors/ActorImage';
 import { Emotion } from '../Emotion';
-import { TypeOut } from 'typingfx';
 import SingleTypeOut from "../SingleTypeOut";
+import { 
+    Box, 
+    Button, 
+    TextField, 
+    Typography, 
+    Paper,
+    IconButton,
+    Chip,
+    CircularProgress
+} from '@mui/material';
+import {
+    ArrowBackIos,
+    ArrowForwardIos,
+    Send,
+    Close
+} from '@mui/icons-material';
 
-// Small component that animates an ellipsis without forcing the parent
-// component to update on every tick. This prevents the parent class's
-// frequent loading-dot updates from triggering re-renders that can reset
-// other animations in the scene.
-const LoadingEllipsis: React.FC<{ active?: boolean }> = ({ active }) => {
-    const [dots, setDots] = React.useState<number>(0);
-    React.useEffect(() => {
-        if (!active) {
-            setDots(1);
-            return;
-        }
-        const t = window.setInterval(() => setDots(d => ((d + 1) % 3)), 400);
-        return () => clearInterval(t);
-    }, [active]);
-    return <span>{'.'.repeat(1 + dots)}</span>;
+// Small component that shows a loading indicator
+const LoadingIndicator: React.FC<{ active?: boolean }> = ({ active }) => {
+    if (!active) return <span>...</span>;
+    return <CircularProgress size={16} sx={{ color: '#bfffd0' }} />;
 };
 
 interface VignetteScreenProps {
     stage: () => Stage;
     setScreenType: (type: ScreenType) => void;
-}
-
-interface VignetteScreenState {
-    index: number; // current script index
-    inputText: string;
-    sceneEnded?: boolean;
 }
 
 export const VignetteScreen: FC<VignetteScreenProps> = ({ stage, setScreenType }) => {
@@ -72,9 +70,6 @@ export const VignetteScreen: FC<VignetteScreenProps> = ({ stage, setScreenType }
             const imageUrl = actor.emotionPack?.neutral || actor.avatarImageUrl || '';
             const increment = actors.length > 1 ? (i / (actors.length - 1)) : 0.5;
             const xPosition = Math.round(increment * 80) + 10;
-            // Determine if this actor should be rendered as speaking. Compare names case-insensitively.
-            // Need some sort of 'close enough' name comparison because there can be significant variations (like only showing a first name or nickname).
-
             const isSpeaking = !!currentSpeaker && !!actor.name && namesMatch(actor.name.trim().toLowerCase(), currentSpeaker.trim().toLowerCase());
             return (
                 <ActorImage
@@ -119,61 +114,180 @@ export const VignetteScreen: FC<VignetteScreenProps> = ({ stage, setScreenType }
             </div>
 
             {/* Bottom text window */}
-            <div style={{ position: 'absolute', left: '5%', right: '5%', bottom: '4%', background: 'rgba(10,20,30,0.9)', border: '2px solid rgba(0,255,136,0.12)', borderRadius: 12, padding: '18px', boxSizing: 'border-box', color: '#e8fff0', zIndex: 2 }}>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                    <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
-                        <button onClick={prev} style={{ padding: '10px 14px', background: 'transparent', border: '1px solid rgba(255,255,255,0.08)', color: '#cfe', cursor: 'pointer', fontSize: 16, borderRadius: 8 }} disabled={index === 0}>{'⟨'}</button>
+            <Paper 
+                elevation={8}
+                sx={{ 
+                    position: 'absolute', 
+                    left: '5%', 
+                    right: '5%', 
+                    bottom: '4%', 
+                    background: 'rgba(10,20,30,0.95)', 
+                    border: '2px solid rgba(0,255,136,0.12)', 
+                    borderRadius: 3,
+                    p: 3,
+                    color: '#e8fff0', 
+                    zIndex: 2,
+                    backdropFilter: 'blur(8px)'
+                }}
+            >
+                {/* Navigation and speaker section */}
+                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
+                    <Box sx={{ display: 'flex', gap: 1.5, alignItems: 'center' }}>
+                        <IconButton 
+                            onClick={prev} 
+                            disabled={index === 0}
+                            size="small"
+                            sx={{ 
+                                color: '#cfe', 
+                                border: '1px solid rgba(255,255,255,0.08)',
+                                '&:disabled': { color: 'rgba(255,255,255,0.3)' }
+                            }}
+                        >
+                            <ArrowBackIos fontSize="small" />
+                        </IconButton>
 
-                        {/* Move the X/Y indicator between the left/right arrows */}
-                        <div style={{ minWidth: 72, textAlign: 'center', fontSize: 16, fontWeight: 700, color: '#bfffd0', background: 'rgba(255,255,255,0.02)', padding: '6px 10px', borderRadius: 8, border: '1px solid rgba(255,255,255,0.03)' }}>{loading ? <LoadingEllipsis active={loading} /> : `${index + 1} / ${vignette.script.length}`}</div>
-
-                        <button onClick={next} style={{ padding: '10px 14px', background: 'transparent', border: '1px solid rgba(255,255,255,0.08)', color: '#cfe', cursor: 'pointer', fontSize: 16, borderRadius: 8 }} disabled={index === vignette.script.length - 1}>{'⟩'}</button>
-
-                        {/* Speaker name shown to the right of the navigation arrows when present and not NARRATOR */}
-                        {(vignette.script && vignette.script.length > 0 && vignette.script[index]?.speaker && vignette.script[index]?.speaker.trim().toUpperCase() !== 'NARRATOR') ? (
-                            <div style={{ marginLeft: 12, fontSize: 15, fontWeight: 800, color: '#eafff0', letterSpacing: '0.6px', textShadow: '0 1px 0 rgba(0,0,0,0.6)' }}>{vignette.script[index]?.speaker}</div>
-                        ) : null}
-                    </div>
-
-                    {/* right side reserved for future controls; keep it visually quiet */}
-                    <div style={{ fontSize: 12, opacity: 0.65, visibility: 'hidden' }}></div>
-                </div>
-
-                <div style={{ marginTop: 14, minHeight: '4rem', fontSize: '1.18rem', lineHeight: 1.55, fontFamily: 'Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial', color: '#e9fff7' }}>
-                    {vignette.script && vignette.script.length > 0 ? (
-                        //    vignette.script[index]?.message || ''
-                        <SingleTypeOut
-                            key={`message-box-${index}`}
-                            text={vignette.script[index]?.message || ''}
-                            speed={20}
-                            onAdvance={next}
+                        {/* Progress indicator */}
+                        <Chip
+                            label={loading ? <LoadingIndicator active={loading} /> : `${index + 1} / ${vignette.script.length}`}
+                            sx={{ 
+                                minWidth: 80,
+                                fontWeight: 700, 
+                                color: '#bfffd0', 
+                                background: 'rgba(255,255,255,0.02)', 
+                                border: '1px solid rgba(255,255,255,0.03)',
+                                '& .MuiChip-label': {
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: 0.5
+                                }
+                            }}
                         />
-                    ) : ''}
-                </div>
 
-                {/* Chat input shown (enabled) only when at final message */}
-                <div style={{ marginTop: 14, display: 'flex', gap: 10, alignItems: 'center' }}>
-                    <input
+                        <IconButton 
+                            onClick={next} 
+                            disabled={index === vignette.script.length - 1}
+                            size="small"
+                            sx={{ 
+                                color: '#cfe', 
+                                border: '1px solid rgba(255,255,255,0.08)',
+                                '&:disabled': { color: 'rgba(255,255,255,0.3)' }
+                            }}
+                        >
+                            <ArrowForwardIos fontSize="small" />
+                        </IconButton>
+
+                        {/* Speaker name */}
+                        {(vignette.script && vignette.script.length > 0 && vignette.script[index]?.speaker && vignette.script[index]?.speaker.trim().toUpperCase() !== 'NARRATOR') && (
+                            <Chip
+                                label={vignette.script[index]?.speaker}
+                                variant="outlined"
+                                sx={{ 
+                                    ml: 1.5,
+                                    fontWeight: 800, 
+                                    color: '#eafff0', 
+                                    letterSpacing: '0.6px',
+                                    borderColor: 'rgba(255,255,255,0.1)',
+                                    textShadow: '0 1px 0 rgba(0,0,0,0.6)'
+                                }}
+                            />
+                        )}
+                    </Box>
+                </Box>
+
+                {/* Message content */}
+                <Box sx={{ minHeight: '4rem', mb: 2 }}>
+                    <Typography
+                        variant="body1"
+                        sx={{
+                            fontSize: '1.18rem',
+                            lineHeight: 1.55,
+                            fontFamily: 'Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial',
+                            color: '#e9fff7'
+                        }}
+                    >
+                        {vignette.script && vignette.script.length > 0 ? (
+                            <SingleTypeOut
+                                key={`message-box-${index}`}
+                                text={vignette.script[index]?.message || ''}
+                                speed={20}
+                                onAdvance={next}
+                            />
+                        ) : ''}
+                    </Typography>
+                </Box>
+
+                {/* Chat input */}
+                <Box sx={{ display: 'flex', gap: 1.5, alignItems: 'center' }}>
+                    <TextField
+                        fullWidth
                         value={inputText}
-                        onChange={(e) => setInputText(e.target.value)}
-                        onKeyDown={(e) => {
+                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => setInputText(e.target.value)}
+                        onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) => {
                             if (e.key === 'Enter') {
                                 e.preventDefault();
                                 if (index === vignette.script.length - 1 && !sceneEnded) handleSubmit();
                                 else if (sceneEnded) handleClose();
                             }
                         }}
-                        placeholder={index === vignette.script.length - 1 ? (sceneEnded ? 'Scene concluded' : 'Type your course of action...') : (loading ? 'Generating...' : 'Advance to the final line...')}
-                        style={{ flex: 1, padding: '12px 14px', borderRadius: 10, border: '1px solid rgba(255,255,255,0.08)', background: 'linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01))', color: '#eafff2', fontSize: 15 }}
+                        placeholder={
+                            index === vignette.script.length - 1 
+                                ? (sceneEnded ? 'Scene concluded' : 'Type your course of action...') 
+                                : (loading ? 'Generating...' : 'Advance to the final line...')
+                        }
                         disabled={!(index === vignette.script.length - 1) || sceneEnded || loading}
+                        variant="outlined"
+                        size="small"
+                        sx={{
+                            '& .MuiOutlinedInput-root': {
+                                background: 'linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01))',
+                                color: '#eafff2',
+                                '& fieldset': {
+                                    borderColor: 'rgba(255,255,255,0.08)',
+                                },
+                                '&:hover fieldset': {
+                                    borderColor: 'rgba(255,255,255,0.12)',
+                                },
+                                '&.Mui-focused fieldset': {
+                                    borderColor: 'rgba(0,255,136,0.3)',
+                                },
+                            },
+                            '& .MuiInputBase-input::placeholder': {
+                                color: 'rgba(255,255,255,0.5)',
+                                opacity: 1,
+                            },
+                        }}
                     />
-                    <button
+                    <Button
                         onClick={() => { if (sceneEnded) handleClose(); else handleSubmit(); }}
-                        disabled={!(index === vignette.script.length - 1) || sceneEnded || loading}
-                        style={{ padding: '10px 16px', borderRadius: 10, background: (index === vignette.script.length - 1 && !sceneEnded) ? 'linear-gradient(90deg,#00ff88,#00b38f)' : (sceneEnded ? 'linear-gradient(90deg,#ff8c66,#ff5a3b)' : 'rgba(255,255,255,0.04)'), border: 'none', color: '#00221a', cursor: (index === vignette.script.length - 1 || sceneEnded) ? 'pointer' : 'not-allowed', fontWeight: 800, fontSize: 15 }}
-                    >{sceneEnded ? 'Close' : 'Send'}</button>
-                </div>
-            </div>
+                        disabled={!(index === vignette.script.length - 1) || loading}
+                        variant="contained"
+                        startIcon={sceneEnded ? <Close /> : <Send />}
+                        sx={{
+                            background: sceneEnded 
+                                ? 'linear-gradient(90deg,#ff8c66,#ff5a3b)' 
+                                : (index === vignette.script.length - 1 && !sceneEnded) 
+                                    ? 'linear-gradient(90deg,#00ff88,#00b38f)' 
+                                    : 'rgba(255,255,255,0.04)',
+                            color: sceneEnded ? '#fff' : '#00221a',
+                            fontWeight: 800,
+                            minWidth: 100,
+                            '&:hover': {
+                                background: sceneEnded 
+                                    ? 'linear-gradient(90deg,#ff7a52,#ff4621)' 
+                                    : (index === vignette.script.length - 1 && !sceneEnded) 
+                                        ? 'linear-gradient(90deg,#00e67a,#009a7b)' 
+                                        : 'rgba(255,255,255,0.06)',
+                            },
+                            '&:disabled': {
+                                background: 'rgba(255,255,255,0.04)',
+                                color: 'rgba(255,255,255,0.3)',
+                            }
+                        }}
+                    >
+                        {sceneEnded ? 'Close' : 'Send'}
+                    </Button>
+                </Box>
+            </Paper>
         </div>
     );
     
