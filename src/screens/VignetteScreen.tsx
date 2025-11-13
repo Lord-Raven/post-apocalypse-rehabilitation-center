@@ -9,7 +9,45 @@ import { Stage } from '../Stage';
 import { VignetteData } from '../Vignette';
 import ActorImage from '../actors/ActorImage';
 import { Emotion } from '../Emotion';
-import SingleTypeOut from "../SingleTypeOut";
+import { TypeOut } from "typingfx";
+
+// Wrapper component to add completion detection to TypeOut
+interface TypeOutWithCompletionProps {
+    text: string;
+    speed: number;
+    finishTyping: boolean;
+    onTypingComplete: () => void;
+}
+
+const TypeOutWithCompletion: React.FC<TypeOutWithCompletionProps> = ({ 
+    text, 
+    speed, 
+    finishTyping, 
+    onTypingComplete 
+}) => {
+    React.useEffect(() => {
+        if (finishTyping) return; // Already finished or finishing
+        
+        // Calculate approximate time for typing to complete
+        const typingDuration = (text.length / speed) * 1000; // convert to milliseconds
+        
+        const timer = setTimeout(() => {
+            onTypingComplete();
+        }, typingDuration + 100); // Small buffer
+        
+        return () => clearTimeout(timer);
+    }, [text, speed, finishTyping, onTypingComplete]);
+    
+    return (
+        <TypeOut
+            steps={[text]}
+            speed={speed}
+            repeat={1}
+            noCursor={true}
+            paused={false}
+        />
+    );
+};
 import { 
     Box, 
     Button, 
@@ -45,8 +83,9 @@ export const VignetteScreen: FC<VignetteScreenProps> = ({ stage, setScreenType }
     const [vignette, setVignette] = React.useState<VignetteData>(stage().getSave().currentVignette as VignetteData);
     const [loading, setLoading] = React.useState<boolean>(false);
     const [speaker, setSpeaker] = React.useState<Actor|null>(null);
-    const [displayName, setDisplayName] = React.useState<string>('');
+    const [displayName, setDisplayName] = React.useState<string>('');   
     const [finishTyping, setFinishTyping] = React.useState<boolean>(false);
+
 
     useEffect(() => {
         if (vignette.script.length == 0) {
@@ -73,9 +112,7 @@ export const VignetteScreen: FC<VignetteScreenProps> = ({ stage, setScreenType }
             setSpeaker(null);
             setDisplayName('');
         }
-        
-        // Reset typing state when index changes
-        setFinishTyping(false);
+
     }, [index, vignette, stage]);
 
     const next = () => {
@@ -259,10 +296,10 @@ export const VignetteScreen: FC<VignetteScreenProps> = ({ stage, setScreenType }
                         }}
                     >
                         {vignette.script && vignette.script.length > 0 ? (
-                            <SingleTypeOut
+                            <TypeOutWithCompletion
                                 key={`message-box-${index}`}
                                 text={vignette.script[index]?.message || ''}
-                                speed={25}
+                                speed={finishTyping ? 1000 : 40} // Very fast when finishing
                                 finishTyping={finishTyping}
                                 onTypingComplete={() => setFinishTyping(true)}
                             />

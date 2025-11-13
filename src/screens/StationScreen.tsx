@@ -18,7 +18,7 @@ interface StationScreenProps {
 }
 
 export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType}) => {
-    const [selectedMenu, setSelectedMenu] = React.useState<string>('patients');
+    const [expandedMenu, setExpandedMenu] = React.useState<string | null>('patients');
     const [day, setDay] = React.useState<number>(stage().getSave().day);
     const [phase, setPhase] = React.useState<number>(stage().getSave().phase);
 
@@ -260,116 +260,148 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType}) =>
                     <p>Phase: {renderPhaseCircles(stage().getSave().phase)}</p>
                 </div>
 
-                {['Patients', 'Crew', 'Modules', 'Requests'].map(item => (
-                    <motion.button
-                        key={item}
-                        onClick={() => setSelectedMenu(item.toLowerCase())}
-                        whileHover={{ x: 10 }}
-                        whileTap={{ scale: 0.95 }}
-                        style={{
-                            display: 'block',
-                            width: '100%',
-                            padding: '15px',
-                            margin: '10px 0',
-                            background: selectedMenu === item.toLowerCase()
-                                ? 'rgba(0, 255, 136, 0.2)'
-                                : 'transparent',
-                            border: '3px solid #00ff88',
-                            borderRadius: '5px',
-                            color: '#00ff88',
-                            fontSize: '16px',
-                            cursor: 'pointer',
-                            textAlign: 'left',
-                        }}
-                    >
-                        {item}
-                    </motion.button>
-                ))}
-
-                {/* Content area based on selected menu */}
-                <div style={{ marginTop: '40px', color: '#00ff88', fontSize: '14px', maxHeight: '60vh', overflowY: 'auto' }}>
-                    {selectedMenu === 'patients' && (
-                        <div>
-                            <h3 style={{ marginBottom: '20px', color: '#00ff88' }}>Current Patients</h3>
-                            {Object.values(stage().getSave().actors).length === 0 ? (
-                                <p style={{ color: '#888', fontStyle: 'italic' }}>No patients currently on station</p>
-                            ) : (
-                                Object.values(stage().getSave().actors).map((actor: any) => (
-                                    <motion.div
-                                        key={actor.id}
-                                        whileHover={{ backgroundColor: 'rgba(0, 255, 136, 0.1)' }}
-                                        style={{
-                                            display: 'flex',
-                                            alignItems: 'center',
-                                            padding: '12px',
-                                            marginBottom: '8px',
-                                            border: '1px solid rgba(0, 255, 136, 0.3)',
-                                            borderRadius: '8px',
-                                            background: 'rgba(0, 20, 40, 0.5)',
-                                        }}
-                                    >
-                                        {/* Portrait */}
-                                        <img
-                                            src={actor.emotionPack?.neutral || actor.avatarImageUrl}
-                                            alt={actor.name}
-                                            style={{
-                                                width: '40px',
-                                                height: '40px',
-                                                borderRadius: '50%',
-                                                marginRight: '12px',
-                                                border: '1px solid #00ff88',
-                                                objectFit: 'cover',
-                                            }}
-                                        />
-                                        
-                                        {/* Name and Stats */}
-                                        <div style={{ flex: 1 }}>
-                                            <div style={{ fontWeight: 'bold', marginBottom: '4px' }}>{actor.name}</div>
-                                            <div style={{ display: 'flex', gap: '8px', fontSize: '12px' }}>
-                                                {[
-                                                    ['B', actor.stats.brawn],
-                                                    ['W', actor.stats.wits],
-                                                    ['N', actor.stats.nerve],
-                                                    ['S', actor.stats.skill],
-                                                    ['C', actor.stats.charm],
-                                                    ['L', actor.stats.lust],
-                                                    ['J', actor.stats.joy],
-                                                    ['T', actor.stats.trust],
-                                                ].map(([label, value]) => {
-                                                    const grade = actor.scoreToGrade(value);
-                                                    return (
-                                                        <span
-                                                            key={label}
-                                                            style={{
-                                                                display: 'inline-block',
-                                                                minWidth: '20px',
-                                                                textAlign: 'center',
-                                                                padding: '2px 4px',
-                                                                borderRadius: '3px',
-                                                                background: grade.startsWith('A') ? 'rgba(0, 255, 0, 0.2)' :
-                                                                          grade.startsWith('B') ? 'rgba(0, 150, 255, 0.2)' :
-                                                                          grade.startsWith('C') ? 'rgba(255, 255, 0, 0.2)' :
-                                                                          grade.startsWith('D') ? 'rgba(255, 150, 0, 0.2)' :
-                                                                          'rgba(255, 0, 0, 0.2)',
-                                                                border: '1px solid rgba(255, 255, 255, 0.1)',
-                                                            }}
-                                                            title={`${label === 'B' ? 'Brawn' : label === 'W' ? 'Wits' : label === 'N' ? 'Nerve' : label === 'S' ? 'Skill' : label === 'C' ? 'Charm' : label === 'L' ? 'Lust' : label === 'J' ? 'Joy' : 'Trust'}: ${grade}`}
-                                                        >
-                                                            {grade}
-                                                        </span>
-                                                    );
-                                                })}
-                                            </div>
-                                        </div>
-                                    </motion.div>
-                                ))
-                            )}
+                {['Patients', 'Crew', 'Modules', 'Requests'].map(item => {
+                    const itemKey = item.toLowerCase();
+                    const isExpanded = expandedMenu === itemKey;
+                    
+                    return (
+                        <div key={item} style={{ margin: '10px 0' }}>
+                            <motion.button
+                                onClick={() => setExpandedMenu(isExpanded ? null : itemKey)}
+                                whileHover={{ x: 10 }}
+                                whileTap={{ scale: 0.95 }}
+                                style={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'space-between',
+                                    width: '100%',
+                                    padding: '15px',
+                                    background: isExpanded
+                                        ? 'rgba(0, 255, 136, 0.2)'
+                                        : 'transparent',
+                                    border: '3px solid #00ff88',
+                                    borderRadius: '5px',
+                                    color: '#00ff88',
+                                    fontSize: '16px',
+                                    cursor: 'pointer',
+                                    textAlign: 'left',
+                                }}
+                            >
+                                <span>{item}</span>
+                                <span style={{ 
+                                    transform: isExpanded ? 'rotate(180deg)' : 'rotate(0deg)',
+                                    transition: 'transform 0.2s ease'
+                                }}>▼</span>
+                            </motion.button>
+                            
+                            {/* Expandable content */}
+                            <motion.div
+                                initial={{ height: 0, opacity: 0 }}
+                                animate={{ 
+                                    height: isExpanded ? 'auto' : 0,
+                                    opacity: isExpanded ? 1 : 0
+                                }}
+                                transition={{ duration: 0.3, ease: 'easeInOut' }}
+                                style={{ 
+                                    overflow: 'hidden',
+                                    background: 'rgba(0, 20, 40, 0.7)',
+                                    border: isExpanded ? '1px solid rgba(0, 255, 136, 0.3)' : 'none',
+                                    borderTop: 'none',
+                                    borderRadius: '0 0 5px 5px',
+                                }}
+                            >
+                                {isExpanded && itemKey === 'patients' && (
+                                    <div style={{ padding: '15px', maxHeight: '50vh', overflowY: 'auto' }}>
+                                        <h4 style={{ marginBottom: '15px', color: '#00ff88', fontSize: '14px' }}>Current Patients</h4>
+                                        {Object.values(stage().getSave().actors).length === 0 ? (
+                                            <p style={{ color: '#888', fontStyle: 'italic', fontSize: '12px' }}>No patients currently on station</p>
+                                        ) : (
+                                            Object.values(stage().getSave().actors).map((actor: any) => (
+                                                <motion.div
+                                                    key={actor.id}
+                                                    whileHover={{ backgroundColor: 'rgba(0, 255, 136, 0.1)' }}
+                                                    style={{
+                                                        display: 'flex',
+                                                        alignItems: 'center',
+                                                        padding: '8px',
+                                                        marginBottom: '6px',
+                                                        border: '1px solid rgba(0, 255, 136, 0.2)',
+                                                        borderRadius: '4px',
+                                                        background: 'rgba(0, 10, 20, 0.5)',
+                                                    }}
+                                                >
+                                                    {/* Portrait */}
+                                                    <img
+                                                        src={actor.emotionPack?.neutral || actor.avatarImageUrl}
+                                                        alt={actor.name}
+                                                        style={{
+                                                            width: '32px',
+                                                            height: '32px',
+                                                            borderRadius: '50%',
+                                                            marginRight: '8px',
+                                                            border: '1px solid #00ff88',
+                                                            objectFit: 'cover',
+                                                        }}
+                                                    />
+                                                    
+                                                    {/* Name and Stats */}
+                                                    <div style={{ flex: 1 }}>
+                                                        <div style={{ fontWeight: 'bold', marginBottom: '3px', fontSize: '12px' }}>{actor.name}</div>
+                                                        <div style={{ display: 'flex', gap: '4px', fontSize: '10px' }}>
+                                                            {[
+                                                                ['B', actor.stats.brawn],
+                                                                ['W', actor.stats.wits],
+                                                                ['N', actor.stats.nerve],
+                                                                ['S', actor.stats.skill],
+                                                                ['C', actor.stats.charm],
+                                                                ['L', actor.stats.lust],
+                                                                ['J', actor.stats.joy],
+                                                                ['T', actor.stats.trust],
+                                                            ].map(([label, value]) => {
+                                                                const grade = actor.scoreToGrade(value);
+                                                                return (
+                                                                    <span
+                                                                        key={label}
+                                                                        style={{
+                                                                            display: 'inline-block',
+                                                                            minWidth: '16px',
+                                                                            textAlign: 'center',
+                                                                            padding: '1px 2px',
+                                                                            borderRadius: '2px',
+                                                                            background: grade.startsWith('A') ? 'rgba(0, 255, 0, 0.2)' :
+                                                                                      grade.startsWith('B') ? 'rgba(0, 150, 255, 0.2)' :
+                                                                                      grade.startsWith('C') ? 'rgba(255, 255, 0, 0.2)' :
+                                                                                      grade.startsWith('D') ? 'rgba(255, 150, 0, 0.2)' :
+                                                                                      'rgba(255, 0, 0, 0.2)',
+                                                                            border: '1px solid rgba(255, 255, 255, 0.1)',
+                                                                            fontSize: '9px',
+                                                                        }}
+                                                                        title={`${label === 'B' ? 'Brawn' : label === 'W' ? 'Wits' : label === 'N' ? 'Nerve' : label === 'S' ? 'Skill' : label === 'C' ? 'Charm' : label === 'L' ? 'Lust' : label === 'J' ? 'Joy' : 'Trust'}: ${grade}`}
+                                                                    >
+                                                                        {grade}
+                                                                    </span>
+                                                                );
+                                                            })}
+                                                        </div>
+                                                    </div>
+                                                </motion.div>
+                                            ))
+                                        )}
+                                    </div>
+                                )}
+                                {isExpanded && itemKey !== 'patients' && (
+                                    <div style={{ padding: '15px', color: '#888', fontSize: '12px' }}>
+                                        {itemKey === 'crew' && 'Crew management coming soon...'}
+                                        {itemKey === 'modules' && 'Module management coming soon...'}
+                                        {itemKey === 'requests' && 'Request management coming soon...'}
+                                    </div>
+                                )}
+                            </motion.div>
                         </div>
-                    )}
-                    {selectedMenu !== 'patients' && (
-                        <p>Selected: {selectedMenu}</p>
-                    )}
-                </div>
+                    );
+                })}
+
+                
             </div>
         </div>
     );
