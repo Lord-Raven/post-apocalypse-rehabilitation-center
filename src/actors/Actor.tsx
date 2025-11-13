@@ -103,8 +103,10 @@ export async function loadReserveActor(fullPath: string, stage: Stage): Promise<
     // Take this data and use text generation to get an updated distillation of this character, including a physical description.
     const generatedResponse = await stage.generator.textGen({
         prompt: `{{messages}}This is a preparatory request for formatted content for a video game set in a futuristic multiverse setting that pulls characters from across eras and timelines and settings. ` +
-            `The following is a description for a random character or scenario from another universe. This response must digest and distill this description to suit the game's narrative, ` +
-            `in which this character has been rematerialized into this universe through an "echo chamber," their essence reconstituted from the whispers of a black hole. ` +
+            `The player of this game ${stage.getSave().player.name} manages a space station and rehabilitiation center that resurrects victims of a multiversal calamity and helps them adapt to a new life. ` +
+            `The player's motives and ethics are open-ended; they may be benevolent or self-serving, and the characters they interact with may respond accordingly. ` +
+            `\n\nThe following is a description for a random character or scenario from another universe. This response must digest and distill this description to suit the game's narrative, ` +
+            `crafting a character who has been rematerialized into this universe through an "echo chamber," their essence reconstituted from the whispers of a black hole. ` +
             `As a result of this process, many of this character's traits may have changed, including the loss of most supernatural or arcane abilities, which functioned only within the rules of their former universe. ` +
             `Their new description and profile should reflect these possible changes and their impact.\n\n` +
             `The provided character description may reference 'Individual X' who no longer exists in this timeline; ` +
@@ -144,7 +146,16 @@ export async function loadReserveActor(fullPath: string, stage: Stage): Promise<
         }
     }
     // Create an Actor instance from the parsed data; ID should be generated uniquely
-    const DEFAULT_TRAIT_SCORE = 4;
+    const DEFAULT_TRAIT_MAP: Record<Stat, number> = {
+        ['capability']: 4,
+        ['intelligence']: 4,
+        ['condition']: 3,
+        ['resilience']: 3,
+        ['charisma']: 4,
+        ['sexuality']: 4,
+        ['compliance']: 3,
+        ['trust']: 1
+    };
     const newActor = new Actor(
         generateUuid(),
         parsedData['name'] || data.name,
@@ -153,20 +164,22 @@ export async function loadReserveActor(fullPath: string, stage: Stage): Promise<
         parsedData['profile'] || '',
         {}, 
         {
-            ['capability']: parseInt(parsedData['capability']) || DEFAULT_TRAIT_SCORE,
-            ['intelligence']: parseInt(parsedData['intelligence']) || DEFAULT_TRAIT_SCORE,
-            ['condition']: parseInt(parsedData['condition']) || DEFAULT_TRAIT_SCORE,
-            ['resilience']: parseInt(parsedData['resilience']) || DEFAULT_TRAIT_SCORE,
-            ['charisma']: parseInt(parsedData['charisma']) || DEFAULT_TRAIT_SCORE,
-            ['sexuality']: parseInt(parsedData['sexuality']) || DEFAULT_TRAIT_SCORE,
-            ['compliance']: parseInt(parsedData['compliance']) || DEFAULT_TRAIT_SCORE,
-            ['trust']: parseInt(parsedData['trust']) || 1
+            ['capability']: parseInt(parsedData['capability']) || DEFAULT_TRAIT_MAP[Stat.Capability],
+            ['intelligence']: parseInt(parsedData['intelligence']) || DEFAULT_TRAIT_MAP[Stat.Intelligence],
+            ['condition']: parseInt(parsedData['condition']) || DEFAULT_TRAIT_MAP[Stat.Condition],
+            ['resilience']: parseInt(parsedData['resilience']) || DEFAULT_TRAIT_MAP[Stat.Resilience],
+            ['charisma']: parseInt(parsedData['charisma']) || DEFAULT_TRAIT_MAP[Stat.Charisma],
+            ['sexuality']: parseInt(parsedData['sexuality']) || DEFAULT_TRAIT_MAP[Stat.Sexuality],
+            ['compliance']: parseInt(parsedData['compliance']) || DEFAULT_TRAIT_MAP[Stat.Compliance],
+            ['trust']: parseInt(parsedData['trust']) || DEFAULT_TRAIT_MAP[Stat.Trust]
         }
     );
     console.log(`Loaded new actor: ${newActor.name} (ID: ${newActor.id})`);
     console.log(newActor);
-    // If name, description, or profile are missing, discard this actor by returning null
-    if (newActor.name && newActor.description && newActor.profile && bannedWords.every(word => !newActor.description.toLowerCase().includes(word))) {
+    // If name, description, or profile are missing, or banned words are present or the attributes are all defaults (unlikely to have been set at all), discard this actor by returning null
+    if (newActor.name && newActor.description && newActor.profile && 
+            bannedWords.every(word => !newActor.description.toLowerCase().includes(word)) && 
+            Object.entries(newActor.stats).some(([key, value]) => value !== DEFAULT_TRAIT_MAP[key as Stat])) {
         return newActor;
     }
     return null;
@@ -189,7 +202,7 @@ export async function populateActorImages(actor: Actor, stage: Stage): Promise<v
         // Use stage.makeImageFromImage to create a neutral expression based on imageUrl or the avatar image
         imageUrl = await stage.makeImageFromImage({
             image: imageUrl || actor.avatarImageUrl,
-            prompt: `Create a waist-up, solo portrait of this character (${actor.description}) with a calm, neutral expression.`,
+            prompt: `Create a waist-up, solo portrait of this character (${actor.description}) with a calm, neutral expression. Maintain a margin of negative space over their head/hair.`,
             remove_background: true,
             transfer_type: 'edit'
         }, `actors/${actor.id}/neutral.png`, '');

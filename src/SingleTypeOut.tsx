@@ -4,16 +4,15 @@ interface SingleTypeOutProps {
     text: string;
     speed?: number; // ms per character
     className?: string;
-    onAdvance?: () => void; // called when user clicks and the text is already complete
+    finishTyping?: boolean; // forces immediate completion when true
+    onTypingComplete?: () => void; // called when typing animation finishes (either naturally or forced)
 }
 
 /*
   Types `text` from empty to full once. It restarts whenever the `text` prop changes.
-  Click behavior:
-  - If still typing: finish immediately.
-  - If already finished: call `onAdvance`.
+  Can be forced to complete immediately via finishTyping prop.
 */
-export const SingleTypeOut: React.FC<SingleTypeOutProps> = ({ text, speed = 25, className, onAdvance }) => {
+export const SingleTypeOut: React.FC<SingleTypeOutProps> = ({ text, speed = 25, className, finishTyping = false, onTypingComplete }) => {
     const [display, setDisplay] = React.useState<string>('');
     const [finished, setFinished] = React.useState<boolean>(false);
     const timerRef = React.useRef<number | null>(null);
@@ -26,6 +25,7 @@ export const SingleTypeOut: React.FC<SingleTypeOutProps> = ({ text, speed = 25, 
 
         if (!text) {
             setFinished(true);
+            onTypingComplete?.();
             return;
         }
 
@@ -39,6 +39,7 @@ export const SingleTypeOut: React.FC<SingleTypeOutProps> = ({ text, speed = 25, 
                     timerRef.current = null;
                 }
                 setFinished(true);
+                onTypingComplete?.();
             }
         }, speed);
 
@@ -48,28 +49,23 @@ export const SingleTypeOut: React.FC<SingleTypeOutProps> = ({ text, speed = 25, 
                 timerRef.current = null;
             }
         };
-    }, [text, speed]);
+    }, [text, speed, onTypingComplete]);
 
-    const handleClick = () => {
-        if (!finished) {
-            // Finish immediately
-            if (timerRef.current !== null) {
-                clearInterval(timerRef.current);
-                timerRef.current = null;
-            }
+    // Effect to handle finishTyping prop
+    React.useEffect(() => {
+        if (finishTyping && !finished && timerRef.current !== null) {
+            clearInterval(timerRef.current);
+            timerRef.current = null;
             setDisplay(text);
             setFinished(true);
-            return;
+            onTypingComplete?.();
         }
-        // Already finished -> inform parent to advance
-        onAdvance?.();
-    };
+    }, [finishTyping, finished, text, onTypingComplete]);
 
     return (
         <span
             className={className}
-            onClick={handleClick}
-            style={{ cursor: 'pointer', userSelect: 'none' }}
+            style={{ userSelect: 'none' }}
             aria-label="message"
         >
       {display}

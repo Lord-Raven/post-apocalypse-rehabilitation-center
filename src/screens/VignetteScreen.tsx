@@ -44,6 +44,10 @@ export const VignetteScreen: FC<VignetteScreenProps> = ({ stage, setScreenType }
     const [sceneEnded, setSceneEnded] = React.useState<boolean>(false);
     const [vignette, setVignette] = React.useState<VignetteData>(stage().getSave().currentVignette as VignetteData);
     const [loading, setLoading] = React.useState<boolean>(false);
+    const [speaker, setSpeaker] = React.useState<Actor|null>(null);
+    const [displayName, setDisplayName] = React.useState<string>('');
+    const [finishTyping, setFinishTyping] = React.useState<boolean>(false);
+    const [typingComplete, setTypingComplete] = React.useState<boolean>(false);
 
     useEffect(() => {
         if (vignette.script.length == 0) {
@@ -55,7 +59,27 @@ export const VignetteScreen: FC<VignetteScreenProps> = ({ stage, setScreenType }
             });
         }
     }, [vignette]);
-    
+
+    // speaker is set by index change
+    useEffect(() => {
+        if (vignette.script && vignette.script.length > 0) {
+            const currentSpeakerName = vignette.script[index]?.speaker?.trim() || '';
+            const actors = Object.values(stage().getSave().actors);
+            const matchingActor = actors.find(actor => 
+                actor.name && namesMatch(actor.name.trim().toLowerCase(), currentSpeakerName.toLowerCase())
+            );
+            setSpeaker(matchingActor || null);
+            setDisplayName(matchingActor?.name || '');
+        } else {
+            setSpeaker(null);
+            setDisplayName('');
+        }
+        
+        // Reset typing state when index changes
+        setFinishTyping(false);
+        setTypingComplete(false);
+    }, [index, vignette, stage]);
+
     const next = () => {
         setIndex(prevIndex => Math.min(prevIndex + 1, vignette.script.length - 1));
     };
@@ -70,7 +94,7 @@ export const VignetteScreen: FC<VignetteScreenProps> = ({ stage, setScreenType }
             const imageUrl = actor.emotionPack?.neutral || actor.avatarImageUrl || '';
             const increment = actors.length > 1 ? (i / (actors.length - 1)) : 0.5;
             const xPosition = Math.round(increment * 80) + 10;
-            const isSpeaking = !!currentSpeaker && !!actor.name && namesMatch(actor.name.trim().toLowerCase(), currentSpeaker.trim().toLowerCase());
+            const isSpeaking = actor === speaker;
             return (
                 <ActorImage
                     key={actor.id}
@@ -177,25 +201,56 @@ export const VignetteScreen: FC<VignetteScreenProps> = ({ stage, setScreenType }
                         </IconButton>
 
                         {/* Speaker name */}
-                        {(vignette.script && vignette.script.length > 0 && vignette.script[index]?.speaker && vignette.script[index]?.speaker.trim().toUpperCase() !== 'NARRATOR') && (
-                            <Chip
-                                label={vignette.script[index]?.speaker}
-                                variant="outlined"
-                                sx={{ 
-                                    ml: 1.5,
-                                    fontWeight: 800, 
-                                    color: '#eafff0', 
-                                    letterSpacing: '0.6px',
-                                    borderColor: 'rgba(255,255,255,0.1)',
-                                    textShadow: '0 1px 0 rgba(0,0,0,0.6)'
-                                }}
-                            />
+                        {displayName && (
+                                <Chip
+                                    label={displayName}
+                                    variant="filled"
+                                    sx={{ 
+                                        ml: 2,
+                                        px: 2,
+                                        py: 0.5,
+                                        fontSize: '1.1rem',
+                                        fontWeight: 700, 
+                                        color: '#fff', 
+                                        letterSpacing: '0.8px',
+                                        background: 'linear-gradient(135deg, rgba(0,255,136,0.2) 0%, rgba(0,180,100,0.3) 100%)',
+                                        border: '2px solid rgba(0,255,136,0.4)',
+                                        borderRadius: '20px',
+                                        textShadow: '0 2px 4px rgba(0,0,0,0.8)',
+                                        boxShadow: '0 4px 12px rgba(0,255,136,0.2), inset 0 1px 0 rgba(255,255,255,0.1)',
+                                        backdropFilter: 'blur(4px)',
+                                        '& .MuiChip-label': {
+                                            padding: '8px 16px',
+                                            textTransform: 'capitalize'
+                                        }
+                                    }}
+                                />
                         )}
                     </Box>
                 </Box>
 
                 {/* Message content */}
-                <Box sx={{ minHeight: '4rem', mb: 2 }}>
+                <Box 
+                    sx={{ 
+                        minHeight: '4rem', 
+                        mb: 2, 
+                        cursor: 'pointer',
+                        borderRadius: 1,
+                        transition: 'background-color 0.2s ease',
+                        '&:hover': {
+                            backgroundColor: 'rgba(255,255,255,0.02)'
+                        }
+                    }}
+                    onClick={() => {
+                        if (!typingComplete) {
+                            // Force typing to complete immediately
+                            setFinishTyping(true);
+                        } else {
+                            // Already finished typing, advance to next message
+                            next();
+                        }
+                    }}
+                >
                     <Typography
                         variant="body1"
                         sx={{
@@ -209,8 +264,9 @@ export const VignetteScreen: FC<VignetteScreenProps> = ({ stage, setScreenType }
                             <SingleTypeOut
                                 key={`message-box-${index}`}
                                 text={vignette.script[index]?.message || ''}
-                                speed={20}
-                                onAdvance={next}
+                                speed={25}
+                                finishTyping={finishTyping}
+                                onTypingComplete={() => setTypingComplete(true)}
                             />
                         ) : ''}
                     </Typography>
