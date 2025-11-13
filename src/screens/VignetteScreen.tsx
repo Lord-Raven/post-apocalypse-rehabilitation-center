@@ -47,7 +47,6 @@ export const VignetteScreen: FC<VignetteScreenProps> = ({ stage, setScreenType }
     const [speaker, setSpeaker] = React.useState<Actor|null>(null);
     const [displayName, setDisplayName] = React.useState<string>('');
     const [finishTyping, setFinishTyping] = React.useState<boolean>(false);
-    const [typingComplete, setTypingComplete] = React.useState<boolean>(false);
 
     useEffect(() => {
         if (vignette.script.length == 0) {
@@ -77,7 +76,6 @@ export const VignetteScreen: FC<VignetteScreenProps> = ({ stage, setScreenType }
         
         // Reset typing state when index changes
         setFinishTyping(false);
-        setTypingComplete(false);
     }, [index, vignette, stage]);
 
     const next = () => {
@@ -242,7 +240,7 @@ export const VignetteScreen: FC<VignetteScreenProps> = ({ stage, setScreenType }
                         }
                     }}
                     onClick={() => {
-                        if (!typingComplete) {
+                        if (!finishTyping) {
                             // Force typing to complete immediately
                             setFinishTyping(true);
                         } else {
@@ -266,7 +264,7 @@ export const VignetteScreen: FC<VignetteScreenProps> = ({ stage, setScreenType }
                                 text={vignette.script[index]?.message || ''}
                                 speed={25}
                                 finishTyping={finishTyping}
-                                onTypingComplete={() => setTypingComplete(true)}
+                                onTypingComplete={() => setFinishTyping(true)}
                             />
                         ) : ''}
                     </Typography>

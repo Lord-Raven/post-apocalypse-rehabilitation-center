@@ -1,6 +1,6 @@
 import React, { FC } from 'react';
 import { motion } from 'framer-motion';
-import { BaseScreen, ScreenType } from './BaseScreen';
+import { ScreenType } from './BaseScreen';
 import { Layout, MODULE_DEFAULTS, Module, createModule } from '../Module';
 import { Stage } from '../Stage';
 
@@ -9,7 +9,7 @@ import { Stage } from '../Stage';
  * This React Vite component is primarily a large space station built from different modules. Probably 80% of the left side of the screen should be a space scene with a subtle grid.
  * The grid should house a couple of starter modules. Additional modules can be added by clicking "+" icons near modules with extendable sections.
  * It should be balanced and visually appealing, with a clear layout for each module.
- * The right side of the screen should have a vertical menu with buttons for different station management options: Resources, Crew, Upgrades, Missions.
+ * The right side of the screen should have a vertical menu with buttons for different station management options: Patients, Crew, Modules, Requests.
  */
 
 interface StationScreenProps {
@@ -18,7 +18,7 @@ interface StationScreenProps {
 }
 
 export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType}) => {
-    const [selectedMenu, setSelectedMenu] = React.useState<string>('resources');
+    const [selectedMenu, setSelectedMenu] = React.useState<string>('patients');
     const [day, setDay] = React.useState<number>(stage().getSave().day);
     const [phase, setPhase] = React.useState<number>(stage().getSave().phase);
 
@@ -260,7 +260,7 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType}) =>
                     <p>Phase: {renderPhaseCircles(stage().getSave().phase)}</p>
                 </div>
 
-                {['Resources', 'Crew', 'Upgrades', 'Missions'].map(item => (
+                {['Patients', 'Crew', 'Modules', 'Requests'].map(item => (
                     <motion.button
                         key={item}
                         onClick={() => setSelectedMenu(item.toLowerCase())}
@@ -286,8 +286,89 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType}) =>
                     </motion.button>
                 ))}
 
-                <div style={{ marginTop: '40px', color: '#00ff88', fontSize: '14px' }}>
-                    <p>Selected: {selectedMenu}</p>
+                {/* Content area based on selected menu */}
+                <div style={{ marginTop: '40px', color: '#00ff88', fontSize: '14px', maxHeight: '60vh', overflowY: 'auto' }}>
+                    {selectedMenu === 'patients' && (
+                        <div>
+                            <h3 style={{ marginBottom: '20px', color: '#00ff88' }}>Current Patients</h3>
+                            {Object.values(stage().getSave().actors).length === 0 ? (
+                                <p style={{ color: '#888', fontStyle: 'italic' }}>No patients currently on station</p>
+                            ) : (
+                                Object.values(stage().getSave().actors).map((actor: any) => (
+                                    <motion.div
+                                        key={actor.id}
+                                        whileHover={{ backgroundColor: 'rgba(0, 255, 136, 0.1)' }}
+                                        style={{
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            padding: '12px',
+                                            marginBottom: '8px',
+                                            border: '1px solid rgba(0, 255, 136, 0.3)',
+                                            borderRadius: '8px',
+                                            background: 'rgba(0, 20, 40, 0.5)',
+                                        }}
+                                    >
+                                        {/* Portrait */}
+                                        <img
+                                            src={actor.emotionPack?.neutral || actor.avatarImageUrl}
+                                            alt={actor.name}
+                                            style={{
+                                                width: '40px',
+                                                height: '40px',
+                                                borderRadius: '50%',
+                                                marginRight: '12px',
+                                                border: '1px solid #00ff88',
+                                                objectFit: 'cover',
+                                            }}
+                                        />
+                                        
+                                        {/* Name and Stats */}
+                                        <div style={{ flex: 1 }}>
+                                            <div style={{ fontWeight: 'bold', marginBottom: '4px' }}>{actor.name}</div>
+                                            <div style={{ display: 'flex', gap: '8px', fontSize: '12px' }}>
+                                                {[
+                                                    ['B', actor.stats.brawn],
+                                                    ['W', actor.stats.wits],
+                                                    ['N', actor.stats.nerve],
+                                                    ['S', actor.stats.skill],
+                                                    ['C', actor.stats.charm],
+                                                    ['L', actor.stats.lust],
+                                                    ['J', actor.stats.joy],
+                                                    ['T', actor.stats.trust],
+                                                ].map(([label, value]) => {
+                                                    const grade = actor.scoreToGrade(value);
+                                                    return (
+                                                        <span
+                                                            key={label}
+                                                            style={{
+                                                                display: 'inline-block',
+                                                                minWidth: '20px',
+                                                                textAlign: 'center',
+                                                                padding: '2px 4px',
+                                                                borderRadius: '3px',
+                                                                background: grade.startsWith('A') ? 'rgba(0, 255, 0, 0.2)' :
+                                                                          grade.startsWith('B') ? 'rgba(0, 150, 255, 0.2)' :
+                                                                          grade.startsWith('C') ? 'rgba(255, 255, 0, 0.2)' :
+                                                                          grade.startsWith('D') ? 'rgba(255, 150, 0, 0.2)' :
+                                                                          'rgba(255, 0, 0, 0.2)',
+                                                                border: '1px solid rgba(255, 255, 255, 0.1)',
+                                                            }}
+                                                            title={`${label === 'B' ? 'Brawn' : label === 'W' ? 'Wits' : label === 'N' ? 'Nerve' : label === 'S' ? 'Skill' : label === 'C' ? 'Charm' : label === 'L' ? 'Lust' : label === 'J' ? 'Joy' : 'Trust'}: ${grade}`}
+                                                        >
+                                                            {grade}
+                                                        </span>
+                                                    );
+                                                })}
+                                            </div>
+                                        </div>
+                                    </motion.div>
+                                ))
+                            )}
+                        </div>
+                    )}
+                    {selectedMenu !== 'patients' && (
+                        <p>Selected: {selectedMenu}</p>
+                    )}
                 </div>
             </div>
         </div>

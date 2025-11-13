@@ -3,29 +3,17 @@ import { Stage } from "../Stage";
 import { v4 as generateUuid } from 'uuid';
 
 // Core character stats as an enum so other parts of the app can reference them safely
+// Using single-syllable words, each starting with a different letter
 export enum Stat {
-    Capability = 'capability',
-    Intelligence = 'intelligence',
-    Condition = 'condition',
-    Resilience = 'resilience',
-    Charisma = 'charisma',
-    Sexuality = 'sexuality',
-    Compliance = 'compliance',
-    Trust = 'trust'
-}
-
-// Re-imagining core stats with single-syllable words, each starting with a different letter
-/*export enum stat {
-    Might = 'might', // Physical condition and strength
-    Grit = 'grit', // Mental resilience and toughness
-    Spunk = 'spunk', // Enthusiasm and energy
+    Brawn = 'brawn', // Physical condition and strength
+    Wits = 'wits', // Intelligence and awareness
     Nerve = 'nerve', // Courage and confidence
-    Brains = 'brains', // Intelligence and problem-solving
-    Skill = 'skill', // Capability and dexterity
-    Charm = 'charm', // Charisma and social skills
+    Skill = 'skill', // Capability and finesse
+    Charm = 'charm', // Charisma and tact
     Lust = 'lust', // Sexuality and physical desire
-    Faith = 'faith' // Compliance and trust
-}*/
+    Joy = 'joy', // Happiness and positivity
+    Trust = 'trust' // Compliance and faith in the player
+}
 
 class Actor {
     id: string;
@@ -64,22 +52,22 @@ class Actor {
 export function getStatDescription(stat: Stat | string): string {
     const key = typeof stat === 'string' ? stat : stat;
     switch (key) {
-        case Stat.Capability:
-            return 'overall capability to contribute meaningfully to the crew, with 10 being highly skilled and 1 being a liability.';
-        case Stat.Intelligence:
-            return 'intelligence level and problem-solving ability, with 10 being a genius and 1 being unable to think critically.';
-        case Stat.Condition:
-            return 'relative physical condition and health, with 10 being peak condition and 1 being critically impaired.';
-        case Stat.Resilience:
-            return 'mental resilience and ability to cope with stress, with 10 being highly resilient and 1 being easily overwhelmed.';
-        case Stat.Charisma:
-            return 'personality appeal and social skills, with 10 being extremely charismatic and 1 being socially inept.';
-        case Stat.Sexuality:
+        case Stat.Brawn:
+            return 'physical condition and strength, with 10 being peak condition and 1 being critically impaired.';
+        case Stat.Wits:
+            return 'intelligence and awareness, with 10 being a genius and 1 being utterly oblivious.';
+        case Stat.Nerve:
+            return 'courage and mental resilience, with 10 being indefatigably fearless and 1 being easily overwhelmed.';
+        case Stat.Skill:
+            return 'capability and ability to contribute meaningfully, with 10 being highly competent and 1 being a liability.';
+        case Stat.Charm:
+            return 'personality appeal and tact, with 10 being extremely charismatic and 1 being socially inept.';
+        case Stat.Lust:
             return 'physical lustiness and sexual confidence, with 10 being abjectly lewd and 1 being utterly asexual.';
-        case Stat.Compliance:
-            return 'willingness to comply with authority and rules, with 10 being highly compliant and 1 being completely rebellious.';
+        case Stat.Joy:
+            return 'happiness and positivity, with 10 being eternally optimistic and 1 being deeply depressed.';
         case Stat.Trust:
-            return 'level of trust in the player character, with 10 being fully trusting and 1 being completely distrustful.';
+            return 'level of trust in the player character, with 10 being fully trusting and 1 being completely suspicious.';
         default:
             return '';
     }
@@ -111,7 +99,7 @@ export async function loadReserveActor(fullPath: string, stage: Stage): Promise<
             `Their new description and profile should reflect these possible changes and their impact.\n\n` +
             `The provided character description may reference 'Individual X' who no longer exists in this timeline; ` +
             `if Individual X remains relevant to this character, you should give Individual X an appropriate name in the distillation.\n\n` +
-            `In addition to name, physical description, and personality, you will score the character with a simple 1-10 for the following traits: CONDITION, RESILIENCE, CAPABILITY, INTELLIGENCE, CHARISMA, SEXUALITY, COMPLIANCE, and TRUST.\n` +
+            `In addition to name, physical description, and personality, you will score the character with a simple 1-10 for the following traits: BRAWN, WITS, NERVE, SKILL, CHARM, LUST, JOY, and TRUST.\n` +
             `Bear in mind the character's current, diminished state—as a newly reconstituted and relatively powerless individual—and not their original potential when scoring these traits; some characters may not respond well to being essentially resurrected into a new timeline.\n\n` +
             `Original details about ${data.name}:\nDescription: ${data.description} ${data.personality}\n\n` +
             `After carefully considering this description, provide a concise breakdown in the following format:\n` +
@@ -147,14 +135,14 @@ export async function loadReserveActor(fullPath: string, stage: Stage): Promise<
     }
     // Create an Actor instance from the parsed data; ID should be generated uniquely
     const DEFAULT_TRAIT_MAP: Record<Stat, number> = {
-        ['capability']: 4,
-        ['intelligence']: 4,
-        ['condition']: 3,
-        ['resilience']: 3,
-        ['charisma']: 4,
-        ['sexuality']: 4,
-        ['compliance']: 3,
-        ['trust']: 1
+        [Stat.Brawn]: 3,
+        [Stat.Wits]: 4,
+        [Stat.Nerve]: 3,
+        [Stat.Skill]: 4,
+        [Stat.Charm]: 4,
+        [Stat.Lust]: 4,
+        [Stat.Joy]: 3,
+        [Stat.Trust]: 1
     };
     const newActor = new Actor(
         generateUuid(),
@@ -164,22 +152,24 @@ export async function loadReserveActor(fullPath: string, stage: Stage): Promise<
         parsedData['profile'] || '',
         {}, 
         {
-            ['capability']: parseInt(parsedData['capability']) || DEFAULT_TRAIT_MAP[Stat.Capability],
-            ['intelligence']: parseInt(parsedData['intelligence']) || DEFAULT_TRAIT_MAP[Stat.Intelligence],
-            ['condition']: parseInt(parsedData['condition']) || DEFAULT_TRAIT_MAP[Stat.Condition],
-            ['resilience']: parseInt(parsedData['resilience']) || DEFAULT_TRAIT_MAP[Stat.Resilience],
-            ['charisma']: parseInt(parsedData['charisma']) || DEFAULT_TRAIT_MAP[Stat.Charisma],
-            ['sexuality']: parseInt(parsedData['sexuality']) || DEFAULT_TRAIT_MAP[Stat.Sexuality],
-            ['compliance']: parseInt(parsedData['compliance']) || DEFAULT_TRAIT_MAP[Stat.Compliance],
-            ['trust']: parseInt(parsedData['trust']) || DEFAULT_TRAIT_MAP[Stat.Trust]
+            [Stat.Brawn]: parseInt(parsedData['brawn']) || DEFAULT_TRAIT_MAP[Stat.Brawn],
+            [Stat.Wits]: parseInt(parsedData['wits']) || DEFAULT_TRAIT_MAP[Stat.Wits],
+            [Stat.Nerve]: parseInt(parsedData['nerve']) || DEFAULT_TRAIT_MAP[Stat.Nerve],
+            [Stat.Skill]: parseInt(parsedData['skill']) || DEFAULT_TRAIT_MAP[Stat.Skill],
+            [Stat.Charm]: parseInt(parsedData['charm']) || DEFAULT_TRAIT_MAP[Stat.Charm],
+            [Stat.Lust]: parseInt(parsedData['lust']) || DEFAULT_TRAIT_MAP[Stat.Lust],
+            [Stat.Joy]: parseInt(parsedData['joy']) || DEFAULT_TRAIT_MAP[Stat.Joy],
+            [Stat.Trust]: parseInt(parsedData['trust']) || DEFAULT_TRAIT_MAP[Stat.Trust]
         }
     );
     console.log(`Loaded new actor: ${newActor.name} (ID: ${newActor.id})`);
     console.log(newActor);
-    // If name, description, or profile are missing, or banned words are present or the attributes are all defaults (unlikely to have been set at all), discard this actor by returning null
+    // If name, description, or profile are missing, or banned words are present or the attributes are all defaults (unlikely to have been set at all) or description is non-english, discard this actor by returning null
     if (newActor.name && newActor.description && newActor.profile && 
             bannedWords.every(word => !newActor.description.toLowerCase().includes(word)) && 
-            Object.entries(newActor.stats).some(([key, value]) => value !== DEFAULT_TRAIT_MAP[key as Stat])) {
+            Object.entries(newActor.stats).some(([key, value]) => value !== DEFAULT_TRAIT_MAP[key as Stat]) &&
+            !/[\u3040-\u30ff\u3400-\u4dbf\u4e00-\u9fff\uf900-\ufaff]/.test(newActor.description) // Try to rule out Chinese/Japanese/Korean characters. Sorry. I should consider a toggle to allow this later.
+        ) {
         return newActor;
     }
     return null;

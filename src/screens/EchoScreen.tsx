@@ -87,13 +87,13 @@ export const EchoScreen: FC<EchoScreenProps> = ({stage, setScreenType}) => {
 								{/* Lay out actor property scores with large stylized letter grades */}
 								<div className="stat-list" style={{ padding: '8px 12px', background: 'rgba(0,0,0,0.8)' }}>
 									{[
-										['Condition', actor.stats['condition']],
-										['Capability', actor.stats['capability']],
-										['Intelligence', actor.stats['intelligence']],
-										['Resilience', actor.stats['resilience']],
-										['Charisma', actor.stats['charisma']],
-										['Sexuality', actor.stats['sexuality']],
-										['Compliance', actor.stats['compliance']],
+										['Brawn', actor.stats['brawn']],
+										['Wits', actor.stats['wits']],
+										['Nerve', actor.stats['nerve']],
+										['Skill', actor.stats['skill']],
+										['Charm', actor.stats['charm']],
+										['Lust', actor.stats['lust']],
+										['Joy', actor.stats['joy']],
 										['Trust', actor.stats['trust']],
 									].map(([label, value]) => {
 										const grade = actor.scoreToGrade(value as number);
