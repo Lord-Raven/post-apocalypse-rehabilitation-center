@@ -1,8 +1,7 @@
 import React from 'react';
 
 interface SingleTypeOutProps {
-    text?: string;
-    children?: React.ReactNode;
+    children: React.ReactNode;
     speed?: number; // ms per character
     className?: string;
     finishTyping?: boolean; // forces immediate completion when true
@@ -32,7 +31,7 @@ const extractTextContent = (node: React.ReactNode): string => {
 const truncateReactContent = (node: React.ReactNode, maxLength: number): React.ReactNode => {
     let currentLength = 0;
     
-    const truncateNode = (n: React.ReactNode): React.ReactNode => {
+    const truncateNode = (n: React.ReactNode, key?: string | number): React.ReactNode => {
         if (currentLength >= maxLength) {
             return null;
         }
@@ -54,23 +53,29 @@ const truncateReactContent = (node: React.ReactNode, maxLength: number): React.R
         
         if (React.isValidElement(n)) {
             const children = n.props.children;
-            if (children) {
+            if (children !== undefined && children !== null) {
                 const truncatedChildren = truncateNode(children);
-                return React.cloneElement(n, n.props, truncatedChildren);
+                // Only render the element if there are truncated children or if it's a self-closing element
+                if (truncatedChildren !== null || !children) {
+                    return React.cloneElement(n, { ...n.props, key }, truncatedChildren);
+                }
+                return null;
             }
-            return n;
+            // Self-closing element or element with no children
+            return React.cloneElement(n, { ...n.props, key });
         }
         
         if (Array.isArray(n)) {
-            const result = [];
-            for (const child of n) {
+            const result: React.ReactNode[] = [];
+            for (let i = 0; i < n.length; i++) {
                 if (currentLength >= maxLength) break;
-                const truncated = truncateNode(child);
-                if (truncated !== null) {
+                const child = n[i];
+                const truncated = truncateNode(child, i);
+                if (truncated !== null && truncated !== undefined) {
                     result.push(truncated);
                 }
             }
-            return result;
+            return result.length > 0 ? result : null;
         }
         
         return n;
@@ -80,12 +85,11 @@ const truncateReactContent = (node: React.ReactNode, maxLength: number): React.R
 };
 
 /*
-  Types content from empty to full once. It restarts whenever the content changes.
+  Types out React children from empty to full once. It restarts whenever the children change.
   Can be forced to complete immediately via finishTyping prop.
-  Supports both text prop and children for flexible content rendering.
+  Properly renders React elements including spans, divs, and other components.
 */
 export const SingleTypeOut: React.FC<SingleTypeOutProps> = ({ 
-    text, 
     children, 
     speed = 25, 
     className, 
@@ -96,9 +100,7 @@ export const SingleTypeOut: React.FC<SingleTypeOutProps> = ({
     const [finished, setFinished] = React.useState<boolean>(false);
     const timerRef = React.useRef<number | null>(null);
     
-    // Determine what content to use - prioritize children over text
-    const content = children !== undefined ? children : text;
-    const textContent = React.useMemo(() => extractTextContent(content), [content]);
+    const textContent = React.useMemo(() => extractTextContent(children), [children]);
     
     React.useEffect(() => {
         // Reset state whenever content changes
@@ -148,17 +150,12 @@ export const SingleTypeOut: React.FC<SingleTypeOutProps> = ({
     // Determine what to display
     const displayContent = React.useMemo(() => {
         if (displayLength === 0) {
-            return '';
+            return null;
         }
         
-        if (children !== undefined) {
-            // For React children, truncate based on character count
-            return truncateReactContent(children, displayLength);
-        } else {
-            // For text prop, slice the string
-            return text ? text.slice(0, displayLength) : '';
-        }
-    }, [children, text, displayLength]);
+        // Truncate React children based on character count
+        return truncateReactContent(children, displayLength);
+    }, [children, displayLength]);
 
     return (
         <span

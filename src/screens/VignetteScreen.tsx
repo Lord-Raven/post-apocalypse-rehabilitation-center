@@ -10,7 +10,7 @@ import { VignetteData } from '../Vignette';
 import ActorImage from '../actors/ActorImage';
 import { Emotion } from '../Emotion';
 
-import { 
+import {
     Box, 
     Button, 
     TextField, 
@@ -347,7 +347,7 @@ export const VignetteScreen: FC<VignetteScreenProps> = ({ stage, setScreenType }
                         {vignette.script && vignette.script.length > 0 ? (
                             <SingleTypeOut
                                 key={`message-box-${index}`}
-                                speed={80}
+                                speed={20}
                                 finishTyping={finishTyping}
                                 onTypingComplete={() => setFinishTyping(true)}
                             >
