@@ -265,10 +265,13 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType}) =>
                     const isExpanded = expandedMenu === itemKey;
                     
                     return (
-                        <div key={item} style={{ margin: '10px 0' }}>
+                        <motion.div 
+                            key={item} 
+                            style={{ margin: '10px 0' }}
+                            whileHover={{ x: 10 }}
+                        >
                             <motion.button
                                 onClick={() => setExpandedMenu(isExpanded ? null : itemKey)}
-                                whileHover={{ x: 10 }}
                                 whileTap={{ scale: 0.95 }}
                                 style={{
                                     display: 'flex',
@@ -397,7 +400,7 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType}) =>
                                     </div>
                                 )}
                             </motion.div>
-                        </div>
+                        </motion.div>
                     );
                 })}
 

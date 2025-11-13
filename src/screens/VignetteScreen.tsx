@@ -9,45 +9,7 @@ import { Stage } from '../Stage';
 import { VignetteData } from '../Vignette';
 import ActorImage from '../actors/ActorImage';
 import { Emotion } from '../Emotion';
-import { TypeOut } from "typingfx";
 
-// Wrapper component to add completion detection to TypeOut
-interface TypeOutWithCompletionProps {
-    text: string;
-    speed: number;
-    finishTyping: boolean;
-    onTypingComplete: () => void;
-}
-
-const TypeOutWithCompletion: React.FC<TypeOutWithCompletionProps> = ({ 
-    text, 
-    speed, 
-    finishTyping, 
-    onTypingComplete 
-}) => {
-    React.useEffect(() => {
-        if (finishTyping) return; // Already finished or finishing
-        
-        // Calculate approximate time for typing to complete
-        const typingDuration = (text.length / speed) * 1000; // convert to milliseconds
-        
-        const timer = setTimeout(() => {
-            onTypingComplete();
-        }, typingDuration + 100); // Small buffer
-        
-        return () => clearTimeout(timer);
-    }, [text, speed, finishTyping, onTypingComplete]);
-    
-    return (
-        <TypeOut
-            steps={[text]}
-            speed={speed}
-            repeat={1}
-            noCursor={true}
-            paused={false}
-        />
-    );
-};
 import { 
     Box, 
     Button, 
@@ -64,11 +26,97 @@ import {
     Send,
     Close
 } from '@mui/icons-material';
+import { Typewriter } from 'react-simple-typewriter';
 
 // Small component that shows a loading indicator
 const LoadingIndicator: React.FC<{ active?: boolean }> = ({ active }) => {
     if (!active) return <span>...</span>;
     return <CircularProgress size={16} sx={{ color: '#bfffd0' }} />;
+};
+
+// Helper function to format text with dialogue, italics, and bold styling
+const formatMessage = (text: string): string => {
+
+    // Just testing for a moment.
+    return '<b>' + text + '</b>';
+    /*
+    if (!text) return <></>;
+    
+    // Split by dialogue (text in quotes) first
+    const dialogueParts = text.split(/(\"[^"]*\")/g);
+    
+    return (
+        <>
+            {dialogueParts.map((part, index) => {
+                // Check if this part is dialogue (wrapped in quotes)
+                if (part.startsWith('"') && part.endsWith('"')) {
+                    const dialogueText = part.slice(1, -1); // Remove quotes
+                    return (
+                        <span key={index} style={{ color: '#87CEEB' }}>
+                            {formatInlineStyles(dialogueText)}
+                        </span>
+                    );
+                } else {
+                    return (
+                        <span key={index}>
+                            {formatInlineStyles(part)}
+                        </span>
+                    );
+                }
+            })}
+        </>
+    );*/
+};
+
+// Helper function to format bold and italic text
+const formatInlineStyles = (text: string): JSX.Element => {
+    if (!text) return <></>;
+    
+    // Process bold first (**text**)
+    const boldParts = text.split(/(\*\*[^*]+\*\*)/g);
+    
+    return (
+        <>
+            {boldParts.map((boldPart, boldIndex) => {
+                if (boldPart.startsWith('**') && boldPart.endsWith('**')) {
+                    const boldText = boldPart.slice(2, -2); // Remove **
+                    return (
+                        <strong key={boldIndex}>
+                            {formatItalics(boldText)}
+                        </strong>
+                    );
+                } else {
+                    return (
+                        <span key={boldIndex}>
+                            {formatItalics(boldPart)}
+                        </span>
+                    );
+                }
+            })}
+        </>
+    );
+};
+
+// Helper function to format italic text (* or _)
+const formatItalics = (text: string): JSX.Element => {
+    if (!text) return <></>;
+    
+    // Process both * and _ for italics, but avoid ** (bold)
+    const italicParts = text.split(/(\*(?!\*)[^*]+\*|_[^_]+_)/g);
+    
+    return (
+        <>
+            {italicParts.map((italicPart, italicIndex) => {
+                if ((italicPart.startsWith('*') && italicPart.endsWith('*') && !italicPart.startsWith('**')) ||
+                    (italicPart.startsWith('_') && italicPart.endsWith('_'))) {
+                    const italicText = italicPart.slice(1, -1); // Remove * or _
+                    return <em key={italicIndex}>{italicText}</em>;
+                } else {
+                    return <span key={italicIndex}>{italicPart}</span>;
+                }
+            })}
+        </>
+    );
 };
 
 interface VignetteScreenProps {
@@ -83,7 +131,8 @@ export const VignetteScreen: FC<VignetteScreenProps> = ({ stage, setScreenType }
     const [vignette, setVignette] = React.useState<VignetteData>(stage().getSave().currentVignette as VignetteData);
     const [loading, setLoading] = React.useState<boolean>(false);
     const [speaker, setSpeaker] = React.useState<Actor|null>(null);
-    const [displayName, setDisplayName] = React.useState<string>('');   
+    const [displayName, setDisplayName] = React.useState<string>('');
+    const [displayMessage, setDisplayMessage] = React.useState<string>('');
     const [finishTyping, setFinishTyping] = React.useState<boolean>(false);
 
 
@@ -108,9 +157,13 @@ export const VignetteScreen: FC<VignetteScreenProps> = ({ stage, setScreenType }
             );
             setSpeaker(matchingActor || null);
             setDisplayName(matchingActor?.name || '');
+            setDisplayMessage(formatMessage(vignette.script[index]?.message || ''));
+            setFinishTyping(false); // Reset typing state when message changes
         } else {
             setSpeaker(null);
             setDisplayName('');
+            setDisplayMessage('');
+            setFinishTyping(false);
         }
 
     }, [index, vignette, stage]);
@@ -296,12 +349,11 @@ export const VignetteScreen: FC<VignetteScreenProps> = ({ stage, setScreenType }
                         }}
                     >
                         {vignette.script && vignette.script.length > 0 ? (
-                            <TypeOutWithCompletion
+                            <Typewriter
                                 key={`message-box-${index}`}
-                                text={vignette.script[index]?.message || ''}
-                                speed={finishTyping ? 1000 : 40} // Very fast when finishing
-                                finishTyping={finishTyping}
-                                onTypingComplete={() => setFinishTyping(true)}
+                                words={[displayMessage || '']}
+                                typeSpeed={80}
+                                onLoopDone={() => setFinishTyping(true)}
                             />
                         ) : ''}
                     </Typography>
