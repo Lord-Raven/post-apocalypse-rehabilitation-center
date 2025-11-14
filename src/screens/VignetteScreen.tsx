@@ -268,8 +268,11 @@ export const VignetteScreen: FC<VignetteScreenProps> = ({ stage, setScreenType }
                 setSceneEnded(ended);
                 
                 // Process stat changes when scene ends
-                if (ended && vignetteData?.endProperties) {
-                    processStatChanges(vignetteData.endProperties);
+                if (ended) {
+                    if (vignetteData?.endProperties) {
+                        processStatChanges(vignetteData.endProperties);
+                    }
+                    stage().incPhase();
                 }
             });
         }
@@ -318,9 +321,10 @@ export const VignetteScreen: FC<VignetteScreenProps> = ({ stage, setScreenType }
     const renderActors = (module: Module | null, actors: Actor[], currentSpeaker?: string) => {
         // Display actors centered across the scene bottom. Use neutral emotion image where possible
         return actors.map((actor, i) => {
+            const range = Math.min(90, 30 + actors.length * 10); // Adjust used screen space by number of present actors.
             const imageUrl = actor.emotionPack?.neutral || actor.avatarImageUrl || '';
             const increment = actors.length > 1 ? (i / (actors.length - 1)) : 0.5;
-            const xPosition = Math.round(increment * 80) + 10;
+            const xPosition = Math.round(increment * range) + (100 - range) / 2;
             const isSpeaking = actor === speaker;
             return (
                 <ActorImage

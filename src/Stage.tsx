@@ -12,6 +12,7 @@ type ConfigType = any;
 type InitStateType = any;
 type ChatStateType = {
     saves: SaveType[]
+    lastSaveSlot: number;
 }
 
 type SaveType = {
@@ -26,6 +27,7 @@ type SaveType = {
 export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateType, ConfigType> {
 
     private saves: SaveType[];
+    private saveSlot: number = 0;
     // Flag/promise to avoid redundant concurrent requests for reserve actors
     private reserveActorsLoadPromise?: Promise<void>;
     readonly RESERVE_ACTORS = 3;
@@ -60,6 +62,7 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
         } = data;
 
         this.saves = chatState?.saves || [];
+        this.saveSlot = chatState?.lastSaveSlot || 0;
         // ensure at least one save exists and has a layout
         if (!this.saves.length) {
             const layout = new Layout();
@@ -86,6 +89,14 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
             const actor = save.actors[actorId];
             actor.locationId = save.layout.getModulesWhere(m => ['echo', 'common', 'generator'].includes(m.type) || m.ownerId == actorId).sort(() => Math.random() - 0.5)[0]?.id || '';
         }
+        this.saveGame();
+    }
+
+    saveGame() {
+        this.messenger.updateChatState({
+            saves: this.saves,
+            lastSaveSlot: this.saveSlot
+        });
     }
 
     getSave(): SaveType {

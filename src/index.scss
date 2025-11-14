@@ -64,3 +64,17 @@ html, body, #root {
   .stat-grade { font-size: 2.4rem; transform: skewX(-10deg) rotate(-6deg); }
   .stat-label { font-size: 11px; }
 }
+
+/* Shimmer animation for active phase indicator */
+@keyframes shimmer {
+  0% {
+    left: -100%;
+  }
+  100% {
+    left: 100%;
+  }
+}
+
+.phase-shimmer {
+  animation: shimmer 2s infinite;
+}

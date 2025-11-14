@@ -1,9 +1,67 @@
 import React, { FC } from 'react';
 import { motion } from 'framer-motion';
+import { Box, Typography, Card, CardContent } from '@mui/material';
+import { styled } from '@mui/material/styles';
 import { ScreenType } from './BaseScreen';
 import { Layout, MODULE_DEFAULTS, Module, createModule } from '../Module';
 import { Stage } from '../Stage';
 import Nameplate from '../components/Nameplate';
+
+// Styled components for the day/phase display
+const StyledDayCard = styled(Card)(({ theme }) => ({
+    background: 'linear-gradient(135deg, rgba(0, 255, 136, 0.15) 0%, rgba(0, 200, 100, 0.08) 100%)',
+    border: '2px solid #00ff88',
+    borderRadius: '16px',
+    marginBottom: '24px',
+    overflow: 'visible',
+    position: 'relative',
+    '&::before': {
+        content: '""',
+        position: 'absolute',
+        top: '-2px',
+        left: '-2px',
+        right: '-2px',
+        bottom: '-2px',
+        background: 'linear-gradient(135deg, #00ff88 0%, rgba(0, 255, 136, 0.3) 100%)',
+        borderRadius: '18px',
+        zIndex: -1,
+        filter: 'blur(4px)',
+        opacity: 0.6,
+    }
+}));
+
+const PhaseIndicator = styled(Box)(({ theme }) => ({
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: '8px',
+    marginTop: '12px',
+}));
+
+const PhaseSegment = styled(motion.div)<{ isActive: boolean; isCompleted: boolean }>(({ isActive, isCompleted }) => ({
+    width: '32px',
+    height: '8px',
+    borderRadius: '4px',
+    border: '2px solid #00ff88',
+    background: isCompleted 
+        ? 'linear-gradient(90deg, #00ff88 0%, #00cc66 100%)'
+        : isActive 
+            ? 'linear-gradient(90deg, #00ff88 0%, rgba(0, 255, 136, 0.5) 100%)'
+            : 'rgba(0, 255, 136, 0.1)',
+    boxShadow: isActive || isCompleted ? '0 0 12px rgba(0, 255, 136, 0.6)' : 'none',
+    position: 'relative',
+    overflow: 'hidden',
+    '&::after': isActive ? {
+        content: '""',
+        position: 'absolute',
+        top: 0,
+        left: '-100%',
+        width: '100%',
+        height: '100%',
+        background: 'linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.4) 50%, transparent 100%)',
+        animation: 'shimmer 2s infinite',
+    } : {},
+}));
 
 /*
  * This screen allows the player to manage their space station, including viewing resources, upgrading facilities, or visiting locations (transitioning to vignette scenes).
@@ -47,27 +105,92 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType}) =>
         setLayout(stage().getLayout());
     }, [stage().getLayout()]);
 
-    const renderPhaseCircles = (phase: number | undefined) => {
-        const circles = [];
-        for (let i = 0; i < 4; i++) {
-            circles.push(
-                <span
-                    key={`phase_circle_${i}`}
-                    style={{
-                        display: 'inline-block',
-                        width: i == phase ? '0.5rem' :'1rem',
-                        height: i == phase ? '0.5rem' :'1rem',
-                        marginRight: i == phase ? '0.5rem' :'0.25rem',
-                        marginLeft: i == phase ? '0.5rem' :'0.25rem',
-                        marginBottom: i == phase ? '0.25rem' : '0rem',
-                        borderRadius: '50%',
-                        backgroundColor: i <= (phase || 0) ? '#00ff88' : 'rgba(0, 255, 136, 0.3)',
-                    }}
-                ></span>
-            );
-        }
-        return circles;
-    }
+    const renderDayPhaseDisplay = () => {
+        return (
+            <motion.div
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.5, ease: "easeOutBack" }}
+            >
+                <StyledDayCard elevation={4}>
+                    <CardContent sx={{ textAlign: 'center', padding: '20px !important' }}>
+                        {/* Day Number */}
+                        <motion.div
+                            key={day} // Re-animate when day changes
+                            initial={{ scale: 0.8, opacity: 0 }}
+                            animate={{ scale: 1, opacity: 1 }}
+                            transition={{ duration: 0.4, ease: "easeOutBack" }}
+                        >
+                            <Typography
+                                variant="h4"
+                                component="div"
+                                sx={{
+                                    fontWeight: 900,
+                                    fontSize: '2.2rem',
+                                    color: '#00ff88',
+                                    textShadow: '0 0 20px rgba(0, 255, 136, 0.5)',
+                                    letterSpacing: '0.05em',
+                                    marginBottom: '4px',
+                                }}
+                            >
+                                DAY {day}
+                            </Typography>
+                        </motion.div>
+                        
+                        {/* Phase Indicator */}
+                        <Typography
+                            variant="caption"
+                            sx={{
+                                color: 'rgba(0, 255, 136, 0.8)',
+                                fontSize: '0.75rem',
+                                fontWeight: 600,
+                                letterSpacing: '0.1em',
+                                textTransform: 'uppercase',
+                            }}
+                        >
+                            Phase Progress
+                        </Typography>
+                        
+                        <PhaseIndicator>
+                            {[0, 1, 2, 3].map((segmentIndex) => (
+                                <PhaseSegment
+                                    key={segmentIndex}
+                                    isActive={segmentIndex === phase}
+                                    isCompleted={segmentIndex < phase}
+                                    initial={{ scaleX: 0 }}
+                                    animate={{ scaleX: 1 }}
+                                    transition={{ 
+                                        duration: 0.3, 
+                                        delay: segmentIndex * 0.1,
+                                        ease: "easeOut"
+                                    }}
+                                    whileHover={{ 
+                                        scaleY: 1.3,
+                                        transition: { duration: 0.2 }
+                                    }}
+                                />
+                            ))}
+                        </PhaseIndicator>
+                        
+                        {/* Phase Labels */}
+                        <Box sx={{ 
+                            display: 'flex', 
+                            justifyContent: 'space-between', 
+                            marginTop: '8px',
+                            fontSize: '0.65rem',
+                            color: 'rgba(0, 255, 136, 0.6)',
+                            fontWeight: 500,
+                        }}>
+                            <span>Dawn</span>
+                            <span>Day</span>
+                            <span>Dusk</span>
+                            <span>Night</span>
+                        </Box>
+                    </CardContent>
+                </StyledDayCard>
+            </motion.div>
+        );
+    };
 
     const renderGrid = () => {
         const cells: React.ReactNode[] = [];
@@ -256,11 +379,9 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType}) =>
                 }}
             >
                 <h2 style={{ color: '#00ff88', marginBottom: '30px' }}>Station Control</h2>
-                {/* Display stage.getSave().day and stage.getSave().phase (day is displayed as a number, phase is a set of four of filled/unfilled circles) */}
-                <div style={{ color: '#00ff88', fontSize: '14px' }}>
-                    <p>Day: {stage().getSave().day}</p>
-                    <p>Phase: {renderPhaseCircles(stage().getSave().phase)}</p>
-                </div>
+                
+                {/* Enhanced Day and Phase Display */}
+                {renderDayPhaseDisplay()}
 
                 {['Patients', 'Crew', 'Modules', 'Requests'].map(item => {
                     const itemKey = item.toLowerCase();
