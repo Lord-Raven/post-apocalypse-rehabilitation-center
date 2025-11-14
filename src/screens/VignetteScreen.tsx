@@ -158,6 +158,16 @@ export const VignetteScreen: FC<VignetteScreenProps> = ({ stage, setScreenType }
         }
     }, [vignette]);
 
+    // Memoize the message content to prevent unnecessary re-renders
+    const currentMessageText = React.useMemo(() => {
+        return vignette.script && vignette.script.length > 0 ? vignette.script[index]?.message || '' : '';
+    }, [vignette.script, index]);
+
+    // Memoize the formatted message to prevent recreation on every render
+    const memoizedDisplayMessage = React.useMemo(() => {
+        return formatMessage(currentMessageText);
+    }, [currentMessageText]);
+
     // speaker is set by index change
     useEffect(() => {
         if (vignette.script && vignette.script.length > 0) {
@@ -166,9 +176,16 @@ export const VignetteScreen: FC<VignetteScreenProps> = ({ stage, setScreenType }
             const matchingActor = actors.find(actor => 
                 actor.name && namesMatch(actor.name.trim().toLowerCase(), currentSpeakerName.toLowerCase())
             );
+            
+            // Check if this is the player speaking
+            const playerName = stage().getSave().player.name;
+            const isPlayerSpeaker = !matchingActor && playerName && 
+                (currentSpeakerName.toLowerCase() === playerName.toLowerCase() || 
+                 currentSpeakerName.toUpperCase() === playerName.toUpperCase());
+            
             setSpeaker(matchingActor || null);
-            setDisplayName(matchingActor?.name || '');
-            setDisplayMessage(formatMessage(vignette.script[index]?.message || ''));
+            setDisplayName(matchingActor?.name || (isPlayerSpeaker ? playerName : ''));
+            setDisplayMessage(memoizedDisplayMessage);
             setFinishTyping(false); // Reset typing state when message changes
         } else {
             setSpeaker(null);
@@ -177,10 +194,14 @@ export const VignetteScreen: FC<VignetteScreenProps> = ({ stage, setScreenType }
             setFinishTyping(false);
         }
 
-    }, [index, vignette, stage]);
+    }, [index, vignette, stage, memoizedDisplayMessage]);
 
     const next = () => {
-        setIndex(prevIndex => Math.min(prevIndex + 1, vignette.script.length - 1));
+        if (finishTyping) {
+            setIndex(prevIndex => Math.min(prevIndex + 1, vignette.script.length - 1));
+        } else {
+            setFinishTyping(true);
+        }
     };
 
     const prev = () => {
@@ -304,7 +325,7 @@ export const VignetteScreen: FC<VignetteScreenProps> = ({ stage, setScreenType }
             </div>
 
             {/* Stat Change Display - shown when scene ends with stat changes */}
-            {sceneEnded && characterStatChanges.length > 0 && (
+            {sceneEnded && characterStatChanges.length > 0 && index === vignette.script.length - 1 && (
                 <StatChangeDisplay characterChanges={characterStatChanges} />
             )}
 
@@ -330,7 +351,7 @@ export const VignetteScreen: FC<VignetteScreenProps> = ({ stage, setScreenType }
                     <Box sx={{ display: 'flex', gap: 1.5, alignItems: 'center' }}>
                         <IconButton 
                             onClick={prev} 
-                            disabled={index === 0}
+                            disabled={index === 0 || loading}
                             size="small"
                             sx={{ 
                                 color: '#cfe', 
@@ -360,7 +381,7 @@ export const VignetteScreen: FC<VignetteScreenProps> = ({ stage, setScreenType }
 
                         <IconButton 
                             onClick={next} 
-                            disabled={index === vignette.script.length - 1}
+                            disabled={index === vignette.script.length - 1 || loading}
                             size="small"
                             sx={{ 
                                 color: '#cfe', 
@@ -372,7 +393,7 @@ export const VignetteScreen: FC<VignetteScreenProps> = ({ stage, setScreenType }
                         </IconButton>
 
                         {/* Speaker name */}
-                        {displayName && speaker && (
+                        {displayName && (
                                 <Chip
                                     label={displayName}
                                     variant="filled"
@@ -385,11 +406,11 @@ export const VignetteScreen: FC<VignetteScreenProps> = ({ stage, setScreenType }
                                         color: '#fff', 
                                         letterSpacing: '1.2px',
                                         textTransform: 'uppercase',
-                                        background: speaker.themeColor ? `linear-gradient(135deg, ${speaker.themeColor}BB 0%, ${speaker.themeColor}DD 50%, ${speaker.themeColor}99 100%)` : 'linear-gradient(135deg, rgba(0,255,136,0.35) 0%, rgba(0,180,100,0.45) 50%, rgba(0,120,80,0.3) 100%)',
-                                        border: speaker.themeColor ? `3px solid ${speaker.themeColor}` : '3px solid rgba(0,255,136,0.6)',
+                                        background: speaker?.themeColor || '#4a5568', // Solid theme color or default gray
+                                        border: speaker?.themeColor ? `3px solid ${speaker.themeColor}CC` : '3px solid #718096', // Lightened outline
                                         borderRadius: '25px',
-                                        textShadow: speaker.themeColor ? `0 3px 8px rgba(0,0,0,0.9), 0 1px 0 ${speaker.themeColor}44` : '0 3px 8px rgba(0,0,0,0.9), 0 1px 0 rgba(0,255,136,0.3)',
-                                        boxShadow: speaker.themeColor ? `0 6px 20px ${speaker.themeColor}44, inset 0 2px 0 rgba(255,255,255,0.15), inset 0 -2px 0 rgba(0,0,0,0.2)` : '0 6px 20px rgba(0,255,136,0.3), inset 0 2px 0 rgba(255,255,255,0.15), inset 0 -2px 0 rgba(0,0,0,0.2)',
+                                        textShadow: '0 2px 4px rgba(0,0,0,0.8), 0 1px 0 rgba(0,0,0,0.9)', // Black drop shadow
+                                        boxShadow: `0 6px 20px rgba(0,0,0,0.4), inset 0 2px 0 rgba(255,255,255,0.15), inset 0 -2px 0 rgba(0,0,0,0.2)`,
                                         backdropFilter: 'blur(6px)',
                                         position: 'relative',
                                         overflow: 'visible',
@@ -400,14 +421,14 @@ export const VignetteScreen: FC<VignetteScreenProps> = ({ stage, setScreenType }
                                             left: '-2px',
                                             right: '-2px',
                                             bottom: '-2px',
-                                            background: speaker.themeColor ? `linear-gradient(135deg, ${speaker.themeColor}66, ${speaker.themeColor}99, ${speaker.themeColor}66)` : 'linear-gradient(135deg, rgba(0,255,136,0.4), rgba(0,180,100,0.6), rgba(0,255,136,0.4))',
+                                            background: speaker?.themeColor ? `${speaker.themeColor}33` : 'rgba(113, 128, 150, 0.2)', // Very light theme color glow
                                             borderRadius: '27px',
                                             zIndex: -1,
-                                            filter: 'blur(2px)',
+                                            filter: 'blur(3px)',
                                         },
                                         '& .MuiChip-label': {
                                             padding: '12px 24px',
-                                            fontFamily: speaker.themeFontFamily || '"Arial Black", "Helvetica Neue", Arial, sans-serif',
+                                            fontFamily: speaker?.themeFontFamily || '"Arial Black", "Helvetica Neue", Arial, sans-serif',
                                             position: 'relative',
                                             zIndex: 1
                                         }
@@ -455,7 +476,7 @@ export const VignetteScreen: FC<VignetteScreenProps> = ({ stage, setScreenType }
                                 finishTyping={finishTyping}
                                 onTypingComplete={() => setFinishTyping(true)}
                             >
-                                {displayMessage}
+                                {memoizedDisplayMessage}
                             </SingleTypeOut>
                         ) : ''}
                     </Typography>
