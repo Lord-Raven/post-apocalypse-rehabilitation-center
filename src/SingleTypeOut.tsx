@@ -101,39 +101,43 @@ export const SingleTypeOut: React.FC<SingleTypeOutProps> = ({
     const timerRef = React.useRef<number | null>(null);
     
     const textContent = React.useMemo(() => extractTextContent(children), [children]);
+    const prevTextContentRef = React.useRef<string>('');
     
     React.useEffect(() => {
-        // Text content changed, so reset state and update ref
-        setDisplayLength(0);
-        setFinished(false);
-        let idx = 0;
+        // Only reset if the actual text content has changed
+        if (textContent !== prevTextContentRef.current) {
+            prevTextContentRef.current = textContent;
+            setDisplayLength(0);
+            setFinished(false);
+            let idx = 0;
 
-        if (!textContent) {
-            setFinished(true);
-            onTypingComplete?.();
-            return;
-        }
+            if (!textContent) {
+                setFinished(true);
+                onTypingComplete?.();
+                return;
+            }
 
-        // Start interval to reveal characters
-        timerRef.current = window.setInterval(() => {
-            idx += 1;
-            setDisplayLength(idx);
-            if (idx >= textContent.length) {
+            // Start interval to reveal characters
+            timerRef.current = window.setInterval(() => {
+                idx += 1;
+                setDisplayLength(idx);
+                if (idx >= textContent.length) {
+                    if (timerRef.current !== null) {
+                        clearInterval(timerRef.current);
+                        timerRef.current = null;
+                    }
+                    setFinished(true);
+                    onTypingComplete?.();
+                }
+            }, speed);
+
+            return () => {
                 if (timerRef.current !== null) {
                     clearInterval(timerRef.current);
                     timerRef.current = null;
                 }
-                setFinished(true);
-                onTypingComplete?.();
-            }
-        }, speed);
-
-        return () => {
-            if (timerRef.current !== null) {
-                clearInterval(timerRef.current);
-                timerRef.current = null;
-            }
-        };
+            };
+        }
     }, [textContent, speed, onTypingComplete]);
 
     // Effect to handle finishTyping prop

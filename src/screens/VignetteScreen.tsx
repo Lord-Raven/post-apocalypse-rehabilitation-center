@@ -442,7 +442,7 @@ export const VignetteScreen: FC<VignetteScreenProps> = ({ stage, setScreenType }
                 sx={{ 
                     position: 'absolute', 
                     left: '5%', 
-                    right: sceneEnded && characterStatChanges.length > 0 ? '35%' : '5%', // Make room for stat display
+                    right: '5%',
                     bottom: '4%', 
                     background: 'rgba(10,20,30,0.95)', 
                     border: '2px solid rgba(0,255,136,0.12)', 

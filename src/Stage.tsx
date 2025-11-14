@@ -5,10 +5,7 @@ import Actor, { loadReserveActor, populateActorImages } from "./actors/Actor";
 import { DEFAULT_GRID_SIZE, Layout, createModule } from './Module';
 import { BaseScreen } from "./screens/BaseScreen";
 import {Client} from "@gradio/client";
-import VignetteScreen from "./screens/VignetteScreen";
 import { generateVignetteScript, VignetteData } from "./Vignette";
-
-
 
 type MessageStateType = any;
 type ConfigType = any;
@@ -45,9 +42,6 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
     screenProps: any = {};
 
     reserveActors: Actor[] = [];
-
-    // Internal render callback registered by the UI wrapper so the Stage can request re-renders when internal state (like `screen`) changes.
-    private renderCallback?: () => void;
 
     emotionPipeline: any;
     imagePipeline: any;
@@ -139,8 +133,6 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
 
                     this.reserveActors = [...this.reserveActors, ...newActors.filter(a => a !== null)];
                 }
-                // Notify the UI wrapper that actors are now loaded so it can re-render
-                // this.requestUpdate();
             } catch (err) {
                 console.error('Error loading reserve actors', err);
             } finally {
