@@ -7,6 +7,7 @@ import { motion } from 'framer-motion';
 import { BaseScreen, ScreenType } from './BaseScreen';
 import { Stage } from '../Stage';
 import { VignetteType } from '../Vignette';
+import Nameplate from '../components/Nameplate';
 
 interface EchoScreenProps {
 	stage: () => Stage;
@@ -80,18 +81,17 @@ export const EchoScreen: FC<EchoScreenProps> = ({stage, setScreenType}) => {
 									boxShadow: isSelected ? '0 8px 30px rgba(0,255,136,0.12)' : '0 6px 18px rgba(0,0,0,0.4)'
 								}}
 							>
-								{/* actor.name label across top center of parent div */}
-								<div style={{ 
-									padding: '12px 16px', 
-									background: actor.themeColor ? `linear-gradient(180deg, ${actor.themeColor}99 0%, ${actor.themeColor}CC 100%)` : 'rgba(0,0,0,0.6)', 
-									color: '#fff', 
-									textAlign: 'center', 
-									fontWeight: 600, 
-									fontSize: 18,
-									fontFamily: actor.themeFontFamily || 'inherit'
-								}}>
-									{actor.name}
-								</div>
+								{/* Actor nameplate */}
+								<Nameplate 
+									actor={actor} 
+									variant="simple" 
+									size="medium"
+									style={{
+										padding: '12px 16px',
+										fontSize: 18,
+										borderRadius: 0
+									}}
+								/>
 								{/* Lay out actor property scores with large stylized letter grades */}
 								<div className="stat-list" style={{ padding: '8px 12px', background: 'rgba(0,0,0,0.8)' }}>
 									{[

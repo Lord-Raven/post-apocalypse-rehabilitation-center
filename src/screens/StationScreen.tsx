@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { ScreenType } from './BaseScreen';
 import { Layout, MODULE_DEFAULTS, Module, createModule } from '../Module';
 import { Stage } from '../Stage';
+import Nameplate from '../components/Nameplate';
 
 /*
  * This screen allows the player to manage their space station, including viewing resources, upgrading facilities, or visiting locations (transitioning to vignette scenes).
@@ -368,16 +369,16 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType}) =>
                                                     />
                                                     
                                                     {/* Name centered below portrait */}
-                                                    <div style={{ 
-                                                        fontWeight: 'bold', 
-                                                        marginBottom: '6px', 
-                                                        fontSize: '14px', 
-                                                        fontFamily: actor.themeFontFamily || 'inherit',
-                                                        textAlign: 'center',
-                                                        color: '#00ff88'
-                                                    }}>
-                                                        {actor.name}
-                                                    </div>
+                                                    <Nameplate 
+                                                        actor={actor} 
+                                                        variant="compact" 
+                                                        size="small"
+                                                        style={{
+                                                            marginBottom: '6px',
+                                                            fontSize: '14px',
+                                                            fontWeight: 'bold'
+                                                        }}
+                                                    />
                                                     
                                                     {/* Stats in a grid layout below name */}
                                                     <div style={{ 

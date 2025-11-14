@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { Paper, Typography, Box, Avatar } from '@mui/material';
 import { TrendingUp } from '@mui/icons-material';
 import Actor from '../actors/Actor';
+import Nameplate from '../components/Nameplate';
 
 interface StatChange {
     statName: string;
@@ -123,31 +124,11 @@ const StatChangeDisplay: FC<StatChangeDisplayProps> = ({ characterChanges }) => 
                             transition={{ duration: 0.4, delay: 0.7 + charIndex * 0.2 }}
                             style={{ marginBottom: '20px' }}
                         >
-                            <Paper
-                                elevation={4}
-                                sx={{
-                                    background: `linear-gradient(135deg, ${charChange.actor.themeColor}20, ${charChange.actor.themeColor}40)`,
-                                    border: `2px solid ${charChange.actor.themeColor}60`,
-                                    borderRadius: 2,
-                                    py: 1.5,
-                                    px: 2,
-                                    backdropFilter: 'blur(6px)'
-                                }}
-                            >
-                                <Typography
-                                    variant="h5"
-                                    sx={{
-                                        color: '#fff',
-                                        fontWeight: 800,
-                                        letterSpacing: '1px',
-                                        textShadow: '0 2px 6px rgba(0,0,0,0.8)',
-                                        fontFamily: charChange.actor.themeFontFamily || 'inherit',
-                                        textTransform: 'uppercase'
-                                    }}
-                                >
-                                    {charChange.actor.name}
-                                </Typography>
-                            </Paper>
+                            <Nameplate 
+                                actor={charChange.actor} 
+                                variant="card" 
+                                size="large"
+                            />
                         </motion.div>
 
                         {/* Stat changes */}
