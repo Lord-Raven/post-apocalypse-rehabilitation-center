@@ -230,7 +230,7 @@ export function namesMatch(name: string, possibleName: string): boolean {
             }
         }
     }
-    return matrix[name.length][possibleName.length] < Math.min(name.length / 2, possibleName.length / 2);
+    return matrix[name.length][possibleName.length] < Math.min(name.length / 1.5, possibleName.length / 1.5);
 }
 
 export default Actor;

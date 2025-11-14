@@ -46,10 +46,9 @@ const formatMessage = (text: string): JSX.Element => {
             {dialogueParts.map((part, index) => {
                 // Check if this part is dialogue (wrapped in quotes)
                 if (part.startsWith('"') && part.endsWith('"')) {
-                    const dialogueText = part.slice(1, -1); // Remove quotes
                     return (
                         <span key={index} style={{ color: '#87CEEB' }}>
-                            {formatInlineStyles(dialogueText)}
+                            {formatInlineStyles(part)}
                         </span>
                     );
                 } else {

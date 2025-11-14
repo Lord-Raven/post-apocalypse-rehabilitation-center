@@ -19,6 +19,7 @@ interface StationScreenProps {
 
 export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType}) => {
     const [expandedMenu, setExpandedMenu] = React.useState<string | null>('patients');
+    const [previousExpandedMenu, setPreviousExpandedMenu] = React.useState<string | null>(null);
     const [day, setDay] = React.useState<number>(stage().getSave().day);
     const [phase, setPhase] = React.useState<number>(stage().getSave().phase);
 
@@ -263,15 +264,23 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType}) =>
                 {['Patients', 'Crew', 'Modules', 'Requests'].map(item => {
                     const itemKey = item.toLowerCase();
                     const isExpanded = expandedMenu === itemKey;
+                    const isContracting = previousExpandedMenu === itemKey && !isExpanded;
                     
                     return (
                         <motion.div 
                             key={item} 
+                            layout
                             style={{ margin: '10px 0' }}
                             whileHover={{ x: 10 }}
+                            transition={{ 
+                                layout: { duration: 0.3, ease: 'easeInOut' }
+                            }}
                         >
                             <motion.button
-                                onClick={() => setExpandedMenu(isExpanded ? null : itemKey)}
+                                onClick={() => {
+                                    setPreviousExpandedMenu(expandedMenu);
+                                    setExpandedMenu(isExpanded ? null : itemKey);
+                                }}
                                 whileTap={{ scale: 0.95 }}
                                 style={{
                                     display: 'flex',
@@ -299,18 +308,29 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType}) =>
                             
                             {/* Expandable content */}
                             <motion.div
+                                layout
                                 initial={{ height: 0, opacity: 0 }}
                                 animate={{ 
                                     height: isExpanded ? 'auto' : 0,
                                     opacity: isExpanded ? 1 : 0
                                 }}
-                                transition={{ duration: 0.3, ease: 'easeInOut' }}
+                                transition={{ 
+                                    height: { duration: 0.3, ease: 'easeInOut' },
+                                    opacity: { duration: 0.3, ease: 'easeInOut' },
+                                    layout: { duration: 0.3, ease: 'easeInOut' }
+                                }}
                                 style={{ 
                                     overflow: 'hidden',
                                     background: 'rgba(0, 20, 40, 0.7)',
                                     border: isExpanded ? '1px solid rgba(0, 255, 136, 0.3)' : 'none',
                                     borderTop: 'none',
                                     borderRadius: '0 0 5px 5px',
+                                }}
+                                onAnimationComplete={() => {
+                                    // Clear previous expanded state once animation is complete
+                                    if (isContracting) {
+                                        setPreviousExpandedMenu(null);
+                                    }
                                 }}
                             >
                                 {isExpanded && itemKey === 'patients' && (
