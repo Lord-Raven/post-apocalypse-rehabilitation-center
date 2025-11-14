@@ -9,6 +9,7 @@ import { Stage } from '../Stage';
 import { VignetteData } from '../Vignette';
 import ActorImage from '../actors/ActorImage';
 import { Emotion } from '../Emotion';
+import StatChangeDisplay from './StatChangeDisplay';
 
 import {
     Box, 
@@ -129,6 +130,14 @@ export const VignetteScreen: FC<VignetteScreenProps> = ({ stage, setScreenType }
     const [displayName, setDisplayName] = React.useState<string>('');
     const [displayMessage, setDisplayMessage] = React.useState<JSX.Element>(<></>);
     const [finishTyping, setFinishTyping] = React.useState<boolean>(false);
+    const [characterStatChanges, setCharacterStatChanges] = React.useState<Array<{
+        actor: Actor;
+        statChanges: Array<{
+            statName: string;
+            oldValue: number;
+            newValue: number;
+        }>;
+    }>>([]);
 
 
     useEffect(() => {
@@ -137,7 +146,14 @@ export const VignetteScreen: FC<VignetteScreenProps> = ({ stage, setScreenType }
             stage().continueVignette().then(() => {
                 setVignette({...stage().getSave().currentVignette as VignetteData});
                 setLoading(false);
-                setSceneEnded(stage().getSave().currentVignette?.endScene || false);
+                const vignetteData = stage().getSave().currentVignette;
+                const ended = vignetteData?.endScene || false;
+                setSceneEnded(ended);
+                
+                // Process stat changes when scene ends
+                if (ended && vignetteData?.endProperties) {
+                    processStatChanges(vignetteData.endProperties);
+                }
             });
         }
     }, [vignette]);
@@ -196,6 +212,73 @@ export const VignetteScreen: FC<VignetteScreenProps> = ({ stage, setScreenType }
         });
     }
 
+    // Process stat changes and prepare data for StatChangeDisplay
+    const processStatChanges = (endProperties: { [actorId: string]: { [stat: string]: number } }) => {
+        const changes: Array<{
+            actor: Actor;
+            statChanges: Array<{
+                statName: string;
+                oldValue: number;
+                newValue: number;
+            }>;
+        }> = [];
+
+        Object.entries(endProperties).forEach(([actorId, statChanges]) => {
+            const actor = stage().getSave().actors[actorId];
+            if (!actor) return;
+
+            const actorChanges: Array<{
+                statName: string;
+                oldValue: number;
+                newValue: number;
+            }> = [];
+
+            Object.entries(statChanges).forEach(([statName, change]) => {
+                // Find the current stat value
+                const normalizedStatName = statName.toLowerCase();
+                let currentValue = 0;
+                let foundStat = false;
+
+                // Try to match the stat name to the actor's stats
+                Object.entries(actor.stats).forEach(([actorStat, value]) => {
+                    if (actorStat.toLowerCase() === normalizedStatName || 
+                        actorStat.toLowerCase().includes(normalizedStatName) ||
+                        normalizedStatName.includes(actorStat.toLowerCase())) {
+                        currentValue = value;
+                        foundStat = true;
+                    }
+                });
+
+                if (foundStat) {
+                    const newValue = Math.max(1, Math.min(10, currentValue + change));
+                    actorChanges.push({
+                        statName: statName,
+                        oldValue: currentValue,
+                        newValue: newValue
+                    });
+
+                    // Apply the change to the actor
+                    Object.keys(actor.stats).forEach(actorStat => {
+                        if (actorStat.toLowerCase() === normalizedStatName || 
+                            actorStat.toLowerCase().includes(normalizedStatName) ||
+                            normalizedStatName.includes(actorStat.toLowerCase())) {
+                            (actor.stats as any)[actorStat] = newValue;
+                        }
+                    });
+                }
+            });
+
+            if (actorChanges.length > 0) {
+                changes.push({
+                    actor: actor,
+                    statChanges: actorChanges
+                });
+            }
+        });
+
+        setCharacterStatChanges(changes);
+    };
+
     return (
         <div style={{ position: 'relative', width: '100vw', height: '100vh', overflow: 'hidden', background: '#000' }}>
             {/* Background image (module) with slight blur */}
@@ -220,13 +303,18 @@ export const VignetteScreen: FC<VignetteScreenProps> = ({ stage, setScreenType }
                 {renderActors(stage().getSave().layout.getModuleById(vignette.moduleId || ''), Object.values(stage().getSave().actors).filter(actor => actor.locationId === (vignette.moduleId || '')) || [], vignette.script && vignette.script.length > 0 ? vignette.script[index]?.speaker : undefined)}
             </div>
 
+            {/* Stat Change Display - shown when scene ends with stat changes */}
+            {sceneEnded && characterStatChanges.length > 0 && (
+                <StatChangeDisplay characterChanges={characterStatChanges} />
+            )}
+
             {/* Bottom text window */}
             <Paper 
                 elevation={8}
                 sx={{ 
                     position: 'absolute', 
                     left: '5%', 
-                    right: '5%', 
+                    right: sceneEnded && characterStatChanges.length > 0 ? '35%' : '5%', // Make room for stat display
                     bottom: '4%', 
                     background: 'rgba(10,20,30,0.95)', 
                     border: '2px solid rgba(0,255,136,0.12)', 
@@ -290,21 +378,38 @@ export const VignetteScreen: FC<VignetteScreenProps> = ({ stage, setScreenType }
                                     variant="filled"
                                     sx={{ 
                                         ml: 2,
-                                        px: 2,
-                                        py: 0.5,
-                                        fontSize: '1.1rem',
-                                        fontWeight: 700, 
+                                        px: 3,
+                                        py: 1,
+                                        fontSize: '1.4rem',
+                                        fontWeight: 900, 
                                         color: '#fff', 
-                                        letterSpacing: '0.8px',
-                                        background: 'linear-gradient(135deg, rgba(0,255,136,0.2) 0%, rgba(0,180,100,0.3) 100%)',
-                                        border: '2px solid rgba(0,255,136,0.4)',
-                                        borderRadius: '20px',
-                                        textShadow: '0 2px 4px rgba(0,0,0,0.8)',
-                                        boxShadow: '0 4px 12px rgba(0,255,136,0.2), inset 0 1px 0 rgba(255,255,255,0.1)',
-                                        backdropFilter: 'blur(4px)',
+                                        letterSpacing: '1.2px',
+                                        textTransform: 'uppercase',
+                                        background: 'linear-gradient(135deg, rgba(0,255,136,0.35) 0%, rgba(0,180,100,0.45) 50%, rgba(0,120,80,0.3) 100%)',
+                                        border: '3px solid rgba(0,255,136,0.6)',
+                                        borderRadius: '25px',
+                                        textShadow: '0 3px 8px rgba(0,0,0,0.9), 0 1px 0 rgba(0,255,136,0.3)',
+                                        boxShadow: '0 6px 20px rgba(0,255,136,0.3), inset 0 2px 0 rgba(255,255,255,0.15), inset 0 -2px 0 rgba(0,0,0,0.2)',
+                                        backdropFilter: 'blur(6px)',
+                                        position: 'relative',
+                                        overflow: 'visible',
+                                        '&::before': {
+                                            content: '""',
+                                            position: 'absolute',
+                                            top: '-2px',
+                                            left: '-2px',
+                                            right: '-2px',
+                                            bottom: '-2px',
+                                            background: 'linear-gradient(135deg, rgba(0,255,136,0.4), rgba(0,180,100,0.6), rgba(0,255,136,0.4))',
+                                            borderRadius: '27px',
+                                            zIndex: -1,
+                                            filter: 'blur(2px)',
+                                        },
                                         '& .MuiChip-label': {
-                                            padding: '8px 16px',
-                                            textTransform: 'capitalize'
+                                            padding: '12px 24px',
+                                            fontFamily: '"Arial Black", "Helvetica Neue", Arial, sans-serif',
+                                            position: 'relative',
+                                            zIndex: 1
                                         }
                                     }}
                                 />
@@ -390,10 +495,24 @@ export const VignetteScreen: FC<VignetteScreenProps> = ({ stage, setScreenType }
                                 '&.Mui-focused fieldset': {
                                     borderColor: 'rgba(0,255,136,0.3)',
                                 },
+                                '&.Mui-disabled': {
+                                    color: 'rgba(255,255,255,0.6)',
+                                    '& fieldset': {
+                                        borderColor: 'rgba(255,255,255,0.04)',
+                                    },
+                                },
                             },
                             '& .MuiInputBase-input::placeholder': {
                                 color: 'rgba(255,255,255,0.5)',
                                 opacity: 1,
+                            },
+                            '& .MuiInputBase-input.Mui-disabled::placeholder': {
+                                color: 'rgba(255,255,255,0.4)',
+                                opacity: 1,
+                            },
+                            '& .MuiInputBase-input.Mui-disabled': {
+                                color: 'rgba(255,255,255,0.45)',
+                                WebkitTextFillColor: 'rgba(255,255,255,0.45)',
                             },
                         }}
                     />
@@ -436,7 +555,9 @@ export const VignetteScreen: FC<VignetteScreenProps> = ({ stage, setScreenType }
         // Add input text to vignette script as a player speaker action:
         const stageVignette = stage().getSave().currentVignette;
         if (!stageVignette) return;
-        stageVignette?.script.push({ speaker: stage().getSave().player.name.toUpperCase(), message: inputText });
+        if (inputText.trim()) {
+            stageVignette?.script.push({ speaker: stage().getSave().player.name.toUpperCase(), message: inputText });
+        }
         setVignette({...stageVignette as VignetteData});
         setLoading(true);
         setIndex(stageVignette.script.length - 1);
@@ -444,10 +565,17 @@ export const VignetteScreen: FC<VignetteScreenProps> = ({ stage, setScreenType }
         const oldIndex = stageVignette.script.length;
         stage().continueVignette().then(() => {
             const newIndex = Math.min(oldIndex, (stage().getSave().currentVignette?.script.length || 1) - 1);
-            setVignette({...stage().getSave().currentVignette as VignetteData});
+            const vignetteData = stage().getSave().currentVignette;
+            setVignette({...vignetteData as VignetteData});
             setIndex(newIndex);
             setLoading(false);
-            setSceneEnded(stage().getSave().currentVignette?.endScene || false);
+            const ended = vignetteData?.endScene || false;
+            setSceneEnded(ended);
+            
+            // Process stat changes when scene ends
+            if (ended && vignetteData?.endProperties) {
+                processStatChanges(vignetteData.endProperties);
+            }
         });
     }
 

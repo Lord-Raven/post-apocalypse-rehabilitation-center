@@ -56,8 +56,8 @@ export async function generateVignetteScript(vignette: VignetteData, stage: Stag
 
     // There are two optional phrases for gently/more firmly prodding the model toward wrapping up the scene, and then we calculate one to show based on the vignette.script.length and some randomness:
     const wrapUpPhrases = [
-        ' Consider whether the scene can reach a natural stopping point soon.', // Gently prod toward and ending.
-        ' The scene is getting long and should find a conclusion soon, ending with potential stat boosts ([CHARACTER NAME: RELEVANT STAT + 1]) and/or an [END SCENE] tag.' // Firmer prod
+        ` Consider whether the scene can reach a natural stopping point in this response, but don't force it, if more development is needed.`, // Gently prod toward and ending.
+        ` The scene is getting long and this response should try to aim for a satisfactory conclusion, potentially ending with stat boosts ([CHARACTER NAME: RELEVANT STAT + 1]) and/or an [END SCENE] tag.` // Firmer prod
     ];
 
     // Use script length + random(1, 10) > 12 for gentle or > 24 for firm.
@@ -85,9 +85,9 @@ export async function generateVignetteScript(vignette: VignetteData, stage: Stag
         `\n\nScript Log:\nSystem: ${scriptLog}` +
         `\n\nInstruction:\nAt the "System:" prompt, generate a short scene script based upon this scenario, and the specified Scene Prompt. Follow the structure of the strict Example Script Format above. ` +
         `This response should end when it makes sense to give ${playerName} a chance to respond, ` +
-        `or, if the scene feels satisfactorily complete, the entire scene can be concluded with an "[END SCENE]" tag. ` +
-        `At the conclusion of a scene, a "[CHARACTER NAME: RELEVANT STAT + x]" tag can be used to apply a stat change to the specified Present Character. These changes should reflect an outcome of the scene; ` +
-        `they should be small, typically (but not exclusively) positive, and applied just before [END SCENE]).${wrapupPrompt}`;
+        `or, if the scene feels satisfactorily complete, the entire scene can be concluded with an "[END SCENE]" or ` +
+        `"[CHARACTER NAME: RELEVANT STAT + x]" tag(s) can be used to apply a stat change(s) to the specified Present Character(s). These changes should reflect an outcome of the scene; ` +
+        `they should be incremental, typically (but not exclusively) positive, and applied just before [END SCENE]).${wrapupPrompt}`;
 
     // Retry logic if response is null or response.result is empty
     let retries = 3;
@@ -153,8 +153,7 @@ export async function generateVignetteScript(vignette: VignetteData, stage: Stag
                         if (!statChanges[matched.id]) statChanges[matched.id] = {};
                         statChanges[matched.id][statKey] = (statChanges[matched.id][statKey] || 0) + num;
                     }
-                    // Remove this tag from visible text
-                    text = text.replace(tagMatch[0], '');
+                    endScene = true;
                 }
 
                 // Remove all tags ([]) from visible text:
