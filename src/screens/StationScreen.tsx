@@ -322,7 +322,7 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType}) =>
                                 style={{ 
                                     overflow: 'hidden',
                                     background: 'rgba(0, 20, 40, 0.7)',
-                                    border: isExpanded ? '1px solid rgba(0, 255, 136, 0.3)' : 'none',
+                                    border: isExpanded ? '2px solid rgba(0, 255, 136, 0.3)' : 'none',
                                     borderTop: 'none',
                                     borderRadius: '0 0 5px 5px',
                                 }}
@@ -335,7 +335,6 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType}) =>
                             >
                                 {isExpanded && itemKey === 'patients' && (
                                     <div style={{ padding: '15px', maxHeight: '50vh', overflowY: 'auto' }}>
-                                        <h4 style={{ marginBottom: '15px', color: '#00ff88', fontSize: '14px' }}>Current Patients</h4>
                                         {Object.values(stage().getSave().actors).length === 0 ? (
                                             <p style={{ color: '#888', fontStyle: 'italic', fontSize: '12px' }}>No patients currently on station</p>
                                         ) : (
@@ -345,67 +344,87 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType}) =>
                                                     whileHover={{ backgroundColor: 'rgba(0, 255, 136, 0.1)' }}
                                                     style={{
                                                         display: 'flex',
+                                                        flexDirection: 'column',
                                                         alignItems: 'center',
-                                                        padding: '8px',
-                                                        marginBottom: '6px',
-                                                        border: '1px solid rgba(0, 255, 136, 0.2)',
-                                                        borderRadius: '4px',
+                                                        padding: '12px',
+                                                        marginBottom: '10px',
+                                                        border: '2px solid rgba(0, 255, 136, 0.2)',
+                                                        borderRadius: '8px',
                                                         background: 'rgba(0, 10, 20, 0.5)',
                                                     }}
                                                 >
-                                                    {/* Portrait */}
+                                                    {/* Portrait - larger and centered at top */}
                                                     <img
                                                         src={actor.emotionPack?.neutral || actor.avatarImageUrl}
                                                         alt={actor.name}
                                                         style={{
-                                                            width: '32px',
-                                                            height: '32px',
+                                                            width: '64px',
+                                                            height: '64px',
                                                             borderRadius: '50%',
-                                                            marginRight: '8px',
-                                                            border: '1px solid #00ff88',
+                                                            marginBottom: '8px',
+                                                            border: '3px solid #00ff88',
                                                             objectFit: 'cover',
                                                         }}
                                                     />
                                                     
-                                                    {/* Name and Stats */}
-                                                    <div style={{ flex: 1 }}>
-                                                        <div style={{ fontWeight: 'bold', marginBottom: '3px', fontSize: '12px', fontFamily: actor.themeFontFamily || 'inherit' }}>{actor.name}</div>
-                                                        <div style={{ display: 'flex', gap: '4px', fontSize: '10px' }}>
-                                                            {[
-                                                                ['B', actor.stats.brawn],
-                                                                ['W', actor.stats.wits],
-                                                                ['N', actor.stats.nerve],
-                                                                ['S', actor.stats.skill],
-                                                                ['C', actor.stats.charm],
-                                                                ['L', actor.stats.lust],
-                                                                ['J', actor.stats.joy],
-                                                                ['T', actor.stats.trust],
-                                                            ].map(([label, value]) => {
-                                                                const grade = actor.scoreToGrade(value);
-                                                                return (
-                                                                    <span
-                                                                        key={label}
-                                                                        style={{
-                                                                            display: 'inline-block',
-                                                                            minWidth: '16px',
-                                                                            textAlign: 'center',
-                                                                            padding: '1px 2px',
-                                                                            borderRadius: '2px',
-                                                                            background: grade.startsWith('A') ? 'rgba(0, 255, 0, 0.2)' :
-                                                                                      grade.startsWith('B') ? 'rgba(0, 150, 255, 0.2)' :
-                                                                                      grade.startsWith('C') ? 'rgba(255, 255, 0, 0.2)' :
-                                                                                      grade.startsWith('D') ? 'rgba(255, 150, 0, 0.2)' :
-                                                                                      'rgba(255, 0, 0, 0.2)',
-                                                                            border: '1px solid rgba(255, 255, 255, 0.1)',
-                                                                            fontSize: '9px',
-                                                                        }}
-                                                                        title={`${label === 'B' ? 'Brawn' : label === 'W' ? 'Wits' : label === 'N' ? 'Nerve' : label === 'S' ? 'Skill' : label === 'C' ? 'Charm' : label === 'L' ? 'Lust' : label === 'J' ? 'Joy' : 'Trust'}: ${grade}`}
-                                                                    >
-                                                                        {grade}
-                                                                    </span>
-                                                                );
-                                                            })}
-                                                        </div>
+                                                    {/* Name centered below portrait */}
+                                                    <div style={{ 
+                                                        fontWeight: 'bold', 
+                                                        marginBottom: '6px', 
+                                                        fontSize: '14px', 
+                                                        fontFamily: actor.themeFontFamily || 'inherit',
+                                                        textAlign: 'center',
+                                                        color: '#00ff88'
+                                                    }}>
+                                                        {actor.name}
+                                                    </div>
+                                                    
+                                                    {/* Stats in a grid layout below name */}
+                                                    <div style={{ 
+                                                        display: 'grid', 
+                                                        gridTemplateColumns: 'repeat(4, 1fr)', 
+                                                        gap: '3px', 
+                                                        fontSize: '10px',
+                                                        width: '100%'
+                                                    }}>
+                                                        {[
+                                                            ['B', actor.stats.brawn],
+                                                            ['W', actor.stats.wits],
+                                                            ['N', actor.stats.nerve],
+                                                            ['S', actor.stats.skill],
+                                                            ['C', actor.stats.charm],
+                                                            ['L', actor.stats.lust],
+                                                            ['J', actor.stats.joy],
+                                                            ['T', actor.stats.trust],
+                                                        ].map(([label, value]) => {
+                                                            const grade = actor.scoreToGrade(value);
+                                                            return (
+                                                                <span
+                                                                    key={label}
+                                                                    style={{
+                                                                        display: 'flex',
+                                                                        flexDirection: 'column',
+                                                                        alignItems: 'center',
+                                                                        textAlign: 'center',
+                                                                        padding: '2px',
+                                                                        borderRadius: '3px',
+                                                                        background: grade.startsWith('A') ? 'rgba(0, 255, 0, 0.2)' :
+                                                                                  grade.startsWith('B') ? 'rgba(0, 150, 255, 0.2)' :
+                                                                                  grade.startsWith('C') ? 'rgba(255, 255, 0, 0.2)' :
+                                                                                  grade.startsWith('D') ? 'rgba(255, 150, 0, 0.2)' :
+                                                                                  'rgba(255, 0, 0, 0.2)',
+                                                                        border: '1px solid rgba(255, 255, 255, 0.1)',
+                                                                        fontSize: '8px',
+                                                                    }}
+                                                                    title={`${label === 'B' ? 'Brawn' : label === 'W' ? 'Wits' : label === 'N' ? 'Nerve' : label === 'S' ? 'Skill' : label === 'C' ? 'Charm' : label === 'L' ? 'Lust' : label === 'J' ? 'Joy' : 'Trust'}: ${grade}`}
+                                                                >
+                                                                    <div style={{ fontSize: '7px', opacity: 0.7, marginBottom: '1px' }}>
+                                                                        {label === 'B' ? 'BRW' : label === 'W' ? 'WIT' : label === 'N' ? 'NRV' : label === 'S' ? 'SKL' : label === 'C' ? 'CHM' : label === 'L' ? 'LST' : label === 'J' ? 'JOY' : 'TST'}
+                                                                    </div>
+                                                                    <div style={{ fontWeight: 'bold' }}>{grade}</div>
+                                                                </span>
+                                                            );
+                                                        })}
                                                     </div>
                                                 </motion.div>
                                             ))

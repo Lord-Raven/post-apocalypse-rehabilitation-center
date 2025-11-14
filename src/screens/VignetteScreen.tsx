@@ -158,16 +158,6 @@ export const VignetteScreen: FC<VignetteScreenProps> = ({ stage, setScreenType }
         }
     }, [vignette]);
 
-    // Memoize the message content to prevent unnecessary re-renders
-    const currentMessageText = React.useMemo(() => {
-        return vignette.script && vignette.script.length > 0 ? vignette.script[index]?.message || '' : '';
-    }, [vignette.script, index]);
-
-    // Memoize the formatted message to prevent recreation on every render
-    const memoizedDisplayMessage = React.useMemo(() => {
-        return formatMessage(currentMessageText);
-    }, [currentMessageText]);
-
     // speaker is set by index change
     useEffect(() => {
         if (vignette.script && vignette.script.length > 0) {
@@ -185,7 +175,7 @@ export const VignetteScreen: FC<VignetteScreenProps> = ({ stage, setScreenType }
             
             setSpeaker(matchingActor || null);
             setDisplayName(matchingActor?.name || (isPlayerSpeaker ? playerName : ''));
-            setDisplayMessage(memoizedDisplayMessage);
+            setDisplayMessage(formatMessage(vignette.script[index]?.message || ''));
             setFinishTyping(false); // Reset typing state when message changes
         } else {
             setSpeaker(null);
@@ -194,7 +184,7 @@ export const VignetteScreen: FC<VignetteScreenProps> = ({ stage, setScreenType }
             setFinishTyping(false);
         }
 
-    }, [index, vignette, stage, memoizedDisplayMessage]);
+    }, [index, vignette, stage]);
 
     const next = () => {
         if (finishTyping) {
@@ -476,7 +466,7 @@ export const VignetteScreen: FC<VignetteScreenProps> = ({ stage, setScreenType }
                                 finishTyping={finishTyping}
                                 onTypingComplete={() => setFinishTyping(true)}
                             >
-                                {memoizedDisplayMessage}
+                                {displayMessage}
                             </SingleTypeOut>
                         ) : ''}
                     </Typography>

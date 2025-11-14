@@ -99,20 +99,13 @@ export const SingleTypeOut: React.FC<SingleTypeOutProps> = ({
     const [displayLength, setDisplayLength] = React.useState<number>(0);
     const [finished, setFinished] = React.useState<boolean>(false);
     const timerRef = React.useRef<number | null>(null);
-    const previousTextContentRef = React.useRef<string>('');
     
     const textContent = React.useMemo(() => extractTextContent(children), [children]);
     
     React.useEffect(() => {
-        // Only reset if the text content has actually changed
-        if (textContent === previousTextContentRef.current) {
-            return; // Don't restart if content is the same
-        }
-
         // Text content changed, so reset state and update ref
         setDisplayLength(0);
         setFinished(false);
-        previousTextContentRef.current = textContent;
         let idx = 0;
 
         if (!textContent) {
