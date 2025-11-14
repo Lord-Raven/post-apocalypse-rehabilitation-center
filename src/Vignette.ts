@@ -85,9 +85,9 @@ export async function generateVignetteScript(vignette: VignetteData, stage: Stag
         `\n\nScript Log:\nSystem: ${scriptLog}` +
         `\n\nInstruction:\nAt the "System:" prompt, generate a short scene script based upon this scenario, and the specified Scene Prompt. Follow the structure of the strict Example Script Format above. ` +
         `This response should end when it makes sense to give ${playerName} a chance to respond, ` +
-        `or, if the scene feels satisfactorily complete, the entire scene can be concluded with and "[END SCENE]" tag. ` +
-        `Before an "[END SCENE]" tag, a "[CHARACTER NAME: RELEVANT STAT + x]" tag can be used to apply a stat change to the specified Present Character. These changes should reflect an outcome of the scene; ` +
-        `they should be small, typically (but not exclusively) positive, and applied sparingly (generally just before [END SCENE]).${wrapupPrompt}`;
+        `or, if the scene feels satisfactorily complete, the entire scene can be concluded with an "[END SCENE]" tag. ` +
+        `At the conclusion of a scene, a "[CHARACTER NAME: RELEVANT STAT + x]" tag can be used to apply a stat change to the specified Present Character. These changes should reflect an outcome of the scene; ` +
+        `they should be small, typically (but not exclusively) positive, and applied just before [END SCENE]).${wrapupPrompt}`;
 
     // Retry logic if response is null or response.result is empty
     let retries = 3;
@@ -97,8 +97,7 @@ export async function generateVignetteScript(vignette: VignetteData, stage: Stag
                 prompt: fullPrompt,
                 min_tokens: 100,
                 max_tokens: 700,
-                include_history: true,
-                stop: ['[END]', '[END SCENE]', '[DONE]']
+                include_history: true
             });
             if (response && response.result && response.result.trim().length > 0) {
                 // First, detect and parse any END tags and stat changes that may be embedded in the response.
