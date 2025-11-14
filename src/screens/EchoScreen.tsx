@@ -81,7 +81,15 @@ export const EchoScreen: FC<EchoScreenProps> = ({stage, setScreenType}) => {
 								}}
 							>
 								{/* actor.name label across top center of parent div */}
-								<div style={{ padding: '12px 16px', background: 'rgba(0,0,0,0.6)', color: '#fff', textAlign: 'center', fontWeight: 600, fontSize: 18 }}>
+								<div style={{ 
+									padding: '12px 16px', 
+									background: actor.themeColor ? `linear-gradient(180deg, ${actor.themeColor}99 0%, ${actor.themeColor}CC 100%)` : 'rgba(0,0,0,0.6)', 
+									color: '#fff', 
+									textAlign: 'center', 
+									fontWeight: 600, 
+									fontSize: 18,
+									fontFamily: actor.themeFontFamily || 'inherit'
+								}}>
 									{actor.name}
 								</div>
 								{/* Lay out actor property scores with large stylized letter grades */}

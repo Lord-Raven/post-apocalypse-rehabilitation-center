@@ -369,7 +369,7 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType}) =>
                                                     
                                                     {/* Name and Stats */}
                                                     <div style={{ flex: 1 }}>
-                                                        <div style={{ fontWeight: 'bold', marginBottom: '3px', fontSize: '12px' }}>{actor.name}</div>
+                                                        <div style={{ fontWeight: 'bold', marginBottom: '3px', fontSize: '12px', fontFamily: actor.themeFontFamily || 'inherit' }}>{actor.name}</div>
                                                         <div style={{ display: 'flex', gap: '4px', fontSize: '10px' }}>
                                                             {[
                                                                 ['B', actor.stats.brawn],

@@ -23,6 +23,8 @@ class Actor {
     description: string;
     profile: string;
     emotionPack: EmotionPack;
+    themeColor: string;
+    themeFontFamily: string;
 
     // Characters are candidates for a rehabilitation program; the are coming into the program from a vast range of past life situations.
     // They may have trauma, mental health challenges, or other issues that the program is designed to help with.
@@ -30,7 +32,7 @@ class Actor {
     // Graded stats from 1-10; these get translated to a letter grade in the UI
     stats: Record<Stat, number>;
 
-    constructor(id: string, name: string, avatarImageUrl: string, description: string, profile: string, emotionPack: EmotionPack, stats: Record<Stat, number>) {
+    constructor(id: string, name: string, avatarImageUrl: string, description: string, profile: string, emotionPack: EmotionPack, stats: Record<Stat, number>, themeColor: string, themeFontFamily: string) {
         this.id = id;
         this.name = name;
         this.avatarImageUrl = avatarImageUrl;
@@ -40,6 +42,8 @@ class Actor {
         // populate the consolidated mapping for easier, enum-based lookups
         this.stats = stats;
         this.locationId = '';
+        this.themeColor = themeColor;
+        this.themeFontFamily = themeFontFamily;
     }
 
     scoreToGrade(score: number): string {
@@ -106,6 +110,8 @@ export async function loadReserveActor(fullPath: string, stage: Stage): Promise<
             `NAME: The character's full, given name.\n` +
             `DESCRIPTION: A vivid description of the character's physical appearance, attire, and any distinguishing features.\n` +
             `PROFILE: A brief summary of the character's key personality traits and behaviors.\n` +
+            `THEME COLOR: A hex code representing a color that encapsulates the character's overall theme or mood—use darker or richer colors that will contrast with white text.\n` +
+            `THEME FONT FAMILY: A web-safe font family that reflects the character's personality.\n` +
             Object.entries(Stat).map(([key, value]) => {
                 return `${key.toUpperCase()}: 1-10 scoring of ${getStatDescription(value).toLowerCase()}\n`;
             }).join('\n') +
@@ -160,7 +166,10 @@ export async function loadReserveActor(fullPath: string, stage: Stage): Promise<
             [Stat.Lust]: parseInt(parsedData['lust']) || DEFAULT_TRAIT_MAP[Stat.Lust],
             [Stat.Joy]: parseInt(parsedData['joy']) || DEFAULT_TRAIT_MAP[Stat.Joy],
             [Stat.Trust]: parseInt(parsedData['trust']) || DEFAULT_TRAIT_MAP[Stat.Trust]
-        }
+        },
+        // Default to a random color from a small preset list of relatively neutral colors:
+        parsedData['theme color'] || ['#788ebdff', '#d3aa68ff', '#75c275ff', '#c28891ff', '#55bbb2ff'][Math.floor(Math.random() * 5)],
+        parsedData['theme font family'] || 'Arial, sans-serif'
     );
     console.log(`Loaded new actor: ${newActor.name} (ID: ${newActor.id})`);
     console.log(newActor);

@@ -372,7 +372,7 @@ export const VignetteScreen: FC<VignetteScreenProps> = ({ stage, setScreenType }
                         </IconButton>
 
                         {/* Speaker name */}
-                        {displayName && (
+                        {displayName && speaker && (
                                 <Chip
                                     label={displayName}
                                     variant="filled"
@@ -385,11 +385,11 @@ export const VignetteScreen: FC<VignetteScreenProps> = ({ stage, setScreenType }
                                         color: '#fff', 
                                         letterSpacing: '1.2px',
                                         textTransform: 'uppercase',
-                                        background: 'linear-gradient(135deg, rgba(0,255,136,0.35) 0%, rgba(0,180,100,0.45) 50%, rgba(0,120,80,0.3) 100%)',
-                                        border: '3px solid rgba(0,255,136,0.6)',
+                                        background: speaker.themeColor ? `linear-gradient(135deg, ${speaker.themeColor}BB 0%, ${speaker.themeColor}DD 50%, ${speaker.themeColor}99 100%)` : 'linear-gradient(135deg, rgba(0,255,136,0.35) 0%, rgba(0,180,100,0.45) 50%, rgba(0,120,80,0.3) 100%)',
+                                        border: speaker.themeColor ? `3px solid ${speaker.themeColor}` : '3px solid rgba(0,255,136,0.6)',
                                         borderRadius: '25px',
-                                        textShadow: '0 3px 8px rgba(0,0,0,0.9), 0 1px 0 rgba(0,255,136,0.3)',
-                                        boxShadow: '0 6px 20px rgba(0,255,136,0.3), inset 0 2px 0 rgba(255,255,255,0.15), inset 0 -2px 0 rgba(0,0,0,0.2)',
+                                        textShadow: speaker.themeColor ? `0 3px 8px rgba(0,0,0,0.9), 0 1px 0 ${speaker.themeColor}44` : '0 3px 8px rgba(0,0,0,0.9), 0 1px 0 rgba(0,255,136,0.3)',
+                                        boxShadow: speaker.themeColor ? `0 6px 20px ${speaker.themeColor}44, inset 0 2px 0 rgba(255,255,255,0.15), inset 0 -2px 0 rgba(0,0,0,0.2)` : '0 6px 20px rgba(0,255,136,0.3), inset 0 2px 0 rgba(255,255,255,0.15), inset 0 -2px 0 rgba(0,0,0,0.2)',
                                         backdropFilter: 'blur(6px)',
                                         position: 'relative',
                                         overflow: 'visible',
@@ -400,14 +400,14 @@ export const VignetteScreen: FC<VignetteScreenProps> = ({ stage, setScreenType }
                                             left: '-2px',
                                             right: '-2px',
                                             bottom: '-2px',
-                                            background: 'linear-gradient(135deg, rgba(0,255,136,0.4), rgba(0,180,100,0.6), rgba(0,255,136,0.4))',
+                                            background: speaker.themeColor ? `linear-gradient(135deg, ${speaker.themeColor}66, ${speaker.themeColor}99, ${speaker.themeColor}66)` : 'linear-gradient(135deg, rgba(0,255,136,0.4), rgba(0,180,100,0.6), rgba(0,255,136,0.4))',
                                             borderRadius: '27px',
                                             zIndex: -1,
                                             filter: 'blur(2px)',
                                         },
                                         '& .MuiChip-label': {
                                             padding: '12px 24px',
-                                            fontFamily: '"Arial Black", "Helvetica Neue", Arial, sans-serif',
+                                            fontFamily: speaker.themeFontFamily || '"Arial Black", "Helvetica Neue", Arial, sans-serif',
                                             position: 'relative',
                                             zIndex: 1
                                         }
