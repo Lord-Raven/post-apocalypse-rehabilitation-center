@@ -71,6 +71,26 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
             layout.setModuleAt(DEFAULT_GRID_SIZE/2 - 1, DEFAULT_GRID_SIZE/2, createModule("common", { id: `common-${DEFAULT_GRID_SIZE/2 - 1}-${DEFAULT_GRID_SIZE/2}`, connections: [], attributes: {} }));
             layout.setModuleAt(DEFAULT_GRID_SIZE/2, DEFAULT_GRID_SIZE/2 - 1, createModule("generator", { id: `generator-${DEFAULT_GRID_SIZE/2}-${DEFAULT_GRID_SIZE/2 - 1}`, connections: [], attributes: {} }));
             this.saves.push({ player: {name: Object.values(users)[0].name}, actors: {}, layout: layout, day: 1, phase: 0, currentVignette: undefined });
+        } else {
+            console.log(this.saves);
+            // Ensure saves unmarshalled to correct types?
+            // Specifically, Layout and Actor types.
+            this.saves = this.saves.map(save => {
+                // Layout
+                if (!(save.layout instanceof Layout)) {
+                    console.log('Rehydrating layout from save', save);
+                    save.layout = save.layout as Layout;
+                }
+                // Actors
+                for (const actorId in save.actors) {
+                    const actor = save.actors[actorId];
+                    if (!(actor instanceof Actor)) {
+                        console.log('Rehydrating actor from save', actor);
+                        save.actors[actorId] = actor as Actor;
+                    }
+                }
+                return save;
+            });
         }
 
         this.emotionPipeline = null;
@@ -102,7 +122,7 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
     }
 
     getSave(): SaveType {
-        return this.saves[0];
+        return this.saves[this.saveSlot];
     }
 
     async load(): Promise<Partial<LoadResponse<InitStateType, ChatStateType, MessageStateType>>> {
@@ -162,7 +182,7 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
     }
 
     getLayout(): Layout {
-        return this.saves[0].layout;
+        return this.getSave().layout;
     }
 
     async setState(state: MessageStateType): Promise<void> {
