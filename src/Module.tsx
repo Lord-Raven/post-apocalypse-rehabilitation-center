@@ -72,6 +72,18 @@ export class Module<T extends ModuleType = ModuleType> {
     public ownerId?: string;
     public attributes?: Partial<ModuleIntrinsic> & { [key: string]: any };
 
+    /**
+     * Rehydrate a Module from saved data
+     */
+    static fromSave(savedModule: any): Module {
+        return createModule(savedModule.type, {
+            id: savedModule.id,
+            connections: savedModule.connections,
+            attributes: savedModule.attributes,
+            ownerId: savedModule.ownerId
+        });
+    }
+
     constructor(type: T, opts?: { id?: string; connections?: string[]; attributes?: Partial<ModuleIntrinsic> & { [key: string]: any }; ownerId?: string }) {
         this.id = opts?.id ?? `${type}-${Date.now()}`;
         this.type = type;
@@ -125,6 +137,23 @@ export class Layout {
         this.grid = initial || Array.from({ length: this.gridSize }, () =>
             Array.from({ length: this.gridSize }, () => null)
         );
+    }
+
+    /**
+     * Rehydrate a Layout from saved data
+     */
+    static fromSave(savedLayout: any): Layout {
+        const layout = Object.create(Layout.prototype);
+        layout.gridSize = savedLayout.gridSize || DEFAULT_GRID_SIZE;
+        
+        // Rehydrate grid with proper Module instances
+        layout.grid = savedLayout.grid?.map((row: any[]) => 
+            row?.map((savedModule: any) => 
+                savedModule ? Module.fromSave(savedModule) : null
+            ) || Array(layout.gridSize).fill(null)
+        ) || Array.from({ length: layout.gridSize }, () => Array(layout.gridSize).fill(null));
+        
+        return layout;
     }
 
     getLayout(): (Module | null)[][] {

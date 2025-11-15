@@ -6,6 +6,7 @@ import { DEFAULT_GRID_SIZE, Layout, createModule } from './Module';
 import { BaseScreen } from "./screens/BaseScreen";
 import {Client} from "@gradio/client";
 import { generateVignetteScript, VignetteData } from "./Vignette";
+import { smartRehydrate } from "./SaveRehydration";
 
 type MessageStateType = any;
 type ConfigType = any;
@@ -74,25 +75,8 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
         } else {
             console.log("Something in saves:");
             console.log(this.saves);
-            // Ensure saves unmarshalled to correct types?
-            // Specifically, Layout and Actor types.
-            this.saves = this.saves.map(save => {
-                // Layout
-                console.log(save);
-                if (!(save.layout instanceof Layout)) {
-                    console.log('Rehydrating layout from save', save);
-                    save.layout = save.layout as Layout;
-                }
-                // Actors
-                for (const actorId in save.actors) {
-                    const actor = save.actors[actorId];
-                    if (!(actor instanceof Actor)) {
-                        console.log('Rehydrating actor from save', actor);
-                        save.actors[actorId] = actor as Actor;
-                    }
-                }
-                return save;
-            });
+            // Rehydrate saves with proper class instances
+            this.saves = this.saves.map(save => this.rehydrateSave(save));
         }
 
         this.emotionPipeline = null;
@@ -113,6 +97,16 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
             actor.locationId = save.layout.getModulesWhere(m => ['echo', 'common', 'generator'].includes(m.type) || m.ownerId == actorId).sort(() => Math.random() - 0.5)[0]?.id || '';
         }
         this.saveGame();
+    }
+
+    /**
+     * Rehydrate a save object by restoring proper class instances
+     */
+    private rehydrateSave(save: any): SaveType {
+        console.log('Rehydrating save:', save);
+        
+        // Use smart rehydration to automatically detect and restore all nested objects
+        return smartRehydrate(save) as SaveType;
     }
 
     buildSaves(): ChatStateType {

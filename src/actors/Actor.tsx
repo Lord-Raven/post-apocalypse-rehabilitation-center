@@ -34,6 +34,15 @@ class Actor {
     // Graded stats from 1-10; these get translated to a letter grade in the UI
     stats: Record<Stat, number>;
 
+    /**
+     * Rehydrate an Actor from saved data
+     */
+    static fromSave(savedActor: any): Actor {
+        const actor = Object.create(Actor.prototype);
+        Object.assign(actor, savedActor);
+        return actor;
+    }
+
     constructor(id: string, name: string, avatarImageUrl: string, description: string, profile: string, emotionPack: EmotionPack, stats: Record<Stat, number>, themeColor: string, themeFontFamily: string) {
         this.id = id;
         this.name = name;
