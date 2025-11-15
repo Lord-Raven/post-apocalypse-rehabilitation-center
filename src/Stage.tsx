@@ -61,6 +61,7 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
             chatState
         } = data;
 
+        console.log(chatState);
         this.saves = chatState?.saves || [];
         this.saveSlot = chatState?.lastSaveSlot || 0;
         // ensure at least one save exists and has a layout
