@@ -182,9 +182,12 @@ export async function loadReserveActor(fullPath: string, stage: Stage): Promise<
     if (newActor.name && newActor.description && newActor.profile && 
             bannedWords.every(word => !newActor.description.toLowerCase().includes(word)) && 
             Object.entries(newActor.stats).some(([key, value]) => value !== DEFAULT_TRAIT_MAP[key as Stat]) &&
+            newActor.name.length < 30 &&
             !/[\u3040-\u30ff\u3400-\u4dbf\u4e00-\u9fff\uf900-\ufaff]/.test(`${newActor.name}${newActor.description}${newActor.profile}`) // Try to rule out Chinese/Japanese/Korean characters. Sorry. I should consider a toggle to allow this later.
         ) {
         return newActor;
+    } else {
+        console.log(`Discarding actor due to insufficient or inappropriate data: ${newActor.name}`);
     }
     return null;
 }
