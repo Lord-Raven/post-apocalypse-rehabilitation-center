@@ -1,4 +1,4 @@
-import { EmotionPack } from "../Emotion";
+import { Emotion, EMOTION_PROMPTS, EmotionPack } from "../Emotion";
 import { Stage } from "../Stage";
 import { v4 as generateUuid } from 'uuid';
 
@@ -18,13 +18,15 @@ export enum Stat {
 class Actor {
     id: string;
     name: string;
-    locationId: string;
+    locationId: string = '';
     avatarImageUrl: string;
     description: string;
     profile: string;
     emotionPack: EmotionPack;
     themeColor: string;
     themeFontFamily: string;
+    birthDay: number = -1; // Day they were "born" into the game world
+    participations: number = 0; // Number of vignettes they've participated in
 
     // Characters are candidates for a rehabilitation program; the are coming into the program from a vast range of past life situations.
     // They may have trauma, mental health challenges, or other issues that the program is designed to help with.
@@ -41,7 +43,6 @@ class Actor {
         this.emotionPack = emotionPack;
         // populate the consolidated mapping for easier, enum-based lookups
         this.stats = stats;
-        this.locationId = '';
         this.themeColor = themeColor;
         this.themeFontFamily = themeFontFamily;
     }
@@ -50,6 +51,10 @@ class Actor {
         const scoreClamped = Math.max(1, Math.min(10, score));
         const scoreArray = ['F', 'D', 'C', 'C+', 'B-', 'B', 'B+', 'A-', 'A', 'A+'];
         return scoreArray[scoreClamped - 1];
+    }
+
+    birth(day: number) {
+        this.birthDay = day;
     }
 }
 
@@ -107,7 +112,7 @@ export async function loadReserveActor(fullPath: string, stage: Stage): Promise<
             `Bear in mind the character's current, diminished state—as a newly reconstituted and relatively powerless individual—and not their original potential when scoring these traits; some characters may not respond well to being essentially resurrected into a new timeline.\n\n` +
             `Original details about ${data.name}:\nDescription: ${data.description} ${data.personality}\n\n` +
             `After carefully considering this description, provide a concise breakdown in the following format:\n` +
-            `NAME: The character's full, given name.\n` +
+            `NAME: The character's simple, typical name.\n` +
             `DESCRIPTION: A vivid description of the character's physical appearance, attire, and any distinguishing features.\n` +
             `PROFILE: A brief summary of the character's key personality traits and behaviors.\n` +
             `THEME COLOR: A hex code representing a color that encapsulates the character's overall theme or mood—use darker or richer colors that will contrast with white text.\n` +
@@ -184,7 +189,7 @@ export async function loadReserveActor(fullPath: string, stage: Stage): Promise<
     return null;
 }
 
-export async function populateActorImages(actor: Actor, stage: Stage): Promise<void> {
+export async function generatePrimaryActorImage(actor: Actor, stage: Stage): Promise<void> {
     console.log(`Populating images for actor ${actor.name} (ID: ${actor.id})`);
     // If the actor has no neutral emotion image in their emotion pack, generate one based on their description or from the existing avatar image
     if (!actor.emotionPack['neutral']) {
@@ -208,6 +213,28 @@ export async function populateActorImages(actor: Actor, stage: Stage): Promise<v
         console.log(`Generated neutral emotion image for actor ${actor.name} from avatar image: ${imageUrl || ''}`);
         
         actor.emotionPack['neutral'] = imageUrl || '';
+    }
+}
+
+export async function generateAdditionalActorImages(actor: Actor, stage: Stage): Promise<void> {
+
+    console.log(`Generating additional emotion images for actor ${actor.name} (ID: ${actor.id})`);
+    if (actor.emotionPack['neutral']) {
+        Object.values(Emotion).forEach(async (emotion) => {
+            
+            if (!actor.emotionPack[emotion]) {
+                console.log(`Generating ${emotion} emotion image for actor ${actor.name}`);
+                const imageUrl = await stage.makeImageFromImage({
+                    image: actor.emotionPack['neutral'],
+                    prompt: `This character now has a ${EMOTION_PROMPTS[emotion]}.`,
+                    remove_background: true,
+                    transfer_type: 'edit'
+                }, `actors/${actor.id}/${emotion}.png`, '');
+                console.log(`Generated ${emotion} emotion image for actor ${actor.name}: ${imageUrl || ''}`);
+                
+                actor.emotionPack[emotion] = imageUrl || '';
+            }
+        });
     }
 }
 

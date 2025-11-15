@@ -319,10 +319,24 @@ export const VignetteScreen: FC<VignetteScreenProps> = ({ stage, setScreenType }
     };
 
     const renderActors = (module: Module | null, actors: Actor[], currentSpeaker?: string) => {
-        // Display actors centered across the scene bottom. Use neutral emotion image where possible
+        // Display actors centered across the scene bottom. Use emotion from current script entry or neutral as fallback
         return actors.map((actor, i) => {
             const range = Math.min(90, 30 + actors.length * 10); // Adjust used screen space by number of present actors.
-            const imageUrl = actor.emotionPack?.neutral || actor.avatarImageUrl || '';
+            
+            // Get emotion for this actor from current script entry
+            let emotion = Emotion.neutral;
+            
+            if (vignette.script && vignette.script.length > 0 && index < vignette.script.length) {
+                // scan backward through vignette script to find most recent emotion for this actor:
+                for (let j = index; j >= 0; j--) {
+                    const entry = vignette.script[j];
+                    if (entry.actorEmotions && entry.actorEmotions[actor.name]) {
+                        emotion = entry.actorEmotions[actor.name];
+                        break;
+                    }
+                }
+            }
+            
             const increment = actors.length > 1 ? (i / (actors.length - 1)) : 0.5;
             const xPosition = Math.round(increment * range) + (100 - range) / 2;
             const isSpeaking = actor === speaker;
@@ -330,8 +344,8 @@ export const VignetteScreen: FC<VignetteScreenProps> = ({ stage, setScreenType }
                 <ActorImage
                     key={actor.id}
                     actor={actor}
-                    emotion={Emotion.neutral}
-                    imageUrl={imageUrl}
+                    emotion={emotion}
+                    imageUrl={actor.emotionPack[emotion] || actor.emotionPack['neutral'] || ''}
                     xPosition={xPosition}
                     yPosition={0}
                     zIndex={1}
@@ -507,7 +521,6 @@ export const VignetteScreen: FC<VignetteScreenProps> = ({ stage, setScreenType }
                         {displayName && speaker && (
                             <Nameplate 
                                 actor={speaker} 
-                                variant="speaker" 
                                 size="large"
                             />
                         )}

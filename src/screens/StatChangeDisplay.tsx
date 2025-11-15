@@ -33,8 +33,7 @@ const StatChangeDisplay: FC<StatChangeDisplayProps> = ({ characterChanges }) => 
             style={{
                 position: 'absolute',
                 top: '5%',
-                left: '50%',
-                transform: 'translateX(-50%)',
+                right: '5%',
                 width: '400px',
                 maxHeight: '85vh',
                 zIndex: 3,
@@ -69,7 +68,7 @@ const StatChangeDisplay: FC<StatChangeDisplayProps> = ({ characterChanges }) => 
                             textShadow: '0 2px 4px rgba(0,0,0,0.8)'
                         }}
                     >
-                        Character Progress
+                        Progress!
                     </Typography>
                 </Box>
             </Paper>
@@ -100,17 +99,21 @@ const StatChangeDisplay: FC<StatChangeDisplayProps> = ({ characterChanges }) => 
                             transition={{ duration: 0.5, delay: 0.6 + charIndex * 0.2 }}
                             style={{ marginBottom: '16px' }}
                         >
-                            <Avatar
-                                src={charChange.actor.emotionPack?.neutral || charChange.actor.avatarImageUrl}
+                            <Box
                                 sx={{
-                                    width: 120,
-                                    height: 120,
-                                    margin: '0 auto',
+                                    width: '100%',
+                                    height: '200px',
+                                    borderRadius: '12px',
+                                    overflow: 'hidden',
                                     border: '3px solid rgba(0,255,136,0.4)',
+                                    backgroundImage: `url(${charChange.actor.emotionPack?.neutral || charChange.actor.avatarImageUrl})`,
+                                    backgroundSize: 'cover',
+                                    backgroundPosition: 'top center',
+                                    backgroundRepeat: 'no-repeat',
                                     filter: 'brightness(1.1)',
                                     boxShadow: '0 8px 24px rgba(0,0,0,0.6)',
                                     '&:hover': {
-                                        transform: 'scale(1.05)',
+                                        transform: 'scale(1.02)',
                                         transition: 'transform 0.2s ease-in-out'
                                     }
                                 }}
@@ -126,14 +129,17 @@ const StatChangeDisplay: FC<StatChangeDisplayProps> = ({ characterChanges }) => 
                         >
                             <Nameplate 
                                 actor={charChange.actor} 
-                                variant="card" 
                                 size="large"
                             />
                         </motion.div>
 
                         {/* Stat changes */}
                         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
-                            {charChange.statChanges.map((statChange, statIndex) => (
+                            {charChange.statChanges.map((statChange, statIndex) => {
+                                const isIncrease = statChange.newValue > statChange.oldValue;
+                                const isDecrease = statChange.newValue < statChange.oldValue;
+                                
+                                return (
                                 <motion.div
                                     key={`${charChange.actor.id}-${statChange.statName}`}
                                     initial={{ opacity: 0, x: -20 }}
@@ -144,9 +150,17 @@ const StatChangeDisplay: FC<StatChangeDisplayProps> = ({ characterChanges }) => 
                                         alignItems: 'center',
                                         justifyContent: 'space-between',
                                         padding: '12px 16px',
-                                        background: 'rgba(255,255,255,0.05)',
+                                        background: isDecrease 
+                                            ? 'rgba(255,80,80,0.08)' 
+                                            : isIncrease 
+                                                ? 'rgba(0,255,136,0.08)' 
+                                                : 'rgba(255,255,255,0.05)',
                                         borderRadius: '8px',
-                                        border: '1px solid rgba(255,255,255,0.1)'
+                                        border: isDecrease 
+                                            ? '1px solid rgba(255,80,80,0.3)' 
+                                            : isIncrease 
+                                                ? '1px solid rgba(0,255,136,0.3)' 
+                                                : '1px solid rgba(255,255,255,0.1)'
                                     }}
                                 >
                                     {/* Stat name */}
@@ -181,14 +195,22 @@ const StatChangeDisplay: FC<StatChangeDisplayProps> = ({ characterChanges }) => 
                                         {/* Arrow */}
                                         <Typography
                                             sx={{
-                                                color: '#00ff88',
+                                                color: isDecrease 
+                                                    ? '#ff5050' 
+                                                    : isIncrease 
+                                                        ? '#00ff88' 
+                                                        : '#ffffff',
                                                 fontWeight: 900,
                                                 fontSize: '1.4rem',
                                                 mx: 0.5,
-                                                textShadow: '0 2px 4px rgba(0,0,0,0.6)'
+                                                textShadow: isDecrease 
+                                                    ? '0 2px 4px rgba(255,0,0,0.6)' 
+                                                    : isIncrease 
+                                                        ? '0 2px 4px rgba(0,255,0,0.6)' 
+                                                        : '0 2px 4px rgba(0,0,0,0.6)'
                                             }}
                                         >
-                                            →
+                                            {isDecrease ? '↓' : isIncrease ? '↑' : '→'}
                                         </Typography>
 
                                         {/* New grade */}
@@ -206,7 +228,8 @@ const StatChangeDisplay: FC<StatChangeDisplayProps> = ({ characterChanges }) => 
                                         </motion.span>
                                     </Box>
                                 </motion.div>
-                            ))}
+                                );
+                            })}
                         </Box>
                     </Paper>
                 </motion.div>

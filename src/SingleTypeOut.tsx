@@ -142,9 +142,13 @@ export const SingleTypeOut: React.FC<SingleTypeOutProps> = ({
 
     // Effect to handle finishTyping prop
     React.useEffect(() => {
-        if (finishTyping && !finished && timerRef.current !== null) {
-            clearInterval(timerRef.current);
-            timerRef.current = null;
+        if (finishTyping && !finished) {
+            // Clear any running interval
+            if (timerRef.current !== null) {
+                clearInterval(timerRef.current);
+                timerRef.current = null;
+            }
+            // Set to full length and mark as finished
             setDisplayLength(textContent.length);
             setFinished(true);
             onTypingComplete?.();
@@ -157,9 +161,14 @@ export const SingleTypeOut: React.FC<SingleTypeOutProps> = ({
             return null;
         }
         
+        // If finishTyping is true, always show complete content regardless of displayLength
+        if (finishTyping) {
+            return children;
+        }
+        
         // Truncate React children based on character count
         return truncateReactContent(children, displayLength);
-    }, [children, displayLength]);
+    }, [children, displayLength, finishTyping]);
 
     return (
         <span

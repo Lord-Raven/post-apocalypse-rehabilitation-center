@@ -8,6 +8,7 @@ import { BaseScreen, ScreenType } from './BaseScreen';
 import { Stage } from '../Stage';
 import { VignetteType } from '../Vignette';
 import Nameplate from '../components/Nameplate';
+import { generateAdditionalActorImages } from '../actors/Actor';
 
 interface EchoScreenProps {
 	stage: () => Stage;
@@ -35,6 +36,12 @@ export const EchoScreen: FC<EchoScreenProps> = ({stage, setScreenType}) => {
 			stage().getSave().actors[selected.id] = selected;
 			stage().reserveActors = stage().reserveActors.filter(a => a.id !== selected.id);
 			// Possibly set other properties on the selected actor as needed
+			selected.birth(stage().getSave().day);
+			generateAdditionalActorImages(selected, stage()).then(() => {
+				console.log(`Finished generating additional images for actor ${selected.name}`);
+			}).catch(err => {
+				console.error(`Error generating additional images for actor ${selected.name}:`, err);
+			});
 			stage().setVignette({
                     type: VignetteType.INTRO_CHARACTER,
                     actorId: selected.id,
@@ -84,7 +91,6 @@ export const EchoScreen: FC<EchoScreenProps> = ({stage, setScreenType}) => {
 								{/* Actor nameplate */}
 								<Nameplate 
 									actor={actor} 
-									variant="simple" 
 									size="medium"
 									style={{
 										padding: '12px 16px',

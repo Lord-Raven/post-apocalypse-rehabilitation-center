@@ -1,4 +1,5 @@
 import Actor, { getStatDescription, namesMatch, Stat } from "./actors/Actor";
+import { Emotion } from "./Emotion";
 import { Stage } from "./Stage";
 
 export enum VignetteType {
@@ -10,6 +11,7 @@ export enum VignetteType {
 export interface ScriptEntry {
     speaker: string;
     message: string;
+    actorEmotions?: {[key: string]: Emotion}; // actor name -> emotion string
 }
 
 export interface VignetteData {
@@ -56,38 +58,52 @@ export async function generateVignetteScript(vignette: VignetteData, stage: Stag
 
     // There are two optional phrases for gently/more firmly prodding the model toward wrapping up the scene, and then we calculate one to show based on the vignette.script.length and some randomness:
     const wrapUpPhrases = [
-        ` Consider whether the scene can reach a natural stopping point in this response, but don't force it, if more development is needed.`, // Gently prod toward and ending.
+        ` Consider whether the scene can reach a natural stopping point in this response, but don't force it; if more development feels needed, allow the scene to continue.`, // Gently prod toward and ending.
         ` The scene is getting long and this response should try to aim for a satisfactory conclusion, potentially ending with stat boosts ([CHARACTER NAME: RELEVANT STAT + 1]) and/or an [END SCENE] tag.` // Firmer prod
     ];
 
     // Use script length + random(1, 10) > 12 for gentle or > 24 for firm.
     const scriptLengthFactor = vignette.script.length + Math.floor(Math.random() * 10) + 1;
     const wrapupPrompt = scriptLengthFactor > 24 ? wrapUpPhrases[1] : (scriptLengthFactor > 12 ? wrapUpPhrases[0] : '');
+    const presentActors = Object.values(stage.getSave().actors).filter(a => a.locationId === (vignette.moduleId || ''));
+    const absentActors = Object.values(stage.getSave().actors).filter(a => a.locationId !== (vignette.moduleId || ''));
+
+    // Update participation counts if this is the start of the vignette
+    if (vignette.script.length === 0) {
+        // Increment participation count for present actors
+        presentActors.forEach(a => {
+            a.participations = (a.participations || 0) + 1;
+        });
+    }
 
     let fullPrompt = `{{messages}}\nPremise:\nThis is a sci-fi visual novel game set on a space station that resurrects and rehabilitates patients who died in the multiverse-wide apocalypse: ` +
         `the Post-Apocalyptic Rehabilitation Center. ` +
         `The thrust of the game has the player character, ${playerName}, managing this station and interacting with patients and crew, as they navigate this complex futuristic universe together. ` +
         `\n\nCrew:\nAt this point in the story, the player is running the operation on their own, with no fellow crew members. ` +
         // List patients who are here, along with full stat details:
-        `\n\nPresent Characters:\n${Object.values(stage.getSave().actors).filter(actor => actor.locationId == vignette.moduleId).map(actor => 
-            `${actor.name}\n  Description: ${actor.description}\n  Profile: ${actor.profile}\n  Stats:\n    ${Object.entries(actor.stats).map(([stat, value]) => `${stat}: ${value}`).join('\n    ')}`).join('\n')}` +
+        `\n\nPresent Characters:\n${presentActors.map(actor => 
+            `${actor.name}\n  Description: ${actor.description}\n  Profile: ${actor.profile}\n  Days Aboard: ${stage.getSave().day - actor.birthDay}\n  Scene Participation: ${actor.participations}\n` +
+            `  Stats:\n    ${Object.entries(actor.stats).map(([stat, value]) => `${stat}: ${value}`).join('\n    ')}`).join('\n')}` +
         // List non-present patients for reference; just need description and profile:
-        `\n\nOther Patients:\n${Object.values(stage.getSave().actors).filter(actor => actor.locationId != vignette.moduleId).map(actor => `${actor.name}\n  ${actor.description}\n  ${actor.profile}`).join('\n')}` +
+        `\n\nOther Patients:\n${absentActors.map(actor => `${actor.name}\n  ${actor.description}\n  ${actor.profile}`).join('\n')}` +
         // List stat meanings, for reference:
         `\n\nStats:\n${Object.values(Stat).map(stat => `${stat.toUpperCase()}: ${getStatDescription(stat)}`).join('\n')}` +
+        `\n\nEmotions:\n${Object.values(Emotion).map(emotion => `${emotion.toUpperCase()}`).join(', ')}` +
         `\n\nScene Prompt:\n${generateVignettePrompt(vignette, stage, vignette.script.length > 0)}` +
-        `\n\nExample Mid Script Format:\n` +
-        'System: CHARACTER NAME: Action in pose. "Dialogue in quotation marks."\nANOTHER CHARACTER NAME: "Dialogue in quotation marks."\nNARRATOR: Descriptive content that is not attributed to a character.' +
-        `\n\nExample End Script Format:\n` +
-        'System: CHARACTER NAME: Action in pose. "Dialogue in quotation marks."\nNARRATOR: Conclusive ending to the scene in prose.' +
+        `\n\nExample Script Format:\n` +
+        'System: CHARACTER NAME: They do actions in prose. "Their dialogue is in quotation marks."\nANOTHER CHARACTER NAME: [ANOTHER CHARACTER EXPRESSES JOY][CHARACTER NAME EXPRESSES SURPRISE] "Dialogue in quotation marks."\nNARRATOR: [CHARACTER NAME EXPRESSES RELIEF] Descriptive content that is not attributed to a character.' +
+        `\n\nExample Ending Script Format:\n` +
+        'System: CHARACTER NAME: [CHARACTER NAME EXPRESSES OPTIMISM] Action in prose. "Dialogue in quotation marks."\nNARRATOR: Conclusive ending to the scene in prose.' +
         `\n[CHARACTER NAME: RELEVANT STAT + 1]` +
         `\n[END SCENE]` +
         `\n\nScript Log:\nSystem: ${scriptLog}` +
-        `\n\nInstruction:\nAt the "System:" prompt, generate a short scene script based upon this scenario, and the specified Scene Prompt. Follow the structure of the strict Example Script Format above. ` +
-        `This response should end when it makes sense to give ${playerName} a chance to respond, ` +
+        `\n\nInstruction:\nAt the "System:" prompt, generate a short scene script based upon this scenario, and the specified Scene Prompt. Follow the structure of the strict Example Script formatting above. ` +
+        `Actions are depicted in prose and character dialogue in quotation marks. Emotion tags (e.g. [CHARACTER NAME EXPRESSES JOY]) should be used to indicate significant emotional shifts—` +
+        `these cues will be utilized by the game engine to visually display appropriate character emotions; only the listed emotions can be used here.\n` +
+        `This response should end when it makes sense to give ${playerName} a chance to respond or contribute, ` +
         `or, if the scene feels satisfactorily complete, the entire scene can be concluded with an "[END SCENE]" or ` +
-        `"[CHARACTER NAME: RELEVANT STAT + x]" tag(s) can be used to apply a stat change(s) to the specified Present Character(s). These changes should reflect an outcome of the scene; ` +
-        `they should be incremental, typically (but not exclusively) positive, and applied just before [END SCENE]).${wrapupPrompt}`;
+        `"[CHARACTER NAME: RELEVANT STAT + x]" tag(s), which can be used to apply stat changes to the specified Present Character(s). These changes should reflect an outcome of the scene; ` +
+        `they should be incremental, typically (but not exclusively) positive, and applied only when the scene is complete.${wrapupPrompt}`;
 
     // Retry logic if response is null or response.result is empty
     let retries = 3;
@@ -156,9 +172,6 @@ export async function generateVignetteScript(vignette: VignetteData, stage: Stag
                     endScene = true;
                 }
 
-                // Remove all tags ([]) from visible text:
-                text = text.replace(/\[([^\]]+)\]/g, '');
-
                 // Parse response based on format "NAME: content"; content could be multi-line. We want to ensure that lines that don't start with a name are appended to the previous line.
                 const lines = text.split('\n');
                 const combinedLines: string[] = [];
@@ -186,10 +199,47 @@ export async function generateVignetteScript(vignette: VignetteData, stage: Stag
                 // Convert combined lines into ScriptEntry objects by splitting at first ':'
                 const scriptEntries: ScriptEntry[] = combinedLines.map(l => {
                     const idx = l.indexOf(':');
-                    if (idx === -1) return { speaker: 'NARRATOR', message: l };
-                    const sp = l.slice(0, idx).trim();
-                    const msg = l.slice(idx + 1).trim();
-                    return { speaker: sp, message: msg };
+                    let speaker = 'NARRATOR';
+                    let message = l;
+                    
+                    if (idx !== -1) {
+                        speaker = l.slice(0, idx).trim();
+                        message = l.slice(idx + 1).trim();
+                    }
+                    
+                    // Extract emotion tags from this line and map them to characters
+                    const emotionTags: {[key: string]: Emotion} = {};
+                    const emotionTagRegex = /\[([^[\]]+)\s+EXPRESSES\s+([^[\]]+)\]/gi;
+                    let emotionMatch: RegExpExecArray | null;
+                    
+                    while ((emotionMatch = emotionTagRegex.exec(message)) !== null) {
+                        const characterName = emotionMatch[1].trim();
+                        const emotionName = emotionMatch[2].trim().toLowerCase();
+                        
+                        // Find matching emotion from enum
+                        const emotion = Object.values(Emotion).find(e => 
+                            e.toLowerCase() === emotionName || 
+                            e.toLowerCase().includes(emotionName) || 
+                            emotionName.includes(e.toLowerCase())
+                        );
+                        
+                        if (emotion) {
+                            emotionTags[characterName] = emotion;
+                        }
+                    }
+                    
+                    // Remove emotion tags from the visible message
+                    message = message.replace(/\[([^[\]]+)\s+EXPRESSES\s+([^[\]]+)\]/gi, '').trim();
+                    
+                    // Remove any remaining non-emotion tags
+                    message = message.replace(/\[([^\]]+)\]/g, '').trim();
+                    
+                    const entry: ScriptEntry = { speaker, message };
+                    if (Object.keys(emotionTags).length > 0) {
+                        entry.actorEmotions = emotionTags;
+                    }
+                    
+                    return entry;
                 });
                 return { entries: scriptEntries, endScene: endScene, statChanges: statChanges };
             }

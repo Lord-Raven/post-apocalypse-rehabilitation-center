@@ -32,21 +32,21 @@ const StyledDayCard = styled(Card)(({ theme }) => ({
 
 const PhaseIndicator = styled(Box)(({ theme }) => ({
     display: 'flex',
-    justifyContent: 'center',
+    justifyContent: 'space-between',
     alignItems: 'center',
-    gap: '8px',
+    gap: '4px',
     marginTop: '12px',
 }));
 
 const PhaseSegment = styled(motion.div)<{ isActive: boolean; isCompleted: boolean }>(({ isActive, isCompleted }) => ({
-    width: '32px',
+    flex: 1,
     height: '8px',
     borderRadius: '4px',
     border: '2px solid #00ff88',
     background: isCompleted 
         ? 'linear-gradient(90deg, #00ff88 0%, #00cc66 100%)'
         : isActive 
-            ? 'linear-gradient(90deg, #00ff88 0%, rgba(0, 255, 136, 0.5) 100%)'
+            ? 'linear-gradient(90deg, #00aa55 0%, rgba(0, 170, 85, 0.7) 100%)'
             : 'rgba(0, 255, 136, 0.1)',
     boxShadow: isActive || isCompleted ? '0 0 12px rgba(0, 255, 136, 0.6)' : 'none',
     position: 'relative',
@@ -138,19 +138,6 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType}) =>
                         </motion.div>
                         
                         {/* Phase Indicator */}
-                        <Typography
-                            variant="caption"
-                            sx={{
-                                color: 'rgba(0, 255, 136, 0.8)',
-                                fontSize: '0.75rem',
-                                fontWeight: 600,
-                                letterSpacing: '0.1em',
-                                textTransform: 'uppercase',
-                            }}
-                        >
-                            Phase Progress
-                        </Typography>
-                        
                         <PhaseIndicator>
                             {[0, 1, 2, 3].map((segmentIndex) => (
                                 <PhaseSegment
@@ -171,21 +158,6 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType}) =>
                                 />
                             ))}
                         </PhaseIndicator>
-                        
-                        {/* Phase Labels */}
-                        <Box sx={{ 
-                            display: 'flex', 
-                            justifyContent: 'space-between', 
-                            marginTop: '8px',
-                            fontSize: '0.65rem',
-                            color: 'rgba(0, 255, 136, 0.6)',
-                            fontWeight: 500,
-                        }}>
-                            <span>Dawn</span>
-                            <span>Day</span>
-                            <span>Dusk</span>
-                            <span>Night</span>
-                        </Box>
                     </CardContent>
                 </StyledDayCard>
             </motion.div>
@@ -492,7 +464,6 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType}) =>
                                                     {/* Name centered below portrait */}
                                                     <Nameplate 
                                                         actor={actor} 
-                                                        variant="compact" 
                                                         size="small"
                                                         style={{
                                                             marginBottom: '6px',

@@ -1,7 +1,7 @@
 import {ReactElement, useEffect, useState} from "react";
 import {StageBase, StageResponse, InitialData, Message} from "@chub-ai/stages-ts";
 import {LoadResponse} from "@chub-ai/stages-ts/dist/types/load";
-import Actor, { loadReserveActor, populateActorImages } from "./actors/Actor";
+import Actor, { loadReserveActor, generatePrimaryActorImage } from "./actors/Actor";
 import { DEFAULT_GRID_SIZE, Layout, createModule } from './Module';
 import { BaseScreen } from "./screens/BaseScreen";
 import {Client} from "@gradio/client";
@@ -151,7 +151,7 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
                 this.reserveActorsLoadPromise = undefined;
                 for (const actor of this.reserveActors) {
                     // Don't await. Just kick these off.
-                    populateActorImages(actor, this);
+                    generatePrimaryActorImage(actor, this);
                 }
             }
         })();
