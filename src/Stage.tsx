@@ -31,7 +31,7 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
     private saveSlot: number = 0;
     // Flag/promise to avoid redundant concurrent requests for reserve actors
     private reserveActorsLoadPromise?: Promise<void>;
-    readonly RESERVE_ACTORS = 3;
+    readonly RESERVE_ACTORS = 10;
     readonly FETCH_AT_TIME = 10;
     readonly MAX_PAGES = 100;
     readonly characterSearchQuery = `https://inference.chub.ai/search?first=${this.FETCH_AT_TIME}&exclude_tags=child%2Cteenager%2Cnarrator%2Cunderage%2CMultiple%20Character&page={pageNumber}&sort=random&asc=false&include_forks=false&nsfw=true&nsfl=false&nsfw_only=false&require_images=false&require_example_dialogues=false&require_alternate_greetings=false&require_custom_prompt=false&exclude_mine=false&min_tokens=200&max_tokens=10000&require_expressions=false&require_lore=false&mine_first=false&require_lore_embedded=false&require_lore_linked=false&my_favorites=false&inclusive_or=true&recommended_verified=false&count=false`;
@@ -83,6 +83,23 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
         this.imagePipeline = null;
     }
 
+    async load(): Promise<Partial<LoadResponse<InitStateType, ChatStateType, MessageStateType>>> {
+
+        try {
+            this.emotionPipeline = await Client.connect("ravenok/emotions");
+            this.imagePipeline = await Client.connect("ravenok/Depth-Anything-V2");
+        } catch (exception: any) {
+            console.error(`Error loading HuggingFace pipelines, error: ${exception}`);
+        }
+
+        return {
+            success: true,
+            error: null,
+            initState: null,
+            chatState: this.buildSaves(),
+        };
+    }
+
     incPhase(numberOfPhases: number = 1) {
         const save = this.getSave();
         save.phase += numberOfPhases;
@@ -125,21 +142,11 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
         return this.saves[this.saveSlot];
     }
 
-    async load(): Promise<Partial<LoadResponse<InitStateType, ChatStateType, MessageStateType>>> {
-
-        try {
-            this.emotionPipeline = await Client.connect("ravenok/emotions");
-            this.imagePipeline = await Client.connect("ravenok/Depth-Anything-V2");
-        } catch (exception: any) {
-            console.error(`Error loading HuggingFace pipelines, error: ${exception}`);
+    startGame() {
+        // Called when a game is loaded or a new game is started
+        if (this.reserveActors.length < this.RESERVE_ACTORS && !this.reserveActorsLoadPromise) {
+            this.reserveActorsLoadPromise = this.loadReserveActors();
         }
-
-        return {
-            success: true,
-            error: null,
-            initState: null,
-            chatState: this.buildSaves(),
-        };
     }
 
 
@@ -171,10 +178,8 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
             } finally {
                 // clear the promise so future loads can be attempted if needed
                 this.reserveActorsLoadPromise = undefined;
-                for (const actor of this.reserveActors) {
-                    // Don't await. Just kick these off.
-                    generatePrimaryActorImage(actor, this);
-                }
+                // Note: We no longer automatically generate primary images here
+                // Images will be generated when actors are committed to echo slots
             }
         })();
 
@@ -258,6 +263,14 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
         return updateResponse.data[0].value;
     }
 
+    async commitActorToEcho(actorId: string): Promise<void> {
+        const actor = this.reserveActors.find(a => a.id === actorId);
+        if (actor) {
+            const { commitActorToEcho } = await import('./actors/Actor');
+            await commitActorToEcho(actor, this);
+        }
+    }
+
     setVignette(vignette: VignetteData) {
         const save = this.getSave() as any;
         save.currentVignette = vignette;
@@ -282,10 +295,6 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
 
 
     render(): ReactElement {
-
-        if (this.reserveActors.length < this.RESERVE_ACTORS && !this.reserveActorsLoadPromise) {
-            this.reserveActorsLoadPromise = this.loadReserveActors();
-        }
 
         return <BaseScreen stage={() => this}/>;
     }

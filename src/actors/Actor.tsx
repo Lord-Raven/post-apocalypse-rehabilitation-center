@@ -27,6 +27,8 @@ class Actor {
     themeFontFamily: string;
     birthDay: number = -1; // Day they were "born" into the game world
     participations: number = 0; // Number of vignettes they've participated in
+    isImageLoadingComplete: boolean = false; // Whether all emotion pack images have been generated
+    isCommittedToEcho: boolean = false; // Whether this actor has been committed to an echo slot
 
     // Characters are candidates for a rehabilitation program; the are coming into the program from a vast range of past life situations.
     // They may have trauma, mental health challenges, or other issues that the program is designed to help with.
@@ -248,6 +250,27 @@ export async function generateAdditionalActorImages(actor: Actor, stage: Stage):
             }
         }
     }
+    actor.isImageLoadingComplete = true;
+}
+
+/**
+ * Commits an actor to the echo process by generating all their images
+ */
+export async function commitActorToEcho(actor: Actor, stage: Stage): Promise<void> {
+    if (actor.isCommittedToEcho && actor.isImageLoadingComplete) {
+        return; // Already committed and ready
+    }
+    
+    actor.isCommittedToEcho = true;
+    console.log(`Committing actor ${actor.name} to echo process`);
+    
+    // First generate the primary image if not already done
+    if (!actor.emotionPack['neutral']) {
+        await generatePrimaryActorImage(actor, stage);
+    }
+    
+    // Then generate all additional emotion images
+    await generateAdditionalActorImages(actor, stage);
 }
 
 export function namesMatch(name: string, possibleName: string): boolean {

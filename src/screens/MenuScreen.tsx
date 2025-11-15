@@ -28,11 +28,13 @@ export const MenuScreen: FC<MenuScreenProps> = ({ stage, setScreenType }) => {
     const handleNewGame = () => {
         // For now, just go to station - in the future this might reset the save
         setScreenType(ScreenType.STATION);
+        stage().startGame();
     };
 
     const handleLoad = () => {
         // Placeholder for load functionality
         console.log('Load game clicked - functionality to be implemented');
+        stage().startGame();
     };
 
     const handleSettings = () => {
