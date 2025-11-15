@@ -18,6 +18,7 @@ type ChatStateType = {
 
 type SaveType = {
     player: {name: string};
+    echos: (Actor | null)[]; // actors currently in echo slots (can be null for empty slots)
     actors: {[key: string]: Actor};
     layout: Layout;
     day: number;
@@ -71,7 +72,7 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
             layout.setModuleAt(DEFAULT_GRID_SIZE/2, DEFAULT_GRID_SIZE/2, createModule('echo', { id: `echo-${DEFAULT_GRID_SIZE/2}-${DEFAULT_GRID_SIZE/2}`, connections: [], attributes: {} }));
             layout.setModuleAt(DEFAULT_GRID_SIZE/2 - 1, DEFAULT_GRID_SIZE/2, createModule("common", { id: `common-${DEFAULT_GRID_SIZE/2 - 1}-${DEFAULT_GRID_SIZE/2}`, connections: [], attributes: {} }));
             layout.setModuleAt(DEFAULT_GRID_SIZE/2, DEFAULT_GRID_SIZE/2 - 1, createModule("generator", { id: `generator-${DEFAULT_GRID_SIZE/2}-${DEFAULT_GRID_SIZE/2 - 1}`, connections: [], attributes: {} }));
-            this.saves.push({ player: {name: Object.values(users)[0].name}, actors: {}, layout: layout, day: 1, phase: 0, currentVignette: undefined });
+            this.saves.push({ player: {name: Object.values(users)[0].name}, echos: [], actors: {}, layout: layout, day: 1, phase: 0, currentVignette: undefined });
         } else {
             console.log("Something in saves:");
             console.log(this.saves);
@@ -157,6 +158,7 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
 
         this.reserveActorsLoadPromise = (async () => {
             try {
+                console.log('Loading reserve actors...');
                 while (this.reserveActors.length < this.RESERVE_ACTORS) {
                     // Populate reserveActors; this is loaded with data from a service, calling the characterServiceQuery URL:
                     const response = await fetch(this.characterSearchQuery.replace('{pageNumber}', this.pageNumber.toString()));
@@ -263,12 +265,36 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
         return updateResponse.data[0].value;
     }
 
-    async commitActorToEcho(actorId: string): Promise<void> {
-        const actor = this.reserveActors.find(a => a.id === actorId);
+    async commitActorToEcho(actorId: string, slotIndex: number): Promise<void> {
+        const actor = this.reserveActors.find(a => a.id === actorId) || this.getSave().echos.find(a => a?.id === actorId);
         if (actor) {
+            const save = this.getSave();
+            // Ensure echos array has 3 slots
+            if (save.echos.length < 3) {
+                save.echos = [...save.echos, ...Array(3 - save.echos.length).fill(null)];
+            }
+            // Remove from any existing slot
+            save.echos = save.echos.map(slot => slot?.id === actorId ? null : slot);
+            // Place in new slot
+            save.echos[slotIndex] = actor;
+            
             const { commitActorToEcho } = await import('./actors/Actor');
             await commitActorToEcho(actor, this);
+            this.saveGame();
         }
+    }
+
+    removeActorFromEcho(actorId: string): void {
+        const save = this.getSave();
+        save.echos = save.echos.map(slot => slot?.id === actorId ? null : slot);
+        this.saveGame();
+    }
+
+    getEchoSlots(): (Actor | null)[] {
+        const save = this.getSave();
+        // Ensure we always return an array of 3 slots
+        const echos = save.echos || [];
+        return [...echos, ...Array(Math.max(0, 3 - echos.length)).fill(null)].slice(0, 3);
     }
 
     setVignette(vignette: VignetteData) {

@@ -17,9 +17,9 @@ interface EchoScreenProps {
 
 export const EchoScreen: FC<EchoScreenProps> = ({stage, setScreenType}) => {
 
-	const [echoSlots, setEchoSlots] = React.useState<(Actor | null)[]>([null, null, null]);
 	const [selectedSlotIndex, setSelectedSlotIndex] = React.useState<number | null>(null);
 	const reserveActors = stage().reserveActors;
+	const echoSlots = stage().getEchoSlots();
 
 	const cancel = () => {
 		setScreenType(ScreenType.STATION);
@@ -37,7 +37,7 @@ export const EchoScreen: FC<EchoScreenProps> = ({stage, setScreenType}) => {
 			stage().getSave().actors[selected.id] = selected;
 			// Remove from reserve actors and echo slots
 			stage().reserveActors = stage().reserveActors.filter(a => a.id !== selected.id);
-			setEchoSlots(prev => prev.map(slot => slot?.id === selected.id ? null : slot));
+			stage().removeActorFromEcho(selected.id);
 			// Possibly set other properties on the selected actor as needed
 			selected.birth(stage().getSave().day);
 			stage().setVignette({
@@ -70,22 +70,8 @@ export const EchoScreen: FC<EchoScreenProps> = ({stage, setScreenType}) => {
 		const actor = reserveActors.find(a => a.id === data.actorId) || echoSlots.find(a => a?.id === data.actorId);
 		
 		if (actor) {
-			// Remove from previous echo slot if moving between slots
-			if (data.source === 'echo') {
-				setEchoSlots(prev => prev.map(slot => slot?.id === actor.id ? null : slot));
-			}
-			
-			// Place in new echo slot
-			setEchoSlots(prev => {
-				const newSlots = [...prev];
-				newSlots[slotIndex] = actor;
-				return newSlots;
-			});
-
-			// Trigger image loading
-			if (!actor.isCommittedToEcho) {
-				stage().commitActorToEcho(actor.id);
-			}
+			// Use Stage method to manage echo slots
+			await stage().commitActorToEcho(actor.id, slotIndex);
 		}
 	};
 
@@ -93,8 +79,8 @@ export const EchoScreen: FC<EchoScreenProps> = ({stage, setScreenType}) => {
 		e.preventDefault();
 		const data = JSON.parse(e.dataTransfer.getData('application/json'));
 		if (data.source === 'echo') {
-			// Remove from echo slot
-			setEchoSlots(prev => prev.map(slot => slot?.id === data.actorId ? null : slot));
+			// Remove from echo slot using Stage method
+			stage().removeActorFromEcho(data.actorId);
 		}
 	};
 
