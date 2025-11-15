@@ -93,10 +93,11 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
     }
 
     saveGame() {
-        this.messenger.updateChatState({
+        console.log(this.saves);
+/*        this.messenger.updateChatState({
             saves: this.saves,
             lastSaveSlot: this.saveSlot
-        });
+        });*/
     }
 
     getSave(): SaveType {
