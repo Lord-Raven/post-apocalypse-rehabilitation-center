@@ -23,6 +23,7 @@ export const MenuScreen: FC<MenuScreenProps> = ({ stage, setScreenType }) => {
 
     const handleContinue = () => {
         setScreenType(ScreenType.STATION);
+        stage().startGame();
     };
 
     const handleNewGame = () => {
@@ -34,7 +35,6 @@ export const MenuScreen: FC<MenuScreenProps> = ({ stage, setScreenType }) => {
     const handleLoad = () => {
         // Placeholder for load functionality
         console.log('Load game clicked - functionality to be implemented');
-        stage().startGame();
     };
 
     const handleSettings = () => {

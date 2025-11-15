@@ -145,6 +145,7 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
 
     startGame() {
         // Called when a game is loaded or a new game is started
+        console.log('Starting game...');
         if (this.reserveActors.length < this.RESERVE_ACTORS && !this.reserveActorsLoadPromise) {
             this.reserveActorsLoadPromise = this.loadReserveActors();
         }
