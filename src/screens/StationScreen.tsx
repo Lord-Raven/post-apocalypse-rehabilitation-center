@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import { Box, Typography, Card, CardContent } from '@mui/material';
 import { styled } from '@mui/material/styles';
 import { ScreenType } from './BaseScreen';
-import { Layout, MODULE_DEFAULTS, Module, createModule } from '../Module';
+import { Layout, Module, createModule } from '../Module';
 import { Stage } from '../Stage';
 import Nameplate from '../components/Nameplate';
 
@@ -193,8 +193,9 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType}) =>
                                 onClick={() => {
                                     // Trigger module action if defined
                                     console.log(`Clicked module ${module.id} of type ${module.type}`);
-                                    if (MODULE_DEFAULTS[module.type]?.action) {
-                                        MODULE_DEFAULTS[module.type].action!(module, stage(), setScreenType);
+                                    const action = module.getAction();
+                                    if (action) {
+                                        action(module, stage(), setScreenType);
                                     }
                                 }}
                                 style={{
@@ -202,7 +203,7 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType}) =>
                                     height: '100%',
                                     border: '3px solid rgba(0, 255, 136, 0.9)',
                                     borderRadius: 10,
-                                    background: `url(${module.attributes?.defaultImageUrl}) center center / contain no-repeat`,
+                                    background: `url(${module.getAttribute('defaultImageUrl')}) center center / contain no-repeat`,
                                     cursor: 'pointer',
                                     color: '#dfffe6',
                                     fontWeight: 700,

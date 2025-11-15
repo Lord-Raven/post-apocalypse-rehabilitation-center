@@ -40,7 +40,7 @@ const StatChangeDisplay: FC<StatChangeDisplayProps> = ({ characterChanges }) => 
                 display: 'flex',
                 flexDirection: 'column',
                 gap: '20px',
-                overflowY: 'auto',
+                overflow: 'hidden',
                 padding: '0 20px'
             }}
         >

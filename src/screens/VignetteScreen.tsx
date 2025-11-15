@@ -331,6 +331,7 @@ export const VignetteScreen: FC<VignetteScreenProps> = ({ stage, setScreenType }
                 for (let j = index; j >= 0; j--) {
                     const entry = vignette.script[j];
                     if (entry.actorEmotions && entry.actorEmotions[actor.name]) {
+                        console.log(`Setting emotion for actor ${actor.name} to ${entry.actorEmotions[actor.name]} from script entry ${j}`);
                         emotion = entry.actorEmotions[actor.name];
                         break;
                     }
@@ -434,7 +435,7 @@ export const VignetteScreen: FC<VignetteScreenProps> = ({ stage, setScreenType }
                 left: 0,
                 right: 0,
                 bottom: 0,
-                backgroundImage: `url(${(stage().getSave().layout.getModuleById(vignette.moduleId || '')?.attributes?.defaultImageUrl || '')})`,
+                backgroundImage: `url(${(stage().getSave().layout.getModuleById(vignette.moduleId || '')?.getAttribute('defaultImageUrl') || '')})`,
                 backgroundSize: 'cover',
                 backgroundPosition: 'center',
                 filter: 'blur(6px) brightness(0.6) contrast(1.05)',

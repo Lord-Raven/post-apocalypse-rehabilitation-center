@@ -65,24 +65,51 @@ export const MODULE_DEFAULTS: Record<ModuleType, ModuleIntrinsic> = {
     }
 };
 
-export interface Module<T extends ModuleType = ModuleType> {
-    id: string;
-    type: T;
-    connections?: string[];
-    ownerId?: string;
-    // merged intrinsic properties for this module (defaults from type + instance overrides)
-    attributes?: Partial<ModuleIntrinsic> & { [key: string]: any };
+export class Module<T extends ModuleType = ModuleType> {
+    public id: string;
+    public type: T;
+    public connections?: string[];
+    public ownerId?: string;
+    public attributes?: Partial<ModuleIntrinsic> & { [key: string]: any };
+
+    constructor(type: T, opts?: { id?: string; connections?: string[]; attributes?: Partial<ModuleIntrinsic> & { [key: string]: any }; ownerId?: string }) {
+        this.id = opts?.id ?? `${type}-${Date.now()}`;
+        this.type = type;
+        this.connections = opts?.connections ?? [];
+        this.ownerId = opts?.ownerId;
+        this.attributes = opts?.attributes || {};
+    }
+
+    /**
+     * Get all attributes with intrinsic defaults applied
+     */
+    getAttributes(): ModuleIntrinsic & { [key: string]: any } {
+        return { ...MODULE_DEFAULTS[this.type], ...(this.attributes || {}) };
+    }
+
+    /**
+     * Get a specific attribute with intrinsic default fallback
+     */
+    getAttribute<K extends keyof ModuleIntrinsic>(key: K): ModuleIntrinsic[K];
+    getAttribute(key: string): any;
+    getAttribute(key: string): any {
+        const instanceValue = this.attributes?.[key];
+        if (instanceValue !== undefined) {
+            return instanceValue;
+        }
+        return MODULE_DEFAULTS[this.type]?.[key];
+    }
+
+    /**
+     * Get the action method for this module type
+     */
+    getAction(): ((module: Module, stage: Stage, setScreenType: (type: ScreenType) => void) => void) | undefined {
+        return MODULE_DEFAULTS[this.type]?.action;
+    }
 }
 
-export function createModule(type: ModuleType, opts?: { id?: string; connections?: string[]; attributes?: Partial<ModuleIntrinsic> & { [key: string]: any } }): Module {
-    const id = opts?.id ?? `${type}-${Date.now()}`;
-    const attributes = { ...MODULE_DEFAULTS[type], ...(opts?.attributes || {}) };
-    return {
-        id,
-        type,
-        connections: opts?.connections ?? [],
-        attributes,
-    };
+export function createModule(type: ModuleType, opts?: { id?: string; connections?: string[]; attributes?: Partial<ModuleIntrinsic> & { [key: string]: any }; ownerId?: string }): Module {
+    return new Module(type, opts);
 }
 
 export const DEFAULT_GRID_SIZE = 6;

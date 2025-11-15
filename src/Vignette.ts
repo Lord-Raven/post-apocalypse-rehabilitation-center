@@ -122,82 +122,110 @@ export async function generateVignetteScript(vignette: VignetteData, stage: Stag
                 // Map actorId -> { statName: delta }
                 const statChanges: { [actorId: string]: { [stat: string]: number } } = {};
 
-                // Detect [END SCENE] or [END] to determine whether the scene ends here
-                const endSceneRegex = /\[(END|END SCENE|DONE)\]/i;
-                if (endSceneRegex.test(text)) {
-                    endScene = true;
-                }
-
-                // Now detect separate stat-change tags of the form:
-                // [Character Name: Stat +1]
-                // or [Character Name - Stat +1]
-                // We'll look for any bracketed tag and attempt to parse it as a stat-change if the left side matches a present character.
-                const bracketTagRegex = /\[([^\]]+)\]/g;
-                let tagMatch: RegExpExecArray | null;
-                // Prepare list of present actors (based on module/location)
-                const presentActors: Actor[] = Object.values(stage.getSave().actors).filter(a => a.locationId === (vignette.moduleId || ''));
-                while ((tagMatch = bracketTagRegex.exec(response.result || text || '')) !== null) {
-                    const raw = tagMatch[1].trim();
-                    if (!raw) continue;
-                    const up = raw.toUpperCase();
-                    if (up === 'END' || up.startsWith('END SCENE')) continue;
-
-                    // Attempt to split into "name" and "stat payload" by first ':' or '-' delimiter
-                    const split = raw.split(/[:\-]/);
-                    if (split.length < 2) continue; // not in expected form
-                    const candidateName = split[0].trim();
-                    const payload = raw.substring(raw.indexOf(split[1])).trim();
-
-                    // Find matching present actor using namesMatch
-                    const matched = presentActors.find(a => namesMatch(a.name.toLowerCase(), candidateName.toLowerCase()));
-                    if (!matched) continue;
-
-                    // payload may contain multiple stat adjustments separated by '|' or ','
-                    const adjustments = payload.split('|').flatMap(p => p.split(',')).map(p => p.trim()).filter(Boolean);
-                    for (const adj of adjustments) {
-                        // Capture stat name and signed number e.g. "Trust + 2"
-                        const m = adj.match(/([A-Za-z\s]+)\s*([+-]\s*\d+)/i);
-                        if (!m) continue;
-                        const statNameRaw = m[1].trim();
-                        const num = parseInt(m[2].replace(/\s+/g, ''), 10) || 0;
-
-                        // Normalize stat name to possible Stat enum value if possible
-                        let statKey = statNameRaw.toLowerCase().trim();
-                        const enumMatch = Object.values(Stat).find(s => s.toLowerCase() === statKey || s.toLowerCase().includes(statKey) || statKey.includes(s.toLowerCase()));
-                        if (enumMatch) statKey = enumMatch;
-
-                        if (!statChanges[matched.id]) statChanges[matched.id] = {};
-                        statChanges[matched.id][statKey] = (statChanges[matched.id][statKey] || 0) + num;
-                    }
-                    endScene = true;
-                }
-
                 // Parse response based on format "NAME: content"; content could be multi-line. We want to ensure that lines that don't start with a name are appended to the previous line.
                 const lines = text.split('\n');
                 const combinedLines: string[] = [];
+                const combinedEmotionTags: {[key: string]: Emotion}[] = [];
                 let currentLine = '';
+                let currentEmotionTags: {[key: string]: Emotion} = {};
                 for (const line of lines) {
                     // Skip any explicit END tags that might have survived splitting
-                    const trimmed = line.trim();
+                    let trimmed = line.trim();
                     if (!trimmed) continue;
+
+                    const newEmotionTags: {[key: string]: Emotion} = {};
+
+                    // Process tags in the line:
+                    // Detect [END SCENE] or [END] to determine whether the scene ends here
+                    // Detect separate stat-change tags of the form:
+                    // [Character Name: Stat +1]
+                    // or [Character Name - Stat +1]
+                    // Also look for expression tags:
+                    // [Character Name EXPRESSES Emotion]
+                    // Look at all bracketed tags in the response
+                    const bracketTagRegex = /\[([^\]]+)\]/g;
+                    let tagMatch: RegExpExecArray | null;
+                    // Prepare list of present actors (based on module/location)
+                    const presentActors: Actor[] = Object.values(stage.getSave().actors).filter(a => a.locationId === (vignette.moduleId || ''));
+                    
+                    while ((tagMatch = bracketTagRegex.exec(trimmed || '')) !== null) {
+                        const raw = tagMatch[1].trim();
+                        if (!raw) continue;
+
+                        const endSceneRegex = /\[(END|END SCENE|DONE)\]/i;
+                        if (endSceneRegex.test(raw)) {
+                            console.log("Detected end scene tag.");
+                            endScene = true;
+                            continue;
+                        }
+
+                        // Attempt to split into "name" and "stat payload" by first ':' or '-' delimiter
+                        const split = raw.split(/[:\-]/);
+                        if (split.length >= 2) {
+                            const candidateName = split[0].trim();
+                            const payload = raw.substring(raw.indexOf(split[1])).trim();
+
+                            // Find matching present actor using namesMatch
+                            const matched = presentActors.find(a => namesMatch(a.name.toLowerCase(), candidateName.toLowerCase()));
+                            if (!matched) continue;
+
+                            // payload may contain multiple stat adjustments separated by '|' or ','
+                            const adjustments = payload.split('|').flatMap(p => p.split(',')).map(p => p.trim()).filter(Boolean);
+                            for (const adj of adjustments) {
+                                // Capture stat name and signed number e.g. "Trust + 2"
+                                const m = adj.match(/([A-Za-z\s]+)\s*([+-]\s*\d+)/i);
+                                if (!m) continue;
+                                const statNameRaw = m[1].trim();
+                                const num = parseInt(m[2].replace(/\s+/g, ''), 10) || 0;
+
+                                // Normalize stat name to possible Stat enum value if possible
+                                let statKey = statNameRaw.toLowerCase().trim();
+                                const enumMatch = Object.values(Stat).find(s => s.toLowerCase() === statKey || s.toLowerCase().includes(statKey) || statKey.includes(s.toLowerCase()));
+                                if (enumMatch) statKey = enumMatch;
+
+                                if (!statChanges[matched.id]) statChanges[matched.id] = {};
+                                statChanges[matched.id][statKey] = (statChanges[matched.id][statKey] || 0) + num;
+                            }
+                            endScene = true;
+                        }
+
+                        // Look for expresses tags here, too:
+                        const emotionTagRegex = /\[([^[\]]+)\s+EXPRESSES\s+([^[\]]+)\]/gi;
+                        let emotionMatch: RegExpExecArray | null;
+                        while ((emotionMatch = emotionTagRegex.exec(raw)) !== null) {
+                            const characterName = emotionMatch[1].trim();
+                            const emotionName = emotionMatch[2].trim().toLowerCase();
+                            // Find matching present actor using namesMatch
+                            const matched = presentActors.find(a => namesMatch(a.name.toLowerCase(), characterName.toLowerCase()));
+                            if (!matched) continue;
+                            newEmotionTags[matched.name] = Emotion[emotionName as keyof typeof Emotion];
+                        }
+                    }
+
+                    // Remove all tags:
+                    trimmed = trimmed.replace(/\[([^\]]+)\]/g, '').trim();
 
                     if (line.includes(':')) {
                         // New line
                         if (currentLine) {
                             combinedLines.push(currentLine.trim());
+                            combinedEmotionTags.push(currentEmotionTags);
                         }
-                        currentLine = line;
+                        currentLine = trimmed;
+                        currentEmotionTags = newEmotionTags;
                     } else {
                         // Continuation of previous line
-                        currentLine += '\n' + line;
+                        currentLine += '\n' + trimmed;
+                        currentEmotionTags = {...currentEmotionTags, ...newEmotionTags};
                     }
                 }
                 if (currentLine) {
                     combinedLines.push(currentLine.trim());
+                    combinedEmotionTags.push(currentEmotionTags);
                 }
 
                 // Convert combined lines into ScriptEntry objects by splitting at first ':'
-                const scriptEntries: ScriptEntry[] = combinedLines.map(l => {
+                const scriptEntries: ScriptEntry[] = combinedLines.map((l, index) => {
                     const idx = l.indexOf(':');
                     let speaker = 'NARRATOR';
                     let message = l;
@@ -207,36 +235,12 @@ export async function generateVignetteScript(vignette: VignetteData, stage: Stag
                         message = l.slice(idx + 1).trim();
                     }
                     
-                    // Extract emotion tags from this line and map them to characters
-                    const emotionTags: {[key: string]: Emotion} = {};
-                    const emotionTagRegex = /\[([^[\]]+)\s+EXPRESSES\s+([^[\]]+)\]/gi;
-                    let emotionMatch: RegExpExecArray | null;
-                    
-                    while ((emotionMatch = emotionTagRegex.exec(message)) !== null) {
-                        const characterName = emotionMatch[1].trim();
-                        const emotionName = emotionMatch[2].trim().toLowerCase();
-                        
-                        // Find matching emotion from enum
-                        const emotion = Object.values(Emotion).find(e => 
-                            e.toLowerCase() === emotionName || 
-                            e.toLowerCase().includes(emotionName) || 
-                            emotionName.includes(e.toLowerCase())
-                        );
-                        
-                        if (emotion) {
-                            emotionTags[characterName] = emotion;
-                        }
-                    }
-                    
-                    // Remove emotion tags from the visible message
-                    message = message.replace(/\[([^[\]]+)\s+EXPRESSES\s+([^[\]]+)\]/gi, '').trim();
-                    
                     // Remove any remaining non-emotion tags
                     message = message.replace(/\[([^\]]+)\]/g, '').trim();
                     
                     const entry: ScriptEntry = { speaker, message };
-                    if (Object.keys(emotionTags).length > 0) {
-                        entry.actorEmotions = emotionTags;
+                    if (Object.keys(combinedEmotionTags[index]).length > 0) {
+                        entry.actorEmotions = combinedEmotionTags[index];
                     }
                     
                     return entry;

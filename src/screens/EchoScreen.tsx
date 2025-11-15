@@ -4,7 +4,7 @@
  */
 import React, { FC } from 'react';
 import { motion } from 'framer-motion';
-import { BaseScreen, ScreenType } from './BaseScreen';
+import { ScreenType } from './BaseScreen';
 import { Stage } from '../Stage';
 import { VignetteType } from '../Vignette';
 import Nameplate from '../components/Nameplate';
