@@ -289,9 +289,7 @@ export const VignetteScreen: FC<VignetteScreenProps> = ({ stage, setScreenType }
             
             // Check if this is the player speaking
             const playerName = stage().getSave().player.name;
-            const isPlayerSpeaker = !matchingActor && playerName && 
-                (currentSpeakerName.toLowerCase() === playerName.toLowerCase() || 
-                 currentSpeakerName.toUpperCase() === playerName.toUpperCase());
+            const isPlayerSpeaker = !matchingActor && playerName && namesMatch(playerName.trim().toLowerCase(), currentSpeakerName.toLowerCase());
             
             setSpeaker(matchingActor || null);
             setDisplayName(matchingActor?.name || (isPlayerSpeaker ? playerName : ''));

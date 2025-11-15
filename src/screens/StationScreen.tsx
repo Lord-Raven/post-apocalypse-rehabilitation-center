@@ -411,7 +411,7 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType}) =>
                                 }}
                                 transition={{ 
                                     height: { duration: 0.3, ease: 'easeInOut' },
-                                    opacity: { duration: 0.3, ease: 'easeInOut' },
+                                    opacity: { duration: 0.2, ease: 'easeInOut' },
                                     layout: { duration: 0.3, ease: 'easeInOut' }
                                 }}
                                 style={{ 
@@ -428,7 +428,8 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType}) =>
                                     }
                                 }}
                             >
-                                {isExpanded && itemKey === 'patients' && (
+                                {/* Always render content, but with conditional styling for visibility */}
+                                {itemKey === 'patients' && (
                                     <div style={{ padding: '15px', maxHeight: '50vh', overflowY: 'auto' }}>
                                         {Object.values(stage().getSave().actors).length === 0 ? (
                                             <p style={{ color: '#888', fontStyle: 'italic', fontSize: '12px' }}>No patients currently on station</p>
@@ -438,94 +439,86 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType}) =>
                                                     key={actor.id}
                                                     whileHover={{ backgroundColor: 'rgba(0, 255, 136, 0.1)' }}
                                                     style={{
-                                                        display: 'flex',
-                                                        flexDirection: 'column',
-                                                        alignItems: 'center',
                                                         padding: '12px',
-                                                        marginBottom: '10px',
+                                                        marginBottom: '15px',
                                                         border: '2px solid rgba(0, 255, 136, 0.2)',
                                                         borderRadius: '8px',
                                                         background: 'rgba(0, 10, 20, 0.5)',
                                                     }}
                                                 >
-                                                    {/* Portrait - larger and centered at top */}
-                                                    <img
-                                                        src={actor.emotionPack?.neutral || actor.avatarImageUrl}
-                                                        alt={actor.name}
-                                                        style={{
-                                                            width: '64px',
-                                                            height: '64px',
-                                                            borderRadius: '50%',
-                                                            marginBottom: '8px',
-                                                            border: '3px solid #00ff88',
-                                                            objectFit: 'cover',
-                                                        }}
-                                                    />
+                                                    {/* Nameplate at the top */}
+                                                    <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '12px' }}>
+                                                        <Nameplate 
+                                                            actor={actor} 
+                                                            size="small"
+                                                        />
+                                                    </div>
                                                     
-                                                    {/* Name centered below portrait */}
-                                                    <Nameplate 
-                                                        actor={actor} 
-                                                        size="small"
-                                                        style={{
-                                                            marginBottom: '6px',
-                                                            fontSize: '14px',
-                                                            fontWeight: 'bold'
-                                                        }}
-                                                    />
-                                                    
-                                                    {/* Stats in a grid layout below name */}
-                                                    <div style={{ 
-                                                        display: 'grid', 
-                                                        gridTemplateColumns: 'repeat(4, 1fr)', 
-                                                        gap: '3px', 
-                                                        fontSize: '10px',
-                                                        width: '100%'
-                                                    }}>
-                                                        {[
-                                                            ['B', actor.stats.brawn],
-                                                            ['W', actor.stats.wits],
-                                                            ['N', actor.stats.nerve],
-                                                            ['S', actor.stats.skill],
-                                                            ['C', actor.stats.charm],
-                                                            ['L', actor.stats.lust],
-                                                            ['J', actor.stats.joy],
-                                                            ['T', actor.stats.trust],
-                                                        ].map(([label, value]) => {
-                                                            const grade = actor.scoreToGrade(value);
-                                                            return (
-                                                                <span
-                                                                    key={label}
-                                                                    style={{
-                                                                        display: 'flex',
-                                                                        flexDirection: 'column',
-                                                                        alignItems: 'center',
-                                                                        textAlign: 'center',
-                                                                        padding: '2px',
-                                                                        borderRadius: '3px',
-                                                                        background: grade.startsWith('A') ? 'rgba(0, 255, 0, 0.2)' :
-                                                                                  grade.startsWith('B') ? 'rgba(0, 150, 255, 0.2)' :
-                                                                                  grade.startsWith('C') ? 'rgba(255, 255, 0, 0.2)' :
-                                                                                  grade.startsWith('D') ? 'rgba(255, 150, 0, 0.2)' :
-                                                                                  'rgba(255, 0, 0, 0.2)',
-                                                                        border: '1px solid rgba(255, 255, 255, 0.1)',
-                                                                        fontSize: '8px',
-                                                                    }}
-                                                                    title={`${label === 'B' ? 'Brawn' : label === 'W' ? 'Wits' : label === 'N' ? 'Nerve' : label === 'S' ? 'Skill' : label === 'C' ? 'Charm' : label === 'L' ? 'Lust' : label === 'J' ? 'Joy' : 'Trust'}: ${grade}`}
-                                                                >
-                                                                    <div style={{ fontSize: '7px', opacity: 0.7, marginBottom: '1px' }}>
-                                                                        {label === 'B' ? 'BRW' : label === 'W' ? 'WIT' : label === 'N' ? 'NRV' : label === 'S' ? 'SKL' : label === 'C' ? 'CHM' : label === 'L' ? 'LST' : label === 'J' ? 'JOY' : 'TST'}
+                                                    {/* Two-column layout below */}
+                                                    <div style={{ display: 'flex', gap: '12px', height: '120px' }}>
+                                                        {/* Left column: Stats with letter grades */}
+                                                        <div className="stat-list" style={{ 
+                                                            flex: '1', 
+                                                            background: 'rgba(0,0,0,0.8)', 
+                                                            borderRadius: '6px',
+                                                            padding: '6px 8px',
+                                                            overflow: 'hidden'
+                                                        }}>
+                                                            {[
+                                                                ['Brawn', actor.stats.brawn],
+                                                                ['Wits', actor.stats.wits],
+                                                                ['Nerve', actor.stats.nerve],
+                                                                ['Skill', actor.stats.skill],
+                                                                ['Charm', actor.stats.charm],
+                                                                ['Lust', actor.stats.lust],
+                                                                ['Joy', actor.stats.joy],
+                                                                ['Trust', actor.stats.trust],
+                                                            ].map(([label, value]) => {
+                                                                const grade = actor.scoreToGrade(value);
+                                                                return (
+                                                                    <div className="stat-row" key={`${actor.id}_${label}`} style={{
+                                                                        padding: '2px 0px',
+                                                                        gap: '6px'
+                                                                    }}>
+                                                                        <span className="stat-label" style={{
+                                                                            fontSize: '8px',
+                                                                            letterSpacing: '0.5px'
+                                                                        }}>{label}</span>
+                                                                        <span className="stat-grade" data-grade={grade} style={{
+                                                                            fontSize: '1.4rem',
+                                                                            textShadow: '3px 3px 0 rgba(0,0,0,0.88)',
+                                                                            transform: 'skewX(-8deg) rotate(-4deg)'
+                                                                        }}>{grade}</span>
                                                                     </div>
-                                                                    <div style={{ fontWeight: 'bold' }}>{grade}</div>
-                                                                </span>
-                                                            );
-                                                        })}
+                                                                );
+                                                            })}
+                                                        </div>
+                                                        
+                                                        {/* Right column: Tall character portrait */}
+                                                        <div style={{ 
+                                                            width: '60px',
+                                                            height: '100%',
+                                                            borderRadius: '6px',
+                                                            overflow: 'hidden',
+                                                            border: '2px solid #00ff88'
+                                                        }}>
+                                                            <img
+                                                                src={actor.emotionPack?.neutral || actor.avatarImageUrl}
+                                                                alt={actor.name}
+                                                                style={{
+                                                                    width: '100%',
+                                                                    height: '100%',
+                                                                    objectFit: 'cover',
+                                                                }}
+                                                            />
+                                                        </div>
                                                     </div>
                                                 </motion.div>
                                             ))
                                         )}
                                     </div>
                                 )}
-                                {isExpanded && itemKey !== 'patients' && (
+                                {itemKey !== 'patients' && (
                                     <div style={{ padding: '15px', color: '#888', fontSize: '12px' }}>
                                         {itemKey === 'crew' && 'Crew management coming soon...'}
                                         {itemKey === 'modules' && 'Module management coming soon...'}
