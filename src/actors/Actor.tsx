@@ -118,11 +118,11 @@ export async function loadReserveActor(fullPath: string, stage: Stage): Promise<
             `Their new description and profile should reflect these possible changes and their impact.\n\n` +
             `The provided character description may reference 'Individual X' who no longer exists in this timeline; ` +
             `if Individual X remains relevant to this character, you should give Individual X an appropriate name in the distillation.\n\n` +
-            `In addition to a simple name, physical description, and personality, you will score the character with a simple 1-10 for the following traits: BRAWN, WITS, NERVE, SKILL, CHARM, LUST, JOY, and TRUST.\n` +
+            `In addition to the simple display name, physical description, and personality, you will score the character with a simple 1-10 for the following traits: BRAWN, WITS, NERVE, SKILL, CHARM, LUST, JOY, and TRUST.\n` +
             `Bear in mind the character's current, diminished state—as a newly reconstituted and relatively powerless individual—and not their original potential when scoring these traits; some characters may not respond well to being essentially resurrected into a new timeline.\n\n` +
             `Original details:\nDescription: ${data.description} ${data.personality}\n\n` +
             `After carefully considering this description, provide a concise breakdown in the following format:\n` +
-            `NAME: The character's name.\n` +
+            `NAME: The character's actual name\n` +
             `DESCRIPTION: A vivid description of the character's physical appearance, attire, and any distinguishing features.\n` +
             `PROFILE: A brief summary of the character's key personality traits and behaviors.\n` +
             `THEME COLOR: A hex code representing a color that encapsulates the character's overall theme or mood—use darker or richer colors that will contrast with white text.\n` +
@@ -133,7 +133,7 @@ export async function loadReserveActor(fullPath: string, stage: Stage): Promise<
             `#END#`,
         stop: ['#END'],
         include_history: true, // There won't be any history, but if this is true, the front-end doesn't automatically apply pre-/post-history prompts.
-        max_tokens: 700,
+        max_tokens: 800,
     });
     console.log('Generated character distillation:');
     console.log(generatedResponse);
@@ -189,17 +189,31 @@ export async function loadReserveActor(fullPath: string, stage: Stage): Promise<
     console.log(`Loaded new actor: ${newActor.name} (ID: ${newActor.id})`);
     console.log(newActor);
     // If name, description, or profile are missing, or banned words are present or the attributes are all defaults (unlikely to have been set at all) or description is non-english, discard this actor by returning null
-    if (newActor.name && newActor.description && newActor.profile && 
-            bannedWords.every(word => !newActor.description.toLowerCase().includes(word)) && 
-            Object.entries(newActor.stats).some(([key, value]) => value !== DEFAULT_TRAIT_MAP[key as Stat]) &&
-            newActor.name.length < 30 &&
-            !/[\u3040-\u30ff\u3400-\u4dbf\u4e00-\u9fff\uf900-\ufaff]/.test(`${newActor.name}${newActor.description}${newActor.profile}`) // Try to rule out Chinese/Japanese/Korean characters. Sorry. I should consider a toggle to allow this later.
-        ) {
-        return newActor;
-    } else {
-        console.log(`Discarding actor due to insufficient or inappropriate data: ${newActor.name}`);
+    // Rewrite discard reasons to log which reason applied:
+    if (!newActor.name) {
+        console.log(`Discarding actor due to missing name: ${newActor.name}`);
+        return null;
+    } else if (!newActor.description) {
+        console.log(`Discarding actor due to missing description: ${newActor.name}`);
+        return null;
+    } else if (!newActor.profile) {
+        console.log(`Discarding actor due to missing profile: ${newActor.name}`);
+        return null;
+    } else if (bannedWords.some(word => newActor.description.toLowerCase().includes(word))) {
+        console.log(`Discarding actor due to banned words in description: ${newActor.name}`);
+        return null;
+    } else if (Object.entries(newActor.stats).every(([key, value]) => value === DEFAULT_TRAIT_MAP[key as Stat])) {
+        console.log(`Discarding actor due to all default stats: ${newActor.name}`);
+        return null;
+    } else if (newActor.name.length >= 30) {
+        console.log(`Discarding actor due to excessive name length: ${newActor.name}`);
+        return null;
+    } else if (/[\u3040-\u30ff\u3400-\u4dbf\u4e00-\u9fff\uf900-\ufaff]/.test(`${newActor.name}${newActor.description}${newActor.profile}`)) {
+        console.log(`Discarding actor due to non-english characters in name/description/profile: ${newActor.name}`);
+        return null;
     }
-    return null;
+
+    return newActor;
 }
 
 export async function generatePrimaryActorImage(actor: Actor, stage: Stage): Promise<void> {

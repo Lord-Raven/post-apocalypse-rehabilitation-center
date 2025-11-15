@@ -32,7 +32,7 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
     private saveSlot: number = 0;
     // Flag/promise to avoid redundant concurrent requests for reserve actors
     private reserveActorsLoadPromise?: Promise<void>;
-    readonly RESERVE_ACTORS = 10;
+    readonly RESERVE_ACTORS = 5;
     readonly FETCH_AT_TIME = 10;
     readonly MAX_PAGES = 100;
     readonly characterSearchQuery = `https://inference.chub.ai/search?first=${this.FETCH_AT_TIME}&exclude_tags=child%2Cteenager%2Cnarrator%2Cunderage%2CMultiple%20Character&page={pageNumber}&sort=random&asc=false&include_forks=false&nsfw=true&nsfl=false&nsfw_only=false&require_images=false&require_example_dialogues=false&require_alternate_greetings=false&require_custom_prompt=false&exclude_mine=false&min_tokens=200&max_tokens=10000&require_expressions=false&require_lore=false&mine_first=false&require_lore_embedded=false&require_lore_linked=false&my_favorites=false&inclusive_or=true&recommended_verified=false&count=false`;
