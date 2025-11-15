@@ -108,11 +108,11 @@ export async function loadReserveActor(fullPath: string, stage: Stage): Promise<
             `Their new description and profile should reflect these possible changes and their impact.\n\n` +
             `The provided character description may reference 'Individual X' who no longer exists in this timeline; ` +
             `if Individual X remains relevant to this character, you should give Individual X an appropriate name in the distillation.\n\n` +
-            `In addition to name, physical description, and personality, you will score the character with a simple 1-10 for the following traits: BRAWN, WITS, NERVE, SKILL, CHARM, LUST, JOY, and TRUST.\n` +
+            `In addition to a simple name, physical description, and personality, you will score the character with a simple 1-10 for the following traits: BRAWN, WITS, NERVE, SKILL, CHARM, LUST, JOY, and TRUST.\n` +
             `Bear in mind the character's current, diminished state—as a newly reconstituted and relatively powerless individual—and not their original potential when scoring these traits; some characters may not respond well to being essentially resurrected into a new timeline.\n\n` +
-            `Original details about ${data.name}:\nDescription: ${data.description} ${data.personality}\n\n` +
+            `Original details:\nDescription: ${data.description} ${data.personality}\n\n` +
             `After carefully considering this description, provide a concise breakdown in the following format:\n` +
-            `NAME: The character's simple, typical name.\n` +
+            `NAME: The character's name.\n` +
             `DESCRIPTION: A vivid description of the character's physical appearance, attire, and any distinguishing features.\n` +
             `PROFILE: A brief summary of the character's key personality traits and behaviors.\n` +
             `THEME COLOR: A hex code representing a color that encapsulates the character's overall theme or mood—use darker or richer colors that will contrast with white text.\n` +
@@ -182,7 +182,7 @@ export async function loadReserveActor(fullPath: string, stage: Stage): Promise<
     if (newActor.name && newActor.description && newActor.profile && 
             bannedWords.every(word => !newActor.description.toLowerCase().includes(word)) && 
             Object.entries(newActor.stats).some(([key, value]) => value !== DEFAULT_TRAIT_MAP[key as Stat]) &&
-            !/[\u3040-\u30ff\u3400-\u4dbf\u4e00-\u9fff\uf900-\ufaff]/.test(newActor.description) // Try to rule out Chinese/Japanese/Korean characters. Sorry. I should consider a toggle to allow this later.
+            !/[\u3040-\u30ff\u3400-\u4dbf\u4e00-\u9fff\uf900-\ufaff]/.test(`${newActor.name}${newActor.description}${newActor.profile}`) // Try to rule out Chinese/Japanese/Korean characters. Sorry. I should consider a toggle to allow this later.
         ) {
         return newActor;
     }
@@ -220,8 +220,8 @@ export async function generateAdditionalActorImages(actor: Actor, stage: Stage):
 
     console.log(`Generating additional emotion images for actor ${actor.name} (ID: ${actor.id})`);
     if (actor.emotionPack['neutral']) {
-        Object.values(Emotion).forEach(async (emotion) => {
-            
+        // Generate in serial and not parallel as below:
+        for (const emotion of Object.values(Emotion)) {            
             if (!actor.emotionPack[emotion]) {
                 console.log(`Generating ${emotion} emotion image for actor ${actor.name}`);
                 const imageUrl = await stage.makeImageFromImage({
@@ -234,7 +234,7 @@ export async function generateAdditionalActorImages(actor: Actor, stage: Stage):
                 
                 actor.emotionPack[emotion] = imageUrl || '';
             }
-        });
+        }
     }
 }
 
