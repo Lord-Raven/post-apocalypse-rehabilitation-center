@@ -72,11 +72,13 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
             layout.setModuleAt(DEFAULT_GRID_SIZE/2, DEFAULT_GRID_SIZE/2 - 1, createModule("generator", { id: `generator-${DEFAULT_GRID_SIZE/2}-${DEFAULT_GRID_SIZE/2 - 1}`, connections: [], attributes: {} }));
             this.saves.push({ player: {name: Object.values(users)[0].name}, actors: {}, layout: layout, day: 1, phase: 0, currentVignette: undefined });
         } else {
+            console.log("Something in saves:");
             console.log(this.saves);
             // Ensure saves unmarshalled to correct types?
             // Specifically, Layout and Actor types.
             this.saves = this.saves.map(save => {
                 // Layout
+                console.log(save);
                 if (!(save.layout instanceof Layout)) {
                     console.log('Rehydrating layout from save', save);
                     save.layout = save.layout as Layout;
@@ -113,12 +115,16 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
         this.saveGame();
     }
 
-    saveGame() {
-        console.log(this.saves);
-        this.messenger.updateChatState({
+    buildSaves(): ChatStateType {
+        return {
             saves: this.saves,
             lastSaveSlot: this.saveSlot
-        });
+        }
+    }
+
+    saveGame() {
+        console.log(this.saves);
+        this.messenger.updateChatState(this.buildSaves());
     }
 
     getSave(): SaveType {
@@ -138,7 +144,7 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
             success: true,
             error: null,
             initState: null,
-            chatState: null,
+            chatState: this.buildSaves(),
         };
     }
 
