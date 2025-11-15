@@ -9,6 +9,7 @@ import { Stage } from '../Stage';
 import { VignetteType } from '../Vignette';
 import Nameplate from '../components/Nameplate';
 import Actor from '../actors/Actor';
+import { BlurredBackground } from '../components/BlurredBackground';
 
 interface EchoScreenProps {
 	stage: () => Stage;
@@ -89,7 +90,13 @@ export const EchoScreen: FC<EchoScreenProps> = ({stage, setScreenType}) => {
 	const acceptable = selectedActor && selectedActor.isImageLoadingComplete && availableRooms.length > 0;
 
 	return (
-		<div style={{ display: 'flex', flexDirection: 'column', height: '100vh', width: '100vw' }}>
+		<BlurredBackground imageUrl="https://media.charhub.io/026ae01a-7dc8-472d-bfea-61548b87e6ef/84990780-8260-4833-ac0b-79c1a15ddb9e.png">
+			<div style={{ 
+				display: 'flex', 
+				flexDirection: 'column', 
+				height: '100vh', 
+				width: '100vw'
+			}}>
 			{/* Reserve carousel at top */}
 			<div 
 				style={{ 
@@ -321,6 +328,7 @@ export const EchoScreen: FC<EchoScreenProps> = ({stage, setScreenType}) => {
 					}
 				</motion.button>
 			</div>
-		</div>
+			</div>
+		</BlurredBackground>
 	);
 }

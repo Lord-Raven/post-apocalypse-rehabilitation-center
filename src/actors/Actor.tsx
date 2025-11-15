@@ -109,20 +109,22 @@ export async function loadReserveActor(fullPath: string, stage: Stage): Promise<
     }
     // Take this data and use text generation to get an updated distillation of this character, including a physical description.
     const generatedResponse = await stage.generator.textGen({
-        prompt: `{{messages}}This is a preparatory request for formatted content for a video game set in a futuristic multiverse setting that pulls characters from across eras and timelines and settings. ` +
+        prompt: `{{messages}}This is preparatory request for structured and formatted game content.` +
+            `\n\nBackground: This game is a futuristic multiverse setting that pulls characters from across eras and timelines and settings. ` +
             `The player of this game ${stage.getSave().player.name} manages a space station and rehabilitiation center that resurrects victims of a multiversal calamity and helps them adapt to a new life. ` +
             `The player's motives and ethics are open-ended; they may be benevolent or self-serving, and the characters they interact with may respond accordingly. ` +
-            `\n\nThe following is a description for a random character or scenario from another universe. This response must digest and distill this description to suit the game's narrative, ` +
+            `\n\nThe Original Details below describe a character or scenario from another universe. This request and response must digest and distill these details to suit the game's narrative scenario, ` +
             `crafting a character who has been rematerialized into this universe through an "echo chamber," their essence reconstituted from the whispers of a black hole. ` +
             `As a result of this process, many of this character's traits may have changed, including the loss of most supernatural or arcane abilities, which functioned only within the rules of their former universe. ` +
             `Their new description and profile should reflect these possible changes and their impact.\n\n` +
-            `The provided character description may reference 'Individual X' who no longer exists in this timeline; ` +
-            `if Individual X remains relevant to this character, you should give Individual X an appropriate name in the distillation.\n\n` +
-            `In addition to the simple display name, physical description, and personality, you will score the character with a simple 1-10 for the following traits: BRAWN, WITS, NERVE, SKILL, CHARM, LUST, JOY, and TRUST.\n` +
+            `The provided Original Details reference 'Individual X' who no longer exists in this timeline; ` +
+            `if Individual X remains relevant to this character, Individual X should be replaced with an appropriate name in the distillation.\n\n` +
+            `In addition to the simple display name, physical description, and personality profile, ` +
+            `score the character with a simple 1-10 for the following traits: BRAWN, WITS, NERVE, SKILL, CHARM, LUST, JOY, and TRUST.\n` +
             `Bear in mind the character's current, diminished state—as a newly reconstituted and relatively powerless individual—and not their original potential when scoring these traits; some characters may not respond well to being essentially resurrected into a new timeline.\n\n` +
-            `Original details:\nDescription: ${data.description} ${data.personality}\n\n` +
-            `After carefully considering this description, provide a concise breakdown in the following format:\n` +
-            `NAME: The character's actual name\n` +
+            `Original Details:\n${data.description} ${data.personality}\n\n` +
+            `Instructions: After carefully considering this description and the rules provided, generate a concise breakdown for a character based upon these details in the following strict format:\n` +
+            `System: NAME: Their simple name\n` +
             `DESCRIPTION: A vivid description of the character's physical appearance, attire, and any distinguishing features.\n` +
             `PROFILE: A brief summary of the character's key personality traits and behaviors.\n` +
             `THEME COLOR: A hex code representing a color that encapsulates the character's overall theme or mood—use darker or richer colors that will contrast with white text.\n` +

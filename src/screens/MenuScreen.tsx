@@ -2,6 +2,7 @@ import React, { FC } from 'react';
 import { motion } from 'framer-motion';
 import { ScreenType } from './BaseScreen';
 import { Stage } from '../Stage';
+import { BlurredBackground } from '../components/BlurredBackground';
 
 /*
  * This screen represents both the start-up and in-game menu screen. It should present basic options: new game, load game, settings.
@@ -29,6 +30,7 @@ export const MenuScreen: FC<MenuScreenProps> = ({ stage, setScreenType }) => {
     const handleNewGame = () => {
         // For now, just go to station - in the future this might reset the save
         setScreenType(ScreenType.STATION);
+        stage().newGame();
         stage().startGame();
     };
 
@@ -70,20 +72,21 @@ export const MenuScreen: FC<MenuScreenProps> = ({ stage, setScreenType }) => {
     ];
 
     return (
-        <div 
-            className="menu-screen" 
-            style={{ 
-                display: 'flex', 
-                flexDirection: 'column',
-                alignItems: 'center',
-                justifyContent: 'center',
-                height: '100vh', 
-                width: '100vw', 
-                background: 'linear-gradient(45deg, #001122 0%, #002244 100%)',
-                position: 'relative',
-                overflow: 'hidden'
-            }}
+        <BlurredBackground
+            imageUrl="https://media.charhub.io/41b7b65d-839b-4d31-8c11-64ee50e817df/0fc1e223-ad07-41c4-bdae-c9545d5c5e34.png"
+            overlay="linear-gradient(45deg, rgba(0,17,34,0.3) 0%, rgba(0,34,68,0.3) 100%)"
         >
+            <div 
+                className="menu-screen" 
+                style={{ 
+                    display: 'flex', 
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    height: '100vh', 
+                    width: '100vw'
+                }}
+            >
             {/* Background grid effect similar to StationScreen */}
             <div
                 style={{
@@ -199,6 +202,7 @@ export const MenuScreen: FC<MenuScreenProps> = ({ stage, setScreenType }) => {
                     v0.1.0 - Early Access
                 </motion.div>
             </motion.div>
-        </div>
+            </div>
+        </BlurredBackground>
     );
 };

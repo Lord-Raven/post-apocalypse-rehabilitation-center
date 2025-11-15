@@ -11,6 +11,7 @@ import ActorImage from '../actors/ActorImage';
 import { Emotion } from '../Emotion';
 import StatChangeDisplay from './StatChangeDisplay';
 import Nameplate from '../components/Nameplate';
+import { BlurredBackground } from '../components/BlurredBackground';
 
 import {
     Box, 
@@ -425,23 +426,11 @@ export const VignetteScreen: FC<VignetteScreenProps> = ({ stage, setScreenType }
     };
 
     return (
-        <div style={{ position: 'relative', width: '100vw', height: '100vh', overflow: 'hidden', background: '#000' }}>
-            {/* Background image (module) with slight blur */}
-            <div style={{
-                position: 'absolute',
-                top: 0,
-                left: 0,
-                right: 0,
-                bottom: 0,
-                backgroundImage: `url(${(stage().getSave().layout.getModuleById(vignette.moduleId || '')?.getAttribute('defaultImageUrl') || '')})`,
-                backgroundSize: 'cover',
-                backgroundPosition: 'center',
-                filter: 'blur(6px) brightness(0.6) contrast(1.05)',
-                transform: 'scale(1.03)'
-            }} />
-
-            {/* A subtle overlay to tint the scene and provide readable contrast */}
-            <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, rgba(0,0,0,0.2) 0%, rgba(0,0,0,0.6) 60%)' }} />
+        <BlurredBackground
+            imageUrl={stage().getSave().layout.getModuleById(vignette.moduleId || '')?.getAttribute('defaultImageUrl') || ''}
+            overlay="linear-gradient(180deg, rgba(0,0,0,0.2) 0%, rgba(0,0,0,0.6) 60%)"
+        >
+            <div style={{ position: 'relative', width: '100vw', height: '100vh', background: '#000' }}>
 
             {/* Actors */}
             <div style={{ position: 'absolute', inset: 0, zIndex: 1, pointerEvents: 'none' }}>
@@ -656,7 +645,8 @@ export const VignetteScreen: FC<VignetteScreenProps> = ({ stage, setScreenType }
                     </Button>
                 </Box>
             </Paper>
-        </div>
+            </div>
+        </BlurredBackground>
     );
     
     // Handle submission of player's guidance (or blank submit to continue the scene autonomously)

@@ -32,6 +32,7 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
     private saveSlot: number = 0;
     // Flag/promise to avoid redundant concurrent requests for reserve actors
     private reserveActorsLoadPromise?: Promise<void>;
+    private freshSave: SaveType;
     readonly RESERVE_ACTORS = 5;
     readonly FETCH_AT_TIME = 10;
     readonly MAX_PAGES = 100;
@@ -66,13 +67,16 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
         console.log(chatState);
         this.saves = chatState?.saves || [];
         this.saveSlot = chatState?.lastSaveSlot || 0;
+
+        const layout = new Layout();
+        layout.setModuleAt(DEFAULT_GRID_SIZE/2, DEFAULT_GRID_SIZE/2, createModule('echo', { id: `echo-${DEFAULT_GRID_SIZE/2}-${DEFAULT_GRID_SIZE/2}`, connections: [], attributes: {} }));
+        layout.setModuleAt(DEFAULT_GRID_SIZE/2 - 1, DEFAULT_GRID_SIZE/2, createModule("common", { id: `common-${DEFAULT_GRID_SIZE/2 - 1}-${DEFAULT_GRID_SIZE/2}`, connections: [], attributes: {} }));
+        layout.setModuleAt(DEFAULT_GRID_SIZE/2, DEFAULT_GRID_SIZE/2 - 1, createModule("generator", { id: `generator-${DEFAULT_GRID_SIZE/2}-${DEFAULT_GRID_SIZE/2 - 1}`, connections: [], attributes: {} }));
+        this.freshSave = { player: {name: Object.values(users)[0].name}, echos: [], actors: {}, layout: layout, day: 1, phase: 0, currentVignette: undefined };
+
         // ensure at least one save exists and has a layout
         if (!this.saves.length) {
-            const layout = new Layout();
-            layout.setModuleAt(DEFAULT_GRID_SIZE/2, DEFAULT_GRID_SIZE/2, createModule('echo', { id: `echo-${DEFAULT_GRID_SIZE/2}-${DEFAULT_GRID_SIZE/2}`, connections: [], attributes: {} }));
-            layout.setModuleAt(DEFAULT_GRID_SIZE/2 - 1, DEFAULT_GRID_SIZE/2, createModule("common", { id: `common-${DEFAULT_GRID_SIZE/2 - 1}-${DEFAULT_GRID_SIZE/2}`, connections: [], attributes: {} }));
-            layout.setModuleAt(DEFAULT_GRID_SIZE/2, DEFAULT_GRID_SIZE/2 - 1, createModule("generator", { id: `generator-${DEFAULT_GRID_SIZE/2}-${DEFAULT_GRID_SIZE/2 - 1}`, connections: [], attributes: {} }));
-            this.saves.push({ player: {name: Object.values(users)[0].name}, echos: [], actors: {}, layout: layout, day: 1, phase: 0, currentVignette: undefined });
+            this.saves.push(this.freshSave);
         } else {
             console.log("Something in saves:");
             console.log(this.saves);
@@ -132,6 +136,12 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
             saves: this.saves,
             lastSaveSlot: this.saveSlot
         }
+    }
+
+    newGame() {
+        this.saves.push(this.freshSave);
+        this.saveSlot = this.saves.length - 1;
+        this.saveGame();
     }
 
     saveGame() {
