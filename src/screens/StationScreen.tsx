@@ -504,20 +504,15 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType}) =>
                                                         {/* Right column: Tall character portrait */}
                                                         <div style={{ 
                                                             flex: '1',
-                                                            height: '100%',
+                                                            minHeight: '100%',
                                                             borderRadius: '6px',
                                                             overflow: 'hidden',
-                                                            border: '2px solid #00ff88'
+                                                            border: '2px solid #00ff88',
+                                                            backgroundImage: `url(${actor.emotionPack?.neutral || actor.avatarImageUrl})`,
+                                                            backgroundSize: 'cover',
+                                                            backgroundPosition: 'top center',
+                                                            backgroundRepeat: 'no-repeat'
                                                         }}>
-                                                            <img
-                                                                src={actor.emotionPack?.neutral || actor.avatarImageUrl}
-                                                                alt={actor.name}
-                                                                style={{
-                                                                    width: '100%',
-                                                                    height: '100%',
-                                                                    objectFit: 'cover',
-                                                                }}
-                                                            />
                                                         </div>
                                                     </div>
                                                 </motion.div>
