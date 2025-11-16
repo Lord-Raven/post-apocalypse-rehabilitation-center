@@ -149,20 +149,24 @@ export async function generateVignetteScript(vignette: VignetteData, stage: Stag
                     // Prepare list of present actors (based on module/location)
                     const presentActors: Actor[] = Object.values(stage.getSave().actors).filter(a => a.locationId === (vignette.moduleId || ''));
                     
-                    while ((tagMatch = bracketTagRegex.exec(trimmed || '')) !== null) {
-                        const raw = tagMatch[1].trim();
+                    // Lookp through all tags:
+                    for (const tag of trimmed.match(/\[[^\]]+\]/g) || []) {
+                        const raw = tag.slice(1, -1).trim();
                         if (!raw) continue;
 
-                        const endSceneRegex = /\[(END|END SCENE|DONE)\]/i;
+                        console.log(`Processing tag: ${raw}`);
+                        
+                        const endSceneRegex = /(END|END SCENE|DONE)/i;
                         if (endSceneRegex.test(raw)) {
                             console.log("Detected end scene tag.");
                             endScene = true;
                             continue;
                         }
 
-                        // Attempt to split into "name" and "stat payload" by first ':' or '-' delimiter
-                        const split = raw.split(/[:\-]/);
+                        // Attempt to split into "name" and "stat +/-1" by first ':' or '-' delimiter
+                        const split = raw.split(":");
                         if (split.length >= 2) {
+                            console.log(`Processing stat change tag: ${raw}`);
                             const candidateName = split[0].trim();
                             const payload = raw.substring(raw.indexOf(split[1])).trim();
 
@@ -191,9 +195,9 @@ export async function generateVignetteScript(vignette: VignetteData, stage: Stag
                         }
 
                         // Look for expresses tags here, too:
-                        const emotionTagRegex = /\[([^[\]]+)\s+EXPRESSES\s+([^[\]]+)\]/gi;
-                        let emotionMatch: RegExpExecArray | null;
-                        while ((emotionMatch = emotionTagRegex.exec(raw)) !== null) {
+                        const emotionTagRegex = /([^[\]]+)\s+EXPRESSES\s+([^[\]]+)/gi;
+                        let emotionMatch = emotionTagRegex.exec(raw);
+                        if (emotionMatch) {
                             const characterName = emotionMatch[1].trim();
                             const emotionName = emotionMatch[2].trim().toLowerCase();
                             // Find matching present actor using namesMatch
