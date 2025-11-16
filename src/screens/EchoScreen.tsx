@@ -112,9 +112,10 @@ export const EchoScreen: FC<EchoScreenProps> = ({stage, setScreenType}) => {
 			<div 
 				style={{ 
 					flex: '0 0 auto', 
-					padding: '10px 20px', 
+					padding: '10px', 
 					borderBottom: '2px solid rgba(0,255,136,0.2)',
 					background: 'rgba(0,0,0,0.3)'
+					overflow: 'visible'
 				}}
 				onDrop={handleDropOnReserve}
 				onDragOver={handleDragOver}
@@ -190,8 +191,28 @@ export const EchoScreen: FC<EchoScreenProps> = ({stage, setScreenType}) => {
 				</div>
 			</div>
 
-			{/* Echo slots in center */}
-			<div style={{ flex: '1 1 auto', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '40px' }}>
+			{/* Echo slots in center with buttons on sides */}
+			<div style={{ flex: '1 1 auto', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '40px', gap: '40px' }}>
+				{/* Cancel button on the left */}
+				<motion.button
+					onClick={cancel}
+					whileHover={{ x: 6 }}
+					whileTap={{ scale: 0.98 }}
+					style={{
+						padding: '12px 18px',
+						borderRadius: 8,
+						border: '2px solid rgba(255,255,255,0.06)',
+						background: 'rgba(0,0,0,0.5)',
+						color: '#fff',
+						cursor: 'pointer',
+						height: 'fit-content',
+						alignSelf: 'center'
+					}}
+				>
+					Cancel
+				</motion.button>
+
+				{/* Echo slots container */}
 				<div style={{ display: 'flex', gap: 40, alignItems: 'flex-end', justifyContent: 'center' }}>
 					{echoSlots.map((actor, slotIndex) => {
 						// Calculate mouse-based tilt
@@ -273,25 +294,6 @@ export const EchoScreen: FC<EchoScreenProps> = ({stage, setScreenType}) => {
 							>
 							{actor ? (
 								<>
-									{/* Draggable indicator */}
-									<div
-										draggable
-										onDragStart={(e) => handleDragStart(e as any, actor, 'echo')}
-										style={{
-											position: 'absolute',
-											top: '10px',
-											left: '10px',
-											background: 'rgba(0,0,0,0.7)',
-											color: '#fff',
-											padding: '4px 8px',
-											borderRadius: 4,
-											fontSize: '12px',
-											cursor: 'grab'
-										}}
-									>
-										⋮⋮
-									</div>
-
 									{/* Actor nameplate */}
 									<Nameplate 
 										actor={actor} 
@@ -330,31 +332,15 @@ export const EchoScreen: FC<EchoScreenProps> = ({stage, setScreenType}) => {
 									textAlign: 'center',
 									padding: '20px'
 								}}>
-									Drop a candidate here to commit them to the echo process
+									Drop an echo here to initiate the echofusion process.
 								</div>
 							)}
 								</motion.div>
 						);
 					})}
 				</div>
-			</div>			{/* Footer actions */}
-			<div style={{ flex: '0 0 auto', padding: '18px 28px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-				<motion.button
-					onClick={cancel}
-					whileHover={{ x: 6 }}
-					whileTap={{ scale: 0.98 }}
-					style={{
-						padding: '12px 18px',
-						borderRadius: 8,
-						border: '2px solid rgba(255,255,255,0.06)',
-						background: 'rgba(0,0,0,0.5)',
-						color: '#fff',
-						cursor: 'pointer'
-					}}
-				>
-					Cancel
-				</motion.button>
 
+				{/* Wake button on the right */}
 				<motion.button
 					onClick={accept}
 					whileHover={{ scale: acceptable ? 1.03 : 1 }}
@@ -366,7 +352,9 @@ export const EchoScreen: FC<EchoScreenProps> = ({stage, setScreenType}) => {
 						background: acceptable ? '#00ff88' : 'rgba(255,255,255,0.06)',
 						color: acceptable ? '#002210' : '#9aa0a6',
 						fontWeight: 800,
-						cursor: acceptable ? 'pointer' : 'not-allowed'
+						cursor: acceptable ? 'pointer' : 'not-allowed',
+						height: 'fit-content',
+						alignSelf: 'center'
 					}}
 					disabled={!acceptable}
 				>

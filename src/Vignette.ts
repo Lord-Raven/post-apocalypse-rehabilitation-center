@@ -197,8 +197,10 @@ export async function generateVignetteScript(vignette: VignetteData, stage: Stag
                             const emotionName = emotionMatch[2].trim().toLowerCase();
                             // Find matching present actor using namesMatch
                             const matched = presentActors.find(a => namesMatch(a.name.toLowerCase(), characterName.toLowerCase()));
-                            if (!matched) continue;
-                            newEmotionTags[matched.name] = Emotion[emotionName as keyof typeof Emotion];
+                            // If no matching actor or emotion, skip
+                            if (!matched || !(emotionName in Emotion)) continue;
+                            console.log(`Detected emotion tag for ${matched.name}: ${emotionName}`);
+                            newEmotionTags[matched.name] = emotionName as Emotion;
                         }
                     }
 
