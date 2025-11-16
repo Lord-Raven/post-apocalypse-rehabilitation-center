@@ -426,12 +426,11 @@ export const VignetteScreen: FC<VignetteScreenProps> = ({ stage, setScreenType }
         setCharacterStatChanges(changes);
     };
 
-    console.log(`Rendering VignetteScreen in module ${vignette.moduleId}:`, stage().getSave().layout.getModuleById(vignette.moduleId || ''));
+    console.log(`Rendering VignetteScreen in module ${vignette.moduleId}:`, stage().getSave().layout.getModuleById(vignette.moduleId || '')?.getAttribute('defaultImageUrl') );
 
     return (
         <BlurredBackground
             imageUrl={stage().getSave().layout.getModuleById(vignette.moduleId || '')?.getAttribute('defaultImageUrl') || ''}
-            overlay="linear-gradient(180deg, rgba(0,0,0,0.2) 0%, rgba(0,0,0,0.6) 60%)"
         >
             <div style={{ position: 'relative', width: '100vw', height: '100vh', background: '#000' }}>
 
