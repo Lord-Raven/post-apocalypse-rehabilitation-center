@@ -50,8 +50,9 @@ export function generateVignettePrompt(vignette: VignetteData, stage: Stage, con
 
 export async function generateVignetteScript(vignette: VignetteData, stage: Stage): Promise<{ entries: ScriptEntry[]; endScene: boolean; statChanges: { [actorId: string]: { [stat: string]: number } } }> {
     // Build a scene log when continuing so the generator can see prior script entries
+    // Insert [Character EXPRESSES Emotion] tags as needed
     const scriptLog = (vignette.generating && vignette.script && vignette.script.length > 0)
-        ? vignette.script.map(e => `${e.speaker}: ${e.message}`).join('\n')
+        ? vignette.script.map(e => `${e.speaker}: ${Object.keys(e.actorEmotions || {}).map(emotion => `[${e.speaker} EXPRESSES ${emotion.toUpperCase()}]`).join(' ')} ${e.message}`).join('\n')
         : '(None so far)';
 
     const playerName = stage.getSave().player.name;
@@ -99,7 +100,7 @@ export async function generateVignetteScript(vignette: VignetteData, stage: Stag
         `\n\nScript Log:\nSystem: ${scriptLog}` +
         `\n\nInstruction:\nAt the "System:" prompt, generate a short scene script based upon this scenario, and the specified Scene Prompt. Follow the structure of the strict Example Script formatting above. ` +
         `Actions are depicted in prose and character dialogue in quotation marks. Emotion tags (e.g. [CHARACTER NAME EXPRESSES JOY]) should be used to indicate significant emotional shifts—` +
-        `these cues will be utilized by the game engine to visually display appropriate character emotions; only the listed emotions can be used here.\n` +
+        `these cues will be utilized by the game engine to visually display appropriate character emotions; only the known, listed emotions can be used here.\n` +
         `This response should end when it makes sense to give ${playerName} a chance to respond or contribute, ` +
         `or, if the scene feels satisfactorily complete, the entire scene can be concluded with an "[END SCENE]" or ` +
         `"[CHARACTER NAME: RELEVANT STAT + x]" tag(s), which can be used to apply stat changes to the specified Present Character(s). These changes should reflect an outcome of the scene; ` +
@@ -247,6 +248,22 @@ export async function generateVignetteScript(vignette: VignetteData, stage: Stag
                     
                     return entry;
                 });
+
+                // Drop empty entries from scriptEntries and adjust speaker to any matching actor's name:
+                for (const entry of scriptEntries) {
+                    if (!entry.message || entry.message.trim().length === 0) {
+                        scriptEntries.splice(scriptEntries.indexOf(entry), 1);
+                        continue;
+                    }
+                    // Adjust speaker name to match actor name if possible
+                    const presentActors = Object.values(stage.getSave().actors).filter(a => a.locationId === (vignette.moduleId || ''));
+                    const matched = presentActors.find(a => namesMatch(a.name.toLowerCase(), entry.speaker.toLowerCase()));
+                    if (matched) {
+                        entry.speaker = matched.name;
+                    }
+                }
+                
+
                 return { entries: scriptEntries, endScene: endScene, statChanges: statChanges };
             }
         } catch (error) {
