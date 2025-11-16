@@ -76,7 +76,7 @@ export const Nameplate: FC<NameplateProps> = ({
                     filter: 'blur(3px)',
                 },
                 '& .MuiChip-label': {
-                    padding: sizeStyles.padding,
+                    padding: 0,
                     fontFamily: actor.themeFontFamily || '"Arial Black", "Helvetica Neue", Arial, sans-serif',
                     position: 'relative',
                     zIndex: 1

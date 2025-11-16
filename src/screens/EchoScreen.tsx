@@ -19,6 +19,8 @@ interface EchoScreenProps {
 export const EchoScreen: FC<EchoScreenProps> = ({stage, setScreenType}) => {
 
 	const [selectedSlotIndex, setSelectedSlotIndex] = React.useState<number | null>(null);
+	const [refreshKey, setRefreshKey] = React.useState(0); // Force re-renders when data changes
+	const [mousePosition, setMousePosition] = React.useState({ x: 0, y: 0 });
 	const reserveActors = stage().reserveActors;
 	const echoSlots = stage().getEchoSlots();
 
@@ -30,6 +32,7 @@ export const EchoScreen: FC<EchoScreenProps> = ({stage, setScreenType}) => {
 		e.stopPropagation();
 		e.preventDefault();
 		stage().reserveActors = stage().reserveActors.filter(a => a.id !== actorId);
+		setRefreshKey(prev => prev + 1); // Force re-render
 	};
 
 	const accept = () => {
@@ -79,6 +82,7 @@ export const EchoScreen: FC<EchoScreenProps> = ({stage, setScreenType}) => {
 		if (actor) {
 			// Use Stage method to manage echo slots
 			await stage().commitActorToEcho(actor.id, slotIndex);
+			setRefreshKey(prev => prev + 1); // Force re-render
 		}
 	};
 
@@ -88,6 +92,7 @@ export const EchoScreen: FC<EchoScreenProps> = ({stage, setScreenType}) => {
 		if (data.source === 'echo') {
 			// Remove from echo slot using Stage method
 			stage().removeActorFromEcho(data.actorId);
+			setRefreshKey(prev => prev + 1); // Force re-render
 		}
 	};
 
@@ -187,42 +192,82 @@ export const EchoScreen: FC<EchoScreenProps> = ({stage, setScreenType}) => {
 			{/* Echo slots in center */}
 			<div style={{ flex: '1 1 auto', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '40px' }}>
 				<div style={{ display: 'flex', gap: 40, alignItems: 'flex-end', justifyContent: 'center' }}>
-					{echoSlots.map((actor, slotIndex) => (
-						<motion.div
-							key={`echo_slot_${slotIndex}`}
-							onClick={() => setSelectedSlotIndex(actor ? slotIndex : null)}
-							onDrop={(e) => handleDropOnEchoSlot(e, slotIndex)}
-							onDragOver={handleDragOver}
-							whileHover={{ scale: actor ? 1.02 : 1 }}
-							whileTap={{ scale: actor ? 0.98 : 1 }}
-							className={actor && !actor.isImageLoadingComplete ? 'loading-echo-slot' : ''}
-							style={{
-								cursor: actor ? 'pointer' : 'default',
-								width: '20vw',
-								height: '75vh',
-								minHeight: 400,
-								display: 'flex',
-								flexDirection: 'column',
-								justifyContent: actor ? 'flex-end' : 'center',
-								alignItems: actor ? 'stretch' : 'center',
-								borderRadius: 12,
-								overflow: 'hidden',
-								background: actor 
-									? `url(${actor.emotionPack['neutral'] || actor.avatarImageUrl})`
-									: 'rgba(0,255,136,0.1)',
-								backgroundSize: 'cover',
-								backgroundPosition: 'center top',
-								border: selectedSlotIndex === slotIndex 
-									? '5px solid #ffffff' 
-									: actor 
-										? (actor.isImageLoadingComplete ? '3px solid #00ff88' : '3px solid #ffaa00')
-										: '3px dashed rgba(0,255,136,0.5)',
-								boxShadow: selectedSlotIndex === slotIndex 
-									? '0 8px 30px rgba(0,255,136,0.12)' 
-									: '0 6px 18px rgba(0,0,0,0.4)',
-								position: 'relative'
-							}}
-						>
+					{echoSlots.map((actor, slotIndex) => {
+						// Calculate mouse-based tilt
+						const handleMouseMove = (e: React.MouseEvent) => {
+							const rect = e.currentTarget.getBoundingClientRect();
+							const centerX = rect.left + rect.width / 2;
+							const centerY = rect.top + rect.height / 2;
+							setMousePosition({
+								x: (e.clientX - centerX) / rect.width,
+								y: (e.clientY - centerY) / rect.height
+							});
+						};
+
+						const baseSkew = slotIndex === 1 ? 0 : slotIndex === 0 ? -2 : 2; // Slight base skew
+						const tiltX = mousePosition.y * 8; // Vertical mouse movement affects X rotation
+						const tiltY = mousePosition.x * -8; // Horizontal mouse movement affects Y rotation
+						const skewY = baseSkew + (mousePosition.x * 2);
+
+						return (
+							<motion.div
+								key={`echo_slot_${slotIndex}`}
+								onClick={() => setSelectedSlotIndex(actor ? slotIndex : null)}
+								onDrop={(e) => handleDropOnEchoSlot(e, slotIndex)}
+								onDragOver={handleDragOver}
+								onMouseMove={handleMouseMove}
+								onMouseLeave={() => setMousePosition({ x: 0, y: 0 })}
+								whileHover={{ 
+									scale: actor ? 1.02 : 1,
+									filter: 'brightness(1.1)'
+								}}
+								whileTap={{ scale: actor ? 0.98 : 1 }}
+								animate={{
+									rotateX: tiltX,
+									rotateY: tiltY,
+									skewY: skewY
+								}}
+								transition={{
+									type: "spring",
+									stiffness: 150,
+									damping: 15
+								}}
+								className={actor && !actor.isImageLoadingComplete ? 'loading-echo-slot' : ''}
+								style={{
+									cursor: actor ? 'pointer' : 'default',
+									width: '20vw',
+									height: '75vh',
+									minHeight: 400,
+									display: 'flex',
+									flexDirection: 'column',
+									justifyContent: actor ? 'flex-end' : 'center',
+									alignItems: actor ? 'stretch' : 'center',
+									borderRadius: 12,
+									overflow: 'hidden',
+									background: actor 
+										? `linear-gradient(
+												135deg, 
+												rgba(0, 255, 136, 0.15) 0%, 
+												rgba(0, 200, 255, 0.1) 50%, 
+												rgba(128, 0, 255, 0.15) 100%
+											), url(${actor.emotionPack['neutral'] || actor.avatarImageUrl})`
+										: 'linear-gradient(135deg, rgba(0,255,136,0.15), rgba(0,200,255,0.1))',
+									backgroundSize: actor ? 'cover, cover' : 'cover',
+									backgroundPosition: actor ? 'center, center top' : 'center',
+									backgroundBlendMode: actor ? 'overlay, normal' : 'normal',
+									border: selectedSlotIndex === slotIndex 
+										? '5px solid #ffffff' 
+										: actor 
+											? (actor.isImageLoadingComplete ? '3px solid #00ff88' : '3px solid #ffaa00')
+											: '3px dashed rgba(0,255,136,0.5)',
+									boxShadow: selectedSlotIndex === slotIndex 
+										? '0 12px 40px rgba(0,255,136,0.25), inset 0 0 50px rgba(0,255,136,0.1)' 
+										: '0 8px 25px rgba(0,0,0,0.4), inset 0 0 30px rgba(0,255,136,0.05)',
+									position: 'relative',
+									transformStyle: 'preserve-3d',
+									perspective: '1000px'
+								}}
+							>
 							{actor ? (
 								<>
 									{/* Draggable indicator */}
@@ -244,14 +289,13 @@ export const EchoScreen: FC<EchoScreenProps> = ({stage, setScreenType}) => {
 										⋮⋮
 									</div>
 
-									{/* Actor nameplate - now properly rounded */}
+									{/* Actor nameplate */}
 									<Nameplate 
 										actor={actor} 
 										size="medium"
 										style={{
 											padding: '12px 16px',
 											fontSize: 18
-											// Remove borderRadius: 0 to allow the component's default rounded style
 										}}
 									/>
 									{/* Stats */}
@@ -286,12 +330,11 @@ export const EchoScreen: FC<EchoScreenProps> = ({stage, setScreenType}) => {
 									Drop a candidate here to commit them to the echo process
 								</div>
 							)}
-						</motion.div>
-					))}
+								</motion.div>
+						);
+					})}
 				</div>
-			</div>
-
-			{/* Footer actions */}
+			</div>			{/* Footer actions */}
 			<div style={{ flex: '0 0 auto', padding: '18px 28px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
 				<motion.button
 					onClick={cancel}
