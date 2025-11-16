@@ -47,7 +47,6 @@ export const Nameplate: FC<NameplateProps> = ({
             variant="filled"
             className={className}
             sx={{ 
-                ml: 2,
                 px: 2,
                 py: 0.5,
                 fontSize: sizeStyles.fontSize,
@@ -63,6 +62,9 @@ export const Nameplate: FC<NameplateProps> = ({
                 backdropFilter: 'blur(6px)',
                 position: 'relative',
                 overflow: 'visible',
+                // Width should be content-based by default, but respect parent constraints
+                width: 'fit-content',
+                maxWidth: '100%',
                 '&::before': {
                     content: '""',
                     position: 'absolute',
