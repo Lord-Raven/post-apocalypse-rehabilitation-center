@@ -127,7 +127,6 @@ export const EchoScreen: FC<EchoScreenProps> = ({stage, setScreenType}) => {
 					justifyContent: 'center', 
 					flexWrap: 'wrap',
 					maxHeight: '200px',
-					overflowY: 'auto'
 				}}>
 					{reserveActors.map((actor, index) => (
 						<div
@@ -153,8 +152,8 @@ export const EchoScreen: FC<EchoScreenProps> = ({stage, setScreenType}) => {
 								className="reserve-actor"
 								style={{
 									cursor: 'grab',
-									width: '120px',
-									height: '180px',
+									width: '160px',
+									height: '200px',
 									display: 'flex',
 									flexDirection: 'column',
 									borderRadius: 12,

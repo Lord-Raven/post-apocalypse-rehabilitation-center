@@ -455,7 +455,7 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType}) =>
                                                     </div>
                                                     
                                                     {/* Two-column layout below */}
-                                                    <div style={{ display: 'flex', gap: '12px', height: '200px' }}>
+                                                    <div style={{ display: 'flex', gap: '12px', alignItems: 'stretch' }}>
                                                         {/* Left column: Stats with letter grades */}
                                                         <div className="stat-list" style={{ 
                                                             flex: '2', 

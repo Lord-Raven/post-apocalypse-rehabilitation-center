@@ -3,7 +3,8 @@ import { Chip } from '@mui/material';
 import Actor from '../actors/Actor';
 
 export interface NameplateProps {
-    actor: Actor;
+    actor?: Actor;
+    name?: string;
     size?: 'small' | 'medium' | 'large';
     className?: string;
     style?: React.CSSProperties;
@@ -14,7 +15,8 @@ export interface NameplateProps {
  * with consistent styling based on their theme colors and fonts.
  */
 export const Nameplate: FC<NameplateProps> = ({ 
-    actor, 
+    actor,
+    name,
     size = 'medium',
     className,
     style 
@@ -43,7 +45,7 @@ export const Nameplate: FC<NameplateProps> = ({
 
     return (
         <Chip
-            label={actor.name}
+            label={actor?.name || name || ''}
             variant="filled"
             className={className}
             sx={{ 
@@ -54,8 +56,8 @@ export const Nameplate: FC<NameplateProps> = ({
                 color: '#fff', 
                 letterSpacing: '1.2px',
                 textTransform: 'uppercase',
-                background: actor.themeColor || '#4a5568',
-                border: actor.themeColor ? `${sizeStyles.borderWidth} solid ${actor.themeColor}CC` : `${sizeStyles.borderWidth} solid #718096`,
+                background: actor?.themeColor || '#4a5568',
+                border: actor?.themeColor ? `${sizeStyles.borderWidth} solid ${actor.themeColor}CC` : `${sizeStyles.borderWidth} solid #718096`,
                 borderRadius: '25px',
                 textShadow: '0 2px 4px rgba(0,0,0,0.8), 0 1px 0 rgba(0,0,0,0.9)',
                 boxShadow: `0 6px 20px rgba(0,0,0,0.4), inset 0 2px 0 rgba(255,255,255,0.15), inset 0 -2px 0 rgba(0,0,0,0.2)`,
@@ -65,6 +67,8 @@ export const Nameplate: FC<NameplateProps> = ({
                 // Width should be content-based by default, but respect parent constraints
                 width: 'fit-content',
                 maxWidth: '100%',
+                // Center the nameplate when not in a flex container
+                mx: 'auto',
                 '&::before': {
                     content: '""',
                     position: 'absolute',
@@ -72,14 +76,14 @@ export const Nameplate: FC<NameplateProps> = ({
                     left: '-2px',
                     right: '-2px',
                     bottom: '-2px',
-                    background: actor.themeColor ? `${actor.themeColor}33` : 'rgba(113, 128, 150, 0.2)',
+                    background: actor?.themeColor ? `${actor.themeColor}33` : 'rgba(113, 128, 150, 0.2)',
                     borderRadius: '27px',
                     zIndex: -1,
                     filter: 'blur(3px)',
                 },
                 '& .MuiChip-label': {
                     padding: 0,
-                    fontFamily: actor.themeFontFamily || '"Arial Black", "Helvetica Neue", Arial, sans-serif',
+                    fontFamily: actor?.themeFontFamily || '"Arial Black", "Helvetica Neue", Arial, sans-serif',
                     position: 'relative',
                     zIndex: 1
                 },
