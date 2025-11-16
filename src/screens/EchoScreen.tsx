@@ -26,6 +26,12 @@ export const EchoScreen: FC<EchoScreenProps> = ({stage, setScreenType}) => {
 		setScreenType(ScreenType.STATION);
 	};
 
+	const removeReserveActor = (actorId: string, e: React.MouseEvent) => {
+		e.stopPropagation();
+		e.preventDefault();
+		stage().reserveActors = stage().reserveActors.filter(a => a.id !== actorId);
+	};
+
 	const accept = () => {
 		const selected = selectedSlotIndex != null ? echoSlots[selectedSlotIndex] : null;
 		const firstRoom = stage().getSave().layout.getModulesWhere(m => m?.type === 'quarters' && !m?.ownerId)[0] || null;
@@ -117,48 +123,62 @@ export const EchoScreen: FC<EchoScreenProps> = ({stage, setScreenType}) => {
 					maxHeight: '200px',
 					overflowY: 'auto'
 				}}>
-					{reserveActors.map((actor) => (
+					{reserveActors.map((actor, index) => (
 						<div
 							key={`reserve_${actor.id}`}
 							draggable
 							onDragStart={(e) => handleDragStart(e, actor, 'reserve')}
-							style={{ display: 'inline-block' }}
-						>
-						<motion.div
-							whileHover={{ scale: 1.05 }}
-							style={{
-								cursor: 'grab',
-								width: '80px',
-								height: '120px',
-								display: 'flex',
-								flexDirection: 'column',
-								borderRadius: 8,
-								overflow: 'hidden',
-								background: `url(${actor.emotionPack['neutral'] || actor.avatarImageUrl})`,
-								backgroundSize: 'cover',
-								backgroundPosition: 'center top',
-								border: '2px solid #00ff88',
-								boxShadow: '0 4px 12px rgba(0,0,0,0.4)',
+							style={{ 
+								display: 'inline-block',
 								position: 'relative'
 							}}
 						>
-							<div style={{
-								position: 'absolute',
-								bottom: 0,
-								left: 0,
-								right: 0,
-								background: 'rgba(0,0,0,0.8)',
-								color: '#fff',
-								fontSize: '10px',
-								padding: '4px',
-								textAlign: 'center',
-								textOverflow: 'ellipsis',
-								overflow: 'hidden',
-								whiteSpace: 'nowrap'
-							}}>
-								{actor.name}
+							{/* Remove button */}
+							<div
+								className="remove-actor-btn"
+								onClick={(e) => removeReserveActor(actor.id, e)}
+								title="Remove from reserves"
+							>
+								×
 							</div>
-						</motion.div>
+
+							<motion.div
+								whileHover={{ scale: 1.05 }}
+								className="reserve-actor"
+								style={{
+									cursor: 'grab',
+									width: '80px',
+									height: '120px',
+									display: 'flex',
+									flexDirection: 'column',
+									borderRadius: 8,
+									overflow: 'hidden',
+									background: `url(${actor.emotionPack['neutral'] || actor.avatarImageUrl})`,
+									backgroundSize: 'cover',
+									backgroundPosition: 'center top',
+									border: '2px solid rgba(0, 255, 136, 0.8)',
+									boxShadow: '0 4px 12px rgba(0,0,0,0.4), 0 0 15px rgba(0, 255, 136, 0.3)',
+									position: 'relative',
+									animationDelay: `${index * 0.5}s` // Stagger the floating animation
+								}}
+							>
+								<div style={{
+									position: 'absolute',
+									bottom: 0,
+									left: 0,
+									right: 0,
+									background: 'rgba(0,0,0,0.8)',
+									color: '#fff',
+									fontSize: '10px',
+									padding: '4px',
+									textAlign: 'center',
+									textOverflow: 'ellipsis',
+									overflow: 'hidden',
+									whiteSpace: 'nowrap'
+								}}>
+									{actor.name}
+								</div>
+							</motion.div>
 						</div>
 					))}
 				</div>
@@ -175,6 +195,7 @@ export const EchoScreen: FC<EchoScreenProps> = ({stage, setScreenType}) => {
 							onDragOver={handleDragOver}
 							whileHover={{ scale: actor ? 1.02 : 1 }}
 							whileTap={{ scale: actor ? 0.98 : 1 }}
+							className={actor && !actor.isImageLoadingComplete ? 'loading-echo-slot' : ''}
 							style={{
 								cursor: actor ? 'pointer' : 'default',
 								width: '20vw',
@@ -204,23 +225,6 @@ export const EchoScreen: FC<EchoScreenProps> = ({stage, setScreenType}) => {
 						>
 							{actor ? (
 								<>
-									{/* Loading indicator */}
-									{!actor.isImageLoadingComplete && (
-										<div style={{
-											position: 'absolute',
-											top: '10px',
-											right: '10px',
-											background: 'rgba(255,170,0,0.9)',
-											color: '#000',
-											padding: '4px 8px',
-											borderRadius: 4,
-											fontSize: '12px',
-											fontWeight: 'bold'
-										}}>
-											Loading Images...
-										</div>
-									)}
-									
 									{/* Draggable indicator */}
 									<div
 										draggable
@@ -240,14 +244,14 @@ export const EchoScreen: FC<EchoScreenProps> = ({stage, setScreenType}) => {
 										⋮⋮
 									</div>
 
-									{/* Actor nameplate */}
+									{/* Actor nameplate - now properly rounded */}
 									<Nameplate 
 										actor={actor} 
 										size="medium"
 										style={{
 											padding: '12px 16px',
-											fontSize: 18,
-											borderRadius: 0
+											fontSize: 18
+											// Remove borderRadius: 0 to allow the component's default rounded style
 										}}
 									/>
 									{/* Stats */}

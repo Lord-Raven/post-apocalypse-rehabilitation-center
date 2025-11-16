@@ -24,19 +24,16 @@ export const Nameplate: FC<NameplateProps> = ({
             case 'small':
                 return {
                     fontSize: '0.9rem',
-                    padding: '6px 12px',
                     borderWidth: '2px',
                 };
             case 'large':
                 return {
                     fontSize: '1.6rem',
-                    padding: '16px 32px',
                     borderWidth: '4px',
                 };
             default: // medium
                 return {
                     fontSize: '1.2rem',
-                    padding: '12px 24px',
                     borderWidth: '3px',
                 };
         }
