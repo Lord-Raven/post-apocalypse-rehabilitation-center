@@ -330,6 +330,7 @@ export const VignetteScreen: FC<VignetteScreenProps> = ({ stage, setScreenType }
                 // scan backward through vignette script to find most recent emotion for this actor:
                 for (let j = index; j >= 0; j--) {
                     const entry = vignette.script[j];
+                    console.log(entry);
                     if (entry.actorEmotions && entry.actorEmotions[actor.name]) {
                         console.log(`Setting emotion for actor ${actor.name} to ${entry.actorEmotions[actor.name]} from script entry ${j}`);
                         emotion = entry.actorEmotions[actor.name];
