@@ -114,7 +114,7 @@ export const EchoScreen: FC<EchoScreenProps> = ({stage, setScreenType}) => {
 					flex: '0 0 auto', 
 					padding: '10px', 
 					borderBottom: '2px solid rgba(0,255,136,0.2)',
-					background: 'rgba(0,0,0,0.3)'
+					background: 'rgba(0,0,0,0.3)',
 					overflow: 'visible'
 				}}
 				onDrop={handleDropOnReserve}
