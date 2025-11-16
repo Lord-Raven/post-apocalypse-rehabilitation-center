@@ -63,6 +63,10 @@ class Actor {
         return scoreArray[scoreClamped - 1];
     }
 
+    get isPrimaryImageReady(): boolean {
+        return !!this.emotionPack['neutral'];
+    }
+
     birth(day: number) {
         this.birthDay = day;
     }
@@ -269,22 +273,25 @@ export async function generateAdditionalActorImages(actor: Actor, stage: Stage):
 }
 
 /**
- * Commits an actor to the echo process by generating all their images
+ * Commits an actor to the echo process by generating their primary image
+ * Additional images are generated in the background
  */
 export async function commitActorToEcho(actor: Actor, stage: Stage): Promise<void> {
-    if (actor.isImageLoadingComplete) {
-        return; // Already has all images generated
+    if (actor.emotionPack['neutral']) {
+        // If neutral image exists, start background generation of additional images if not complete
+        if (!actor.isImageLoadingComplete) {
+            generateAdditionalActorImages(actor, stage).catch(console.error);
+        }
+        return; // Neutral image already exists, actor is ready
     }
     
     console.log(`Committing actor ${actor.name} to echo process`);
     
-    // First generate the primary image if not already done
-    if (!actor.emotionPack['neutral']) {
-        await generatePrimaryActorImage(actor, stage);
-    }
+    // Generate the primary image (this makes the character ready)
+    await generatePrimaryActorImage(actor, stage);
     
-    // Then generate all additional emotion images
-    await generateAdditionalActorImages(actor, stage);
+    // Start generating additional emotion images in the background
+    generateAdditionalActorImages(actor, stage).catch(console.error);
 }
 
 export function namesMatch(name: string, possibleName: string): boolean {

@@ -38,7 +38,7 @@ export const EchoScreen: FC<EchoScreenProps> = ({stage, setScreenType}) => {
 	const accept = () => {
 		const selected = selectedSlotIndex != null ? echoSlots[selectedSlotIndex] : null;
 		const firstRoom = stage().getSave().layout.getModulesWhere(m => m?.type === 'quarters' && !m?.ownerId)[0] || null;
-		if (selected && firstRoom && selected.isImageLoadingComplete) {
+		if (selected && firstRoom && selected.isPrimaryImageReady) {
 			// Assign the selected actor to the first available room
 			firstRoom.ownerId = selected.id;
 			// Set the actor's location to the echo room:
@@ -98,7 +98,7 @@ export const EchoScreen: FC<EchoScreenProps> = ({stage, setScreenType}) => {
 
 	const availableRooms = stage().getSave().layout.getModulesWhere(m => m?.type === 'quarters' && !m?.ownerId) || [];
 	const selectedActor = selectedSlotIndex != null ? echoSlots[selectedSlotIndex] : null;
-	const acceptable = selectedActor && selectedActor.isImageLoadingComplete && availableRooms.length > 0;
+	const acceptable = selectedActor && selectedActor.isPrimaryImageReady && availableRooms.length > 0;
 
 	return (
 		<BlurredBackground imageUrl="https://media.charhub.io/026ae01a-7dc8-472d-bfea-61548b87e6ef/84990780-8260-4833-ac0b-79c1a15ddb9e.png">
@@ -112,14 +112,14 @@ export const EchoScreen: FC<EchoScreenProps> = ({stage, setScreenType}) => {
 			<div 
 				style={{ 
 					flex: '0 0 auto', 
-					padding: '20px', 
+					padding: '10px 20px', 
 					borderBottom: '2px solid rgba(0,255,136,0.2)',
 					background: 'rgba(0,0,0,0.3)'
 				}}
 				onDrop={handleDropOnReserve}
 				onDragOver={handleDragOver}
 			>
-				<h3 style={{ color: '#00ff88', marginBottom: '15px', textAlign: 'center' }}>Reserve Candidates</h3>
+				<h3 style={{ color: '#00ff88', marginBottom: '10px', textAlign: 'center' }}>Echos</h3>
 				<div style={{ 
 					display: 'flex', 
 					gap: 12, 
@@ -152,17 +152,17 @@ export const EchoScreen: FC<EchoScreenProps> = ({stage, setScreenType}) => {
 								className="reserve-actor"
 								style={{
 									cursor: 'grab',
-									width: '80px',
-									height: '120px',
+									width: '120px',
+									height: '180px',
 									display: 'flex',
 									flexDirection: 'column',
-									borderRadius: 8,
+									borderRadius: 12,
 									overflow: 'hidden',
 									background: `url(${actor.emotionPack['neutral'] || actor.avatarImageUrl})`,
 									backgroundSize: 'cover',
 									backgroundPosition: 'center top',
-									border: '2px solid rgba(0, 255, 136, 0.8)',
-									boxShadow: '0 4px 12px rgba(0,0,0,0.4), 0 0 15px rgba(0, 255, 136, 0.3)',
+									border: `3px solid ${actor.themeColor || '#00ff88'}`,
+									boxShadow: `0 6px 18px rgba(0,0,0,0.4), 0 0 20px ${actor.themeColor ? actor.themeColor + '66' : 'rgba(0, 255, 136, 0.4)'}`,
 									position: 'relative',
 									animationDelay: `${index * 0.5}s` // Stagger the floating animation
 								}}
@@ -172,16 +172,17 @@ export const EchoScreen: FC<EchoScreenProps> = ({stage, setScreenType}) => {
 									bottom: 0,
 									left: 0,
 									right: 0,
-									background: 'rgba(0,0,0,0.8)',
-									color: '#fff',
-									fontSize: '10px',
-									padding: '4px',
-									textAlign: 'center',
-									textOverflow: 'ellipsis',
-									overflow: 'hidden',
-									whiteSpace: 'nowrap'
+									display: 'flex',
+									justifyContent: 'center',
+									padding: '8px'
 								}}>
-									{actor.name}
+									<Nameplate 
+										actor={actor} 
+										size="small"
+										style={{
+											transform: 'scale(0.8)'
+										}}
+									/>
 								</div>
 							</motion.div>
 						</div>
@@ -232,7 +233,7 @@ export const EchoScreen: FC<EchoScreenProps> = ({stage, setScreenType}) => {
 									stiffness: 150,
 									damping: 15
 								}}
-								className={actor && !actor.isImageLoadingComplete ? 'loading-echo-slot' : ''}
+								className={actor && !actor.isPrimaryImageReady ? 'loading-echo-slot' : ''}
 								style={{
 									cursor: actor ? 'pointer' : 'default',
 									width: '20vw',
@@ -256,13 +257,15 @@ export const EchoScreen: FC<EchoScreenProps> = ({stage, setScreenType}) => {
 									backgroundPosition: actor ? 'center, center top' : 'center',
 									backgroundBlendMode: actor ? 'overlay, normal' : 'normal',
 									border: selectedSlotIndex === slotIndex 
-										? '5px solid #ffffff' 
+										? `5px solid ${actor?.themeColor || '#ffffff'}` 
 										: actor 
-											? (actor.isImageLoadingComplete ? '3px solid #00ff88' : '3px solid #ffaa00')
+											? (actor.isPrimaryImageReady ? `4px solid ${actor.themeColor || '#00ff88'}` : '4px solid #ffaa00')
 											: '3px dashed rgba(0,255,136,0.5)',
 									boxShadow: selectedSlotIndex === slotIndex 
-										? '0 12px 40px rgba(0,255,136,0.25), inset 0 0 50px rgba(0,255,136,0.1)' 
-										: '0 8px 25px rgba(0,0,0,0.4), inset 0 0 30px rgba(0,255,136,0.05)',
+										? `0 12px 40px ${actor?.themeColor ? actor.themeColor + '40' : 'rgba(0,255,136,0.25)'}, inset 0 0 50px ${actor?.themeColor ? actor.themeColor + '20' : 'rgba(0,255,136,0.1)'}` 
+										: actor
+											? `0 8px 25px rgba(0,0,0,0.4), inset 0 0 30px ${actor.themeColor ? actor.themeColor + '15' : 'rgba(0,255,136,0.05)'}, 0 0 20px ${actor.themeColor ? actor.themeColor + '30' : 'rgba(0,255,136,0.1)'}`
+											: '0 8px 25px rgba(0,0,0,0.4), inset 0 0 30px rgba(0,255,136,0.05)',
 									position: 'relative',
 									transformStyle: 'preserve-3d',
 									perspective: '1000px'
@@ -370,7 +373,7 @@ export const EchoScreen: FC<EchoScreenProps> = ({stage, setScreenType}) => {
 					{availableRooms.length === 0 
 						? 'No Available Quarters' 
 						: selectedActor 
-							? (selectedActor.isImageLoadingComplete ? 'Wake Candidate' : 'Candidate Still Fusing')
+							? (selectedActor.isPrimaryImageReady ? 'Wake Candidate' : 'Candidate Still Fusing')
 							: 'Select a Candidate'
 					}
 				</motion.button>

@@ -455,14 +455,17 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType}) =>
                                                     </div>
                                                     
                                                     {/* Two-column layout below */}
-                                                    <div style={{ display: 'flex', gap: '12px', height: '120px' }}>
+                                                    <div style={{ display: 'flex', gap: '12px', height: '200px' }}>
                                                         {/* Left column: Stats with letter grades */}
                                                         <div className="stat-list" style={{ 
-                                                            flex: '1', 
+                                                            flex: '2', 
                                                             background: 'rgba(0,0,0,0.8)', 
                                                             borderRadius: '6px',
-                                                            padding: '6px 8px',
-                                                            overflow: 'hidden'
+                                                            padding: '8px 10px',
+                                                            overflow: 'hidden',
+                                                            display: 'flex',
+                                                            flexDirection: 'column',
+                                                            justifyContent: 'space-around'
                                                         }}>
                                                             {[
                                                                 ['Brawn', actor.stats.brawn],
@@ -477,15 +480,19 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType}) =>
                                                                 const grade = actor.scoreToGrade(value);
                                                                 return (
                                                                     <div className="stat-row" key={`${actor.id}_${label}`} style={{
-                                                                        padding: '2px 0px',
-                                                                        gap: '6px'
+                                                                        padding: '3px 0px',
+                                                                        gap: '8px',
+                                                                        display: 'flex',
+                                                                        alignItems: 'center',
+                                                                        justifyContent: 'space-between'
                                                                     }}>
                                                                         <span className="stat-label" style={{
-                                                                            fontSize: '8px',
-                                                                            letterSpacing: '0.5px'
+                                                                            fontSize: '10px',
+                                                                            letterSpacing: '0.5px',
+                                                                            flex: '1'
                                                                         }}>{label}</span>
                                                                         <span className="stat-grade" data-grade={grade} style={{
-                                                                            fontSize: '1.4rem',
+                                                                            fontSize: '1.6rem',
                                                                             textShadow: '3px 3px 0 rgba(0,0,0,0.88)',
                                                                             transform: 'skewX(-8deg) rotate(-4deg)'
                                                                         }}>{grade}</span>
@@ -496,7 +503,7 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType}) =>
                                                         
                                                         {/* Right column: Tall character portrait */}
                                                         <div style={{ 
-                                                            width: '60px',
+                                                            flex: '1',
                                                             height: '100%',
                                                             borderRadius: '6px',
                                                             overflow: 'hidden',
