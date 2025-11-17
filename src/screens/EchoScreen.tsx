@@ -17,6 +17,33 @@ interface EchoScreenProps {
 	setScreenType: (type: ScreenType) => void;
 }
 
+// Stat list array used for rendering actor stats
+const STATS_LIST = [
+	['Brawn', 'brawn'],
+	['Wits', 'wits'],
+	['Nerve', 'nerve'],
+	['Skill', 'skill'],
+	['Charm', 'charm'],
+	['Lust', 'lust'],
+	['Joy', 'joy'],
+	['Trust', 'trust'],
+] as const;
+
+// Helper component for rendering stat rows
+const StatRows: FC<{ actor: Actor }> = ({ actor }) => (
+	<>
+		{STATS_LIST.map(([label, key]) => {
+			const grade = actor.scoreToGrade(actor.stats[key]);
+			return (
+				<div className="stat-row" key={`${actor.id}_${label}`}>
+					<span className="stat-label">{label}</span>
+					<span className="stat-grade" data-grade={grade}>{grade}</span>
+				</div>
+			);
+		})}
+	</>
+);
+
 export const EchoScreen: FC<EchoScreenProps> = ({stage, setScreenType}) => {
 
 	const [selectedSlotIndex, setSelectedSlotIndex] = React.useState<number | null>(null);
@@ -122,6 +149,14 @@ export const EchoScreen: FC<EchoScreenProps> = ({stage, setScreenType}) => {
 	const selectedActor = selectedSlotIndex != null ? echoSlots[selectedSlotIndex] : null;
 	const acceptable = selectedActor && selectedActor.isPrimaryImageReady && availableRooms.length > 0;
 
+	// Shared button style
+	const buttonBaseStyle = {
+		padding: '12px 18px',
+		borderRadius: 8,
+		height: 'fit-content',
+		alignSelf: 'center'
+	};
+
 	return (
 		<BlurredBackground imageUrl="https://media.charhub.io/026ae01a-7dc8-472d-bfea-61548b87e6ef/84990780-8260-4833-ac0b-79c1a15ddb9e.png">
 			<div style={{ 
@@ -176,8 +211,8 @@ export const EchoScreen: FC<EchoScreenProps> = ({stage, setScreenType}) => {
 								whileHover={{ scale: 1.05 }}
 								layout
 								animate={{
-									width: isExpanded ? '320px' : '160px',
-									height: isExpanded ? '400px' : '200px'
+									width: isExpanded ? '480px' : '160px',
+									height: '200px'
 								}}
 								transition={{
 									type: "spring",
@@ -188,88 +223,74 @@ export const EchoScreen: FC<EchoScreenProps> = ({stage, setScreenType}) => {
 								style={{
 									cursor: 'pointer',
 									display: 'flex',
-									flexDirection: 'column',
+									flexDirection: 'row',
 									borderRadius: 12,
 									overflow: 'hidden',
+									border: `3px solid ${actor.themeColor || '#00ff88'}`,
+									boxShadow: `0 6px 18px rgba(0,0,0,0.4), 0 0 20px ${actor.themeColor ? actor.themeColor + '66' : 'rgba(0, 255, 136, 0.4)'}`,
+									position: 'relative'
+								}}
+							>
+								{/* Portrait - always visible on left */}
+								<div style={{
+									width: '160px',
+									height: '200px',
+									flexShrink: 0,
 									background: `url(${actor.emotionPack['neutral'] || actor.avatarImageUrl})`,
 									backgroundSize: 'cover',
 									backgroundPosition: 'center top',
-									border: `3px solid ${actor.themeColor || '#00ff88'}`,
-									boxShadow: `0 6px 18px rgba(0,0,0,0.4), 0 0 20px ${actor.themeColor ? actor.themeColor + '66' : 'rgba(0, 255, 136, 0.4)'}`,
-									position: 'relative',
-									animationDelay: `${index * 0.5}s` // Stagger the floating animation
-								}}
-							>
-								{isExpanded ? (
-									/* Expanded view with stats */
-									<>
-										<div style={{ flex: 1 }} />
-										<div style={{ 
-											background: 'rgba(0,0,0,0.85)', 
-											padding: '12px',
+									position: 'relative'
+								}}>
+									{!isExpanded && (
+										<div style={{
+											position: 'absolute',
+											bottom: 0,
+											left: 0,
+											right: 0,
 											display: 'flex',
-											flexDirection: 'column',
-											gap: '8px'
+											justifyContent: 'center',
+											padding: '8px'
 										}}>
 											<Nameplate 
 												actor={actor} 
 												size="small"
 												style={{
-													transform: 'scale(0.9)'
+													transform: 'scale(0.8)'
 												}}
 											/>
-											<div className="stat-list" style={{ 
-												display: 'grid',
-												gridTemplateColumns: '1fr 1fr',
-												gap: '4px',
-												fontSize: '11px'
-											}}>
-												{[
-													['Brawn', actor.stats['brawn']],
-													['Wits', actor.stats['wits']],
-													['Nerve', actor.stats['nerve']],
-													['Skill', actor.stats['skill']],
-													['Charm', actor.stats['charm']],
-													['Lust', actor.stats['lust']],
-													['Joy', actor.stats['joy']],
-													['Trust', actor.stats['trust']],
-												].map(([label, value]) => {
-													const grade = actor.scoreToGrade(value as number);
-													return (
-														<div className="stat-row" key={`${actor.id}_${label}`} style={{
-															display: 'flex',
-															justifyContent: 'space-between',
-															padding: '2px 4px'
-														}}>
-															<span className="stat-label">{label}</span>
-															<span className="stat-grade" data-grade={grade}>{grade}</span>
-														</div>
-													);
-												})}
-											</div>
-											<div style={{ display: 'flex', justifyContent: 'center', marginTop: '4px' }}>
-												<AuthorLink actor={actor} />
-											</div>
 										</div>
-									</>
-								) : (
-									/* Compact view */
-									<div style={{
-										position: 'absolute',
-										bottom: 0,
-										left: 0,
-										right: 0,
+									)}
+								</div>
+
+								{/* Expanded content - appears to the right */}
+								{isExpanded && (
+									<div style={{ 
+										background: 'rgba(0,0,0,0.85)', 
+										padding: '12px',
 										display: 'flex',
-										justifyContent: 'center',
-										padding: '8px'
+										flexDirection: 'column',
+										gap: '8px',
+										flex: 1,
+										justifyContent: 'center'
 									}}>
 										<Nameplate 
 											actor={actor} 
 											size="small"
 											style={{
-												transform: 'scale(0.8)'
+												transform: 'scale(0.9)'
 											}}
 										/>
+										<div className="stat-list" style={{ 
+											display: 'grid',
+											gridTemplateColumns: '1fr 1fr',
+											gap: '4px',
+											fontSize: '11px'
+										}}>
+											<StatRows actor={actor} />
+										</div>
+										<div style={{ display: 'flex', justifyContent: 'center', marginTop: '4px' }}>
+											<AuthorLink actor={actor} />
+										</div>
 									</div>
 								)}
 							</motion.div>
@@ -286,14 +307,11 @@ export const EchoScreen: FC<EchoScreenProps> = ({stage, setScreenType}) => {
 					whileHover={{ x: 6 }}
 					whileTap={{ scale: 0.98 }}
 					style={{
-						padding: '12px 18px',
-						borderRadius: 8,
+						...buttonBaseStyle,
 						border: '2px solid rgba(255,255,255,0.06)',
 						background: 'rgba(0,0,0,0.5)',
 						color: '#fff',
-						cursor: 'pointer',
-						height: 'fit-content',
-						alignSelf: 'center'
+						cursor: 'pointer'
 					}}
 				>
 					Cancel
@@ -349,6 +367,7 @@ export const EchoScreen: FC<EchoScreenProps> = ({stage, setScreenType}) => {
 								}}
 								className={`echo-slot ${actor && !actor.isPrimaryImageReady ? 'loading-echo-slot' : ''}`}
 								style={{
+									animationDelay: `${slotIndex * 0.7}s`,
 									cursor: actor ? 'pointer' : 'default',
 									height: '75vh',
 									minHeight: 400,
@@ -406,24 +425,7 @@ export const EchoScreen: FC<EchoScreenProps> = ({stage, setScreenType}) => {
 									/>
 									{/* Stats */}
 									<div className="stat-list" style={{ padding: '8px 12px', background: 'rgba(0,0,0,0.8)' }}>
-										{[
-											['Brawn', actor.stats['brawn']],
-											['Wits', actor.stats['wits']],
-											['Nerve', actor.stats['nerve']],
-											['Skill', actor.stats['skill']],
-											['Charm', actor.stats['charm']],
-											['Lust', actor.stats['lust']],
-											['Joy', actor.stats['joy']],
-											['Trust', actor.stats['trust']],
-										].map(([label, value]) => {
-											const grade = actor.scoreToGrade(value as number);
-											return (
-												<div className="stat-row" key={`${actor.id}_${label}`}>
-													<span className="stat-label">{label}</span>
-													<span className="stat-grade" data-grade={grade}>{grade}</span>
-												</div>
-											);
-										})}
+										<StatRows actor={actor} />
 									</div>
 									{/* Author link */}
 									<div style={{ 
@@ -456,15 +458,12 @@ export const EchoScreen: FC<EchoScreenProps> = ({stage, setScreenType}) => {
 					whileHover={{ scale: acceptable ? 1.03 : 1 }}
 					whileTap={{ scale: acceptable ? 0.98 : 1 }}
 					style={{
-						padding: '12px 18px',
-						borderRadius: 8,
+						...buttonBaseStyle,
 						border: '2px solid rgba(0,255,136,0.15)',
 						background: acceptable ? '#00ff88' : 'rgba(255,255,255,0.06)',
 						color: acceptable ? '#002210' : '#9aa0a6',
 						fontWeight: 800,
-						cursor: acceptable ? 'pointer' : 'not-allowed',
-						height: 'fit-content',
-						alignSelf: 'center'
+						cursor: acceptable ? 'pointer' : 'not-allowed'
 					}}
 					disabled={!acceptable}
 				>

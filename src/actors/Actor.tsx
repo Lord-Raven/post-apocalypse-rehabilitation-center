@@ -105,7 +105,7 @@ export async function loadReserveActor(fullPath: string, stage: Stage): Promise<
     const bannedWords = ['underage', 'minor', 'child', 'infant', 'baby', 'toddler', 'youngster', 'highschool', 'teen', 'adolescent', 'school'];
     const data = {
         name: dataName,
-        fullPath: item.node.fullpath,
+        fullPath: item.node.fullPath,
         description: item.node.definition.description.replaceAll('{{char}}', dataName).replaceAll('{{user}}', 'Individual X'),
         personality: item.node.definition.personality.replaceAll('{{char}}', dataName).replaceAll('{{user}}', 'Individual X'),
         avatar: item.node.max_res_url
