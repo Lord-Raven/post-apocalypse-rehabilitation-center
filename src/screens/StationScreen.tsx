@@ -6,6 +6,7 @@ import { ScreenType } from './BaseScreen';
 import { Layout, Module, createModule, ModuleType, MODULE_DEFAULTS } from '../Module';
 import { Stage } from '../Stage';
 import Nameplate from '../components/Nameplate';
+import AuthorLink from '../components/AuthorLink';
 
 // Styled components for the day/phase display
 const StyledDayCard = styled(Card)(({ theme }) => ({
@@ -91,6 +92,8 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType}) =>
     // Drag and drop state
     const [draggedModule, setDraggedModule] = React.useState<{module: Module, fromX: number, fromY: number} | null>(null);
     const [draggedActor, setDraggedActor] = React.useState<any | null>(null);
+    const [hoveredModuleId, setHoveredModuleId] = React.useState<string | null>(null);
+    const [justDroppedModuleId, setJustDroppedModuleId] = React.useState<string | null>(null);
 
     const gridSize = 6;
     const cellSize = '10vmin';
@@ -191,9 +194,14 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType}) =>
             targetModule.ownerId = actorId;
         }
 
+        // Show drop animation feedback
+        setJustDroppedModuleId(targetModule.id);
+        setTimeout(() => setJustDroppedModuleId(null), 500);
+
         // Update layout to trigger re-render
         setLayout(stage().getLayout());
         setDraggedActor(null);
+        setHoveredModuleId(null);
     };
 
     // Need to make sure re-renders when layout is updated.
@@ -281,10 +289,23 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType}) =>
                     >
                         {module ? (
                             <motion.div
-                                key={`cell_motion_${x}-${y}`}
+                                key={module.id}
+                                layoutId={module.id}
                                 className={`module module-${module.type}`}
                                 initial={{ scale: 0 }}
-                                animate={{ scale: 1 }}
+                                animate={{ 
+                                    scale: justDroppedModuleId === module.id ? 1.15 : 1,
+                                    boxShadow: hoveredModuleId === module.id && draggedActor 
+                                        ? `0 0 40px rgba(0, 255, 136, 0.8), inset 0 0 30px rgba(0, 255, 136, 0.3)`
+                                        : justDroppedModuleId === module.id
+                                            ? `0 0 50px rgba(0, 255, 136, 1), inset 0 0 40px rgba(0, 255, 136, 0.5)`
+                                            : undefined
+                                }}
+                                transition={{
+                                    scale: { duration: 0.2 },
+                                    boxShadow: { duration: 0.2 },
+                                    layout: { duration: 0.3, ease: "easeInOut" }
+                                }}
                                 whileHover={{ scale: draggedActor ? 1.08 : 1.03 }}
                                 drag={!draggedActor}
                                 dragMomentum={false}
@@ -293,6 +314,12 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType}) =>
                                 onDragOver={(e) => {
                                     if (draggedActor) {
                                         e.preventDefault();
+                                        setHoveredModuleId(module.id);
+                                    }
+                                }}
+                                onDragLeave={() => {
+                                    if (draggedActor) {
+                                        setHoveredModuleId(null);
                                     }
                                 }}
                                 onDrop={(e) => {
@@ -584,24 +611,33 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType}) =>
                                                     }}
                                                     onDragEnd={() => {
                                                         setDraggedActor(null);
+                                                        setHoveredModuleId(null);
                                                     }}
                                                     style={{
-                                                        padding: '12px',
                                                         marginBottom: '15px',
-                                                        border: '2px solid rgba(0, 255, 136, 0.2)',
-                                                        borderRadius: '8px',
-                                                        background: 'rgba(0, 10, 20, 0.5)',
-                                                        cursor: draggedActor?.id === actor.id ? 'grabbing' : 'grab',
-                                                        opacity: draggedActor?.id === actor.id ? 0.5 : 1,
-                                                        transition: 'background-color 0.2s',
-                                                    }}
-                                                    onMouseEnter={(e) => {
-                                                        e.currentTarget.style.backgroundColor = 'rgba(0, 255, 136, 0.1)';
-                                                    }}
-                                                    onMouseLeave={(e) => {
-                                                        e.currentTarget.style.backgroundColor = 'rgba(0, 10, 20, 0.5)';
                                                     }}
                                                 >
+                                                    <motion.div
+                                                        animate={{
+                                                            opacity: draggedActor?.id === actor.id ? 0.4 : 1,
+                                                            scale: draggedActor?.id === actor.id ? 0.95 : 1,
+                                                        }}
+                                                        whileHover={{
+                                                            backgroundColor: 'rgba(0, 255, 136, 0.15)',
+                                                            borderColor: 'rgba(0, 255, 136, 0.5)',
+                                                            scale: 1.02
+                                                        }}
+                                                        transition={{
+                                                            duration: 0.2
+                                                        }}
+                                                        style={{
+                                                            padding: '12px',
+                                                            border: '2px solid rgba(0, 255, 136, 0.2)',
+                                                            borderRadius: '8px',
+                                                            background: 'rgba(0, 10, 20, 0.5)',
+                                                            cursor: draggedActor?.id === actor.id ? 'grabbing' : 'grab',
+                                                        }}
+                                                    >
                                                     {/* Nameplate at the top */}
                                                     <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '12px' }}>
                                                         <Nameplate 
@@ -674,10 +710,18 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType}) =>
                                                             backgroundImage: `url(${actor.emotionPack?.neutral || actor.avatarImageUrl})`,
                                                             backgroundSize: 'cover',
                                                             backgroundPosition: 'top center',
-                                                            backgroundRepeat: 'no-repeat'
+                                                            backgroundRepeat: 'no-repeat',
+                                                            position: 'relative',
+                                                            display: 'flex',
+                                                            alignItems: 'flex-end',
+                                                            justifyContent: 'flex-end',
+                                                            padding: '8px'
                                                         }}>
+                                                            {/* Author link in bottom right corner */}
+                                                            <AuthorLink actor={actor} />
                                                         </div>
                                                     </div>
+                                                    </motion.div>
                                                 </div>
                                             ))
                                         )}

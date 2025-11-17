@@ -183,3 +183,8 @@ html, body, #root {
   background: rgba(255, 30, 30, 1);
   transform: scale(1.1);
 }
+
+/* Floating animation for echo slots (subtle) */
+.echo-slot {
+  animation: float 6s ease-in-out infinite;
+}

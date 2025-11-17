@@ -18,6 +18,7 @@ export enum Stat {
 class Actor {
     id: string;
     name: string;
+    fullPath: string = '';
     locationId: string = '';
     avatarImageUrl: string;
     description: string;
@@ -44,9 +45,10 @@ class Actor {
         return actor;
     }
 
-    constructor(id: string, name: string, avatarImageUrl: string, description: string, profile: string, emotionPack: EmotionPack, stats: Record<Stat, number>, themeColor: string, themeFontFamily: string) {
+    constructor(id: string, name: string, fullPath: string, avatarImageUrl: string, description: string, profile: string, emotionPack: EmotionPack, stats: Record<Stat, number>, themeColor: string, themeFontFamily: string) {
         this.id = id;
         this.name = name;
+        this.fullPath = fullPath;
         this.avatarImageUrl = avatarImageUrl;
         this.description = description;
         this.profile = profile;
@@ -103,6 +105,7 @@ export async function loadReserveActor(fullPath: string, stage: Stage): Promise<
     const bannedWords = ['underage', 'minor', 'child', 'infant', 'baby', 'toddler', 'youngster', 'highschool', 'teen', 'adolescent', 'school'];
     const data = {
         name: dataName,
+        fullpath: item.node.fullpath,
         description: item.node.definition.description.replaceAll('{{char}}', dataName).replaceAll('{{user}}', 'Individual X'),
         personality: item.node.definition.personality.replaceAll('{{char}}', dataName).replaceAll('{{user}}', 'Individual X'),
         avatar: item.node.max_res_url
@@ -178,6 +181,7 @@ export async function loadReserveActor(fullPath: string, stage: Stage): Promise<
     const newActor = new Actor(
         generateUuid(),
         parsedData['name'] || data.name,
+        data.fullPath || '',
         data.avatar || '',
         parsedData['description'] || '',
         parsedData['profile'] || '',
