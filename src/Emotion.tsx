@@ -1,78 +1,43 @@
 export enum Emotion {
     neutral = 'neutral',
-    admiration = 'admiration',
-    amusement = 'amusement',
+    approval = 'approval', // admiration, amusement
     anger = 'anger',
-    annoyance = 'annoyance',
-    approval = 'approval',
-    caring = 'caring',
     confusion = 'confusion',
-    curiosity = 'curiosity',
     desire = 'desire',
-    disappointment = 'disappointment',
-    disapproval = 'disapproval',
+    disappointment = 'disappointment', // annoyance, disapproval
     disgust = 'disgust',
     embarrassment = 'embarrassment',
-    excitement = 'excitement',
-    fear = 'fear',
-    gratitude = 'gratitude',
+    fear = 'fear', // surprised (unpleasant)
     grief = 'grief',
+    guilt = 'guilt', // remorse
     joy = 'joy',
+    kindness = 'kindness', // caring, gratitude
     love = 'love',
     nervousness = 'nervousness',
-    optimism = 'optimism',
     pride = 'pride',
-    realization = 'realization',
-    relief = 'relief',
-    remorse = 'remorse',
     sadness = 'sadness',
-    surprise = 'surprise',
-    standing = 'standing'
-}
-
-export const EMOTION_MAPPING: {[emotion in Emotion]?: Emotion} = {
-    admiration: Emotion.joy,
-    approval: Emotion.amusement,
-    caring: Emotion.neutral,
-    curiosity: Emotion.neutral,
-    disapproval: Emotion.disappointment,
-    optimism: Emotion.gratitude,
-    realization: Emotion.surprise,
-    relief: Emotion.gratitude,
-    remorse: Emotion.sadness,
-    standing: Emotion.neutral
+    wonder = 'wonder', // realization, curiosity, optimism, excitement, surprised (pleasant)
 }
 
 export const EMOTION_PROMPTS: {[emotion in Emotion]?: string} = {
     neutral: 'calm expression',
-    admiration: 'admiring, appreciative expression',
-    amusement: 'subtle smirk, amused expression',
+    approval: 'approving, appreciative, pleased expression',
     anger: 'enraged, angry expression',
-    annoyance: 'annoyed, dismayed expression',
-    approval: 'approving, pleased expression',
-    caring: 'kind, gentle, caring expression',
     confusion: 'stunned, baffled, confused expression',
-    curiosity: 'inquiring, curious expression',
     desire: 'sexy, alluring, seductive expression',
-    disappointment: 'unhappy, disappointed expression',
-    disapproval: 'disapproving, scolding expression',
-    disgust: 'disgusted expression',
-    embarrassment: 'embarrassed, blushing, sheepish expression',
-    excitement: 'keen, excited expression',
-    fear: 'terrified expression',
-    gratitude: 'relieved, thankful expression',
+    disappointment: 'unhappy, mildly dismayed expression',
+    disgust: 'disgusted, grossed-out expression',
+    embarrassment: 'embarrassed, sheepish expression',
+    fear: 'shocked, terrified expression',
     grief: 'depressed, sobbing expression',
+    guilt: 'remorseful, repentant expression',
     joy: 'happy, smiling',
-    love: 'adorable, grinning, blushing, lovestruck expression',
-    nervousness: 'slightly nervous, uncertain expression',
-    optimism: 'hopeful, optimistic expression',
+    kindness: 'kind, caring, grateful expression',
+    love: 'adorable, grinning, lovestruck expression',
+    nervousness: 'anxious, uncertain expression',
     pride: 'proud, haughty, puffed up expression',
-    realization: 'pleasantly surprised, enlightened expression',
-    relief: 'relieved, content expression',
-    remorse: 'regretful, apologetic expression',
-    sadness: 'sad, upset expression, teary-eyed',
-    surprise: 'surprised expression',
-    standing: 'calm expression',
+    sadness: 'sad, upset expression',
+    wonder: 'excitedly curious, intrigued expression',
 }
 
 export type EmotionPack = {[key: string]: string};

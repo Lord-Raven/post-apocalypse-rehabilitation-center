@@ -42,7 +42,7 @@ export const EchoScreen: FC<EchoScreenProps> = ({stage, setScreenType}) => {
 			// Assign the selected actor to the first available room
 			firstRoom.ownerId = selected.id;
 			// Set the actor's location to the echo room:
-			const sceneRoom = stage().getSave().layout.getModulesWhere(m => m.type === 'echo')[0] || firstRoom;
+			const sceneRoom = stage().getSave().layout.getModulesWhere(m => m.type === 'echo chamber')[0] || firstRoom;
 			selected.locationId = sceneRoom?.id || '';
 			stage().getSave().actors[selected.id] = selected;
 			// Remove from reserve actors and echo slots

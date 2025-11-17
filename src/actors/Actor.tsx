@@ -259,12 +259,12 @@ export async function generateAdditionalActorImages(actor: Actor, stage: Stage):
     console.log(`Generating additional emotion images for actor ${actor.name} (ID: ${actor.id})`);
     if (actor.emotionPack['neutral']) {
         // Generate in serial and not parallel as below:
-        for (const emotion of Object.values(Emotion)) {            
+        for (const emotion of Object.values(Emotion)) {
             if (!actor.emotionPack[emotion]) {
                 console.log(`Generating ${emotion} emotion image for actor ${actor.name}`);
                 const imageUrl = await stage.makeImageFromImage({
                     image: actor.emotionPack['neutral'],
-                    prompt: `This character now has a ${EMOTION_PROMPTS[emotion]}.`,
+                    prompt: `Give this character a ${EMOTION_PROMPTS[emotion]} or gesture.`,
                     remove_background: true,
                     transfer_type: 'edit'
                 }, `actors/${actor.id}/${emotion}.png`, '');
