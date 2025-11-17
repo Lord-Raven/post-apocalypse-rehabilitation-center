@@ -116,36 +116,35 @@ export const MenuScreen: FC<MenuScreenProps> = ({ stage, setScreenType }) => {
                 {/* Menu buttons */}
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
                     {menuButtons.map((button, index) => (
-                        <Button
+                        <motion.div
                             key={button.key}
-                            variant="menu"
                             initial={{ opacity: 0, x: -30 }}
                             animate={{ 
                                 opacity: 1, 
-                                x: 0,
-                                background: button.enabled && hoveredButton === button.key 
-                                    ? 'rgba(0, 255, 136, 0.2)' 
-                                    : button.enabled ? 'transparent' : 'rgba(0, 20, 40, 0.5)'
+                                x: hoveredButton === button.key && button.enabled ? 10 : 0
                             }}
                             transition={{ 
-                                delay: 0.4 + (index * 0.1), 
-                                duration: 0.4, 
-                                ease: 'easeOut' 
-                            }}
-                            whileHover={{ 
-                                x: button.enabled ? 10 : 0,
-                                scale: button.enabled ? 1.02 : 1
-                            }}
-                            onHoverStart={() => setHoveredButton(button.enabled ? button.key : null)}
-                            onHoverEnd={() => setHoveredButton(null)}
-                            onClick={button.enabled ? button.onClick : undefined}
-                            disabled={!button.enabled}
-                            style={{
-                                width: '100%'
+                                opacity: { delay: 0.4 + (index * 0.1), duration: 0.4, ease: 'easeOut' },
+                                x: { duration: 0.2, ease: 'easeOut' }
                             }}
                         >
-                            {button.label}
-                        </Button>
+                            <Button
+                                variant="menu"
+                                onMouseEnter={() => setHoveredButton(button.enabled ? button.key : null)}
+                                onMouseLeave={() => setHoveredButton(null)}
+                                whileTap={{ scale: button.enabled ? 0.95 : 1 }}
+                                onClick={button.enabled ? button.onClick : undefined}
+                                disabled={!button.enabled}
+                                style={{
+                                    width: '100%',
+                                    background: button.enabled && hoveredButton === button.key 
+                                        ? 'rgba(0, 255, 136, 0.2)' 
+                                        : button.enabled ? 'transparent' : 'rgba(0, 20, 40, 0.5)'
+                                }}
+                            >
+                                {button.label}
+                            </Button>
+                        </motion.div>
                     ))}
                 </div>
 

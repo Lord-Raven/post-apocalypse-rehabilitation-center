@@ -335,22 +335,21 @@ html, body, #root {
   }
 }
 
-.btn-menu {
-  padding: 15px 25px;
-  border-radius: 8px;
+/* Shared button header style for menu buttons and expandable headers */
+.btn-header-base {
+  padding: 15px;
+  border-radius: 5px;
   border: var(--border-primary-bright);
   background: transparent;
   color: var(--color-primary);
-  font-size: 18px;
+  font-size: 16px;
   font-weight: bold;
   cursor: pointer;
-  text-align: center;
   transition: all 0.2s ease;
   text-shadow: 0 1px 2px var(--color-primary-30);
   
   &:hover:not(:disabled) {
     background: var(--color-primary-20);
-    transform: translateX(10px);
   }
   
   &:disabled {
@@ -358,6 +357,19 @@ html, body, #root {
     color: var(--color-primary-40);
     cursor: not-allowed;
     opacity: 0.6;
+  }
+}
+
+.btn-menu {
+  @extend .btn-header-base;
+  padding: 15px 25px;
+  border-radius: 8px;
+  font-size: 18px;
+  text-align: center;
+  
+  &:hover:not(:disabled) {
+    background: var(--color-primary-20);
+    transform: translateX(10px);
   }
 }
 
@@ -373,19 +385,12 @@ html, body, #root {
 
 /* Expandable Menu Item */
 .menu-item-header {
+  @extend .btn-header-base;
   display: flex;
   align-items: center;
   justify-content: space-between;
   width: 100%;
-  padding: 15px;
-  background: transparent;
-  border: var(--border-primary-bright);
-  border-radius: 5px;
-  color: var(--color-primary);
-  font-size: 16px;
-  cursor: pointer;
   text-align: left;
-  transition: background-color 0.2s ease;
   
   &.expanded {
     background: var(--color-primary-20);

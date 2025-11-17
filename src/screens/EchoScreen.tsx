@@ -9,6 +9,7 @@ import { Stage } from '../Stage';
 import { VignetteType } from '../Vignette';
 import Nameplate from '../components/Nameplate';
 import Actor from '../actors/Actor';
+import ActorCard from '../components/ActorCard';
 import { BlurredBackground } from '../components/BlurredBackground';
 import AuthorLink from '../components/AuthorLink';
 import { Button } from '../components/UIComponents';
@@ -17,33 +18,6 @@ interface EchoScreenProps {
 	stage: () => Stage;
 	setScreenType: (type: ScreenType) => void;
 }
-
-// Stat list array used for rendering actor stats
-const STATS_LIST = [
-	['Brawn', 'brawn'],
-	['Wits', 'wits'],
-	['Nerve', 'nerve'],
-	['Skill', 'skill'],
-	['Charm', 'charm'],
-	['Lust', 'lust'],
-	['Joy', 'joy'],
-	['Trust', 'trust'],
-] as const;
-
-// Helper component for rendering stat rows
-const StatRows: FC<{ actor: Actor }> = ({ actor }) => (
-	<>
-		{STATS_LIST.map(([label, key]) => {
-			const grade = actor.scoreToGrade(actor.stats[key]);
-			return (
-				<div className="stat-row" key={`${actor.id}_${label}`}>
-					<span className="stat-label">{label}</span>
-					<span className="stat-grade" data-grade={grade}>{grade}</span>
-				</div>
-			);
-		})}
-	</>
-);
 
 export const EchoScreen: FC<EchoScreenProps> = ({stage, setScreenType}) => {
 
@@ -185,11 +159,11 @@ export const EchoScreen: FC<EchoScreenProps> = ({stage, setScreenType}) => {
 						return (
 						<div
 							key={`reserve_${actor.id}`}
-							draggable
-							onDragStart={(e) => handleDragStart(e, actor, 'reserve')}
 							style={{ 
 								display: 'inline-block',
-								position: 'relative'
+								position: 'relative',
+								width: isExpanded ? '480px' : '160px',
+								transition: 'width 0.3s ease'
 							}}
 						>
 							{/* Remove button */}
@@ -197,98 +171,44 @@ export const EchoScreen: FC<EchoScreenProps> = ({stage, setScreenType}) => {
 								className="remove-actor-btn"
 								onClick={(e) => removeReserveActor(actor.id, e)}
 								title="Remove from reserves"
+								style={{
+									position: 'absolute',
+									top: '-8px',
+									right: '-8px',
+									width: '28px',
+									height: '28px',
+									borderRadius: '50%',
+									background: 'rgba(255, 0, 0, 0.8)',
+									color: 'white',
+									display: 'flex',
+									alignItems: 'center',
+									justifyContent: 'center',
+									cursor: 'pointer',
+									fontSize: '20px',
+									fontWeight: 'bold',
+									zIndex: 10,
+									border: '2px solid rgba(255, 255, 255, 0.3)',
+									boxShadow: '0 2px 8px rgba(0,0,0,0.3)'
+								}}
 							>
 								×
 							</div>
 
-							<motion.div
+							<ActorCard
+								actor={actor}
+								isExpanded={isExpanded}
 								onClick={() => setExpandedCandidateId(isExpanded ? null : actor.id)}
-								whileHover={{ scale: 1.05 }}
-								layout
-								animate={{
-									width: isExpanded ? '480px' : '160px',
-									height: '200px'
-								}}
-								transition={{
-									type: "spring",
-									stiffness: 150,
-									damping: 15
-								}}
-								className="reserve-actor"
+								draggable
+								onDragStart={(e) => handleDragStart(e, actor, 'reserve')}
+								layout="horizontal"
 								style={{
-									cursor: 'pointer',
-									display: 'flex',
-									flexDirection: 'row',
-									borderRadius: 12,
-									overflow: 'hidden',
+									height: '200px',
 									border: `3px solid ${actor.themeColor || '#00ff88'}`,
 									boxShadow: `0 6px 18px rgba(0,0,0,0.4), 0 0 20px ${actor.themeColor ? actor.themeColor + '66' : 'rgba(0, 255, 136, 0.4)'}`,
-									position: 'relative'
+									padding: '8px',
+									overflow: 'hidden'
 								}}
-							>
-								{/* Portrait - always visible on left */}
-								<div style={{
-									width: '160px',
-									height: '200px',
-									flexShrink: 0,
-									background: `url(${actor.emotionPack['neutral'] || actor.avatarImageUrl})`,
-									backgroundSize: 'cover',
-									backgroundPosition: 'center top',
-									position: 'relative'
-								}}>
-									{!isExpanded && (
-										<div style={{
-											position: 'absolute',
-											bottom: 0,
-											left: 0,
-											right: 0,
-											display: 'flex',
-											justifyContent: 'center',
-											padding: '8px'
-										}}>
-											<Nameplate 
-												actor={actor} 
-												size="small"
-												style={{
-													transform: 'scale(0.8)'
-												}}
-											/>
-										</div>
-									)}
-								</div>
-
-								{/* Expanded content - appears to the right */}
-								{isExpanded && (
-									<div style={{ 
-										background: 'rgba(0,0,0,0.85)', 
-										padding: '12px',
-										display: 'flex',
-										flexDirection: 'column',
-										gap: '8px',
-										flex: 1,
-										justifyContent: 'center'
-									}}>
-										<Nameplate 
-											actor={actor} 
-											size="small"
-											style={{
-												transform: 'scale(0.9)'
-											}}
-										/>
-										<div className="stat-list" style={{ 
-											display: 'grid',
-											gridTemplateColumns: '1fr 1fr',
-											gap: '4px',
-											fontSize: '11px'
-										}}>
-											<StatRows actor={actor} />
-										</div>
-										<div style={{ display: 'flex', justifyContent: 'center', marginTop: '4px' }}>
-											<AuthorLink actor={actor} />
-										</div>
-									</div>
-								)}
-							</motion.div>
+							/>
 						</div>
 					);})}
 				</div>
@@ -413,7 +333,24 @@ export const EchoScreen: FC<EchoScreenProps> = ({stage, setScreenType}) => {
 									/>
 									{/* Stats */}
 									<div className="stat-list" style={{ padding: '8px 12px', background: 'rgba(0,0,0,0.8)' }}>
-										<StatRows actor={actor} />
+										{[
+											['Brawn', 'brawn'],
+											['Wits', 'wits'],
+											['Nerve', 'nerve'],
+											['Skill', 'skill'],
+											['Charm', 'charm'],
+											['Lust', 'lust'],
+											['Joy', 'joy'],
+											['Trust', 'trust'],
+										].map(([label, key]) => {
+											const grade = actor.scoreToGrade(actor.stats[key as keyof typeof actor.stats]);
+											return (
+												<div className="stat-row" key={`${actor.id}_${label}`}>
+													<span className="stat-label">{label}</span>
+													<span className="stat-grade" data-grade={grade}>{grade}</span>
+												</div>
+											);
+										})}
 									</div>
 									{/* Author link */}
 									<div style={{ 

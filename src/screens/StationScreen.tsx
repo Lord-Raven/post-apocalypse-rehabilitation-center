@@ -7,6 +7,7 @@ import { Layout, Module, createModule, ModuleType, MODULE_DEFAULTS } from '../Mo
 import { Stage } from '../Stage';
 import Nameplate from '../components/Nameplate';
 import AuthorLink from '../components/AuthorLink';
+import ActorCard from '../components/ActorCard';
 import { PhaseIndicator as SharedPhaseIndicator, MenuItem, Title, Button } from '../components/UIComponents';
 
 // Styled components for the day/phase display
@@ -577,112 +578,18 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType}) =>
                                                         marginBottom: '15px',
                                                     }}
                                                 >
-                                                    <motion.div
-                                                        animate={{
-                                                            opacity: draggedActor?.id === actor.id ? 0.4 : 1,
-                                                            scale: draggedActor?.id === actor.id ? 0.95 : 1,
-                                                        }}
-                                                        whileHover={{
-                                                            backgroundColor: 'rgba(0, 255, 136, 0.15)',
-                                                            borderColor: 'rgba(0, 255, 136, 0.5)',
-                                                            scale: 1.02,
-                                                            x: 10
-                                                        }}
-                                                        transition={{
-                                                            duration: 0.2
-                                                        }}
-                                                        style={{
-                                                            padding: '12px',
-                                                            border: '2px solid rgba(0, 255, 136, 0.2)',
-                                                            borderRadius: '8px',
-                                                            background: 'rgba(0, 10, 20, 0.5)',
-                                                            cursor: draggedActor?.id === actor.id ? 'grabbing' : 'grab',
-                                                        }}
-                                                    >
-                                                    {/* Nameplate at the top */}
-                                                    <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '12px' }}>
-                                                        <Nameplate 
-                                                            actor={actor} 
-                                                            size="small"
-                                                            role={(() => {
-                                                                const roleModules = layout.getModulesWhere((m: Module) => 
-                                                                    m && m.type !== 'quarters' && m.ownerId === actor.id
-                                                                );
-                                                                return roleModules.length > 0 ? roleModules[0].getAttribute('role') : undefined;
-                                                            })()}
-                                                            layout="stacked"
-                                                        />
-                                                    </div>
-                                                    
-                                                    {/* Two-column layout below */}
-                                                    <div style={{ display: 'flex', gap: '12px', alignItems: 'stretch' }}>
-                                                        {/* Left column: Stats with letter grades */}
-                                                        <div className="stat-list" style={{ 
-                                                            flex: '2', 
-                                                            background: 'rgba(0,0,0,0.8)', 
-                                                            borderRadius: '6px',
-                                                            padding: '8px 10px',
-                                                            overflow: 'hidden',
-                                                            display: 'flex',
-                                                            flexDirection: 'column',
-                                                            justifyContent: 'space-around'
-                                                        }}>
-                                                            {[
-                                                                ['Brawn', actor.stats.brawn],
-                                                                ['Wits', actor.stats.wits],
-                                                                ['Nerve', actor.stats.nerve],
-                                                                ['Skill', actor.stats.skill],
-                                                                ['Charm', actor.stats.charm],
-                                                                ['Lust', actor.stats.lust],
-                                                                ['Joy', actor.stats.joy],
-                                                                ['Trust', actor.stats.trust],
-                                                            ].map(([label, value]) => {
-                                                                const grade = actor.scoreToGrade(value);
-                                                                return (
-                                                                    <div className="stat-row" key={`${actor.id}_${label}`} style={{
-                                                                        padding: '3px 0px',
-                                                                        gap: '8px',
-                                                                        display: 'flex',
-                                                                        alignItems: 'center',
-                                                                        justifyContent: 'space-between'
-                                                                    }}>
-                                                                        <span className="stat-label" style={{
-                                                                            fontSize: '10px',
-                                                                            letterSpacing: '0.5px',
-                                                                            flex: '1'
-                                                                        }}>{label}</span>
-                                                                        <span className="stat-grade" data-grade={grade} style={{
-                                                                            fontSize: '1.6rem',
-                                                                            textShadow: '3px 3px 0 rgba(0,0,0,0.88)',
-                                                                            transform: 'skewX(-8deg) rotate(-4deg)'
-                                                                        }}>{grade}</span>
-                                                                    </div>
-                                                                );
-                                                            })}
-                                                        </div>
-                                                        
-                                                        {/* Right column: Tall character portrait */}
-                                                        <div style={{ 
-                                                            flex: '1',
-                                                            minHeight: '100%',
-                                                            borderRadius: '6px',
-                                                            overflow: 'hidden',
-                                                            border: '2px solid #00ff88',
-                                                            backgroundImage: `url(${actor.emotionPack?.neutral || actor.avatarImageUrl})`,
-                                                            backgroundSize: 'cover',
-                                                            backgroundPosition: 'top center',
-                                                            backgroundRepeat: 'no-repeat',
-                                                            position: 'relative',
-                                                            display: 'flex',
-                                                            alignItems: 'flex-end',
-                                                            justifyContent: 'flex-end',
-                                                            padding: '8px'
-                                                        }}>
-                                                            {/* Author link in bottom right corner */}
-                                                            <AuthorLink actor={actor} />
-                                                        </div>
-                                                    </div>
-                                                    </motion.div>
+                                                    <ActorCard
+                                                        actor={actor}
+                                                        role={(() => {
+                                                            const roleModules = layout.getModulesWhere((m: Module) => 
+                                                                m && m.type !== 'quarters' && m.ownerId === actor.id
+                                                            );
+                                                            return roleModules.length > 0 ? roleModules[0].getAttribute('role') : undefined;
+                                                        })()}
+                                                        forceExpanded={true}
+                                                        isDragging={draggedActor?.id === actor.id}
+                                                        draggable={false}
+                                                    />
                                                 </div>
                                             ))
                                         )}
