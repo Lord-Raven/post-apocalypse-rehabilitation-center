@@ -532,15 +532,17 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType}) =>
                     const itemKey = item.toLowerCase();
                     const isExpanded = expandedMenu === itemKey;
                     const isContracting = previousExpandedMenu === itemKey && !isExpanded;
+                    const [isHeaderHovered, setIsHeaderHovered] = React.useState(false);
                     
                     return (
                         <motion.div 
                             key={item} 
                             layout
                             style={{ margin: '10px 0' }}
-                            whileHover={{ x: 10 }}
+                            animate={{ x: isHeaderHovered ? 10 : 0 }}
                             transition={{ 
-                                layout: { duration: 0.3, ease: 'easeInOut' }
+                                layout: { duration: 0.3, ease: 'easeInOut' },
+                                x: { duration: 0.2, ease: 'easeOut' }
                             }}
                         >
                             <motion.button
@@ -548,6 +550,8 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType}) =>
                                     setPreviousExpandedMenu(expandedMenu);
                                     setExpandedMenu(isExpanded ? null : itemKey);
                                 }}
+                                onMouseEnter={() => setIsHeaderHovered(true)}
+                                onMouseLeave={() => setIsHeaderHovered(false)}
                                 whileTap={{ scale: 0.95 }}
                                 style={{
                                     display: 'flex',
@@ -630,7 +634,8 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType}) =>
                                                         whileHover={{
                                                             backgroundColor: 'rgba(0, 255, 136, 0.15)',
                                                             borderColor: 'rgba(0, 255, 136, 0.5)',
-                                                            scale: 1.02
+                                                            scale: 1.02,
+                                                            x: 10
                                                         }}
                                                         transition={{
                                                             duration: 0.2

@@ -20,6 +20,7 @@ interface EchoScreenProps {
 export const EchoScreen: FC<EchoScreenProps> = ({stage, setScreenType}) => {
 
 	const [selectedSlotIndex, setSelectedSlotIndex] = React.useState<number | null>(null);
+	const [expandedCandidateId, setExpandedCandidateId] = React.useState<string | null>(null);
 	const [refreshKey, setRefreshKey] = React.useState(0); // Force re-renders when data changes
 	const [mousePositions, setMousePositions] = React.useState<{[key: number]: { x: number, y: number }}>({
 		0: { x: 0, y: 0 },
@@ -149,7 +150,9 @@ export const EchoScreen: FC<EchoScreenProps> = ({stage, setScreenType}) => {
 					flexWrap: 'wrap',
 					maxHeight: '200px',
 				}}>
-					{reserveActors.map((actor, index) => (
+					{reserveActors.map((actor, index) => {
+						const isExpanded = expandedCandidateId === actor.id;
+						return (
 						<div
 							key={`reserve_${actor.id}`}
 							draggable
@@ -169,12 +172,21 @@ export const EchoScreen: FC<EchoScreenProps> = ({stage, setScreenType}) => {
 							</div>
 
 							<motion.div
+								onClick={() => setExpandedCandidateId(isExpanded ? null : actor.id)}
 								whileHover={{ scale: 1.05 }}
+								layout
+								animate={{
+									width: isExpanded ? '320px' : '160px',
+									height: isExpanded ? '400px' : '200px'
+								}}
+								transition={{
+									type: "spring",
+									stiffness: 150,
+									damping: 15
+								}}
 								className="reserve-actor"
 								style={{
-									cursor: 'grab',
-									width: '160px',
-									height: '200px',
+									cursor: 'pointer',
 									display: 'flex',
 									flexDirection: 'column',
 									borderRadius: 12,
@@ -188,26 +200,81 @@ export const EchoScreen: FC<EchoScreenProps> = ({stage, setScreenType}) => {
 									animationDelay: `${index * 0.5}s` // Stagger the floating animation
 								}}
 							>
-								<div style={{
-									position: 'absolute',
-									bottom: 0,
-									left: 0,
-									right: 0,
-									display: 'flex',
-									justifyContent: 'center',
-									padding: '8px'
-								}}>
-									<Nameplate 
-										actor={actor} 
-										size="small"
-										style={{
-											transform: 'scale(0.8)'
-										}}
-									/>
-								</div>
+								{isExpanded ? (
+									/* Expanded view with stats */
+									<>
+										<div style={{ flex: 1 }} />
+										<div style={{ 
+											background: 'rgba(0,0,0,0.85)', 
+											padding: '12px',
+											display: 'flex',
+											flexDirection: 'column',
+											gap: '8px'
+										}}>
+											<Nameplate 
+												actor={actor} 
+												size="small"
+												style={{
+													transform: 'scale(0.9)'
+												}}
+											/>
+											<div className="stat-list" style={{ 
+												display: 'grid',
+												gridTemplateColumns: '1fr 1fr',
+												gap: '4px',
+												fontSize: '11px'
+											}}>
+												{[
+													['Brawn', actor.stats['brawn']],
+													['Wits', actor.stats['wits']],
+													['Nerve', actor.stats['nerve']],
+													['Skill', actor.stats['skill']],
+													['Charm', actor.stats['charm']],
+													['Lust', actor.stats['lust']],
+													['Joy', actor.stats['joy']],
+													['Trust', actor.stats['trust']],
+												].map(([label, value]) => {
+													const grade = actor.scoreToGrade(value as number);
+													return (
+														<div className="stat-row" key={`${actor.id}_${label}`} style={{
+															display: 'flex',
+															justifyContent: 'space-between',
+															padding: '2px 4px'
+														}}>
+															<span className="stat-label">{label}</span>
+															<span className="stat-grade" data-grade={grade}>{grade}</span>
+														</div>
+													);
+												})}
+											</div>
+											<div style={{ display: 'flex', justifyContent: 'center', marginTop: '4px' }}>
+												<AuthorLink actor={actor} />
+											</div>
+										</div>
+									</>
+								) : (
+									/* Compact view */
+									<div style={{
+										position: 'absolute',
+										bottom: 0,
+										left: 0,
+										right: 0,
+										display: 'flex',
+										justifyContent: 'center',
+										padding: '8px'
+									}}>
+										<Nameplate 
+											actor={actor} 
+											size="small"
+											style={{
+												transform: 'scale(0.8)'
+											}}
+										/>
+									</div>
+								)}
 							</motion.div>
 						</div>
-					))}
+					);})}
 				</div>
 			</div>
 
@@ -266,17 +333,15 @@ export const EchoScreen: FC<EchoScreenProps> = ({stage, setScreenType}) => {
 								onMouseMove={handleMouseMove}
 								onMouseLeave={() => setMousePositions(prev => ({ ...prev, [slotIndex]: { x: 0, y: 0 } }))}
 								whileHover={{ 
-									scale: actor ? 1.02 : 1,
+									scale: actor ? (isSelected ? 1.05 : 1.02) : 1,
 									filter: 'brightness(1.1)'
 								}}
 								whileTap={{ scale: actor ? 0.98 : 1 }}
 								animate={{
-									rotateX: isSelected ? 0 : tiltX,
-									rotateY: isSelected ? 0 : tiltY,
-									skewY: isSelected ? 0 : skewY,
-									width: isSelected && actor ? '50vw' : '20vw'
+									rotateX: tiltX,
+									rotateY: tiltY,
+									skewY: skewY
 								}}
-								layout
 								transition={{
 									type: "spring",
 									stiffness: 150,
@@ -287,8 +352,9 @@ export const EchoScreen: FC<EchoScreenProps> = ({stage, setScreenType}) => {
 									cursor: actor ? 'pointer' : 'default',
 									height: '75vh',
 									minHeight: 400,
+									width: '20vw',
 									display: 'flex',
-									flexDirection: isSelected ? 'row' : 'column',
+									flexDirection: 'column',
 									justifyContent: actor ? 'flex-end' : 'center',
 									alignItems: actor ? 'stretch' : 'center',
 									borderRadius: 12,
@@ -301,8 +367,8 @@ export const EchoScreen: FC<EchoScreenProps> = ({stage, setScreenType}) => {
 												rgba(128, 0, 255, 0.15) 100%
 											), url(${actor.emotionPack['neutral'] || actor.avatarImageUrl})`
 										: 'linear-gradient(135deg, rgba(0,255,136,0.15), rgba(0,200,255,0.1))',
-									backgroundSize: actor ? (isSelected ? 'cover, contain' : 'cover, cover') : 'cover',
-									backgroundPosition: actor ? (isSelected ? 'center, left center' : 'center, center top') : 'center',
+									backgroundSize: actor ? 'cover, cover' : 'cover',
+									backgroundPosition: actor ? 'center, center top' : 'center',
 									backgroundBlendMode: actor ? 'overlay, normal' : 'normal',
 									backgroundRepeat: 'no-repeat',
 									border: selectedSlotIndex === slotIndex 
@@ -322,121 +388,52 @@ export const EchoScreen: FC<EchoScreenProps> = ({stage, setScreenType}) => {
 							>
 							{actor ? (
 								<>
-									{isSelected ? (
-										/* Expanded horizontal layout */
-										<>
-											{/* Left side: Portrait spacer (background image will show here) */}
-											<div style={{ flex: '1 1 50%', minWidth: 0 }} />
-											
-											{/* Right side: Info panel */}
-											<div style={{ 
-												flex: '1 1 50%', 
-												display: 'flex', 
-												flexDirection: 'column',
-												background: 'rgba(0,0,0,0.85)',
-												padding: '20px',
-												gap: '16px'
-											}}>
-												{/* Nameplate */}
-												<div style={{ display: 'flex', justifyContent: 'center' }}>
-													<Nameplate 
-														actor={actor} 
-														size="medium"
-														role={(() => {
-															const roleModules = stage().getSave().layout.getModulesWhere((m: any) => 
-																m && m.type !== 'quarters' && m.ownerId === actor.id
-															);
-															return roleModules.length > 0 ? roleModules[0].getAttribute('role') : undefined;
-														})()}
-														layout="stacked"
-													/>
+									{/* Actor nameplate */}
+									<Nameplate 
+										actor={actor} 
+										size="medium"
+										role={(() => {
+											const roleModules = stage().getSave().layout.getModulesWhere((m: any) => 
+												m && m.type !== 'quarters' && m.ownerId === actor.id
+											);
+											return roleModules.length > 0 ? roleModules[0].getAttribute('role') : undefined;
+										})()}
+										layout="stacked"
+										style={{
+											padding: '12px 16px',
+											fontSize: 18
+										}}
+									/>
+									{/* Stats */}
+									<div className="stat-list" style={{ padding: '8px 12px', background: 'rgba(0,0,0,0.8)' }}>
+										{[
+											['Brawn', actor.stats['brawn']],
+											['Wits', actor.stats['wits']],
+											['Nerve', actor.stats['nerve']],
+											['Skill', actor.stats['skill']],
+											['Charm', actor.stats['charm']],
+											['Lust', actor.stats['lust']],
+											['Joy', actor.stats['joy']],
+											['Trust', actor.stats['trust']],
+										].map(([label, value]) => {
+											const grade = actor.scoreToGrade(value as number);
+											return (
+												<div className="stat-row" key={`${actor.id}_${label}`}>
+													<span className="stat-label">{label}</span>
+													<span className="stat-grade" data-grade={grade}>{grade}</span>
 												</div>
-
-												{/* Stats grid */}
-												<div className="stat-list" style={{ 
-													display: 'grid',
-													gridTemplateColumns: '1fr 1fr',
-													gap: '12px',
-													padding: '12px',
-													background: 'rgba(0,0,0,0.5)',
-													borderRadius: '8px',
-													flex: 1
-												}}>
-													{[
-														['Brawn', actor.stats['brawn']],
-														['Wits', actor.stats['wits']],
-														['Nerve', actor.stats['nerve']],
-														['Skill', actor.stats['skill']],
-														['Charm', actor.stats['charm']],
-														['Lust', actor.stats['lust']],
-														['Joy', actor.stats['joy']],
-														['Trust', actor.stats['trust']],
-													].map(([label, value]) => {
-														const grade = actor.scoreToGrade(value as number);
-														return (
-															<div className="stat-row" key={`${actor.id}_${label}`} style={{
-																display: 'flex',
-																justifyContent: 'space-between',
-																alignItems: 'center',
-																padding: '8px 12px',
-																background: 'rgba(0,0,0,0.3)',
-																borderRadius: '6px'
-															}}>
-																<span className="stat-label" style={{ fontSize: '14px' }}>{label}</span>
-																<span className="stat-grade" data-grade={grade} style={{ fontSize: '20px' }}>{grade}</span>
-															</div>
-														);
-													})}
-												</div>
-
-												{/* Author link in bottom corner */}
-												<div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-													<AuthorLink actor={actor} />
-												</div>
-											</div>
-										</>
-									) : (
-										/* Compact vertical layout */
-										<>
-											{/* Actor nameplate */}
-											<Nameplate 
-												actor={actor} 
-												size="medium"
-												role={(() => {
-													const roleModules = stage().getSave().layout.getModulesWhere((m: any) => 
-														m && m.type !== 'quarters' && m.ownerId === actor.id
-													);
-													return roleModules.length > 0 ? roleModules[0].getAttribute('role') : undefined;
-												})()}
-												layout="stacked"
-												style={{
-													padding: '12px 16px',
-													fontSize: 18
-												}}
-											/>
-											{/* Stats */}
-											<div className="stat-list" style={{ padding: '8px 12px', background: 'rgba(0,0,0,0.8)' }}>
-												{[
-													['Brawn', actor.stats['brawn']],
-													['Wits', actor.stats['wits']],
-													['Nerve', actor.stats['nerve']],
-													['Skill', actor.stats['skill']],
-													['Charm', actor.stats['charm']],
-													['Lust', actor.stats['lust']],
-													['Joy', actor.stats['joy']],
-													['Trust', actor.stats['trust']],
-												].map(([label, value]) => {
-													const grade = actor.scoreToGrade(value as number);
-													return (
-														<div className="stat-row" key={`${actor.id}_${label}`}>
-															<span className="stat-label">{label}</span>
-															<span className="stat-grade" data-grade={grade}>{grade}</span>
-														</div>
-													);
-												})}
-											</div>
-										</>
-									)}
+											);
+										})}
+									</div>
+									{/* Author link */}
+									<div style={{ 
+										padding: '8px',
+										background: 'rgba(0,0,0,0.8)',
+										display: 'flex',
+										justifyContent: 'center'
+									}}>
+										<AuthorLink actor={actor} />
+									</div>
 								</>
 							) : (
 								<div style={{ 
