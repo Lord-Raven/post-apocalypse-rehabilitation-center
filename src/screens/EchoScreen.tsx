@@ -11,6 +11,7 @@ import Nameplate from '../components/Nameplate';
 import Actor from '../actors/Actor';
 import { BlurredBackground } from '../components/BlurredBackground';
 import AuthorLink from '../components/AuthorLink';
+import { Button } from '../components/UIComponents';
 
 interface EchoScreenProps {
 	stage: () => Stage;
@@ -149,13 +150,7 @@ export const EchoScreen: FC<EchoScreenProps> = ({stage, setScreenType}) => {
 	const selectedActor = selectedSlotIndex != null ? echoSlots[selectedSlotIndex] : null;
 	const acceptable = selectedActor && selectedActor.isPrimaryImageReady && availableRooms.length > 0;
 
-	// Shared button style
-	const buttonBaseStyle = {
-		padding: '12px 18px',
-		borderRadius: 8,
-		height: 'fit-content',
-		alignSelf: 'center'
-	};
+
 
 	return (
 		<BlurredBackground imageUrl="https://media.charhub.io/026ae01a-7dc8-472d-bfea-61548b87e6ef/84990780-8260-4833-ac0b-79c1a15ddb9e.png">
@@ -302,20 +297,13 @@ export const EchoScreen: FC<EchoScreenProps> = ({stage, setScreenType}) => {
 			{/* Echo slots in center with buttons on sides */}
 			<div style={{ flex: '1 1 auto', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '40px', gap: '40px' }}>
 				{/* Cancel button on the left */}
-				<motion.button
+				<Button
+					variant="secondary"
 					onClick={cancel}
 					whileHover={{ x: 6 }}
-					whileTap={{ scale: 0.98 }}
-					style={{
-						...buttonBaseStyle,
-						border: '2px solid rgba(255,255,255,0.06)',
-						background: 'rgba(0,0,0,0.5)',
-						color: '#fff',
-						cursor: 'pointer'
-					}}
 				>
 					Cancel
-				</motion.button>
+				</Button>
 
 				{/* Echo slots container */}
 				<div style={{ display: 'flex', gap: 40, alignItems: 'flex-end', justifyContent: 'center', flex: 1 }}>
@@ -453,19 +441,14 @@ export const EchoScreen: FC<EchoScreenProps> = ({stage, setScreenType}) => {
 				</div>
 
 				{/* Wake button on the right */}
-				<motion.button
+				<Button
+					variant="primary"
 					onClick={accept}
-					whileHover={{ scale: acceptable ? 1.03 : 1 }}
-					whileTap={{ scale: acceptable ? 0.98 : 1 }}
-					style={{
-						...buttonBaseStyle,
-						border: '2px solid rgba(0,255,136,0.15)',
-						background: acceptable ? '#00ff88' : 'rgba(255,255,255,0.06)',
-						color: acceptable ? '#002210' : '#9aa0a6',
-						fontWeight: 800,
-						cursor: acceptable ? 'pointer' : 'not-allowed'
-					}}
 					disabled={!acceptable}
+					style={{
+						background: acceptable ? 'var(--color-primary)' : 'rgba(255,255,255,0.06)',
+						color: acceptable ? '#002210' : '#9aa0a6'
+					}}
 				>
 					{availableRooms.length === 0 
 						? 'No Available Quarters' 
@@ -473,7 +456,7 @@ export const EchoScreen: FC<EchoScreenProps> = ({stage, setScreenType}) => {
 							? (selectedActor.isPrimaryImageReady ? 'Wake Candidate' : 'Candidate Still Fusing')
 							: 'Select a Candidate'
 					}
-				</motion.button>
+				</Button>
 			</div>
 			</div>
 		</BlurredBackground>

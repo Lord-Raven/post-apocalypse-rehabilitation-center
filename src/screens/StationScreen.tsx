@@ -7,6 +7,7 @@ import { Layout, Module, createModule, ModuleType, MODULE_DEFAULTS } from '../Mo
 import { Stage } from '../Stage';
 import Nameplate from '../components/Nameplate';
 import AuthorLink from '../components/AuthorLink';
+import { PhaseIndicator as SharedPhaseIndicator, MenuItem, Title, Button } from '../components/UIComponents';
 
 // Styled components for the day/phase display
 const StyledDayCard = styled(Card)(({ theme }) => ({
@@ -29,39 +30,6 @@ const StyledDayCard = styled(Card)(({ theme }) => ({
         filter: 'blur(4px)',
         opacity: 0.6,
     }
-}));
-
-const PhaseIndicator = styled(Box)(({ theme }) => ({
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    gap: '4px',
-    marginTop: '12px',
-}));
-
-const PhaseSegment = styled(motion.div)<{ isActive: boolean; isCompleted: boolean }>(({ isActive, isCompleted }) => ({
-    flex: 1,
-    height: '8px',
-    borderRadius: '4px',
-    border: '2px solid #00ff88',
-    background: isCompleted 
-        ? 'linear-gradient(90deg, #00ff88 0%, #00cc66 100%)'
-        : isActive 
-            ? 'linear-gradient(90deg, #00aa55 0%, rgba(0, 170, 85, 0.7) 100%)'
-            : 'rgba(0, 255, 136, 0.1)',
-    boxShadow: isActive || isCompleted ? '0 0 12px rgba(0, 255, 136, 0.6)' : 'none',
-    position: 'relative',
-    overflow: 'hidden',
-    '&::after': isActive ? {
-        content: '""',
-        position: 'absolute',
-        top: 0,
-        left: '-100%',
-        width: '100%',
-        height: '100%',
-        background: 'linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.4) 50%, transparent 100%)',
-        animation: 'shimmer 2s infinite',
-    } : {},
 }));
 
 /*
@@ -242,26 +210,7 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType}) =>
                         </motion.div>
                         
                         {/* Phase Indicator */}
-                        <PhaseIndicator>
-                            {[0, 1, 2, 3].map((segmentIndex) => (
-                                <PhaseSegment
-                                    key={segmentIndex}
-                                    isActive={segmentIndex === phase}
-                                    isCompleted={segmentIndex < phase}
-                                    initial={{ scaleX: 0 }}
-                                    animate={{ scaleX: 1 }}
-                                    transition={{ 
-                                        duration: 0.3, 
-                                        delay: segmentIndex * 0.1,
-                                        ease: "easeOut"
-                                    }}
-                                    whileHover={{ 
-                                        scaleY: 1.3,
-                                        transition: { duration: 0.2 }
-                                    }}
-                                />
-                            ))}
-                        </PhaseIndicator>
+                        <SharedPhaseIndicator currentPhase={phase} totalPhases={4} />
                     </CardContent>
                 </StyledDayCard>
             </motion.div>
@@ -523,7 +472,9 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType}) =>
                     padding: '20px',
                 }}
             >
-                <h2 style={{ color: '#00ff88', marginBottom: '30px' }}>Station Control</h2>
+                <Title variant="primary" style={{ fontSize: '24px', marginBottom: '30px', marginTop: 0 }}>
+                    Station Control
+                </Title>
                 
                 {/* Enhanced Day and Phase Display */}
                 {renderDayPhaseDisplay()}

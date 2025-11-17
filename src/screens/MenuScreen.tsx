@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { ScreenType } from './BaseScreen';
 import { Stage } from '../Stage';
 import { BlurredBackground } from '../components/BlurredBackground';
+import { GridOverlay, Title, Button } from '../components/UIComponents';
 
 /*
  * This screen represents both the start-up and in-game menu screen. It should present basic options: new game, load game, settings.
@@ -87,63 +88,45 @@ export const MenuScreen: FC<MenuScreenProps> = ({ stage, setScreenType }) => {
                     width: '100vw'
                 }}
             >
-            {/* Background grid effect similar to StationScreen */}
-            <div
-                style={{
-                    position: 'absolute',
-                    top: 0,
-                    left: 0,
-                    right: 0,
-                    bottom: 0,
-                    backgroundImage: `
-                        linear-gradient(rgba(0, 255, 136, 0.05) 1px, transparent 1px),
-                        linear-gradient(90deg, rgba(0, 255, 136, 0.05) 1px, transparent 1px)
-                    `,
-                    backgroundSize: '60px 60px',
-                    backgroundPosition: '0 0',
-                    backgroundRepeat: 'repeat',
-                    pointerEvents: 'none',
-                }}
-            />
+            {/* Background grid effect */}
+            <GridOverlay />
 
             {/* Main menu container */}
             <motion.div
                 initial={{ opacity: 0, y: 50 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6, ease: 'easeOut' }}
+                className="glass-panel-bright"
                 style={{
-                    background: 'rgba(0, 20, 40, 0.9)',
-                    border: '2px solid #00ff88',
-                    borderRadius: '10px',
                     padding: '40px',
                     minWidth: '300px',
-                    boxShadow: '0 10px 30px rgba(0, 255, 136, 0.2)',
                 }}
             >
                 {/* Title */}
-                <motion.h1
+                <motion.div
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     transition={{ delay: 0.3, duration: 0.5 }}
-                    style={{
-                        color: '#00ff88',
-                        textAlign: 'center',
-                        marginBottom: '40px',
-                        fontSize: '28px',
-                        fontWeight: 'bold',
-                        textShadow: '0 2px 4px rgba(0, 255, 136, 0.3)',
-                    }}
                 >
-                    Apocalypse Rehabilitation Center
-                </motion.h1>
+                    <Title variant="glow" style={{ textAlign: 'center', marginBottom: '40px', fontSize: '28px' }}>
+                        Apocalypse Rehabilitation Center
+                    </Title>
+                </motion.div>
 
                 {/* Menu buttons */}
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
                     {menuButtons.map((button, index) => (
-                        <motion.button
+                        <Button
                             key={button.key}
+                            variant="menu"
                             initial={{ opacity: 0, x: -30 }}
-                            animate={{ opacity: 1, x: 0 }}
+                            animate={{ 
+                                opacity: 1, 
+                                x: 0,
+                                background: button.enabled && hoveredButton === button.key 
+                                    ? 'rgba(0, 255, 136, 0.2)' 
+                                    : button.enabled ? 'transparent' : 'rgba(0, 20, 40, 0.5)'
+                            }}
                             transition={{ 
                                 delay: 0.4 + (index * 0.1), 
                                 duration: 0.4, 
@@ -153,37 +136,16 @@ export const MenuScreen: FC<MenuScreenProps> = ({ stage, setScreenType }) => {
                                 x: button.enabled ? 10 : 0,
                                 scale: button.enabled ? 1.02 : 1
                             }}
-                            whileTap={{ scale: button.enabled ? 0.98 : 1 }}
                             onHoverStart={() => setHoveredButton(button.enabled ? button.key : null)}
                             onHoverEnd={() => setHoveredButton(null)}
                             onClick={button.enabled ? button.onClick : undefined}
                             disabled={!button.enabled}
                             style={{
-                                width: '100%',
-                                padding: '15px 25px',
-                                background: button.enabled 
-                                    ? (hoveredButton === button.key 
-                                        ? 'rgba(0, 255, 136, 0.2)' 
-                                        : 'transparent')
-                                    : 'rgba(0, 20, 40, 0.5)',
-                                border: button.enabled 
-                                    ? '3px solid #00ff88' 
-                                    : '3px solid rgba(0, 255, 136, 0.3)',
-                                borderRadius: '8px',
-                                color: button.enabled ? '#00ff88' : 'rgba(0, 255, 136, 0.4)',
-                                fontSize: '18px',
-                                fontWeight: 'bold',
-                                cursor: button.enabled ? 'pointer' : 'not-allowed',
-                                textAlign: 'center',
-                                transition: 'all 0.2s ease',
-                                textShadow: button.enabled 
-                                    ? '0 1px 2px rgba(0, 255, 136, 0.3)' 
-                                    : 'none',
-                                opacity: button.enabled ? 1 : 0.6,
+                                width: '100%'
                             }}
                         >
                             {button.label}
-                        </motion.button>
+                        </Button>
                     ))}
                 </div>
 
