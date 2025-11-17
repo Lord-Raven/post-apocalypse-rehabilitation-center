@@ -299,17 +299,22 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType}) =>
                                         ? `0 0 40px rgba(0, 255, 136, 0.8), inset 0 0 30px rgba(0, 255, 136, 0.3)`
                                         : justDroppedModuleId === module.id
                                             ? `0 0 50px rgba(0, 255, 136, 1), inset 0 0 40px rgba(0, 255, 136, 0.5)`
-                                            : undefined
+                                            : undefined,
+                                    x: 0,
+                                    y: 0
                                 }}
                                 transition={{
                                     scale: { duration: 0.2 },
                                     boxShadow: { duration: 0.2 },
-                                    layout: { duration: 0.3, ease: "easeInOut" }
+                                    layout: { duration: 0.3, ease: "easeInOut" },
+                                    x: { duration: 0.3, ease: "easeOut" },
+                                    y: { duration: 0.3, ease: "easeOut" }
                                 }}
                                 whileHover={{ scale: draggedActor ? 1.08 : 1.03 }}
                                 drag={!draggedActor}
                                 dragMomentum={false}
                                 dragElastic={0}
+                                dragSnapToOrigin={true}
                                 onDragStart={() => handleModuleDragStart(module, x, y)}
                                 onDragOver={(e) => {
                                     if (draggedActor) {

@@ -73,6 +73,22 @@ export const EchoScreen: FC<EchoScreenProps> = ({stage, setScreenType}) => {
 			actorId: actor.id,
 			source
 		}));
+
+		// Create custom drag image to show only the current card
+		const dragElement = e.currentTarget as HTMLElement;
+		const dragImage = dragElement.cloneNode(true) as HTMLElement;
+		dragImage.style.position = 'absolute';
+		dragImage.style.top = '-9999px';
+		dragImage.style.width = dragElement.offsetWidth + 'px';
+		dragImage.style.height = dragElement.offsetHeight + 'px';
+		document.body.appendChild(dragImage);
+		
+		e.dataTransfer.setDragImage(dragImage, dragElement.offsetWidth / 2, dragElement.offsetHeight / 2);
+		
+		// Clean up the temporary drag image after a short delay
+		setTimeout(() => {
+			document.body.removeChild(dragImage);
+		}, 0);
 	};
 
 	const handleDragOver = (e: React.DragEvent) => {
