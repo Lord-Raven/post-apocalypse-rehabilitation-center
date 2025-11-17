@@ -438,7 +438,7 @@ export const VignetteScreen: FC<VignetteScreenProps> = ({ stage, setScreenType }
 
             {/* Stat Change Display - shown when scene ends with stat changes */}
             {sceneEnded && characterStatChanges.length > 0 && index === vignette.script.length - 1 && (
-                <StatChangeDisplay characterChanges={characterStatChanges} />
+                <StatChangeDisplay characterChanges={characterStatChanges} layout={stage().getSave().layout} />
             )}
 
             {/* Bottom text window */}
@@ -509,12 +509,20 @@ export const VignetteScreen: FC<VignetteScreenProps> = ({ stage, setScreenType }
                             <Nameplate 
                                 actor={speaker} 
                                 size="large"
+                                role={(() => {
+                                    const roleModules = stage().getSave().layout.getModulesWhere((m: any) => 
+                                        m && m.type !== 'quarters' && m.ownerId === speaker.id
+                                    );
+                                    return roleModules.length > 0 ? roleModules[0].getAttribute('role') : undefined;
+                                })()}
+                                layout="inline"
                             />
                         )}
                         {displayName && !speaker && (
                             <Nameplate 
                                 name={displayName}
                                 size="large"
+                                layout="inline"
                             />
                         )}
                     </Box>

@@ -82,11 +82,22 @@ export async function generateVignetteScript(vignette: VignetteData, stage: Stag
         `The thrust of the game has the player character, ${playerName}, managing this station and interacting with patients and crew, as they navigate this complex futuristic universe together. ` +
         `\n\nCrew:\nAt this point in the story, the player is running the operation on their own, with no fellow crew members. ` +
         // List patients who are here, along with full stat details:
-        `\n\nPresent Characters:\n${presentActors.map(actor => 
-            `${actor.name}\n  Description: ${actor.description}\n  Profile: ${actor.profile}\n  Days Aboard: ${stage.getSave().day - actor.birthDay}\n  Scene Participation: ${actor.participations}\n` +
-            `  Stats:\n    ${Object.entries(actor.stats).map(([stat, value]) => `${stat}: ${value}`).join('\n    ')}`).join('\n')}` +
+        `\n\nPresent Characters:\n${presentActors.map(actor => {
+            const roleModule = stage.getLayout().getModulesWhere((m: any) => 
+                m && m.type !== 'quarters' && m.ownerId === actor.id
+            )[0];
+            return `${actor.name}\n  Description: ${actor.description}\n  Profile: ${actor.profile}\n  Days Aboard: ${stage.getSave().day - actor.birthDay}\n  Scene Participation: ${actor.participations}\n` +
+            `  Role: ${roleModule?.getAttribute('role') || 'Patient'}\n` +
+            `  Role Description: ${roleModule?.getAttribute('roleDescription') || 'This character has no assigned role aboard the PARC. They are to focus upon their own needs.'}\n` +
+            `  Stats:\n    ${Object.entries(actor.stats).map(([stat, value]) => `${stat}: ${value}`).join('\n    ')}`}).join('\n')}` +
         // List non-present patients for reference; just need description and profile:
-        `\n\nOther Patients:\n${absentActors.map(actor => `${actor.name}\n  ${actor.description}\n  ${actor.profile}`).join('\n')}` +
+        `\n\nOther Patients:\n${absentActors.map(actor => {
+            // Just role name and not full details.
+            const roleModule = stage.getLayout().getModulesWhere((m: any) => 
+                m && m.type !== 'quarters' && m.ownerId === actor.id
+            )[0];
+            return `${actor.name}\n  Description: ${actor.description}\n  Profile: ${actor.profile}\n  Role: ${roleModule?.getAttribute('role') || 'Patient'}`;
+        }).join('\n')}` +
         // List stat meanings, for reference:
         `\n\nStats:\n${Object.values(Stat).map(stat => `${stat.toUpperCase()}: ${getStatDescription(stat)}`).join('\n')}` +
         `\n\nEmotions:\n${Object.values(Emotion).map(emotion => `${emotion.toUpperCase()}`).join(', ')}` +

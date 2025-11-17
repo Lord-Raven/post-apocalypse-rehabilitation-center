@@ -1,9 +1,9 @@
 import React, { FC } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Box, Typography, Card, CardContent } from '@mui/material';
 import { styled } from '@mui/material/styles';
 import { ScreenType } from './BaseScreen';
-import { Layout, Module, createModule } from '../Module';
+import { Layout, Module, createModule, ModuleType, MODULE_DEFAULTS } from '../Module';
 import { Stage } from '../Stage';
 import Nameplate from '../components/Nameplate';
 
@@ -83,21 +83,117 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType}) =>
     const [phase, setPhase] = React.useState<number>(stage().getSave().phase);
 
     const [layout, setLayout] = React.useState<Layout>(stage()?.getLayout());
+    
+    // Module selection state
+    const [showModuleSelector, setShowModuleSelector] = React.useState(false);
+    const [selectedPosition, setSelectedPosition] = React.useState<{x: number, y: number} | null>(null);
+    
+    // Drag and drop state
+    const [draggedModule, setDraggedModule] = React.useState<{module: Module, fromX: number, fromY: number} | null>(null);
+    const [draggedActor, setDraggedActor] = React.useState<any | null>(null);
 
     const gridSize = 6;
     const cellSize = '10vmin';
 
-    const addModule = (x: number, y: number) => {
-        console.log(`Adding module at ${x}, ${y}`);
-        const newModule: Module = createModule('quarters');
+    const openModuleSelector = (x: number, y: number) => {
+        setSelectedPosition({x, y});
+        setShowModuleSelector(true);
+    };
+
+    const addModule = (moduleType: ModuleType, x: number, y: number) => {
+        console.log(`Adding module of type ${moduleType} at ${x}, ${y}`);
+        const newModule: Module = createModule(moduleType);
         // Write into the Stage's layout
-        console.log(`this.stage.layout: `, stage().getLayout());
         stage().getLayout().setModuleAt(x, y, newModule);
         stage().incPhase(1);
         // update local layout state so this component re-renders with the new module
         setLayout(stage().getLayout());
         setDay(stage().getSave().day);
         setPhase(stage().getSave().phase);
+        setShowModuleSelector(false);
+        setSelectedPosition(null);
+    };
+
+    const getAvailableModules = (): ModuleType[] => {
+        return Object.keys(MODULE_DEFAULTS).filter(moduleType => {
+            const available = MODULE_DEFAULTS[moduleType as ModuleType].available;
+            return available ? available(stage()) : true;
+        }) as ModuleType[];
+    };
+
+    const handleModuleDragStart = (module: Module, x: number, y: number) => {
+        setDraggedModule({module, fromX: x, fromY: y});
+    };
+
+    const handleModuleDrop = (toX: number, toY: number) => {
+        if (!draggedModule) return;
+        
+        const {fromX, fromY, module} = draggedModule;
+        
+        // Don't do anything if dropped on same position
+        if (fromX === toX && fromY === toY) {
+            setDraggedModule(null);
+            return;
+        }
+        
+        const targetModule = layout.getModuleAt(toX, toY);
+        
+        // Swap modules if target has a module
+        if (targetModule) {
+            stage().getLayout().setModuleAt(fromX, fromY, targetModule);
+            stage().getLayout().setModuleAt(toX, toY, module);
+        } else {
+            // Move to empty space
+            stage().getLayout().setModuleAt(fromX, fromY, null as any);
+            stage().getLayout().setModuleAt(toX, toY, module);
+        }
+        
+        setLayout(stage().getLayout());
+        setDraggedModule(null);
+    };
+
+    const handleActorDropOnModule = (actorId: string, targetModule: Module) => {
+        const actor = stage().getSave().actors[actorId];
+        if (!actor) return;
+
+        if (targetModule.type === 'quarters') {
+            // Handle quarters assignment with swapping
+            const currentQuartersId = actor.locationId;
+            const targetOwnerId = targetModule.ownerId;
+
+            // If target quarters has an owner, swap them
+            if (targetOwnerId && targetOwnerId !== actorId) {
+                const otherActor = stage().getSave().actors[targetOwnerId];
+                if (otherActor && currentQuartersId) {
+                    // Find current quarters module
+                    const currentQuarters = layout.getModuleById(currentQuartersId);
+                    if (currentQuarters && currentQuarters.type === 'quarters') {
+                        // Swap: other actor gets current quarters
+                        currentQuarters.ownerId = targetOwnerId;
+                        otherActor.locationId = currentQuartersId;
+                    }
+                }
+            }
+
+            // Assign actor to target quarters
+            targetModule.ownerId = actorId;
+            actor.locationId = targetModule.id;
+
+            // Clear any previous role assignment for this actor (non-quarters modules)
+            layout.getLayout().flat().forEach(module => {
+                if (module && module.type !== 'quarters' && module.ownerId === actorId) {
+                    module.ownerId = undefined;
+                }
+            });
+        } else {
+            // Handle role assignment (non-quarters module)
+            // Simply assign the actor to this module as their role
+            targetModule.ownerId = actorId;
+        }
+
+        // Update layout to trigger re-render
+        setLayout(stage().getLayout());
+        setDraggedActor(null);
     };
 
     // Need to make sure re-renders when layout is updated.
@@ -189,8 +285,48 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType}) =>
                                 className={`module module-${module.type}`}
                                 initial={{ scale: 0 }}
                                 animate={{ scale: 1 }}
-                                whileHover={{ scale: 1.03 }}
-                                onClick={() => {
+                                whileHover={{ scale: draggedActor ? 1.08 : 1.03 }}
+                                drag={!draggedActor}
+                                dragMomentum={false}
+                                dragElastic={0}
+                                onDragStart={() => handleModuleDragStart(module, x, y)}
+                                onDragOver={(e) => {
+                                    if (draggedActor) {
+                                        e.preventDefault();
+                                    }
+                                }}
+                                onDrop={(e) => {
+                                    e.preventDefault();
+                                    if (draggedActor) {
+                                        handleActorDropOnModule(draggedActor.id, module);
+                                    }
+                                }}
+                                onDragEnd={(event, info) => {
+                                    // Calculate which cell we're over based on drag position
+                                    const gridContainer = document.querySelector('.station-modules');
+                                    if (!gridContainer) return;
+                                    
+                                    const rect = gridContainer.getBoundingClientRect();
+                                    const cellSizeNum = rect.width / gridSize;
+                                    
+                                    // Get pointer position relative to grid
+                                    const relX = info.point.x - rect.left;
+                                    const relY = info.point.y - rect.top;
+                                    
+                                    const dropX = Math.floor(relX / cellSizeNum);
+                                    const dropY = Math.floor(relY / cellSizeNum);
+                                    
+                                    // Validate drop position
+                                    if (dropX >= 0 && dropX < gridSize && dropY >= 0 && dropY < gridSize) {
+                                        handleModuleDrop(dropX, dropY);
+                                    } else {
+                                        setDraggedModule(null);
+                                    }
+                                }}
+                                onClick={(e) => {
+                                    // Only trigger action if not dragging
+                                    if (draggedModule) return;
+                                    
                                     // Trigger module action if defined
                                     console.log(`Clicked module ${module.id} of type ${module.type}`);
                                     const action = module.getAction();
@@ -272,11 +408,15 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType}) =>
                         {/* Render + placeholders for adjacent empty spaces as a full darkened dotted box. Test that there is a neighboring module */}
                         {layout.getLayout().flat().some(m => {
                             const {x: mx, y: my} = layout.getModuleCoordinates(m);
-                            return Math.abs(mx - x) + Math.abs(my - y) === 1;
+                            // Check if adjacent and not the dragged module's original position
+                            const isAdjacent = Math.abs(mx - x) + Math.abs(my - y) === 1;
+                            const isDraggedOrigin = draggedModule && draggedModule.fromX === x && draggedModule.fromY === y;
+                            return isAdjacent && !isDraggedOrigin;
                         }) && !module && (
                             <motion.div
                                 className="add-module-placeholder"
-                                onClick={() => addModule(x, y)}
+                                onClick={() => openModuleSelector(x, y)}
+                                onDragOver={(e) => e.preventDefault()}
                                 whileHover={{ scale: 1.02 }}
                                 whileTap={{ scale: 0.98 }}
                                 style={{
@@ -435,15 +575,31 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType}) =>
                                             <p style={{ color: '#888', fontStyle: 'italic', fontSize: '12px' }}>No patients currently on station</p>
                                         ) : (
                                             Object.values(stage().getSave().actors).map((actor: any) => (
-                                                <motion.div
+                                                <div
                                                     key={actor.id}
-                                                    whileHover={{ backgroundColor: 'rgba(0, 255, 136, 0.1)' }}
+                                                    draggable
+                                                    onDragStart={(e: React.DragEvent) => {
+                                                        setDraggedActor(actor);
+                                                        e.dataTransfer.effectAllowed = 'move';
+                                                    }}
+                                                    onDragEnd={() => {
+                                                        setDraggedActor(null);
+                                                    }}
                                                     style={{
                                                         padding: '12px',
                                                         marginBottom: '15px',
                                                         border: '2px solid rgba(0, 255, 136, 0.2)',
                                                         borderRadius: '8px',
                                                         background: 'rgba(0, 10, 20, 0.5)',
+                                                        cursor: draggedActor?.id === actor.id ? 'grabbing' : 'grab',
+                                                        opacity: draggedActor?.id === actor.id ? 0.5 : 1,
+                                                        transition: 'background-color 0.2s',
+                                                    }}
+                                                    onMouseEnter={(e) => {
+                                                        e.currentTarget.style.backgroundColor = 'rgba(0, 255, 136, 0.1)';
+                                                    }}
+                                                    onMouseLeave={(e) => {
+                                                        e.currentTarget.style.backgroundColor = 'rgba(0, 10, 20, 0.5)';
                                                     }}
                                                 >
                                                     {/* Nameplate at the top */}
@@ -451,6 +607,13 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType}) =>
                                                         <Nameplate 
                                                             actor={actor} 
                                                             size="small"
+                                                            role={(() => {
+                                                                const roleModules = layout.getModulesWhere((m: Module) => 
+                                                                    m && m.type !== 'quarters' && m.ownerId === actor.id
+                                                                );
+                                                                return roleModules.length > 0 ? roleModules[0].getAttribute('role') : undefined;
+                                                            })()}
+                                                            layout="stacked"
                                                         />
                                                     </div>
                                                     
@@ -515,7 +678,7 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType}) =>
                                                         }}>
                                                         </div>
                                                     </div>
-                                                </motion.div>
+                                                </div>
                                             ))
                                         )}
                                     </div>
@@ -534,6 +697,142 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType}) =>
 
                 
             </div>
+
+            {/* Module Selection Modal */}
+            <AnimatePresence>
+                {showModuleSelector && selectedPosition && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        onClick={() => setShowModuleSelector(false)}
+                        style={{
+                            position: 'fixed',
+                            top: 0,
+                            left: 0,
+                            right: 0,
+                            bottom: 0,
+                            background: 'rgba(0, 0, 0, 0.8)',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            zIndex: 1000,
+                        }}
+                    >
+                        <motion.div
+                            initial={{ scale: 0.8, opacity: 0 }}
+                            animate={{ scale: 1, opacity: 1 }}
+                            exit={{ scale: 0.8, opacity: 0 }}
+                            onClick={(e) => e.stopPropagation()}
+                            style={{
+                                background: 'linear-gradient(135deg, rgba(0, 30, 60, 0.95) 0%, rgba(0, 20, 40, 0.95) 100%)',
+                                border: '3px solid #00ff88',
+                                borderRadius: '20px',
+                                padding: '30px',
+                                maxWidth: '80vw',
+                                maxHeight: '80vh',
+                                overflow: 'auto',
+                                boxShadow: '0 0 40px rgba(0, 255, 136, 0.3)',
+                            }}
+                        >
+                            <Typography
+                                variant="h4"
+                                style={{
+                                    color: '#00ff88',
+                                    marginBottom: '20px',
+                                    textAlign: 'center',
+                                    textShadow: '0 0 10px rgba(0, 255, 136, 0.5)',
+                                }}
+                            >
+                                Select Module Type
+                            </Typography>
+                            
+                            <div style={{
+                                display: 'grid',
+                                gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))',
+                                gap: '20px',
+                                marginTop: '20px',
+                            }}>
+                                {getAvailableModules().map((moduleType) => {
+                                    const moduleDefaults = MODULE_DEFAULTS[moduleType];
+                                    return (
+                                        <motion.div
+                                            key={moduleType}
+                                            whileHover={{ scale: 1.05, boxShadow: '0 0 20px rgba(0, 255, 136, 0.5)' }}
+                                            whileTap={{ scale: 0.95 }}
+                                            onClick={() => addModule(moduleType, selectedPosition.x, selectedPosition.y)}
+                                            style={{
+                                                background: `url(${moduleDefaults.defaultImageUrl}) center center / cover`,
+                                                border: '2px solid #00ff88',
+                                                borderRadius: '10px',
+                                                padding: '15px',
+                                                cursor: 'pointer',
+                                                position: 'relative',
+                                                minHeight: '150px',
+                                                display: 'flex',
+                                                flexDirection: 'column',
+                                                justifyContent: 'flex-end',
+                                            }}
+                                        >
+                                            <div style={{
+                                                background: 'rgba(0, 0, 0, 0.8)',
+                                                padding: '10px',
+                                                borderRadius: '5px',
+                                                textAlign: 'center',
+                                            }}>
+                                                <Typography
+                                                    variant="h6"
+                                                    style={{
+                                                        color: '#00ff88',
+                                                        textTransform: 'capitalize',
+                                                        fontWeight: 700,
+                                                        fontSize: '16px',
+                                                    }}
+                                                >
+                                                    {moduleType}
+                                                </Typography>
+                                                {moduleDefaults.role && (
+                                                    <Typography
+                                                        variant="body2"
+                                                        style={{
+                                                            color: '#00cc66',
+                                                            fontSize: '12px',
+                                                            marginTop: '4px',
+                                                        }}
+                                                    >
+                                                        {moduleDefaults.role}
+                                                    </Typography>
+                                                )}
+                                            </div>
+                                        </motion.div>
+                                    );
+                                })}
+                            </div>
+                            
+                            <motion.button
+                                whileHover={{ scale: 1.05 }}
+                                whileTap={{ scale: 0.95 }}
+                                onClick={() => setShowModuleSelector(false)}
+                                style={{
+                                    marginTop: '30px',
+                                    padding: '12px 30px',
+                                    background: 'transparent',
+                                    border: '2px solid #00ff88',
+                                    borderRadius: '8px',
+                                    color: '#00ff88',
+                                    fontSize: '16px',
+                                    cursor: 'pointer',
+                                    display: 'block',
+                                    marginLeft: 'auto',
+                                    marginRight: 'auto',
+                                }}
+                            >
+                                Cancel
+                            </motion.button>
+                        </motion.div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
         </div>
     );
 }

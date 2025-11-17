@@ -18,9 +18,10 @@ interface CharacterStatChanges {
 
 interface StatChangeDisplayProps {
     characterChanges: CharacterStatChanges[];
+    layout?: any;
 }
 
-const StatChangeDisplay: FC<StatChangeDisplayProps> = ({ characterChanges }) => {
+const StatChangeDisplay: FC<StatChangeDisplayProps> = ({ characterChanges, layout }) => {
     if (!characterChanges || characterChanges.length === 0) {
         return null;
     }
@@ -130,6 +131,13 @@ const StatChangeDisplay: FC<StatChangeDisplayProps> = ({ characterChanges }) => 
                             <Nameplate 
                                 actor={charChange.actor} 
                                 size="large"
+                                role={layout ? (() => {
+                                    const roleModules = layout.getModulesWhere((m: any) => 
+                                        m && m.type !== 'quarters' && m.ownerId === charChange.actor.id
+                                    );
+                                    return roleModules.length > 0 ? roleModules[0].getAttribute('role') : undefined;
+                                })() : undefined}
+                                layout="inline"
                             />
                         </motion.div>
 

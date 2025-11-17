@@ -297,6 +297,13 @@ export const EchoScreen: FC<EchoScreenProps> = ({stage, setScreenType}) => {
 									<Nameplate 
 										actor={actor} 
 										size="medium"
+										role={(() => {
+											const roleModules = stage().getSave().layout.getModulesWhere((m: any) => 
+												m && m.type !== 'quarters' && m.ownerId === actor.id
+											);
+											return roleModules.length > 0 ? roleModules[0].getAttribute('role') : undefined;
+										})()}
+										layout="stacked"
 										style={{
 											padding: '12px 16px',
 											fontSize: 18

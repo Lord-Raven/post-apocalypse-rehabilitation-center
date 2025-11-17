@@ -1,11 +1,13 @@
 import React, { FC } from 'react';
-import { Chip } from '@mui/material';
+import { Chip, Box } from '@mui/material';
 import Actor from '../actors/Actor';
 
 export interface NameplateProps {
     actor?: Actor;
     name?: string;
+    role?: string;
     size?: 'small' | 'medium' | 'large';
+    layout?: 'inline' | 'stacked';
     className?: string;
     style?: React.CSSProperties;
 }
@@ -13,11 +15,14 @@ export interface NameplateProps {
 /**
  * Reusable character nameplate component that displays character names
  * with consistent styling based on their theme colors and fonts.
+ * Can optionally display a role below or inline with the name.
  */
 export const Nameplate: FC<NameplateProps> = ({ 
     actor,
     name,
+    role,
     size = 'medium',
+    layout = 'stacked',
     className,
     style 
 }) => {
@@ -26,26 +31,69 @@ export const Nameplate: FC<NameplateProps> = ({
             case 'small':
                 return {
                     fontSize: '0.9rem',
+                    roleFontSize: '0.7rem',
                     borderWidth: '2px',
                 };
             case 'large':
                 return {
                     fontSize: '1.6rem',
+                    roleFontSize: '1.1rem',
                     borderWidth: '4px',
                 };
             default: // medium
                 return {
                     fontSize: '1.2rem',
+                    roleFontSize: '0.9rem',
                     borderWidth: '3px',
                 };
         }
     };
 
     const sizeStyles = getSizeStyles();
+    const displayName = actor?.name || name || '';
+    const displayRole = role || 'Patient';
+
+    const renderLabel = () => {
+        if (!role) {
+            return displayName;
+        }
+
+        if (layout === 'inline') {
+            return (
+                <span>
+                    {displayName}
+                    <span style={{ 
+                        fontSize: sizeStyles.roleFontSize,
+                        opacity: 0.75,
+                        marginLeft: '0.5em',
+                        fontWeight: 600,
+                        textTransform: 'capitalize',
+                    }}>
+                        ({displayRole})
+                    </span>
+                </span>
+            );
+        } else {
+            return (
+                <Box sx={{ textAlign: 'center', lineHeight: 1.2 }}>
+                    <div>{displayName}</div>
+                    <div style={{ 
+                        fontSize: sizeStyles.roleFontSize,
+                        opacity: 0.75,
+                        marginTop: '0.15em',
+                        fontWeight: 600,
+                        textTransform: 'capitalize',
+                    }}>
+                        {displayRole}
+                    </div>
+                </Box>
+            );
+        }
+    };
 
     return (
         <Chip
-            label={actor?.name || name || ''}
+            label={renderLabel()}
             variant="filled"
             className={className}
             sx={{ 
@@ -82,7 +130,7 @@ export const Nameplate: FC<NameplateProps> = ({
                     filter: 'blur(3px)',
                 },
                 '& .MuiChip-label': {
-                    padding: 0,
+                    padding: role ? (layout === 'stacked' ? '0.2em 0' : 0) : 0,
                     fontFamily: actor?.themeFontFamily || '"Arial Black", "Helvetica Neue", Arial, sans-serif',
                     position: 'relative',
                     zIndex: 1
@@ -91,6 +139,24 @@ export const Nameplate: FC<NameplateProps> = ({
             }}
         />
     );
+};
+
+/**
+ * Helper function to get an actor's role from the layout.
+ * Returns the role name from their assigned role module, or 'Patient' if none.
+ */
+export const getActorRole = (actorId: string, layout: any): string => {
+    const roleModules = layout.getModulesWhere((m: any) => 
+        m && m.type !== 'quarters' && m.ownerId === actorId
+    );
+    
+    if (roleModules.length > 0) {
+        const roleModule = roleModules[0];
+        // Get the role from MODULE_DEFAULTS
+        return roleModule.getAttribute('role') || 'Patient';
+    }
+    
+    return 'Patient';
 };
 
 export default Nameplate;
