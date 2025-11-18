@@ -142,8 +142,8 @@ export async function loadReserveActor(fullPath: string, stage: Stage): Promise<
             `System: NAME: Their simple name\n` +
             `DESCRIPTION: A vivid description of the character's physical appearance, attire, and any distinguishing features.\n` +
             `PROFILE: A brief summary of the character's key personality traits and behaviors.\n` +
-            `THEME COLOR: A hex color that reflects the character's theme or mood—use darker or richer colors that will contrast with white text.\n` +
-            `THEME FONT FAMILY: A web-safe font family that reflects the character's personality.\n` +
+            `COLOR: A hex color that reflects the character's theme or mood—use darker or richer colors that will contrast with white text.\n` +
+            `FONT: A web-safe font family that reflects the character's personality.\n` +
             Object.entries(Stat).map(([key, value]) => {
                 return `${key.toUpperCase()}: 1-10 scoring of ${getStatDescription(value).toLowerCase()}\n`;
             }).join('\n') +
@@ -168,6 +168,7 @@ export async function loadReserveActor(fullPath: string, stage: Stage): Promise<
             if (!keyMatch) continue;
             const key = keyMatch[1].toLowerCase();
             const value = line.substring(colonIndex + 1).trim();
+            console.log(`Parsed line - Key: ${key}, Value: ${value}`);
             parsedData[key] = value;
         }
     }
@@ -182,9 +183,9 @@ export async function loadReserveActor(fullPath: string, stage: Stage): Promise<
         [Stat.Joy]: 3,
         [Stat.Trust]: 1
     };
-    // Validate that parsedData['theme color'] is a valid hex color, otherwise assign a random default:
-    const themeColor = /^#([0-9A-F]{6}|[0-9A-F]{8})$/i.test(parsedData['theme color']) ? 
-            parsedData['theme color'] :
+    // Validate that parsedData['color'] is a valid hex color, otherwise assign a random default:
+    const themeColor = /^#([0-9A-F]{6}|[0-9A-F]{8})$/i.test(parsedData['color']) ?
+            parsedData['color'] :
             ['#788ebdff', '#d3aa68ff', '#75c275ff', '#c28891ff', '#55bbb2ff'][Math.floor(Math.random() * 5)];
     const newActor = new Actor(
         generateUuid(),
@@ -207,7 +208,7 @@ export async function loadReserveActor(fullPath: string, stage: Stage): Promise<
         // Default to a random color from a small preset list of relatively neutral colors:
         // validate that parsedData is a valid hex color:
         themeColor,
-        parsedData['theme font family'] || 'Arial, sans-serif'
+        parsedData['font'] || 'Arial, sans-serif'
     );
     console.log(`Loaded new actor: ${newActor.name} (ID: ${newActor.id})`);
     console.log(newActor);

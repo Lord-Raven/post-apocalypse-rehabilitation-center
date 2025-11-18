@@ -177,36 +177,34 @@ export const EchoScreen: FC<EchoScreenProps> = ({stage, setScreenType}) => {
 					flexWrap: 'wrap',
 					maxHeight: '25vh',
 				}}>
-					{reserveActors.map((actor, index) => {
-						const isExpanded = expandedCandidateId === actor.id;
-						return (
-						<motion.div
-						key={`reserve_${actor.id}`}
-						style={{ 
-							display: 'inline-block',
-							position: 'relative',
-							width: isExpanded ? '48vh' : '16vh',
-							transition: 'width 0.3s ease'
-						}}
-						whileHover={{ 
-							scale: isExpanded ? 1.02 : 1.05,
-							filter: 'brightness(1.1)'
-						}}
-						whileTap={{ scale: 0.98 }}
-						transition={{
-							type: "spring",
-							stiffness: 150,
-							damping: 15
-						}}
-						>
-							<RemoveButton
-								onClick={(e: React.MouseEvent) => removeReserveActor(actor.id, e)}
-								title="Remove from reserves"
-								variant="topRight"
-								size="small"
-							/>
-
-							<ActorCard
+				{reserveActors.map((actor, index) => {
+					const isExpanded = expandedCandidateId === actor.id;
+					return (
+					<motion.div
+					key={`reserve_${actor.id}`}
+					initial={false}
+					animate={{ width: isExpanded ? '48vh' : '16vh' }}
+					style={{ 
+						display: 'inline-block',
+						position: 'relative'
+					}}
+					whileHover={{ 
+						scale: isExpanded ? 1.02 : 1.05,
+						filter: 'brightness(1.1)'
+					}}
+					whileTap={{ scale: 0.98 }}
+					transition={{
+						width: { duration: 0.3, ease: 'easeInOut' },
+						scale: { type: "spring", stiffness: 150, damping: 15 },
+						filter: { duration: 0.2 }
+					}}
+					>
+						<RemoveButton
+							onClick={(e: React.MouseEvent) => removeReserveActor(actor.id, e)}
+							title="Remove from reserves"
+							variant="topRight"
+							size="small"
+						/>							<ActorCard
 								actor={actor}
 								isExpanded={isExpanded}
 								onClick={() => setExpandedCandidateId(isExpanded ? null : actor.id)}
@@ -230,7 +228,6 @@ export const EchoScreen: FC<EchoScreenProps> = ({stage, setScreenType}) => {
 				<Button
 					variant="secondary"
 					onClick={cancel}
-					whileHover={{ x: 6 }}
 				>
 					Cancel
 				</Button>
@@ -260,9 +257,9 @@ export const EchoScreen: FC<EchoScreenProps> = ({stage, setScreenType}) => {
 								style={{
 									animationDelay: `${slotIndex * 0.7}s`,
 									cursor: actor ? 'pointer' : 'default',
-									height: '60vh',
+									height: '65vh',
 									minHeight: 400,
-									width: '20vw',
+									width: '18vw',
 									display: 'flex',
 									flexDirection: 'column',
 									justifyContent: actor ? 'flex-end' : 'center',
@@ -317,8 +314,7 @@ export const EchoScreen: FC<EchoScreenProps> = ({stage, setScreenType}) => {
 										layout="stacked"
 										style={{
 											padding: '12px 16px',
-											fontSize: 18,
-											flex: 1
+											fontSize: 18
 										}}
 									/>
 									{/* Stats */}
