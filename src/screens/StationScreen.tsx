@@ -1,16 +1,14 @@
 import React, { FC } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Box, Typography, Card, CardContent } from '@mui/material';
+import { Typography, Card, CardContent } from '@mui/material';
 import { styled } from '@mui/material/styles';
 import { ScreenType } from './BaseScreen';
 import { Layout, Module, createModule, ModuleType, MODULE_DEFAULTS } from '../Module';
 import { Stage } from '../Stage';
-import Nameplate from '../components/Nameplate';
-import AuthorLink from '../components/AuthorLink';
 import ActorCard from '../components/ActorCard';
-import { PhaseIndicator as SharedPhaseIndicator, MenuItem, Title, Button } from '../components/UIComponents';
+import { PhaseIndicator as SharedPhaseIndicator, Title } from '../components/UIComponents';
 import { useTooltip } from '../contexts/TooltipContext';
-import { HourglassEmpty, SwapHoriz, Home } from '@mui/icons-material';
+import { SwapHoriz, Home, Work } from '@mui/icons-material';
 
 // Styled components for the day/phase display
 const StyledDayCard = styled(Card)(({ theme }) => ({
@@ -65,6 +63,7 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType}) =>
     const [draggedActor, setDraggedActor] = React.useState<any | null>(null);
     const [hoveredModuleId, setHoveredModuleId] = React.useState<string | null>(null);
     const [justDroppedModuleId, setJustDroppedModuleId] = React.useState<string | null>(null);
+    const [hoveredActorId, setHoveredActorId] = React.useState<string | null>(null);
 
     // Tooltip context
     const { setTooltip, clearTooltip } = useTooltip();
@@ -226,11 +225,50 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType}) =>
         );
     };
 
+    // Helper function to get relevant modules for an actor
+    const getActorRelatedModules = (actorId: string | null) => {
+        if (!actorId) return { locationId: null, homeId: null, workId: null };
+        
+        const actor = stage().getSave().actors[actorId];
+        if (!actor) return { locationId: null, homeId: null, workId: null };
+        
+        // Current location
+        const locationId = actor.locationId;
+        
+        // Home quarters (quarters type with ownerId matching actor)
+        const homeModule = layout.getModulesWhere(m => 
+            m.type === 'quarters' && m.ownerId === actorId
+        )[0];
+        const homeId = homeModule?.id || null;
+        
+        // Work assignment (non-quarters type with ownerId matching actor)
+        const workModule = layout.getModulesWhere(m => 
+            m.type !== 'quarters' && m.ownerId === actorId
+        )[0];
+        const workId = workModule?.id || null;
+        
+        return { locationId, homeId, workId };
+    };
+
     const renderGrid = () => {
         const cells: React.ReactNode[] = [];
+        
+        // Get related modules for the hovered/dragged actor
+        const activeActorId = draggedActor?.id || hoveredActorId;
+        const { locationId, homeId, workId } = getActorRelatedModules(activeActorId);
+        
         for (let y = 0; y < gridSize; y++) {
             for (let x = 0; x < gridSize; x++) {
                 const module = layout.getModuleAt(x, y);
+                
+                // Check if this module should be highlighted
+                const isHighlighted = module && (
+                    module.id === locationId ||
+                    module.id === homeId ||
+                    module.id === workId
+                );
+                const isHome = module && module.id === homeId;
+                const isWork = module && module.id === workId;
                 cells.push(
                     <div
                         key={`cell_${x}-${y}`}
@@ -243,6 +281,7 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType}) =>
                             height: cellSize,
                             boxSizing: 'border-box',
                             padding: 6,
+                            zIndex: draggedModule?.module.id === module?.id ? 1000 : 1,
                         }}
                     >
                         {module ? (
@@ -257,7 +296,9 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType}) =>
                                         ? `0 0 40px rgba(0, 255, 136, 0.8), inset 0 0 30px rgba(0, 255, 136, 0.3)`
                                         : justDroppedModuleId === module.id
                                             ? `0 0 50px rgba(0, 255, 136, 1), inset 0 0 40px rgba(0, 255, 136, 0.5)`
-                                            : undefined,
+                                            : isHighlighted
+                                                ? `0 0 25px rgba(255, 200, 0, 0.8), inset 0 0 20px rgba(255, 200, 0, 0.2)`
+                                                : undefined,
                                     x: 0,
                                     y: 0
                                 }}
@@ -269,6 +310,23 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType}) =>
                                     y: { duration: 0.3, ease: "easeOut" }
                                 }}
                                 whileHover={{ scale: draggedActor ? 1.08 : 1.03 }}
+                                style={{
+                                    width: '100%',
+                                    height: '100%',
+                                    border: isHighlighted 
+                                        ? '3px solid rgba(255, 200, 0, 0.9)' 
+                                        : '3px solid rgba(0, 255, 136, 0.9)',
+                                    borderRadius: 10,
+                                    background: `url(${module.getAttribute('defaultImageUrl')}) center center / contain no-repeat`,
+                                    cursor: 'pointer',
+                                    color: '#dfffe6',
+                                    fontWeight: 700,
+                                    fontSize: '18px',
+                                    textTransform: 'capitalize',
+                                    textShadow: '0 1px 0 rgba(0,0,0,0.6)',
+                                    overflow: 'hidden',
+                                    position: 'relative',
+                                }}
                                 drag={!draggedActor}
                                 dragMomentum={false}
                                 dragElastic={0}
@@ -282,23 +340,38 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType}) =>
                                         // Update tooltip with assignment message
                                         const actor = draggedActor;
                                         if (module.type === 'quarters') {
-                                            setTooltip(
-                                                `Assign ${actor.name} to quarters`,
-                                                Home
-                                            );
+                                            if (module.ownerId === actor.id) {
+                                                setTooltip(`${actor.name} is already assigned here.`, Home);
+                                            } else if (!module.ownerId) {
+                                                setTooltip(`Assign ${actor.name} to new quarters.`, Home);
+                                            } else {
+                                                const otherActor = stage().getSave().actors[module.ownerId]?.name || 'occupant';
+                                                setTooltip(`Swap ${actor.name}'s assignment with ${otherActor}.`, SwapHoriz);
+                                            }
                                         } else {
                                             const role = module.getAttribute('role') || module.type;
-                                            setTooltip(
-                                                `Assign ${actor.name} to ${role}`,
-                                                HourglassEmpty
-                                            );
+                                            if (module.ownerId === actor.id) {
+                                                setTooltip(`${actor.name} is already assigned as ${role}.`, Work);
+                                            } else if (!module.ownerId) {
+                                                setTooltip(`Assign ${actor.name} to ${role}.`, Work);
+                                            } else {
+                                                const otherActor = stage().getSave().actors[module.ownerId]?.name || 'occupant';
+                                                setTooltip(`Swap ${actor.name} with current ${role}, ${otherActor}.`, SwapHoriz);
+                                            }
                                         }
+                                    } else if (draggedModule && draggedModule.module.id !== module.id) {
+                                        // Show swap tooltip when dragging one module over another
+                                        e.preventDefault();
+                                        setTooltip(`Swap ${draggedModule.module.type} with ${module.type}`, SwapHoriz);
                                     }
                                 }}
                                 onDragLeave={() => {
                                     if (draggedActor) {
                                         setHoveredModuleId(null);
                                         clearTooltip();
+                                    } else if (draggedModule) {
+                                        // Restore the "Moving module" tooltip when leaving another module
+                                        setTooltip(`Moving ${draggedModule.module.type} module`, SwapHoriz);
                                     }
                                 }}
                                 onDrop={(e) => {
@@ -345,22 +418,43 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType}) =>
                                         action(module, stage(), setScreenType);
                                     }
                                 }}
-                                style={{
-                                    width: '100%',
-                                    height: '100%',
-                                    border: '3px solid rgba(0, 255, 136, 0.9)',
-                                    borderRadius: 10,
-                                    background: `url(${module.getAttribute('defaultImageUrl')}) center center / contain no-repeat`,
-                                    cursor: 'pointer',
-                                    color: '#dfffe6',
-                                    fontWeight: 700,
-                                    fontSize: '18px',
-                                    textTransform: 'capitalize',
-                                    textShadow: '0 1px 0 rgba(0,0,0,0.6)',
-                                    overflow: 'hidden',
-                                }}
                             >
                                 <div style={{ position: 'relative', width: '100%', height: '100%' }}>
+                                    {/* Icon overlays for home and work modules */}
+                                    {isHome && (
+                                        <div style={{
+                                            position: 'absolute',
+                                            top: '8px',
+                                            right: '8px',
+                                            background: 'rgba(0, 0, 0, 0.7)',
+                                            borderRadius: '50%',
+                                            padding: '8px',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'center',
+                                            zIndex: 10,
+                                            border: '2px solid rgba(255, 200, 0, 0.8)',
+                                        }}>
+                                            <Home style={{ color: '#ffc800', fontSize: '24px' }} />
+                                        </div>
+                                    )}
+                                    {isWork && (
+                                        <div style={{
+                                            position: 'absolute',
+                                            top: '8px',
+                                            right: '8px',
+                                            background: 'rgba(0, 0, 0, 0.7)',
+                                            borderRadius: '50%',
+                                            padding: '8px',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'center',
+                                            zIndex: 10,
+                                            border: '2px solid rgba(255, 200, 0, 0.8)',
+                                        }}>
+                                            <Work style={{ color: '#ffc800', fontSize: '24px' }} />
+                                        </div>
+                                    )}
                                     {/* Compute actors once for this module */}
                                     {(() => {
                                         const actors = Object.values(stage()?.getSave().actors).filter(a => a.locationId === module.id);
@@ -592,36 +686,43 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType}) =>
                                             <p style={{ color: '#888', fontStyle: 'italic', fontSize: '12px' }}>No patients currently on station</p>
                                         ) : (
                                             Object.values(stage().getSave().actors).map((actor: any) => (
-                                                <ActorCard
+                                                <div 
                                                     key={actor.id}
-                                                    actor={actor}
-                                                    role={(() => {
-                                                        const roleModules = layout.getModulesWhere((m: Module) => 
-                                                            m && m.type !== 'quarters' && m.ownerId === actor.id
-                                                        );
-                                                        return roleModules.length > 0 ? roleModules[0].getAttribute('role') : undefined;
-                                                    })()}
-                                                    forceExpanded={true}
-                                                    isDragging={draggedActor?.id === actor.id}
-                                                    draggable={true}
-                                                    onDragStart={(e: React.DragEvent) => {
-                                                        setDraggedActor(actor);
-                                                        e.dataTransfer.effectAllowed = 'move';
-                                                    }}
-                                                    onDragEnd={() => {
-                                                        setDraggedActor(null);
-                                                        setHoveredModuleId(null);
-                                                        clearTooltip();
-                                                    }}
-                                                    whileHover={{
-                                                        backgroundColor: 'rgba(0, 255, 136, 0.15)',
-                                                        borderColor: 'rgba(0, 255, 136, 0.5)',
-                                                        x: 10
-                                                    }}
-                                                    style={{
-                                                        marginBottom: '15px',
-                                                    }}
-                                                />
+                                                    onMouseEnter={() => setHoveredActorId(actor.id)}
+                                                    onMouseLeave={() => setHoveredActorId(null)}
+                                                >
+                                                    <ActorCard
+                                                        actor={actor}
+                                                        role={(() => {
+                                                            const roleModules = layout.getModulesWhere((m: Module) => 
+                                                                m && m.type !== 'quarters' && m.ownerId === actor.id
+                                                            );
+                                                            return roleModules.length > 0 ? roleModules[0].getAttribute('role') : undefined;
+                                                        })()}
+                                                        forceExpanded={true}
+                                                        isDragging={draggedActor?.id === actor.id}
+                                                        draggable={true}
+                                                        onDragStart={(e: React.DragEvent) => {
+                                                            setDraggedActor(actor);
+                                                            setHoveredActorId(null);
+                                                            e.dataTransfer.effectAllowed = 'move';
+                                                        }}
+                                                        onDragEnd={() => {
+                                                            setDraggedActor(null);
+                                                            setHoveredModuleId(null);
+                                                            setHoveredActorId(null);
+                                                            clearTooltip();
+                                                        }}
+                                                        whileHover={{
+                                                            backgroundColor: 'rgba(0, 255, 136, 0.15)',
+                                                            borderColor: 'rgba(0, 255, 136, 0.5)',
+                                                            x: 10
+                                                        }}
+                                                        style={{
+                                                            marginBottom: '15px',
+                                                        }}
+                                                    />
+                                                </div>
                                             ))
                                         )}
                                     </div>
