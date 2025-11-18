@@ -113,8 +113,10 @@ export const EchoScreen: FC<EchoScreenProps> = ({stage, setScreenType}) => {
 	const handleDropOnEchoSlot = async (e: React.DragEvent, slotIndex: number) => {
 		e.preventDefault();
 		const data = JSON.parse(e.dataTransfer.getData('application/json'));
+		console.log('Dropping echo onto slot');
+		console.log(data);
 		const actor = reserveActors.find(a => a.id === data.actorId) || echoSlots.find(a => a?.id === data.actorId);
-		
+		console.log(actor);
 		if (actor) {
 			// Check if slot is occupied
 			const existingActor = echoSlots[slotIndex];
