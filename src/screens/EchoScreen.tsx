@@ -186,7 +186,9 @@ export const EchoScreen: FC<EchoScreenProps> = ({stage, setScreenType}) => {
 					style={{ 
 						display: 'inline-block',
 						position: 'relative',
-						animationDelay: `${0.2 + index * 0.7}s`
+						animationDelay: `${0.2 + index * 0.7}s`,
+						width: isExpanded ? '48vh' : '16vh',
+						transition: 'width 0.3s ease'
 					}}
 					whileHover={{ 
 						scale: isExpanded ? 1.02 : 1.05,
@@ -194,9 +196,9 @@ export const EchoScreen: FC<EchoScreenProps> = ({stage, setScreenType}) => {
 					}}
 					whileTap={{ scale: 0.98 }}
 					transition={{
-						width: { duration: 0.3, ease: 'easeInOut' },
-						scale: { type: "spring", stiffness: 150, damping: 15 },
-						filter: { duration: 0.2 }
+						type: "spring",
+						stiffness: 150,
+						damping: 15
 					}}
 					>
 						<RemoveButton
