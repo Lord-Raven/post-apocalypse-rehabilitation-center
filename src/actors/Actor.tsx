@@ -136,7 +136,8 @@ export async function loadReserveActor(fullPath: string, stage: Stage): Promise<
             `if Individual X remains relevant to this character, Individual X should be replaced with an appropriate name in the distillation.\n\n` +
             `In addition to the simple display name, physical description, and personality profile, ` +
             `score the character with a simple 1-10 for the following traits: BRAWN, WITS, NERVE, SKILL, CHARM, LUST, JOY, and TRUST.\n` +
-            `Bear in mind the character's current, diminished state—as a newly reconstituted and relatively powerless individual—and not their original potential when scoring these traits; some characters may not respond well to being essentially resurrected into a new timeline.\n\n` +
+            `Bear in mind the character's current, diminished state—as a newly reconstituted and relatively powerless individual—and not their original potential when scoring these traits (but omit your reasons from the response structure); ` +
+            `some characters may not respond well to being essentially resurrected into a new timeline, losing much of what they once had. Others may be grateful for a new beginning.\n\n` +
             `Original Details:\n${data.description} ${data.personality}\n\n` +
             `Instructions: After carefully considering this description and the rules provided, generate a concise breakdown for a character based upon these details in the following strict format:\n` +
             `System: NAME: Their simple name\n` +
@@ -147,10 +148,25 @@ export async function loadReserveActor(fullPath: string, stage: Stage): Promise<
             Object.entries(Stat).map(([key, value]) => {
                 return `${key.toUpperCase()}: 1-10 scoring of ${getStatDescription(value).toLowerCase()}\n`;
             }).join('\n') +
+            `#END#\n\n` +
+            `Example Response:\n` +
+            `NAME: Jane Doe\n` +
+            `DESCRIPTION: A tall, athletic woman with short, dark hair and piercing blue eyes. She wears a simple, utilitarian outfit made from durable materials.\n` +
+            `PROFILE: Jane is confident and determined, with a strong sense of justice. She is quick to anger but also quick to forgive. She is fiercely independent and will do whatever it takes to protect those she cares about.\n` +
+            `COLOR: #333333\n` +
+            `FONT: Arial\n` +
+            `BRAWN: 5\n` +
+            `WITS: 6\n` +
+            `NERVE: 7\n` +
+            `SKILL: 5\n` +
+            `CHARM: 4\n` +
+            `LUST: 2\n` +
+            `JOY: 3\n` +
+            `TRUST: 2\n` +
             `#END#`,
         stop: ['#END'],
         include_history: true, // There won't be any history, but if this is true, the front-end doesn't automatically apply pre-/post-history prompts.
-        max_tokens: 800,
+        max_tokens: 500,
     });
     console.log('Generated character distillation:');
     console.log(generatedResponse);
