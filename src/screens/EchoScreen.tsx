@@ -168,7 +168,7 @@ export const EchoScreen: FC<EchoScreenProps> = ({stage, setScreenType}) => {
 				onDrop={handleDropOnReserve}
 				onDragOver={handleDragOver}
 			>
-				<h3 style={{ color: '#00ff88', marginBottom: '10px', textAlign: 'center' }}>Echos</h3>
+				<h3 style={{ color: '#00ff88', marginBottom: '10px', textAlign: 'center' }}>Echoes</h3>
 				<div style={{ 
 					display: 'flex', 
 					gap: 12, 

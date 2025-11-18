@@ -18,7 +18,7 @@ type ChatStateType = {
 
 type SaveType = {
     player: {name: string};
-    echos: (Actor | null)[]; // actors currently in echo slots (can be null for empty slots)
+    echoes: (Actor | null)[]; // actors currently in echo slots (can be null for empty slots)
     actors: {[key: string]: Actor};
     layout: Layout;
     day: number;
@@ -72,7 +72,7 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
         layout.setModuleAt(DEFAULT_GRID_SIZE/2, DEFAULT_GRID_SIZE/2, createModule('echo chamber', { id: `echo-${DEFAULT_GRID_SIZE/2}-${DEFAULT_GRID_SIZE/2}`, connections: [], attributes: {} }));
         layout.setModuleAt(DEFAULT_GRID_SIZE/2 - 1, DEFAULT_GRID_SIZE/2, createModule("commons", { id: `common-${DEFAULT_GRID_SIZE/2 - 1}-${DEFAULT_GRID_SIZE/2}`, connections: [], attributes: {} }));
         layout.setModuleAt(DEFAULT_GRID_SIZE/2, DEFAULT_GRID_SIZE/2 - 1, createModule("generator", { id: `generator-${DEFAULT_GRID_SIZE/2}-${DEFAULT_GRID_SIZE/2 - 1}`, connections: [], attributes: {} }));
-        this.freshSave = { player: {name: Object.values(users)[0].name}, echos: [], actors: {}, layout: layout, day: 1, phase: 0, currentVignette: undefined };
+        this.freshSave = { player: {name: Object.values(users)[0].name}, echoes: [], actors: {}, layout: layout, day: 1, phase: 0, currentVignette: undefined };
 
         // ensure at least one save exists and has a layout
         if (!this.saves.length) {
@@ -287,17 +287,17 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
     }
 
     async commitActorToEcho(actorId: string, slotIndex: number): Promise<void> {
-        const actor = this.reserveActors.find(a => a.id === actorId) || this.getSave().echos.find(a => a?.id === actorId);
+        const actor = this.reserveActors.find(a => a.id === actorId) || this.getSave().echoes.find(a => a?.id === actorId);
         if (actor) {
             const save = this.getSave();
-            // Ensure echos array has 3 slots
-            if (save.echos.length < 3) {
-                save.echos = [...save.echos, ...Array(3 - save.echos.length).fill(null)];
+            // Ensure echoes array has 3 slots
+            if (save.echoes.length < 3) {
+                save.echoes = [...save.echoes, ...Array(3 - save.echoes.length).fill(null)];
             }
             // Remove from any existing slot
-            save.echos = save.echos.map(slot => slot?.id === actorId ? null : slot);
+            save.echoes = save.echoes.map(slot => slot?.id === actorId ? null : slot);
             // Place in new slot
-            save.echos[slotIndex] = actor;
+            save.echoes[slotIndex] = actor;
             
             const { commitActorToEcho } = await import('./actors/Actor');
             await commitActorToEcho(actor, this);
@@ -307,15 +307,15 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
 
     removeActorFromEcho(actorId: string): void {
         const save = this.getSave();
-        save.echos = save.echos.map(slot => slot?.id === actorId ? null : slot);
+        save.echoes = save.echoes.map(slot => slot?.id === actorId ? null : slot);
         this.saveGame();
     }
 
     getEchoSlots(): (Actor | null)[] {
         const save = this.getSave();
         // Ensure we always return an array of 3 slots
-        const echos = save.echos || [];
-        return [...echos, ...Array(Math.max(0, 3 - echos.length)).fill(null)].slice(0, 3);
+        const echoes = save.echoes || [];
+        return [...echoes, ...Array(Math.max(0, 3 - echoes.length)).fill(null)].slice(0, 3);
     }
 
     setVignette(vignette: VignetteData) {

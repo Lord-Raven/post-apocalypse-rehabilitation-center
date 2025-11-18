@@ -92,7 +92,7 @@ export async function generateVignetteScript(vignette: VignetteData, stage: Stag
         `the Post-Apocalyptic Rehabilitation Center. ` +
         `The thrust of the game has the player character, ${playerName}, managing this station and interacting with patients and crew, as they navigate this complex futuristic universe together. ` +
         `\n\nCrew:\nAt this point in the story, the player is running the operation on their own, with no fellow crew members. ` +
-        // List patients who are here, along with full stat details:
+        // List characters who are here, along with full stat details:
         `\n\nPresent Characters:\n${presentActors.map(actor => {
             const roleModule = stage.getLayout().getModulesWhere((m: any) => 
                 m && m.type !== 'quarters' && m.ownerId === actor.id
@@ -101,8 +101,8 @@ export async function generateVignetteScript(vignette: VignetteData, stage: Stag
             (roleModule ? `  Role: ${roleModule.getAttribute('role') || 'Patient'} (${actor.heldRoles[roleModule.getAttribute('role') || 'Patient'] || 0} days)\n` : '') +
             `  Role Description: ${roleModule?.getAttribute('roleDescription') || 'This character has no assigned role aboard the PARC. They are to focus upon their own needs.'}\n` +
             `  Stats:\n    ${Object.entries(actor.stats).map(([stat, value]) => `${stat}: ${value}`).join('\n    ')}`}).join('\n')}` +
-        // List non-present patients for reference; just need description and profile:
-        `\n\nOther Patients:\n${absentActors.map(actor => {
+        // List non-present characters for reference; just need description and profile:
+        `\n\nOther Characters:\n${absentActors.map(actor => {
             // Just role name and not full details.
             const roleModule = stage.getLayout().getModulesWhere((m: any) => 
                 m && m.type !== 'quarters' && m.ownerId === actor.id
