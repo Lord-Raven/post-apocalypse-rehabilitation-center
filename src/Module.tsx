@@ -3,7 +3,7 @@ import { Stage } from "./Stage";
 import { ScreenType } from './screens/BaseScreen';
 
 export type ModuleType = 'echo chamber' | 'generator' | 'quarters' | 'commons' | 'medbay' | 'gym' | 'lounge' | 'armory';
-    /*| 'hydroponics' | 'laboratory' | 'observatory' | 'security' | 'storage' |
+    /*| 'hydroponics' | 'laboratory' | 'observatory' | 'security' | 'storage' | 'market' |
     'brig' | 'showers' | 'conservatory' |
     // Administration pack:
     'directors suite' | 'communications' | 'office' | 'vault' | 'archives' |
@@ -14,7 +14,7 @@ export type ModuleType = 'echo chamber' | 'generator' | 'quarters' | 'commons' |
     // Recreation pack:
     'holodeck' | 'arcade' | 'arena' | 'disco' | 'theater' |
     // Spicy pack:
-    'brothel' | 'dungeon' | 'black market' |
+    'brothel' | 'dungeon' | 'black market' | 'harem' | 
     */
 
 export interface ModuleIntrinsic {

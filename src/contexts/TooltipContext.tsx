@@ -4,7 +4,8 @@ import { SvgIconComponent } from '@mui/icons-material';
 interface TooltipContextValue {
     message: string | null;
     icon: SvgIconComponent | undefined;
-    setTooltip: (message: string | null, icon?: SvgIconComponent) => void;
+    actionCost: number | undefined;
+    setTooltip: (message: string | null, icon?: SvgIconComponent, actionCost?: number) => void;
     clearTooltip: () => void;
 }
 
@@ -20,19 +21,22 @@ interface TooltipProviderProps {
 export const TooltipProvider: FC<TooltipProviderProps> = ({ children }) => {
     const [message, setMessage] = useState<string | null>(null);
     const [icon, setIcon] = useState<SvgIconComponent | undefined>(undefined);
+    const [actionCost, setActionCost] = useState<number | undefined>(undefined);
 
-    const setTooltip = (newMessage: string | null, newIcon?: SvgIconComponent) => {
+    const setTooltip = (newMessage: string | null, newIcon?: SvgIconComponent, newActionCost?: number) => {
         setMessage(newMessage);
         setIcon(newIcon);
+        setActionCost(newActionCost);
     };
 
     const clearTooltip = () => {
         setMessage(null);
         setIcon(undefined);
+        setActionCost(undefined);
     };
 
     return (
-        <TooltipContext.Provider value={{ message, icon, setTooltip, clearTooltip }}>
+        <TooltipContext.Provider value={{ message, icon, actionCost, setTooltip, clearTooltip }}>
             {children}
         </TooltipContext.Provider>
     );

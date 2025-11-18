@@ -408,33 +408,10 @@ html, body, #root {
 /* Phase Progress Indicator */
 .phase-indicator {
   display: flex;
-  justify-content: space-between;
+  justify-content: center;
   align-items: center;
-  gap: 4px;
+  gap: 8px;
   margin-top: 12px;
-}
-
-.phase-segment {
-  flex: 1;
-  height: 8px;
-  border-radius: 4px;
-  border: 2px solid var(--color-primary);
-  position: relative;
-  overflow: hidden;
-  
-  &.active {
-    background: linear-gradient(90deg, var(--color-primary-darker) 0%, rgba(0, 170, 85, 0.7) 100%);
-    box-shadow: var(--glow-primary-strong);
-  }
-  
-  &.completed {
-    background: linear-gradient(90deg, var(--color-primary) 0%, var(--color-primary-dark) 100%);
-    box-shadow: var(--glow-primary-strong);
-  }
-  
-  &:not(.active):not(.completed) {
-    background: var(--color-primary-10);
-  }
 }
 
 /* Module/Tile Styles */

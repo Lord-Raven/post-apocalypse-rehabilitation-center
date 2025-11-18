@@ -35,6 +35,7 @@ export const EchoScreen: FC<EchoScreenProps> = ({stage, setScreenType}) => {
 		e.stopPropagation();
 		e.preventDefault();
 		stage().reserveActors = stage().reserveActors.filter(a => a.id !== actorId);
+		stage().loadReserveActors();
 		setRefreshKey(prev => prev + 1); // Force re-render
 	};
 

@@ -29,6 +29,7 @@ class Actor {
     birthDay: number = -1; // Day they were "born" into the game world
     participations: number = 0; // Number of vignettes they've participated in
     isImageLoadingComplete: boolean = false; // Whether all emotion pack images have been generated
+    heldRoles: { [key: string]: number } = {}; // Roles ever held by this actor and the number of days spent in each
 
     // Characters are candidates for a rehabilitation program; the are coming into the program from a vast range of past life situations.
     // They may have trauma, mental health challenges, or other issues that the program is designed to help with.
@@ -112,6 +113,13 @@ export async function loadReserveActor(fullPath: string, stage: Stage): Promise<
     };
     // if data.name, data.description, or data.personality contain any "{" or "}" at this point, discard this actor by returning null
     if (data.name.includes('{') || data.name.includes('}') || data.description.includes('{') || data.description.includes('}') || data.personality.includes('{') || data.personality.includes('}')) {
+        console.log(`Immediately discarding actor due to curly braces (possible JSON content): ${data.name}`);
+        return null;
+    } else if (bannedWords.some(word => data.description.toLowerCase().includes(word) || data.personality.toLowerCase().includes(word) || data.name.toLowerCase().includes(word))) {
+        console.log(`Immediately discarding actor due to banned words: ${data.name}`);
+        return null;
+    } else if (/[\u3040-\u30ff\u3400-\u4dbf\u4e00-\u9fff\uf900-\ufaff]/.test(`${data.name}${data.description}${data.personality}`)) {
+        console.log(`Immediately discarding actor due to non-english characters: ${data.name}`);
         return null;
     }
     // Take this data and use text generation to get an updated distillation of this character, including a physical description.

@@ -26,7 +26,7 @@ interface BaseScreenProps {
 const BaseScreenContent: FC<{ stage: () => Stage }> = ({ stage }) => {
     const [errorMessage, setErrorMessage] = React.useState<string | null>(null);
     const [screenType, setScreenType] = React.useState<ScreenType>(ScreenType.MENU);
-    const { message, icon } = useTooltip();
+    const { message, icon, actionCost } = useTooltip();
 
     return (
         <div style={{ position: 'relative', width: '100vw', height: '100vh' }}>
@@ -48,7 +48,7 @@ const BaseScreenContent: FC<{ stage: () => Stage }> = ({ stage }) => {
             )}
             
             {/* Unified tooltip bar that renders over all screens */}
-            <TooltipBar message={message} Icon={icon} />
+            <TooltipBar message={message} Icon={icon} actionCost={actionCost} />
         </div>
     );
 };

@@ -5,6 +5,7 @@
 
 import React, { FC, ReactNode } from 'react';
 import { motion, HTMLMotionProps } from 'framer-motion';
+import { HourglassTop, HourglassBottom } from '@mui/icons-material';
 
 /* ===============================================
    PANEL COMPONENTS
@@ -134,26 +135,40 @@ interface PhaseIndicatorProps {
 export const PhaseIndicator: FC<PhaseIndicatorProps> = ({ currentPhase, totalPhases }) => {
 	return (
 		<div className="phase-indicator">
-			{Array.from({ length: totalPhases }).map((_, index) => (
-				<motion.div
-					key={index}
-					className={`phase-segment ${
-						index === currentPhase ? 'active' : 
-						index < currentPhase ? 'completed' : ''
-					}`}
-					initial={{ scaleX: 0 }}
-					animate={{ scaleX: 1 }}
-					transition={{ 
-						duration: 0.3, 
-						delay: index * 0.1,
-						ease: "easeOut"
-					}}
-					whileHover={{ 
-						scaleY: 1.3,
-						transition: { duration: 0.2 }
-					}}
-				/>
-			))}
+			{Array.from({ length: totalPhases }).map((_, index) => {
+				const isSpent = index < currentPhase;
+				const HourglassIcon = isSpent ? HourglassBottom : HourglassTop;
+				
+				return (
+					<motion.div
+						key={index}
+						initial={{ scale: 0, opacity: 0 }}
+						animate={{ scale: 1, opacity: 1 }}
+						transition={{ 
+							duration: 0.3, 
+							delay: index * 0.1,
+							ease: "easeOut"
+						}}
+						whileHover={{ 
+							scale: 1.2,
+							transition: { duration: 0.2 }
+						}}
+						style={{
+							display: 'flex',
+							alignItems: 'center',
+							justifyContent: 'center',
+						}}
+					>
+						<HourglassIcon
+							style={{
+								color: isSpent ? '#00ff88' : 'rgba(0, 255, 136, 0.4)',
+								filter: isSpent ? 'drop-shadow(0 0 8px rgba(0, 255, 136, 0.6))' : 'none',
+								fontSize: '28px',
+							}}
+						/>
+					</motion.div>
+				);
+			})}
 		</div>
 	);
 };

@@ -9,6 +9,7 @@ import ActorCard from '../components/ActorCard';
 import { PhaseIndicator as SharedPhaseIndicator, Title } from '../components/UIComponents';
 import { useTooltip } from '../contexts/TooltipContext';
 import { SwapHoriz, Home, Work } from '@mui/icons-material';
+import { VignetteType } from '../Vignette';
 
 // Styled components for the day/phase display
 const StyledDayCard = styled(Card)(({ theme }) => ({
@@ -81,13 +82,31 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType}) =>
         const newModule: Module = createModule(moduleType);
         // Write into the Stage's layout
         stage().getLayout().setModuleAt(x, y, newModule);
-        stage().incPhase(1);
         // update local layout state so this component re-renders with the new module
         setLayout(stage().getLayout());
-        setDay(stage().getSave().day);
-        setPhase(stage().getSave().phase);
         setShowModuleSelector(false);
         setSelectedPosition(null);
+        // Possibly kick off a vignette about the new module, if no others exist in layout:
+        const existingModules = stage().getLayout().getModulesWhere(m => m.type === moduleType);
+        if (existingModules.length === 1) { // New module is the only one of its type
+            // Grab a few random patients to pull to the new module for a vignette:
+            const randomPatients = Object.values(stage().getSave().actors)
+                .filter(a => a.locationId !== newModule.id)
+                .sort(() => 0.5 - Math.random()) // shuffle, then randomly grab 1-3 patients:
+                .slice(0, Math.min(Math.random() * 3 + 1, Object.keys(stage().getSave().actors).length));
+            randomPatients.forEach(p => {
+                p.locationId = newModule.id;
+            });
+
+            stage().setVignette({
+                type: VignetteType.NEW_MODULE,
+                moduleId: newModule.id,
+                script: [],
+                context: { moduleType }
+            });
+        } else {
+            stage().incPhase(1);
+        }
     };
 
     const getAvailableModules = (): ModuleType[] => {
@@ -134,11 +153,16 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType}) =>
     const handleActorDropOnModule = (actorId: string, targetModule: Module) => {
         const actor = stage().getSave().actors[actorId];
         if (!actor) return;
+        let phaseCost = 0;
 
         if (targetModule.type === 'quarters') {
             // Handle quarters assignment with swapping
             const currentQuartersId = actor.locationId;
             const targetOwnerId = targetModule.ownerId;
+
+            if (targetOwnerId !== actorId) {
+                phaseCost = 1;
+            }
 
             // If target quarters has an owner, swap them
             if (targetOwnerId && targetOwnerId !== actorId) {
@@ -152,11 +176,23 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType}) =>
                         otherActor.locationId = currentQuartersId;
                     }
                 }
+            } else {
+                // If the new quarters was unoccupied, then no one was swapped and we need to clear this character's current quarters before assigning them here.
+                layout.getLayout().flat().forEach(module => {
+                    if (module && module.type === 'quarters' && module.ownerId === actorId) {
+                        module.ownerId = undefined;
+                    }
+                });
             }
 
             // Assign actor to target quarters
             targetModule.ownerId = actorId;
             actor.locationId = targetModule.id;
+
+        } else {
+            if (targetModule.ownerId !== actorId) {
+                phaseCost = 1;
+            }
 
             // Clear any previous role assignment for this actor (non-quarters modules)
             layout.getLayout().flat().forEach(module => {
@@ -164,10 +200,23 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType}) =>
                     module.ownerId = undefined;
                 }
             });
-        } else {
-            // Handle role assignment (non-quarters module)
-            // Simply assign the actor to this module as their role
+
+            // Assign the actor to this module as their role
             targetModule.ownerId = actorId;
+            actor.locationId = targetModule.id;
+            const roleName: string = targetModule.getAttribute('role') || '';
+            if (roleName && Object.keys(actor.heldRoles).indexOf(roleName) === -1) {
+                // This character has never held this role before; initialize counter and also kick off a little vignette about it.
+                actor.heldRoles[roleName] = 0;
+                phaseCost = 0; // The vignette will advance the phase.
+                stage().setVignette({
+                    type: VignetteType.ROLE_ASSIGNMENT,
+                    moduleId: targetModule.id,
+                    actorId: actorId,
+                    script: [],
+                    context: { role: roleName }
+                });
+            }
         }
 
         // Show drop animation feedback
@@ -178,6 +227,9 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType}) =>
         setLayout(stage().getLayout());
         setDraggedActor(null);
         setHoveredModuleId(null);
+        if (phaseCost > 0) {
+            stage().incPhase(phaseCost);
+        }
     };
 
     // Need to make sure re-renders when layout is updated.

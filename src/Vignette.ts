@@ -5,6 +5,8 @@ import { Stage } from "./Stage";
 export enum VignetteType {
     INTRO_CHARACTER = 'INTRO CHARACTER',
     VISIT_CHARACTER = 'VISIT CHARACTER',
+    ROLE_ASSIGNMENT = 'ROLE ASSIGNMENT',
+    NEW_MODULE = 'NEW MODULE',
     RANDOM_ENCOUNTER = 'RANDOM ENCOUNTER'
 }
 
@@ -19,9 +21,9 @@ export interface VignetteData {
     moduleId: string;
     actorId?: string;
     script: ScriptEntry[];
-    generating: boolean;
+    generating?: boolean;
     context: any;
-    endScene: boolean;
+    endScene?: boolean;
     endProperties?: { [actorId: string]: { [stat: string]: number } };
 }
 
@@ -43,6 +45,15 @@ export function generateVignettePrompt(vignette: VignetteData, stage: Stage, con
                 `This scene depicts a chance encounter with ${actor.name} in the ${module?.type || 'unknown'} module. Bear in mind that ${actor.name} is from another universe, and may be unaware of details of this one. ` +
                     `Explore the setting and what might arise from this unexpected meeting.` :
                 `Continue this chance encounter with ${actor.name} in the ${module?.type || 'unknown'} module, exploring what might arise from this unexpected meeting.`;
+        case VignetteType.ROLE_ASSIGNMENT:
+            return !continuing ?
+                `This scene depicts an exchange between the player and ${actor.name} regarding ${actor.name}'s new assignment to the role of ${vignette.context.role || 'something new'} in the ${module?.type || 'unknown'} module. ` +
+                    `Bear in mind ${actor.name}'s personality, stats, and experience within this setting (or lack thereof) as you portray their reaction and to this new role. ` :
+                `Continue this scene with ${actor.name}, potentially exploring their thoughts or feelings toward their new role.`;
+        case VignetteType.NEW_MODULE:
+            return !continuing ?
+                `This scene depicts an exchange between the player and some of the patients regarding the opening of a new module, the ${module?.type || 'unknown'}. ` :
+                `Continue this scene, exploring the crew's thoughts or feelings toward the new module, the ${module?.type || 'unknown'}.`;
         default:
             return '';
     }
