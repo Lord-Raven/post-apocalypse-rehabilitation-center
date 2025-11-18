@@ -46,8 +46,7 @@ export const RemoveButton: FC<RemoveButtonProps> = ({
                     ? '0 2px 8px rgba(0,0,0,0.5)' 
                     : '0 2px 8px rgba(0,0,0,0.3)',
                 '&:hover': {
-                    background: 'rgba(255, 0, 0, 0.9)',
-                    transform: 'scale(1.1)',
+                    background: 'rgba(255, 0, 0, 0.9)'
                 },
                 transition: 'all 0.2s ease'
             }}

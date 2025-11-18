@@ -9,6 +9,8 @@ import Nameplate from '../components/Nameplate';
 import AuthorLink from '../components/AuthorLink';
 import ActorCard from '../components/ActorCard';
 import { PhaseIndicator as SharedPhaseIndicator, MenuItem, Title, Button } from '../components/UIComponents';
+import { useTooltip } from '../contexts/TooltipContext';
+import { HourglassEmpty, SwapHoriz, Home } from '@mui/icons-material';
 
 // Styled components for the day/phase display
 const StyledDayCard = styled(Card)(({ theme }) => ({
@@ -64,6 +66,9 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType}) =>
     const [hoveredModuleId, setHoveredModuleId] = React.useState<string | null>(null);
     const [justDroppedModuleId, setJustDroppedModuleId] = React.useState<string | null>(null);
 
+    // Tooltip context
+    const { setTooltip, clearTooltip } = useTooltip();
+
     const gridSize = 6;
     const cellSize = '10vmin';
 
@@ -95,6 +100,7 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType}) =>
 
     const handleModuleDragStart = (module: Module, x: number, y: number) => {
         setDraggedModule({module, fromX: x, fromY: y});
+        setTooltip(`Moving ${module.type} module`, SwapHoriz);
     };
 
     const handleModuleDrop = (toX: number, toY: number) => {
@@ -105,6 +111,7 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType}) =>
         // Don't do anything if dropped on same position
         if (fromX === toX && fromY === toY) {
             setDraggedModule(null);
+            clearTooltip();
             return;
         }
         
@@ -122,6 +129,7 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType}) =>
         
         setLayout(stage().getLayout());
         setDraggedModule(null);
+        clearTooltip();
     };
 
     const handleActorDropOnModule = (actorId: string, targetModule: Module) => {
@@ -270,23 +278,43 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType}) =>
                                     if (draggedActor) {
                                         e.preventDefault();
                                         setHoveredModuleId(module.id);
+                                        
+                                        // Update tooltip with assignment message
+                                        const actor = draggedActor;
+                                        if (module.type === 'quarters') {
+                                            setTooltip(
+                                                `Assign ${actor.name} to quarters`,
+                                                Home
+                                            );
+                                        } else {
+                                            const role = module.getAttribute('role') || module.type;
+                                            setTooltip(
+                                                `Assign ${actor.name} to ${role}`,
+                                                HourglassEmpty
+                                            );
+                                        }
                                     }
                                 }}
                                 onDragLeave={() => {
                                     if (draggedActor) {
                                         setHoveredModuleId(null);
+                                        clearTooltip();
                                     }
                                 }}
                                 onDrop={(e) => {
                                     e.preventDefault();
                                     if (draggedActor) {
                                         handleActorDropOnModule(draggedActor.id, module);
+                                        clearTooltip();
                                     }
                                 }}
                                 onDragEnd={(event, info) => {
                                     // Calculate which cell we're over based on drag position
                                     const gridContainer = document.querySelector('.station-modules');
-                                    if (!gridContainer) return;
+                                    if (!gridContainer) {
+                                        clearTooltip();
+                                        return;
+                                    }
                                     
                                     const rect = gridContainer.getBoundingClientRect();
                                     const cellSizeNum = rect.width / gridSize;
@@ -303,6 +331,7 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType}) =>
                                         handleModuleDrop(dropX, dropY);
                                     } else {
                                         setDraggedModule(null);
+                                        clearTooltip();
                                     }
                                 }}
                                 onClick={(e) => {
@@ -582,6 +611,7 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType}) =>
                                                     onDragEnd={() => {
                                                         setDraggedActor(null);
                                                         setHoveredModuleId(null);
+                                                        clearTooltip();
                                                     }}
                                                     whileHover={{
                                                         backgroundColor: 'rgba(0, 255, 136, 0.15)',
