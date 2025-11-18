@@ -3,8 +3,6 @@
  */
 import React, { FC } from 'react';
 import { motion } from 'framer-motion';
-import { IconButton } from '@mui/material';
-import CloseIcon from '@mui/icons-material/Close';
 import { ScreenType } from './BaseScreen';
 import { Stage } from '../Stage';
 import { VignetteType } from '../Vignette';
@@ -13,6 +11,7 @@ import Actor from '../actors/Actor';
 import ActorCard from '../components/ActorCard';
 import { BlurredBackground } from '../components/BlurredBackground';
 import AuthorLink from '../components/AuthorLink';
+import { RemoveButton } from '../components/RemoveButton';
 import { Button } from '../components/UIComponents';
 
 interface EchoScreenProps {
@@ -25,11 +24,6 @@ export const EchoScreen: FC<EchoScreenProps> = ({stage, setScreenType}) => {
 	const [selectedSlotIndex, setSelectedSlotIndex] = React.useState<number | null>(null);
 	const [expandedCandidateId, setExpandedCandidateId] = React.useState<string | null>(null);
 	const [refreshKey, setRefreshKey] = React.useState(0); // Force re-renders when data changes
-	const [mousePositions, setMousePositions] = React.useState<{[key: number]: { x: number, y: number }}>({
-		0: { x: 0, y: 0 },
-		1: { x: 0, y: 0 },
-		2: { x: 0, y: 0 }
-	});
 	const reserveActors = stage().reserveActors;
 	const echoSlots = stage().getEchoSlots();
 
@@ -129,6 +123,10 @@ export const EchoScreen: FC<EchoScreenProps> = ({stage, setScreenType}) => {
 					stage().reserveActors.push(existingActor);
 				}
 			}
+			// Remove dragged actor from reserves if they came from there
+			if (data.source === 'reserve') {
+				stage().reserveActors = stage().reserveActors.filter(a => a.id !== actor.id);
+			}
 			// Use Stage method to manage echo slots
 			await stage().commitActorToEcho(actor.id, slotIndex);
 			setRefreshKey(prev => prev + 1); // Force re-render
@@ -148,8 +146,6 @@ export const EchoScreen: FC<EchoScreenProps> = ({stage, setScreenType}) => {
 	const availableRooms = stage().getSave().layout.getModulesWhere(m => m?.type === 'quarters' && !m?.ownerId) || [];
 	const selectedActor = selectedSlotIndex != null ? echoSlots[selectedSlotIndex] : null;
 	const acceptable = selectedActor && selectedActor.isPrimaryImageReady && availableRooms.length > 0;
-
-
 
 	return (
 		<BlurredBackground imageUrl="https://media.charhub.io/026ae01a-7dc8-472d-bfea-61548b87e6ef/84990780-8260-4833-ac0b-79c1a15ddb9e.png">
@@ -191,31 +187,12 @@ export const EchoScreen: FC<EchoScreenProps> = ({stage, setScreenType}) => {
 								transition: 'width 0.3s ease'
 							}}
 						>
-							{/* Remove button */}
-							<IconButton
-								onClick={(e) => removeReserveActor(actor.id, e)}
+							<RemoveButton
+								onClick={(e: React.MouseEvent) => removeReserveActor(actor.id, e)}
 								title="Remove from reserves"
+								variant="topRight"
 								size="small"
-								sx={{
-									position: 'absolute',
-									top: '-8px',
-									right: '-8px',
-									width: '28px',
-									height: '28px',
-									background: 'rgba(255, 0, 0, 0.8)',
-									color: 'white',
-									zIndex: 10,
-									border: '2px solid rgba(255, 255, 255, 0.3)',
-									boxShadow: '0 2px 8px rgba(0,0,0,0.3)',
-									'&:hover': {
-										background: 'rgba(255, 0, 0, 0.95)',
-										transform: 'scale(1.1)',
-									},
-									transition: 'all 0.2s ease'
-								}}
-							>
-								<CloseIcon fontSize="small" />
-							</IconButton>
+							/>
 
 							<ActorCard
 								actor={actor}
@@ -252,26 +229,6 @@ export const EchoScreen: FC<EchoScreenProps> = ({stage, setScreenType}) => {
 				<div style={{ display: 'flex', gap: 40, alignItems: 'flex-end', justifyContent: 'center', flex: 1 }}>
 					{echoSlots.map((actor, slotIndex) => {
 						const isSelected = selectedSlotIndex === slotIndex;
-						
-						// Calculate mouse-based tilt
-						const handleMouseMove = (e: React.MouseEvent) => {
-							const rect = e.currentTarget.getBoundingClientRect();
-							const centerX = rect.left + rect.width / 2;
-							const centerY = rect.top + rect.height / 2;
-							setMousePositions(prev => ({
-								...prev,
-								[slotIndex]: {
-									x: (e.clientX - centerX) / rect.width,
-									y: (e.clientY - centerY) / rect.height
-								}
-							}));
-						};
-
-						const mousePosition = mousePositions[slotIndex] || { x: 0, y: 0 };
-						const baseSkew = slotIndex === 1 ? 0 : slotIndex === 0 ? -2 : 2; // Slight base skew
-						const tiltX = mousePosition.y * 8; // Vertical mouse movement affects X rotation
-						const tiltY = mousePosition.x * -8; // Horizontal mouse movement affects Y rotation
-						const skewY = baseSkew + (mousePosition.x * 2);
 
 						return (
 							<motion.div
@@ -279,18 +236,11 @@ export const EchoScreen: FC<EchoScreenProps> = ({stage, setScreenType}) => {
 								onClick={() => setSelectedSlotIndex(actor ? slotIndex : null)}
 								onDrop={(e) => handleDropOnEchoSlot(e, slotIndex)}
 								onDragOver={handleDragOver}
-								onMouseMove={handleMouseMove}
-								onMouseLeave={() => setMousePositions(prev => ({ ...prev, [slotIndex]: { x: 0, y: 0 } }))}
 								whileHover={{ 
 									scale: actor ? (isSelected ? 1.05 : 1.02) : 1,
 									filter: 'brightness(1.1)'
 								}}
 								whileTap={{ scale: actor ? 0.98 : 1 }}
-								animate={{
-									rotateX: tiltX,
-									rotateY: tiltY,
-									skewY: skewY
-								}}
 								transition={{
 									type: "spring",
 									stiffness: 150,
@@ -338,31 +288,12 @@ export const EchoScreen: FC<EchoScreenProps> = ({stage, setScreenType}) => {
 							>
 							{actor ? (
 								<>
-									{/* Remove button */}
-									<IconButton
-										onClick={(e) => removeEchoActor(actor.id, e)}
+									<RemoveButton
+										onClick={(e: React.MouseEvent) => removeEchoActor(actor.id, e)}
 										title="Move to reserves"
-										size="small"
-										sx={{
-											position: 'absolute',
-											top: '8px',
-											right: '8px',
-											width: '32px',
-											height: '32px',
-											background: 'rgba(0, 0, 0, 0.7)',
-											color: 'white',
-											zIndex: 10,
-											border: '2px solid rgba(255, 255, 255, 0.3)',
-											boxShadow: '0 2px 8px rgba(0,0,0,0.5)',
-											'&:hover': {
-												background: 'rgba(255, 0, 0, 0.8)',
-												transform: 'scale(1.1)',
-											},
-											transition: 'all 0.2s ease'
-										}}
-									>
-										<CloseIcon fontSize="small" />
-									</IconButton>
+										variant="topRightInset"
+										size="medium"
+									/>
 									{/* Actor nameplate */}
 									<Nameplate 
 										actor={actor} 
