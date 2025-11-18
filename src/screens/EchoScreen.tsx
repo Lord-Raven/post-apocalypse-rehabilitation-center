@@ -182,11 +182,11 @@ export const EchoScreen: FC<EchoScreenProps> = ({stage, setScreenType}) => {
 					return (
 					<motion.div
 					key={`reserve_${actor.id}`}
-					initial={false}
-					animate={{ width: isExpanded ? '48vh' : '16vh' }}
+					className={`echo-slot`}
 					style={{ 
 						display: 'inline-block',
-						position: 'relative'
+						position: 'relative',
+						animationDelay: `${0.2 + index * 0.7}s`
 					}}
 					whileHover={{ 
 						scale: isExpanded ? 1.02 : 1.05,
@@ -258,7 +258,6 @@ export const EchoScreen: FC<EchoScreenProps> = ({stage, setScreenType}) => {
 									animationDelay: `${slotIndex * 0.7}s`,
 									cursor: actor ? 'pointer' : 'default',
 									height: '65vh',
-									minHeight: 400,
 									width: '18vw',
 									display: 'flex',
 									flexDirection: 'column',
@@ -289,8 +288,6 @@ export const EchoScreen: FC<EchoScreenProps> = ({stage, setScreenType}) => {
 											? `0 8px 25px rgba(0,0,0,0.4), inset 0 0 30px ${actor.themeColor ? actor.themeColor + '15' : 'rgba(0,255,136,0.05)'}, 0 0 20px ${actor.themeColor ? actor.themeColor + '30' : 'rgba(0,255,136,0.1)'}`
 											: '0 8px 25px rgba(0,0,0,0.4), inset 0 0 30px rgba(0,255,136,0.05)',
 									position: 'relative',
-									transformStyle: 'preserve-3d',
-									perspective: '1000px'
 								}}
 							>
 							{actor ? (
@@ -301,6 +298,8 @@ export const EchoScreen: FC<EchoScreenProps> = ({stage, setScreenType}) => {
 										variant="topRightInset"
 										size="medium"
 									/>
+									{/* Spacer to push the nameplate and stats down about 30vh */}
+									<div style={{ flex: '0 0 30vh' }}></div>
 									{/* Actor nameplate */}
 									<Nameplate 
 										actor={actor} 
@@ -337,16 +336,10 @@ export const EchoScreen: FC<EchoScreenProps> = ({stage, setScreenType}) => {
 												</div>
 											);
 										})}
-									</div>
-									{/* Author link */}
-									<div style={{ 
-										padding: '8px',
-										background: 'rgba(0,0,0,0.8)',
-										display: 'flex',
-										justifyContent: 'center'
-									}}>
+										{/* Author link */}
 										<AuthorLink actor={actor} />
 									</div>
+									
 								</>
 							) : (
 								<div style={{ 
