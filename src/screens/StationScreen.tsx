@@ -88,7 +88,7 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType}) =>
         setSelectedPosition(null);
         // Possibly kick off a vignette about the new module, if no others exist in layout:
         const existingModules = stage().getLayout().getModulesWhere(m => m.type === moduleType);
-        if (existingModules.length === 1) { // New module is the only one of its type
+        if (existingModules.length === 1 && Object.keys(stage().getSave().actors).length > 0) { // New module is the only one of its type
             // Grab a few random patients to pull to the new module for a vignette:
             const randomPatients = Object.values(stage().getSave().actors)
                 .filter(a => a.locationId !== newModule.id)
@@ -104,6 +104,7 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType}) =>
                 script: [],
                 context: { moduleType }
             });
+            setScreenType(ScreenType.VIGNETTE);
         } else {
             stage().incPhase(1);
         }
@@ -216,6 +217,7 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType}) =>
                     script: [],
                     context: { role: roleName }
                 });
+                setScreenType(ScreenType.VIGNETTE);
             }
         }
 

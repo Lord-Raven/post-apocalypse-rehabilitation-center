@@ -72,20 +72,23 @@ html, body, #root {
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  padding: 6px 4px;
+  height: 3vh;
+  position: relative;
+  overflow: visible;
 }
 .stat-label {
-  font-size: 12px;
+  font-size: 1.2vh;
   color: rgba(255,255,255,0.9);
   text-transform: uppercase;
-  letter-spacing: 1px;
+  letter-spacing: 0.1vh;
   font-weight: 600;
   opacity: 0.95;
+  z-index: 1;
 }
 .stat-grade {
   /* big, bold, skewed/rotated letter with a crisp drop shadow */
   font-weight: 900;
-  font-size: 3.2rem;
+  font-size: 4vh;
   line-height: 1;
   display: inline-block;
   padding: 0 4px;
@@ -99,6 +102,8 @@ html, body, #root {
   transform-origin: 50% 50%;
   /* use solid color fill per grade variants below */
   color: #ffffff;
+  position: relative;
+  z-index: 2;
 }
 
 /* grade color variants (solid fills) */

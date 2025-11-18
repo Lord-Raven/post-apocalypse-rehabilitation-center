@@ -162,7 +162,7 @@ export const EchoScreen: FC<EchoScreenProps> = ({stage, setScreenType}) => {
 			<div 
 				style={{ 
 					flex: '0 0 auto', 
-					padding: '10px', 
+					padding: '1vh', 
 					borderBottom: '2px solid rgba(0,255,136,0.2)',
 					background: 'rgba(0,0,0,0.3)',
 					overflow: 'visible'
@@ -170,25 +170,34 @@ export const EchoScreen: FC<EchoScreenProps> = ({stage, setScreenType}) => {
 				onDrop={handleDropOnReserve}
 				onDragOver={handleDragOver}
 			>
-				<h3 style={{ color: '#00ff88', marginBottom: '10px', textAlign: 'center' }}>Echoes</h3>
 				<div style={{ 
 					display: 'flex', 
-					gap: 12, 
+					gap: '1.2vh', 
 					justifyContent: 'center', 
 					flexWrap: 'wrap',
-					maxHeight: '200px',
+					maxHeight: '25vh',
 				}}>
 					{reserveActors.map((actor, index) => {
 						const isExpanded = expandedCandidateId === actor.id;
 						return (
-						<div
-							key={`reserve_${actor.id}`}
-							style={{ 
-								display: 'inline-block',
-								position: 'relative',
-								width: isExpanded ? '480px' : '160px',
-								transition: 'width 0.3s ease'
-							}}
+						<motion.div
+						key={`reserve_${actor.id}`}
+						style={{ 
+							display: 'inline-block',
+							position: 'relative',
+							width: isExpanded ? '48vh' : '16vh',
+							transition: 'width 0.3s ease'
+						}}
+						whileHover={{ 
+							scale: isExpanded ? 1.02 : 1.05,
+							filter: 'brightness(1.1)'
+						}}
+						whileTap={{ scale: 0.98 }}
+						transition={{
+							type: "spring",
+							stiffness: 150,
+							damping: 15
+						}}
 						>
 							<RemoveButton
 								onClick={(e: React.MouseEvent) => removeReserveActor(actor.id, e)}
@@ -203,21 +212,19 @@ export const EchoScreen: FC<EchoScreenProps> = ({stage, setScreenType}) => {
 								onClick={() => setExpandedCandidateId(isExpanded ? null : actor.id)}
 								draggable
 								onDragStart={(e) => handleDragStart(e, actor, 'reserve')}
-								layout="horizontal"
-								style={{
-									height: '200px',
-									border: `3px solid ${actor.themeColor || '#00ff88'}`,
+							layout="horizontal"
+							style={{
+								height: '20vh',
+								border: `3px solid ${actor.themeColor || '#00ff88'}`,
 									boxShadow: `0 6px 18px rgba(0,0,0,0.4), 0 0 20px ${actor.themeColor ? actor.themeColor + '66' : 'rgba(0, 255, 136, 0.4)'}`,
-									padding: '8px',
-									overflow: 'hidden'
-								}}
-							/>
-						</div>
-					);})}
-				</div>
+								padding: '8px',
+								overflow: 'hidden'
+							}}
+						/>
+					</motion.div>
+				);})}
 			</div>
-
-			{/* Echo slots in center with buttons on sides */}
+		</div>			{/* Echo slots in center with buttons on sides */}
 			<div style={{ flex: '1 1 auto', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '40px', gap: '40px' }}>
 				{/* Cancel button on the left */}
 				<Button
@@ -253,7 +260,7 @@ export const EchoScreen: FC<EchoScreenProps> = ({stage, setScreenType}) => {
 								style={{
 									animationDelay: `${slotIndex * 0.7}s`,
 									cursor: actor ? 'pointer' : 'default',
-									height: '75vh',
+									height: '60vh',
 									minHeight: 400,
 									width: '20vw',
 									display: 'flex',
@@ -310,11 +317,12 @@ export const EchoScreen: FC<EchoScreenProps> = ({stage, setScreenType}) => {
 										layout="stacked"
 										style={{
 											padding: '12px 16px',
-											fontSize: 18
+											fontSize: 18,
+											flex: 1
 										}}
 									/>
 									{/* Stats */}
-									<div className="stat-list" style={{ padding: '8px 12px', background: 'rgba(0,0,0,0.8)' }}>
+									<div className="stat-list" style={{ padding: '8px 12px', background: 'rgba(0,0,0,0.8)', flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'space-evenly' }}>
 										{[
 											['Brawn', 'brawn'],
 											['Wits', 'wits'],
