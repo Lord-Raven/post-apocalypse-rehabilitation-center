@@ -70,7 +70,7 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType}) =>
     const { setTooltip, clearTooltip } = useTooltip();
 
     const gridSize = 6;
-    const cellSize = '10vmin';
+    const cellSize = '15vh';
 
     const openModuleSelector = (x: number, y: number) => {
         setSelectedPosition({x, y});
@@ -591,7 +591,6 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType}) =>
                                 }}
                             >
                                 <div style={{ fontSize: 28, lineHeight: 1, fontWeight: 800 }}>+</div>
-                                <div style={{ fontSize: 12, marginTop: 6, opacity: 0.9 }}>Add module</div>
                             </motion.div>
                         )}
                     </div>
@@ -648,14 +647,10 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType}) =>
                     padding: '20px',
                 }}
             >
-                <Title variant="primary" style={{ fontSize: '24px', marginBottom: '30px', marginTop: 0 }}>
-                    Station Control
-                </Title>
-                
                 {/* Enhanced Day and Phase Display */}
                 {renderDayPhaseDisplay()}
 
-                {['Patients', 'Crew', 'Modules', 'Requests'].map(item => {
+                {['Patients', 'Modules', 'Requests'].map(item => {
                     const itemKey = item.toLowerCase();
                     const isExpanded = expandedMenu === itemKey;
                     const isContracting = previousExpandedMenu === itemKey && !isExpanded;
