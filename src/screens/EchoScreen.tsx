@@ -126,12 +126,12 @@ export const EchoScreen: FC<EchoScreenProps> = ({stage, setScreenType}) => {
 					stage().reserveActors.push(existingActor);
 				}
 			}
+			await stage().commitActorToEcho(actor.id, slotIndex);
 			// Remove dragged actor from reserves if they came from there
 			if (data.source === 'reserve') {
 				stage().reserveActors = stage().reserveActors.filter(a => a.id !== actor.id);
 			}
 			// Use Stage method to manage echo slots
-			await stage().commitActorToEcho(actor.id, slotIndex);
 			setRefreshKey(prev => prev + 1); // Force re-render
 		}
 	};
