@@ -47,7 +47,7 @@ export function generateVignettePrompt(vignette: VignetteData, stage: Stage, con
                 `Continue this chance encounter with ${actor.name} in the ${module?.type || 'unknown'} module, exploring what might arise from this unexpected meeting.`;
         case VignetteType.ROLE_ASSIGNMENT:
             return !continuing ?
-                `This scene depicts an exchange between the player and ${actor.name} regarding ${actor.name}'s new assignment to the role of ${vignette.context.role || 'something new'} in the ${module?.type || 'unknown'} module. ` +
+                `This scene depicts an exchange between the player and ${actor.name}, following the player's decision to newly assign ${actor.name} to the role of ${vignette.context.role || 'something new'} in the ${module?.type || 'unknown'} module. ` +
                     `Bear in mind ${actor.name}'s personality, stats, and experience within this setting (or lack thereof) as you portray their reaction and to this new role. ` :
                 `Continue this scene with ${actor.name}, potentially exploring their thoughts or feelings toward their new role.`;
         case VignetteType.NEW_MODULE:
