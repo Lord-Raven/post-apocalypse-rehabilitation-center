@@ -98,7 +98,7 @@ export async function generateVignetteScript(vignette: VignetteData, stage: Stag
                 m && m.type !== 'quarters' && m.ownerId === actor.id
             )[0];
             return `${actor.name}\n  Description: ${actor.description}\n  Profile: ${actor.profile}\n  Days Aboard: ${stage.getSave().day - actor.birthDay}\n  Scene Participation: ${actor.participations}\n` +
-            `  Role: ${roleModule?.getAttribute('role') || 'Patient'}\n` +
+            (roleModule ? `  Role: ${roleModule.getAttribute('role') || 'Patient'} (${actor.heldRoles[roleModule.getAttribute('role') || 'Patient'] || 0} days)\n` : '') +
             `  Role Description: ${roleModule?.getAttribute('roleDescription') || 'This character has no assigned role aboard the PARC. They are to focus upon their own needs.'}\n` +
             `  Stats:\n    ${Object.entries(actor.stats).map(([stat, value]) => `${stat}: ${value}`).join('\n    ')}`}).join('\n')}` +
         // List non-present patients for reference; just need description and profile:

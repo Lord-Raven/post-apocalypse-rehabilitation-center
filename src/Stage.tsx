@@ -111,6 +111,16 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
         if (save.phase >= 4) {
             save.phase = 0;
             save.day += 1;
+            // New day logic.
+            // Increment actor role count
+            for (let actor of Object.values(save.actors)) {
+                // Find non-quarters module assigned to this actor and increment held role count
+                const targetModule = save.layout.getModulesWhere(m => m.ownerId === actor.id && !['quarters', 'echo', 'common', 'generator'].includes(m.type))[0];
+                const roleName: string = targetModule?.getAttribute('role') || '';
+                if (roleName && Object.keys(actor.heldRoles).indexOf(roleName) !== -1) {
+                    actor.heldRoles[roleName] += 1;
+                }
+            }
         }
 
         // When incrementing phase, maybe move some actors around in the layout.
