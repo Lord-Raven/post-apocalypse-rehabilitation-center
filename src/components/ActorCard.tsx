@@ -22,6 +22,8 @@ interface ActorCardProps {
     onDragEnd?: () => void;
     /** Layout direction when expanded: 'vertical' (portrait on right, default) or 'horizontal' (portrait on left) */
     layout?: 'vertical' | 'horizontal';
+    /** Custom hover animation properties */
+    whileHover?: any;
     /** Additional styles */
     style?: React.CSSProperties;
     /** Additional class name */
@@ -54,11 +56,18 @@ export const ActorCard: FC<ActorCardProps> = ({
     onDragStart,
     onDragEnd,
     layout = 'vertical',
+    whileHover,
     style,
     className
 }) => {
     const expanded = forceExpanded || isExpanded;
     const clickable = !forceExpanded && onClick;
+
+    // Default hover behavior
+    const defaultWhileHover = {
+        backgroundColor: (clickable || draggable) ? 'rgba(0, 255, 136, 0.15)' : undefined,
+        borderColor: (clickable || draggable) ? 'rgba(0, 255, 136, 0.5)' : undefined,
+    };
 
     // Create the wrapper element conditionally based on whether draggable or not
     const wrapperProps: any = {
@@ -67,12 +76,7 @@ export const ActorCard: FC<ActorCardProps> = ({
             opacity: isDragging ? 0.4 : 1,
             scale: isDragging ? 0.95 : 1,
         },
-        whileHover: {
-            backgroundColor: clickable ? 'rgba(0, 255, 136, 0.15)' : undefined,
-            borderColor: clickable ? 'rgba(0, 255, 136, 0.5)' : undefined,
-            scale: clickable ? 1.02 : 1,
-            x: clickable ? 10 : 0
-        },
+        whileHover: whileHover || defaultWhileHover,
         transition: {
             duration: 0.2
         },

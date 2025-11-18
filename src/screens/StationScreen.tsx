@@ -563,9 +563,18 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType}) =>
                                             <p style={{ color: '#888', fontStyle: 'italic', fontSize: '12px' }}>No patients currently on station</p>
                                         ) : (
                                             Object.values(stage().getSave().actors).map((actor: any) => (
-                                                <div
+                                                <ActorCard
                                                     key={actor.id}
-                                                    draggable
+                                                    actor={actor}
+                                                    role={(() => {
+                                                        const roleModules = layout.getModulesWhere((m: Module) => 
+                                                            m && m.type !== 'quarters' && m.ownerId === actor.id
+                                                        );
+                                                        return roleModules.length > 0 ? roleModules[0].getAttribute('role') : undefined;
+                                                    })()}
+                                                    forceExpanded={true}
+                                                    isDragging={draggedActor?.id === actor.id}
+                                                    draggable={true}
                                                     onDragStart={(e: React.DragEvent) => {
                                                         setDraggedActor(actor);
                                                         e.dataTransfer.effectAllowed = 'move';
@@ -574,23 +583,15 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType}) =>
                                                         setDraggedActor(null);
                                                         setHoveredModuleId(null);
                                                     }}
+                                                    whileHover={{
+                                                        backgroundColor: 'rgba(0, 255, 136, 0.15)',
+                                                        borderColor: 'rgba(0, 255, 136, 0.5)',
+                                                        x: 10
+                                                    }}
                                                     style={{
                                                         marginBottom: '15px',
                                                     }}
-                                                >
-                                                    <ActorCard
-                                                        actor={actor}
-                                                        role={(() => {
-                                                            const roleModules = layout.getModulesWhere((m: Module) => 
-                                                                m && m.type !== 'quarters' && m.ownerId === actor.id
-                                                            );
-                                                            return roleModules.length > 0 ? roleModules[0].getAttribute('role') : undefined;
-                                                        })()}
-                                                        forceExpanded={true}
-                                                        isDragging={draggedActor?.id === actor.id}
-                                                        draggable={false}
-                                                    />
-                                                </div>
+                                                />
                                             ))
                                         )}
                                     </div>
