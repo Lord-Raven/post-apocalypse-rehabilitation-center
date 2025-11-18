@@ -8,7 +8,7 @@ project_name: "Post-Apocalypse Rehabilitation Clinic"
 tagline: "Surviving the Apocalypse is a walk in the PARC"
 
 # 'PUBLIC', 'PRIVATE', or 'UNLISTED'.
-visibility: 'PRIVATE'
+visibility: 'UNLISTED'
 
 # 'ADJACENT' | 'NONE' | 'COVER' | 'FULLSCREEN'
 # 'ADJACENT' is default. The frame will display on the side of the
@@ -28,7 +28,7 @@ tags:
 
 creator_notes: |
   This is a simulation game where you run a rehabilitation clinic
-  for survivors of an apocalypse. Manage resources, help patients
+  for survivors of a multiversal apocalypse. Manage resources, help patients
   recover, and rebuild society in a post-apocalyptic world.
 
 # The schema of any user-supplied config.
