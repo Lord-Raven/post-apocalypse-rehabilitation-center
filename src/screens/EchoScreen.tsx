@@ -1,9 +1,10 @@
 /*
  * This is the screen where the player can view available echo pods and choose to wake a character.
- * Extends ScreenBase.
  */
 import React, { FC } from 'react';
 import { motion } from 'framer-motion';
+import { IconButton } from '@mui/material';
+import CloseIcon from '@mui/icons-material/Close';
 import { ScreenType } from './BaseScreen';
 import { Stage } from '../Stage';
 import { VignetteType } from '../Vignette';
@@ -41,6 +42,22 @@ export const EchoScreen: FC<EchoScreenProps> = ({stage, setScreenType}) => {
 		e.preventDefault();
 		stage().reserveActors = stage().reserveActors.filter(a => a.id !== actorId);
 		setRefreshKey(prev => prev + 1); // Force re-render
+	};
+
+	const removeEchoActor = (actorId: string, e: React.MouseEvent) => {
+		e.stopPropagation();
+		e.preventDefault();
+		// Find the actor in echo slots
+		const actor = echoSlots.find(a => a?.id === actorId);
+		if (actor) {
+			// Remove from echo slot
+			stage().removeActorFromEcho(actorId);
+			// Add back to reserve actors if not already there
+			if (!stage().reserveActors.find(a => a.id === actorId)) {
+				stage().reserveActors.push(actor);
+			}
+			setRefreshKey(prev => prev + 1); // Force re-render
+		}
 	};
 
 	const accept = () => {
@@ -104,6 +121,14 @@ export const EchoScreen: FC<EchoScreenProps> = ({stage, setScreenType}) => {
 		const actor = reserveActors.find(a => a.id === data.actorId) || echoSlots.find(a => a?.id === data.actorId);
 		
 		if (actor) {
+			// Check if slot is occupied
+			const existingActor = echoSlots[slotIndex];
+			if (existingActor && existingActor.id !== actor.id) {
+				// Move existing actor back to reserves
+				if (!stage().reserveActors.find(a => a.id === existingActor.id)) {
+					stage().reserveActors.push(existingActor);
+				}
+			}
 			// Use Stage method to manage echo slots
 			await stage().commitActorToEcho(actor.id, slotIndex);
 			setRefreshKey(prev => prev + 1); // Force re-render
@@ -167,32 +192,30 @@ export const EchoScreen: FC<EchoScreenProps> = ({stage, setScreenType}) => {
 							}}
 						>
 							{/* Remove button */}
-							<div
-								className="remove-actor-btn"
+							<IconButton
 								onClick={(e) => removeReserveActor(actor.id, e)}
 								title="Remove from reserves"
-								style={{
+								size="small"
+								sx={{
 									position: 'absolute',
 									top: '-8px',
 									right: '-8px',
 									width: '28px',
 									height: '28px',
-									borderRadius: '50%',
 									background: 'rgba(255, 0, 0, 0.8)',
 									color: 'white',
-									display: 'flex',
-									alignItems: 'center',
-									justifyContent: 'center',
-									cursor: 'pointer',
-									fontSize: '20px',
-									fontWeight: 'bold',
 									zIndex: 10,
 									border: '2px solid rgba(255, 255, 255, 0.3)',
-									boxShadow: '0 2px 8px rgba(0,0,0,0.3)'
+									boxShadow: '0 2px 8px rgba(0,0,0,0.3)',
+									'&:hover': {
+										background: 'rgba(255, 0, 0, 0.95)',
+										transform: 'scale(1.1)',
+									},
+									transition: 'all 0.2s ease'
 								}}
 							>
-								×
-							</div>
+								<CloseIcon fontSize="small" />
+							</IconButton>
 
 							<ActorCard
 								actor={actor}
@@ -315,6 +338,31 @@ export const EchoScreen: FC<EchoScreenProps> = ({stage, setScreenType}) => {
 							>
 							{actor ? (
 								<>
+									{/* Remove button */}
+									<IconButton
+										onClick={(e) => removeEchoActor(actor.id, e)}
+										title="Move to reserves"
+										size="small"
+										sx={{
+											position: 'absolute',
+											top: '8px',
+											right: '8px',
+											width: '32px',
+											height: '32px',
+											background: 'rgba(0, 0, 0, 0.7)',
+											color: 'white',
+											zIndex: 10,
+											border: '2px solid rgba(255, 255, 255, 0.3)',
+											boxShadow: '0 2px 8px rgba(0,0,0,0.5)',
+											'&:hover': {
+												background: 'rgba(255, 0, 0, 0.8)',
+												transform: 'scale(1.1)',
+											},
+											transition: 'all 0.2s ease'
+										}}
+									>
+										<CloseIcon fontSize="small" />
+									</IconButton>
 									{/* Actor nameplate */}
 									<Nameplate 
 										actor={actor} 
