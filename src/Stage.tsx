@@ -1,7 +1,7 @@
 import {ReactElement, useEffect, useState} from "react";
 import {StageBase, StageResponse, InitialData, Message} from "@chub-ai/stages-ts";
 import {LoadResponse} from "@chub-ai/stages-ts/dist/types/load";
-import Actor, { loadReserveActor, generatePrimaryActorImage } from "./actors/Actor";
+import Actor, { loadReserveActor, generatePrimaryActorImage, commitActorToEcho } from "./actors/Actor";
 import { DEFAULT_GRID_SIZE, Layout, createModule } from './Module';
 import { BaseScreen } from "./screens/BaseScreen";
 import {Client} from "@gradio/client";
@@ -298,9 +298,9 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
             save.echoes = save.echoes.map(slot => slot?.id === actorId ? null : slot);
             // Place in new slot
             save.echoes[slotIndex] = actor;
+            console.log('Committing actor to echo slot:', actor, slotIndex);
+            commitActorToEcho(actor, this);
             
-            const { commitActorToEcho } = await import('./actors/Actor');
-            await commitActorToEcho(actor, this);
             this.saveGame();
         }
     }
