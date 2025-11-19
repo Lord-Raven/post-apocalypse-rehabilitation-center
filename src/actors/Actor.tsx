@@ -45,6 +45,9 @@ class Actor {
     static fromSave(savedActor: any): Actor {
         const actor = Object.create(Actor.prototype);
         Object.assign(actor, savedActor);
+        if (actor.decorImageUrls === undefined) {
+            actor.decorImageUrls = {};
+        }
         return actor;
     }
 
