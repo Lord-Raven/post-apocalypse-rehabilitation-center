@@ -31,6 +31,22 @@ export interface ModuleIntrinsic {
     available: (stage: Stage) => boolean;
 }
 
+const randomAction = (module: Module, stage: Stage, setScreenType: (type: ScreenType) => void) => {
+            // If there are actors here, open a vignette with them:
+            if (Object.values(stage.getSave().actors).some(a => a.locationId === module.id)) {
+                console.log("Opening vignette.");
+                stage.setVignette({
+                    type: VignetteType.RANDOM_ENCOUNTER,
+                    moduleId: module.id,
+                    script: [],
+                    generating: true,
+                    context: {},
+                    endScene: false
+                });
+                setScreenType(ScreenType.VIGNETTE);
+            }
+        };
+
 export const MODULE_DEFAULTS: Record<ModuleType, ModuleIntrinsic> = {
     'echo chamber': {
         maintenance: 1,
@@ -59,6 +75,7 @@ export const MODULE_DEFAULTS: Record<ModuleType, ModuleIntrinsic> = {
         roleDescription: `Oversee the station's mechanical systems, ensuring all modules receive adequate energy and maintenance to function optimally.`,
         baseImageUrl: 'https://media.charhub.io/e53eeeb3-81a9-4020-a336-070c65edbb8a/4141ed00-9ab7-47f5-a4ce-21983b013e46.png',
         defaultImageUrl: 'https://media.charhub.io/36c3c8b5-1abd-4766-8042-fa7a2af0ce42/6106d6ec-7746-4130-8e13-860c89a325c7.png',
+        action: randomAction,
         available: (stage: Stage) => {
             // Can have only one in stage.getSave().layout:
             return stage.getLayout().getModulesWhere(m => m.type === 'generator').length === 0;
@@ -100,6 +117,7 @@ export const MODULE_DEFAULTS: Record<ModuleType, ModuleIntrinsic> = {
         roleDescription: `Maintain the station's communal areas, ensuring they remain inviting and well-stocked for crew relaxation and socialization.`,
         baseImageUrl: 'https://media.charhub.io/0cee625e-73e7-43b3-86b3-a06c082e73a9/7f958523-48b9-40a4-ae67-59b0cea199d3.png', 
         defaultImageUrl: 'https://media.charhub.io/041617bd-1cb3-424d-8e66-788e60edc80d/3a21ddd2-bd66-40b0-84ca-68b11d8218b2.png',
+        action: randomAction,
         available: (stage: Stage) => {
             // Can have only one in stage.getSave().layout:
             return stage.getLayout().getModulesWhere(m => m.type === 'commons').length === 0;
@@ -113,6 +131,7 @@ export const MODULE_DEFAULTS: Record<ModuleType, ModuleIntrinsic> = {
         roleDescription: `Provide medical care and emergency response for the crew, ensuring their health and well-being.`,
         baseImageUrl: 'https://media.charhub.io/b62f09a0-7a42-47e7-b0be-f54dfac00f33/fe73db8c-2cb6-4744-9464-6d26ecf776c0.png',
         defaultImageUrl: 'https://media.charhub.io/5e9c6119-51b4-4a2c-a06c-bb8f1c20aea1/c471f9ba-ea5f-495b-8e44-e02723a04938.png',
+        action: randomAction,
         available: (stage: Stage) => {
             // Can have only one in stage.getSave().layout:
             return stage.getLayout().getModulesWhere(m => m.type === 'medbay').length === 0;
@@ -126,6 +145,7 @@ export const MODULE_DEFAULTS: Record<ModuleType, ModuleIntrinsic> = {
         roleDescription: `Oversee the physical fitness and training of the crew, ensuring they remain in peak condition for their duties aboard the station.`,
         baseImageUrl: 'https://media.charhub.io/349ca504-7b7e-4afd-8a52-43dd7b166bc7/d91d37e1-eb9d-4211-a28f-16b8d4d341d1.png',
         defaultImageUrl: 'https://media.charhub.io/7f6bd636-804e-493c-8442-e691856a6703/589a3768-f0da-43c0-ab70-8b7d403f5a62.png',
+        action: randomAction,
         available: (stage: Stage) => {
             // Can have only one in stage.getSave().layout:
             return stage.getLayout().getModulesWhere(m => m.type === 'gym').length === 0;
@@ -139,6 +159,7 @@ export const MODULE_DEFAULTS: Record<ModuleType, ModuleIntrinsic> = {
         roleDescription: `Oversee the station's leisure facilities, ensuring crew members have a comfortable and enjoyable environment to relax and socialize.`,
         baseImageUrl: 'https://media.charhub.io/323b12cf-8687-4475-851b-7c1bdeff447a/0b71cb51-c160-47c9-848e-fab183eb9314.png',
         defaultImageUrl: 'https://media.charhub.io/2e8bf9fc-67a8-499d-85ec-8198efafeb14/1da73912-d19e-4f4e-aeda-19688e16e474.png',
+        action: randomAction,
         available: (stage: Stage) => {
             // Can have only one in stage.getSave().layout:
             return stage.getLayout().getModulesWhere(m => m.type === 'lounge').length === 0;
@@ -152,6 +173,7 @@ export const MODULE_DEFAULTS: Record<ModuleType, ModuleIntrinsic> = {
         roleDescription: `Manage the station's defenses and ensure the safety of the crew against external and internal threats.`,
         baseImageUrl: 'https://media.charhub.io/7ccddb81-bed6-4395-80c6-912fe2932e53/c58a4f32-270d-4b62-b2b4-bcc1a3dedc94.png',
         defaultImageUrl: 'https://media.charhub.io/090e6a42-62f9-46da-9a29-09de8b469f05/eedf310f-af7a-40b4-ac56-686f4daa5c07.png',
+        action: randomAction,
         available: (stage: Stage) => {
             // Can have only one in stage.getSave().layout:
             return stage.getLayout().getModulesWhere(m => m.type === 'armory').length === 0;

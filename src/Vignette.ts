@@ -42,9 +42,9 @@ export function generateVignettePrompt(vignette: VignetteData, stage: Stage, con
                 `Continue this scene with ${actor.name}, potentially exploring their thoughts, feelings, or troubles in this intimate setting.`;
         case VignetteType.RANDOM_ENCOUNTER:
             return !continuing ?
-                `This scene depicts a chance encounter with ${actor.name} in the ${module?.type || 'unknown'} module. Bear in mind that ${actor.name} is from another universe, and may be unaware of details of this one. ` +
+                `This scene depicts a chance encounter in the ${module?.type || 'unknown'} module. Bear in mind that patients are from another universe, and may be unaware of details of this one. ` +
                     `Explore the setting and what might arise from this unexpected meeting.` :
-                `Continue this chance encounter with ${actor.name} in the ${module?.type || 'unknown'} module, exploring what might arise from this unexpected meeting.`;
+                `Continue this chance encounter in the ${module?.type || 'unknown'} module, exploring what might arise from this unexpected meeting.`;
         case VignetteType.ROLE_ASSIGNMENT:
             return !continuing ?
                 `This scene depicts an exchange between the player and ${actor.name}, following the player's decision to newly assign ${actor.name} to the role of ${vignette.context.role || 'something new'} in the ${module?.type || 'unknown'} module. ` +
