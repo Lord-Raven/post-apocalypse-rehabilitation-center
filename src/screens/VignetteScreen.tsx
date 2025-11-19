@@ -434,36 +434,6 @@ export const VignetteScreen: FC<VignetteScreenProps> = ({ stage, setScreenType }
         >
             <div style={{ position: 'relative', width: '100vw', height: '100vh' }}>
 
-            {/* Re-roll button in upper right corner */}
-            <IconButton
-                onClick={() => {
-                    console.log('Re-roll clicked');
-                    handleReroll();
-
-                }}
-                disabled={loading}
-                sx={{
-                    position: 'absolute',
-                    top: 20,
-                    right: 20,
-                    zIndex: 10,
-                    background: 'rgba(10,20,30,0.85)',
-                    border: '2px solid rgba(0,255,136,0.2)',
-                    color: '#00ff88',
-                    backdropFilter: 'blur(8px)',
-                    transition: 'all 0.3s ease',
-                    '&:hover': {
-                        background: 'rgba(10,20,30,0.95)',
-                        borderColor: 'rgba(0,255,136,0.4)',
-                        color: '#00ffaa',
-                        transform: 'rotate(180deg)',
-                    },
-                    '&:disabled': { color: 'rgba(255,255,255,0.3)' }
-                }}
-            >
-                <Casino />
-            </IconButton>
-
             {/* Actors */}
             <div style={{ position: 'absolute', inset: 0, zIndex: 1, pointerEvents: 'none' }}>
                 {renderActors(stage().getSave().layout.getModuleById(vignette.moduleId || ''), Object.values(stage().getSave().actors).filter(actor => actor.locationId === (vignette.moduleId || '')) || [], vignette.script && vignette.script.length > 0 ? vignette.script[index]?.speaker : undefined)}
@@ -492,8 +462,8 @@ export const VignetteScreen: FC<VignetteScreenProps> = ({ stage, setScreenType }
                 }}
             >
                 {/* Navigation and speaker section */}
-                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
-                    <Box sx={{ display: 'flex', gap: 1.5, alignItems: 'center' }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                    <Box sx={{ display: 'flex', gap: 1.5, alignItems: 'center', flex: 1 }}>
                         <IconButton 
                             onClick={prev} 
                             disabled={index === 0 || loading}
@@ -559,6 +529,29 @@ export const VignetteScreen: FC<VignetteScreenProps> = ({ stage, setScreenType }
                             />
                         )}
                     </Box>
+
+                    {/* Re-roll button */}
+                    <IconButton
+                        onClick={() => {
+                            console.log('Re-roll clicked');
+                            handleReroll();
+                        }}
+                        disabled={loading}
+                        size="small"
+                        sx={{
+                            color: '#00ff88',
+                            border: '1px solid rgba(0,255,136,0.2)',
+                            transition: 'all 0.3s ease',
+                            '&:hover': {
+                                borderColor: 'rgba(0,255,136,0.4)',
+                                color: '#00ffaa',
+                                transform: 'rotate(180deg)',
+                            },
+                            '&:disabled': { color: 'rgba(255,255,255,0.3)' }
+                        }}
+                    >
+                        <Casino fontSize="small" />
+                    </IconButton>
                 </Box>
 
                 {/* Message content */}
