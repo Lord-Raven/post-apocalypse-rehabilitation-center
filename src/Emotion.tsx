@@ -93,7 +93,12 @@ export const EMOTION_SYNONYMS: {[key: string]: Emotion} = {
     jittery: Emotion.nervousness,
     uneasy: Emotion.nervousness,
     elation: Emotion.wonder,
-    haughty: Emotion.pride
+    haughty: Emotion.pride,
+    worry: Emotion.nervousness,
+    distress: Emotion.sadness,
+    boredom: Emotion.neutral,
+    bliss: Emotion.joy,
+    ecstacy: Emotion.joy,
 }
 
 export const EMOTION_PROMPTS: {[emotion in Emotion]?: string} = {

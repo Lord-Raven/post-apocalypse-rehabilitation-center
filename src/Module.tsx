@@ -91,6 +91,7 @@ export const MODULE_DEFAULTS: Record<ModuleType, ModuleIntrinsic> = {
             // Open the vignette screen to speak to occupants
             if (module.ownerId) {
                 console.log("Opening vignette.");
+                stage.getSave().actors[module.ownerId].locationId = module.id; // Ensure actor is in the module
                 stage.setVignette({
                     type: VignetteType.VISIT_CHARACTER,
                     actorId: module.ownerId,

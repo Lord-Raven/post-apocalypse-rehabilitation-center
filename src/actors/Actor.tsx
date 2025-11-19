@@ -193,7 +193,7 @@ export async function loadReserveActor(fullPath: string, stage: Stage): Promise<
             if (!keyMatch) continue;
             const key = keyMatch[1].toLowerCase();
             const value = line.substring(colonIndex + 1).trim();
-            console.log(`Parsed line - Key: ${key}, Value: ${value}`);
+            // console.log(`Parsed line - Key: ${key}, Value: ${value}`);
             parsedData[key] = value;
         }
     }
