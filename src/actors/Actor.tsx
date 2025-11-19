@@ -24,6 +24,7 @@ class Actor {
     avatarImageUrl: string;
     description: string;
     profile: string;
+    style: string;
     emotionPack: EmotionPack;
     themeColor: string;
     themeFontFamily: string;
@@ -51,13 +52,14 @@ class Actor {
         return actor;
     }
 
-    constructor(id: string, name: string, fullPath: string, avatarImageUrl: string, description: string, profile: string, emotionPack: EmotionPack, stats: Record<Stat, number>, themeColor: string, themeFontFamily: string) {
+    constructor(id: string, name: string, fullPath: string, avatarImageUrl: string, description: string, profile: string, style: string, emotionPack: EmotionPack, stats: Record<Stat, number>, themeColor: string, themeFontFamily: string) {
         this.id = id;
         this.name = name;
         this.fullPath = fullPath;
         this.avatarImageUrl = avatarImageUrl;
         this.description = description;
         this.profile = profile;
+        this.style = style;
         this.emotionPack = emotionPack;
         // populate the consolidated mapping for easier, enum-based lookups
         this.stats = stats;
@@ -148,6 +150,7 @@ export async function loadReserveActor(fullPath: string, stage: Stage): Promise<
             `System: NAME: Their simple name\n` +
             `DESCRIPTION: A vivid description of the character's physical appearance, attire, and any distinguishing features.\n` +
             `PROFILE: A brief summary of the character's key personality traits and behaviors.\n` +
+            `STYLE: A concise description of the character's sense of overall style, mood, and aesthetic, to be used to describe the way they decorate their space or belongings.\n` +
             `COLOR: A hex color that reflects the character's theme or mood—use darker or richer colors that will contrast with white text.\n` +
             `FONT: A web-safe font family that reflects the character's personality.\n` +
             Object.entries(Stat).map(([key, value]) => {
@@ -158,6 +161,7 @@ export async function loadReserveActor(fullPath: string, stage: Stage): Promise<
             `NAME: Jane Doe\n` +
             `DESCRIPTION: A tall, athletic woman with short, dark hair and piercing blue eyes. She wears a simple, utilitarian outfit made from durable materials.\n` +
             `PROFILE: Jane is confident and determined, with a strong sense of justice. She is quick to anger but also quick to forgive. She is fiercely independent and will do whatever it takes to protect those she cares about.\n` +
+            `STYLE: Practical and no-nonsense, favoring functionality over fashion. Prefers muted colors and simple designs that allow freedom and comfort.\n` +
             `COLOR: #333333\n` +
             `FONT: Arial\n` +
             `BRAWN: 5\n` +
@@ -215,6 +219,7 @@ export async function loadReserveActor(fullPath: string, stage: Stage): Promise<
         data.avatar || '',
         parsedData['description'] || '',
         parsedData['profile'] || '',
+        parsedData['style'] || '',
         {}, 
         {
             [Stat.Brawn]: parseInt(parsedData['brawn']) || DEFAULT_TRAIT_MAP[Stat.Brawn],
@@ -322,9 +327,8 @@ export async function generateActorDecor(actor: Actor, module: Module, stage: St
     // Generate a decor image based on the module's description and the actor's description
     const decorImageUrl = await stage.makeImageFromImage({
         image: module.getAttribute('baseImageUrl') || '',
-        prompt: `Go over this sterile sci-fi ${module.type} with a clean visual novel style. ` +
-                `Decorate the scene in a fashion, style, or mood that suits the following character: ${actor.description}\n` +
-                `The module remains empty, but redecorated with updated furnishings or clutter.`,
+        prompt: `Go over this sterile sci-fi ${module.type} with a clean visual novel look. ` +
+                `Redecorate this space, updating furnishings or details to suit this style: ${actor.style}`,
         remove_background: false,
         transfer_type: 'edit'
     }, `actors/${actor.id}/${module.type}/decor.png`, module.getAttribute('baseImageUrl') || '');
