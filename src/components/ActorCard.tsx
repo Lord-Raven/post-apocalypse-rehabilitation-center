@@ -214,6 +214,8 @@ export const ActorCard: FC<ActorCardProps> = ({
                                     </div>
                                 );
                             })}
+                            {/* Author link in bottom */}
+                            <AuthorLink actor={actor} />
                         </div>
                         
                         {/* Right column: Tall character portrait */}
@@ -232,10 +234,7 @@ export const ActorCard: FC<ActorCardProps> = ({
                             alignItems: 'flex-end',
                             justifyContent: 'flex-end',
                             padding: '8px'
-                        }}>
-                            {/* Author link in bottom right corner */}
-                            <AuthorLink actor={actor} />
-                        </div>
+                        }}/>
                     </div>
                 )
             ) : (

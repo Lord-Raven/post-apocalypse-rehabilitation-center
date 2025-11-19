@@ -1,6 +1,6 @@
 import React from 'react';
 
-interface SingleTypeOutProps {
+interface TypeOutProps {
     children: React.ReactNode;
     speed?: number; // ms per character
     className?: string;
@@ -89,7 +89,7 @@ const truncateReactContent = (node: React.ReactNode, maxLength: number): React.R
   Can be forced to complete immediately via finishTyping prop.
   Properly renders React elements including spans, divs, and other components.
 */
-export const SingleTypeOut: React.FC<SingleTypeOutProps> = ({ 
+export const TypeOut: React.FC<TypeOutProps> = ({ 
     children, 
     speed = 25, 
     className, 
@@ -181,4 +181,4 @@ export const SingleTypeOut: React.FC<SingleTypeOutProps> = ({
     );
 };
 
-export default SingleTypeOut;
+export default TypeOut;

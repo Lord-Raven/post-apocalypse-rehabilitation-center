@@ -30,7 +30,7 @@ import {
     Close,
     Casino
 } from '@mui/icons-material';
-import SingleTypeOut from '../SingleTypeOut';
+import TypeOut from '../components/TypeOut';
 
 // Small component that shows a loading indicator
 const LoadingIndicator: React.FC<{ active?: boolean }> = ({ active }) => {
@@ -567,12 +567,14 @@ export const VignetteScreen: FC<VignetteScreenProps> = ({ stage, setScreenType }
                         }
                     }}
                     onClick={() => {
-                        if (!finishTyping) {
-                            // Force typing to complete immediately
-                            setFinishTyping(true);
-                        } else {
-                            // Already finished typing, advance to next message
-                            next();
+                        if (!loading) {
+                            if (!finishTyping) {
+                                // Force typing to complete immediately
+                                setFinishTyping(true);
+                            } else {
+                                // Already finished typing, advance to next message
+                                next();
+                            }
                         }
                     }}
                 >
@@ -586,14 +588,14 @@ export const VignetteScreen: FC<VignetteScreenProps> = ({ stage, setScreenType }
                         }}
                     >
                         {vignette.script && vignette.script.length > 0 ? (
-                            <SingleTypeOut
+                            <TypeOut
                                 key={`message-box-${index}`}
                                 speed={20}
                                 finishTyping={finishTyping}
                                 onTypingComplete={() => setFinishTyping(true)}
                             >
                                 {displayMessage}
-                            </SingleTypeOut>
+                            </TypeOut>
                         ) : ''}
                     </Typography>
                 </Box>
