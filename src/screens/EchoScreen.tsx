@@ -7,7 +7,7 @@ import { ScreenType } from './BaseScreen';
 import { Stage } from '../Stage';
 import { VignetteType } from '../Vignette';
 import Nameplate from '../components/Nameplate';
-import Actor from '../actors/Actor';
+import Actor, { generateActorDecor } from '../actors/Actor';
 import ActorCard from '../components/ActorCard';
 import { BlurredBackground } from '../components/BlurredBackground';
 import AuthorLink from '../components/AuthorLink';
@@ -61,6 +61,7 @@ export const EchoScreen: FC<EchoScreenProps> = ({stage, setScreenType}) => {
 		if (selected && firstRoom && selected.isPrimaryImageReady) {
 			// Assign the selected actor to the first available room
 			firstRoom.ownerId = selected.id;
+			generateActorDecor(selected, firstRoom, stage());
 			// Set the actor's location to the echo room:
 			const sceneRoom = stage().getSave().layout.getModulesWhere(m => m.type === 'echo chamber')[0] || firstRoom;
 			selected.locationId = sceneRoom?.id || '';
