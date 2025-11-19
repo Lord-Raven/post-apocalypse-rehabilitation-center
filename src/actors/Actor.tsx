@@ -1,4 +1,5 @@
 import { Emotion, EMOTION_PROMPTS, EmotionPack } from "../Emotion";
+import { Module, ModuleType } from "../Module";
 import { Stage } from "../Stage";
 import { v4 as generateUuid } from 'uuid';
 
@@ -30,6 +31,7 @@ class Actor {
     participations: number = 0; // Number of vignettes they've participated in
     isImageLoadingComplete: boolean = false; // Whether all emotion pack images have been generated
     heldRoles: { [key: string]: number } = {}; // Roles ever held by this actor and the number of days spent in each
+    decorImageUrls: {[key: string]: string} = {}; // ModuleType to decor image URL mapping
 
     // Characters are candidates for a rehabilitation program; the are coming into the program from a vast range of past life situations.
     // They may have trauma, mental health challenges, or other issues that the program is designed to help with.
@@ -251,6 +253,9 @@ export async function loadReserveActor(fullPath: string, stage: Stage): Promise<
     } else if (/[\u3040-\u30ff\u3400-\u4dbf\u4e00-\u9fff\uf900-\ufaff]/.test(`${newActor.name}${newActor.description}${newActor.profile}`)) {
         console.log(`Discarding actor due to non-english characters in name/description/profile: ${newActor.name}`);
         return null;
+    } else if (Object.values(newActor.stats).some(value => value < 1 || value > 10)) {
+        console.log(`Discarding actor due to out-of-bounds stats: ${newActor.name}`);
+        return null;
     }
 
     return newActor;
@@ -304,6 +309,25 @@ export async function generateAdditionalActorImages(actor: Actor, stage: Stage):
         }
     }
     actor.isImageLoadingComplete = true;
+}
+
+export async function generateActorDecor(actor: Actor, module: Module, stage: Stage): Promise<string> {
+    if (actor.decorImageUrls[module.type] && actor.decorImageUrls[module.type].length > 0 && actor.decorImageUrls[module.type] !== module.getAttribute('baseImageUrl')) {
+        return actor.decorImageUrls[module.type];
+    }
+    console.log(`Generating decor image for actor ${actor.name} in module ${module.type}`);
+    // Generate a decor image based on the module's description and the actor's description
+    const decorImageUrl = await stage.makeImageFromImage({
+        image: module.getAttribute('baseImageUrl') || '',
+        prompt: `Go over this sterile sci-fi ${module.type} with a clean visual novel style. ` +
+                `Decorate the scene in a fashion, style, or mood that suits the following character: ${actor.description}\n` +
+                `The module remains empty, but redecorated with updated furnishings or clutter.`,
+        remove_background: false,
+        transfer_type: 'edit'
+    }, `actors/${actor.id}/${module.type}/decor.png`, module.getAttribute('baseImageUrl') || '');
+    console.log(`Generated decor image for actor ${actor.name} and ${module.type}: ${decorImageUrl || ''}`);
+    actor.decorImageUrls[module.type] = decorImageUrl || '';
+    return decorImageUrl || '';
 }
 
 /**

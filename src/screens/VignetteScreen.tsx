@@ -424,9 +424,12 @@ export const VignetteScreen: FC<VignetteScreenProps> = ({ stage, setScreenType }
         setCharacterStatChanges(changes);
     };
 
+    const module = stage().getSave().layout.getModuleById(vignette.moduleId || '');
+    const decorImageUrl = module ? stage().getSave().actors[module.ownerId || '']?.decorImageUrls[module.type] || module.getAttribute('defaultImageUrl') : '';
+
     return (
         <BlurredBackground
-            imageUrl={stage().getSave().layout.getModuleById(vignette.moduleId || '')?.getAttribute('defaultImageUrl') || ''}
+            imageUrl={decorImageUrl}
         >
             <div style={{ position: 'relative', width: '100vw', height: '100vh' }}>
 

@@ -161,8 +161,8 @@ export const PhaseIndicator: FC<PhaseIndicatorProps> = ({ currentPhase, totalPha
 					>
 						<HourglassIcon
 							style={{
-								color: isSpent ? '#00ff88' : 'rgba(0, 255, 136, 0.4)',
-								filter: isSpent ? 'drop-shadow(0 0 8px rgba(0, 255, 136, 0.6))' : 'none',
+								color: isSpent ? 'rgba(0, 255, 136, 0.4)' : '#00ff88',
+								filter: isSpent ? 'none' : 'drop-shadow(0 0 8px rgba(0, 255, 136, 0.6))',
 								fontSize: '28px',
 							}}
 						/>

@@ -10,6 +10,7 @@ import { PhaseIndicator as SharedPhaseIndicator, Title } from '../components/UIC
 import { useTooltip } from '../contexts/TooltipContext';
 import { SwapHoriz, Home, Work } from '@mui/icons-material';
 import { VignetteType } from '../Vignette';
+import { generateActorDecor } from '../actors/Actor';
 
 // Styled components for the day/phase display
 const StyledDayCard = styled(Card)(({ theme }) => ({
@@ -189,6 +190,7 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType}) =>
             // Assign actor to target quarters
             targetModule.ownerId = actorId;
             actor.locationId = targetModule.id;
+            generateActorDecor(actor, targetModule, stage());
 
         } else {
             if (targetModule.ownerId !== actorId) {
@@ -205,6 +207,7 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType}) =>
             // Assign the actor to this module as their role
             targetModule.ownerId = actorId;
             actor.locationId = targetModule.id;
+            generateActorDecor(actor, targetModule, stage());
             const roleName: string = targetModule.getAttribute('role') || '';
             if (roleName && Object.keys(actor.heldRoles).indexOf(roleName) === -1) {
                 // This character has never held this role before; initialize counter and also kick off a little vignette about it.
@@ -371,7 +374,7 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType}) =>
                                         ? '3px solid rgba(255, 200, 0, 0.9)' 
                                         : '3px solid rgba(0, 255, 136, 0.9)',
                                     borderRadius: 10,
-                                    background: `url(${module.getAttribute('defaultImageUrl')}) center center / contain no-repeat`,
+                                    background: `url(${stage().getSave().actors[module.ownerId || '']?.decorImageUrls[module.type] || module.getAttribute('defaultImageUrl')}) center center / contain no-repeat`,
                                     cursor: 'pointer',
                                     color: '#dfffe6',
                                     fontWeight: 700,
