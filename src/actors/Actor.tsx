@@ -135,7 +135,7 @@ export async function loadReserveActor(fullPath: string, stage: Stage): Promise<
             `\n\nBackground: This game is a futuristic multiverse setting that pulls characters from across eras and timelines and settings. ` +
             `The player of this game ${stage.getSave().player.name} manages a space station and rehabilitiation center that resurrects victims of a multiversal calamity and helps them adapt to a new life. ` +
             `The player's motives and ethics are open-ended; they may be benevolent or self-serving, and the characters they interact with may respond accordingly. ` +
-            `\n\nThe Original Details below describe a character or scenario from another universe. This request and response must digest and distill these details to suit the game's narrative scenario, ` +
+            `\n\nThe Original Details below describe a character or scenario (${data.name}) from another universe. This request and response must digest and distill these details to suit the game's narrative scenario, ` +
             `crafting a character who has been rematerialized into this universe through an "echo chamber," their essence reconstituted from the whispers of a black hole. ` +
             `As a result of this process, many of this character's traits may have changed, including the loss of most supernatural or arcane abilities, which functioned only within the rules of their former universe. ` +
             `Their new description and profile should reflect these possible changes and their impact.\n\n` +
@@ -145,7 +145,7 @@ export async function loadReserveActor(fullPath: string, stage: Stage): Promise<
             `score the character with a simple 1-10 for the following traits: BRAWN, WITS, NERVE, SKILL, CHARM, LUST, JOY, and TRUST.\n` +
             `Bear in mind the character's current, diminished state—as a newly reconstituted and relatively powerless individual—and not their original potential when scoring these traits (but omit your reasons from the response structure); ` +
             `some characters may not respond well to being essentially resurrected into a new timeline, losing much of what they once had. Others may be grateful for a new beginning.\n\n` +
-            `Original Details:\n${data.description} ${data.personality}\n\n` +
+            `Original Details about ${data.name}:\n${data.description} ${data.personality}\n\n` +
             `Instructions: After carefully considering this description and the rules provided, generate a concise breakdown for a character based upon these details in the following strict format:\n` +
             `System: NAME: Their simple name\n` +
             `DESCRIPTION: A vivid description of the character's physical appearance, attire, and any distinguishing features.\n` +
