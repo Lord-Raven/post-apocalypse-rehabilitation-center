@@ -321,20 +321,11 @@ export const EchoScreen: FC<EchoScreenProps> = ({stage, setScreenType}) => {
 									/>
 									{/* Stats */}
 									<div className="stat-list" style={{ padding: '8px 12px', background: 'rgba(0,0,0,0.8)', flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'space-evenly' }}>
-										{[
-											['Brawn', 'brawn'],
-											['Wits', 'wits'],
-											['Nerve', 'nerve'],
-											['Skill', 'skill'],
-											['Charm', 'charm'],
-											['Lust', 'lust'],
-											['Joy', 'joy'],
-											['Trust', 'trust'],
-										].map(([label, key]) => {
+										{Object.keys(actor.stats).map((key) => {
 											const grade = actor.scoreToGrade(actor.stats[key as keyof typeof actor.stats]);
 											return (
-												<div className="stat-row" key={`${actor.id}_${label}`}>
-													<span className="stat-label">{label}</span>
+												<div className="stat-row" key={`${actor.id}_${key}`}>
+													<span className="stat-label">{key}</span>
 													<span className="stat-grade" data-grade={grade}>{grade}</span>
 												</div>
 											);
@@ -342,7 +333,6 @@ export const EchoScreen: FC<EchoScreenProps> = ({stage, setScreenType}) => {
 										{/* Author link */}
 										<AuthorLink actor={actor} />
 									</div>
-									
 								</>
 							) : (
 								<div style={{ 

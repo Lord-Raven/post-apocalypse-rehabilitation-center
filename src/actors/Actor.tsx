@@ -7,9 +7,9 @@ import { v4 as generateUuid } from 'uuid';
 // Using single-syllable words, each starting with a different letter
 export enum Stat {
     Brawn = 'brawn', // Physical condition and strength
-    Wits = 'wits', // Intelligence and awareness
-    Nerve = 'nerve', // Courage and confidence
     Skill = 'skill', // Capability and finesse
+    Nerve = 'nerve', // Courage and confidence
+    Wits = 'wits', // Intelligence and awareness
     Charm = 'charm', // Charisma and tact
     Lust = 'lust', // Sexuality and physical desire
     Joy = 'joy', // Happiness and positivity
@@ -33,11 +33,6 @@ class Actor {
     isImageLoadingComplete: boolean = false; // Whether all emotion pack images have been generated
     heldRoles: { [key: string]: number } = {}; // Roles ever held by this actor and the number of days spent in each
     decorImageUrls: {[key: string]: string} = {}; // ModuleType to decor image URL mapping
-
-    // Characters are candidates for a rehabilitation program; the are coming into the program from a vast range of past life situations.
-    // They may have trauma, mental health challenges, or other issues that the program is designed to help with.
-    // They will be prepped for completely new lives in a sci-fi, dystopian future setting where they may be valued for different traits.
-    // Graded stats from 1-10; these get translated to a letter grade in the UI
     stats: Record<Stat, number>;
 
     /**
@@ -87,12 +82,12 @@ export function getStatDescription(stat: Stat | string): string {
     switch (key) {
         case Stat.Brawn:
             return 'physical condition and strength, with 10 being peak condition and 1 being critically impaired.';
-        case Stat.Wits:
-            return 'intelligence and awareness, with 10 being a genius and 1 being utterly oblivious.';
-        case Stat.Nerve:
-            return 'courage and mental resilience, with 10 being indefatigably fearless and 1 being easily overwhelmed.';
         case Stat.Skill:
             return 'capability and ability to contribute meaningfully, with 10 being highly competent and 1 being a liability.';
+        case Stat.Nerve:
+            return 'courage and mental resilience, with 10 being indefatigably fearless and 1 being easily overwhelmed.';
+        case Stat.Wits:
+            return 'intelligence and awareness, with 10 being a genius and 1 being utterly oblivious.';
         case Stat.Charm:
             return 'personality appeal and tact, with 10 being extremely charismatic and 1 being socially inept.';
         case Stat.Lust:
@@ -118,11 +113,13 @@ export async function loadReserveActor(fullPath: string, stage: Stage): Promise<
         personality: item.node.definition.personality.replaceAll('{{char}}', dataName).replaceAll('{{user}}', 'Individual X'),
         avatar: item.node.max_res_url
     };
-    // if data.name, data.description, or data.personality contain any "{" or "}" at this point, discard this actor by returning null
-    if (data.name.includes('{') || data.name.includes('}') || data.description.includes('{') || data.description.includes('}') || data.personality.includes('{') || data.personality.includes('}')) {
-        console.log(`Immediately discarding actor due to curly braces (possible JSON content): ${data.name}`);
-        return null;
-    } else if (bannedWords.some(word => data.description.toLowerCase().includes(word) || data.personality.toLowerCase().includes(word) || data.name.toLowerCase().includes(word))) {
+
+    // I was discarding curly braces, but instead, let's swap "{" and "}" for "(" and ")" to preserve content while removing JSON-like structures.
+    data.name = data.name.replace(/{/g, '(').replace(/}/g, ')');
+    data.description = data.description.replace(/{/g, '(').replace(/}/g, ')');
+    data.personality = data.personality.replace(/{/g, '(').replace(/}/g, ')');
+    
+    if (bannedWords.some(word => data.description.toLowerCase().includes(word) || data.personality.toLowerCase().includes(word) || data.name.toLowerCase().includes(word))) {
         console.log(`Immediately discarding actor due to banned words: ${data.name}`);
         return null;
     } else if (/[\u3040-\u30ff\u3400-\u4dbf\u4e00-\u9fff\uf900-\ufaff]/.test(`${data.name}${data.description}${data.personality}`)) {
@@ -142,7 +139,7 @@ export async function loadReserveActor(fullPath: string, stage: Stage): Promise<
             `The provided Original Details reference 'Individual X' who no longer exists in this timeline; ` +
             `if Individual X remains relevant to this character, Individual X should be replaced with an appropriate name in the distillation.\n\n` +
             `In addition to the simple display name, physical description, and personality profile, ` +
-            `score the character with a simple 1-10 for the following traits: BRAWN, WITS, NERVE, SKILL, CHARM, LUST, JOY, and TRUST.\n` +
+            `score the character on a scale of 1-10 for the following traits: BRAWN, SKILL, NERVE, WITS, CHARM, LUST, JOY, and TRUST.\n` +
             `Bear in mind the character's current, diminished state—as a newly reconstituted and relatively powerless individual—and not their original potential when scoring these traits (but omit your reasons from the response structure); ` +
             `some characters may not respond well to being essentially resurrected into a new timeline, losing much of what they once had. Others may be grateful for a new beginning.\n\n` +
             `Original Details about ${data.name}:\n${data.description} ${data.personality}\n\n` +
@@ -150,7 +147,7 @@ export async function loadReserveActor(fullPath: string, stage: Stage): Promise<
             `System: NAME: Their simple name\n` +
             `DESCRIPTION: A vivid description of the character's physical appearance, attire, and any distinguishing features.\n` +
             `PROFILE: A brief summary of the character's key personality traits and behaviors.\n` +
-            `STYLE: A concise description of the character's sense of overall style, mood, and aesthetic, to be used to describe the way they decorate their space or belongings.\n` +
+            `STYLE: A concise description of the character's sense of overall style, mood, interests, or aesthetic, to be applied to the way they decorate their space.\n` +
             `COLOR: A hex color that reflects the character's theme or mood—use darker or richer colors that will contrast with white text.\n` +
             `FONT: A web-safe font family that reflects the character's personality.\n` +
             Object.entries(Stat).map(([key, value]) => {
@@ -165,9 +162,9 @@ export async function loadReserveActor(fullPath: string, stage: Stage): Promise<
             `COLOR: #333333\n` +
             `FONT: Arial\n` +
             `BRAWN: 5\n` +
-            `WITS: 6\n` +
-            `NERVE: 7\n` +
             `SKILL: 5\n` +
+            `NERVE: 7\n` +
+            `WITS: 6\n` +
             `CHARM: 4\n` +
             `LUST: 2\n` +
             `JOY: 3\n` +
