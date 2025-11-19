@@ -27,7 +27,8 @@ import {
     ArrowBackIos,
     ArrowForwardIos,
     Send,
-    Close
+    Close,
+    Casino
 } from '@mui/icons-material';
 import SingleTypeOut from '../SingleTypeOut';
 
@@ -433,6 +434,36 @@ export const VignetteScreen: FC<VignetteScreenProps> = ({ stage, setScreenType }
         >
             <div style={{ position: 'relative', width: '100vw', height: '100vh' }}>
 
+            {/* Re-roll button in upper right corner */}
+            <IconButton
+                onClick={() => {
+                    console.log('Re-roll clicked');
+                    handleReroll();
+
+                }}
+                disabled={loading}
+                sx={{
+                    position: 'absolute',
+                    top: 20,
+                    right: 20,
+                    zIndex: 10,
+                    background: 'rgba(10,20,30,0.85)',
+                    border: '2px solid rgba(0,255,136,0.2)',
+                    color: '#00ff88',
+                    backdropFilter: 'blur(8px)',
+                    transition: 'all 0.3s ease',
+                    '&:hover': {
+                        background: 'rgba(10,20,30,0.95)',
+                        borderColor: 'rgba(0,255,136,0.4)',
+                        color: '#00ffaa',
+                        transform: 'rotate(180deg)',
+                    },
+                    '&:disabled': { color: 'rgba(255,255,255,0.3)' }
+                }}
+            >
+                <Casino />
+            </IconButton>
+
             {/* Actors */}
             <div style={{ position: 'absolute', inset: 0, zIndex: 1, pointerEvents: 'none' }}>
                 {renderActors(stage().getSave().layout.getModuleById(vignette.moduleId || ''), Object.values(stage().getSave().actors).filter(actor => actor.locationId === (vignette.moduleId || '')) || [], vignette.script && vignette.script.length > 0 ? vignette.script[index]?.speaker : undefined)}
@@ -663,6 +694,29 @@ export const VignetteScreen: FC<VignetteScreenProps> = ({ stage, setScreenType }
             </div>
         </BlurredBackground>
     );
+
+    // Handle reroll
+    function handleReroll() {
+        const stageVignette = stage().getSave().currentVignette;
+        if (!stageVignette) return;
+        // Cut out this index through the end of the script and re-generate:
+        stageVignette.script = stageVignette.script.slice(0, index);
+        setLoading(true);
+        setInputText('');
+        stage().continueVignette().then(() => {
+            const vignetteData = stage().getSave().currentVignette;
+            setVignette({...vignetteData as VignetteData});
+            setIndex(Math.min(index, (vignetteData?.script.length || 1) - 1));
+            setLoading(false);
+            const ended = vignetteData?.endScene || false;
+            setSceneEnded(ended);
+            
+            // Process stat changes when scene ends
+            if (ended && vignetteData?.endProperties) {
+                processStatChanges(vignetteData.endProperties);
+            }
+        });
+    }
     
     // Handle submission of player's guidance (or blank submit to continue the scene autonomously)
     function handleSubmit() {

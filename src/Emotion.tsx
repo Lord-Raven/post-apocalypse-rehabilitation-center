@@ -99,6 +99,8 @@ export const EMOTION_SYNONYMS: {[key: string]: Emotion} = {
     boredom: Emotion.neutral,
     bliss: Emotion.joy,
     ecstacy: Emotion.joy,
+    suspicious: Emotion.disappointment,
+    suspicion: Emotion.disappointment,
 }
 
 export const EMOTION_PROMPTS: {[emotion in Emotion]?: string} = {

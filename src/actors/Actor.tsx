@@ -255,8 +255,8 @@ export async function loadReserveActor(fullPath: string, stage: Stage): Promise<
     } else if (Object.entries(newActor.stats).every(([key, value]) => value === DEFAULT_TRAIT_MAP[key as Stat])) {
         console.log(`Discarding actor due to all default stats: ${newActor.name}`);
         return null;
-    } else if (newActor.name.length >= 30) {
-        console.log(`Discarding actor due to excessive name length: ${newActor.name}`);
+    } else if (newActor.name.length <= 2 || newActor.name.length >= 30) {
+        console.log(`Discarding actor due to extreme name length: ${newActor.name}`);
         return null;
     } else if (/[\u3040-\u30ff\u3400-\u4dbf\u4e00-\u9fff\uf900-\ufaff]/.test(`${newActor.name}${newActor.description}${newActor.profile}`)) {
         console.log(`Discarding actor due to non-english characters in name/description/profile: ${newActor.name}`);
