@@ -1,5 +1,5 @@
 import Actor, { getStatDescription, namesMatch, Stat } from "./actors/Actor";
-import { Emotion } from "./Emotion";
+import { Emotion, EMOTION_SYNONYMS } from "./Emotion";
 import { Stage } from "./Stage";
 
 export enum VignetteType {
@@ -224,10 +224,20 @@ export async function generateVignetteScript(vignette: VignetteData, stage: Stag
                             const emotionName = emotionMatch[2].trim().toLowerCase();
                             // Find matching present actor using namesMatch
                             const matched = presentActors.find(a => namesMatch(a.name.toLowerCase(), characterName.toLowerCase()));
-                            // If no matching actor or emotion, skip
-                            if (!matched || !(emotionName in Emotion)) continue;
-                            console.log(`Detected emotion tag for ${matched.name}: ${emotionName}`);
-                            newEmotionTags[matched.name] = emotionName as Emotion;
+                            if (!matched) continue;
+                            
+                            // Try to map emotion using EMOTION_SYNONYMS if not a standard emotion
+                            let finalEmotion: Emotion | undefined;
+                            if (emotionName in Emotion) {
+                                finalEmotion = emotionName as Emotion;
+                            } else if (emotionName in EMOTION_SYNONYMS) {
+                                finalEmotion = EMOTION_SYNONYMS[emotionName];
+                                console.log(`Mapped non-standard emotion "${emotionName}" to "${finalEmotion}" for ${matched.name}`);
+                            }
+                            
+                            if (!finalEmotion) continue;
+                            console.log(`Detected emotion tag for ${matched.name}: ${finalEmotion}`);
+                            newEmotionTags[matched.name] = finalEmotion;
                         }
                     }
 
