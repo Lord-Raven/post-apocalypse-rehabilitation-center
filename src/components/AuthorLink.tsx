@@ -43,6 +43,7 @@ export const AuthorLink: FC<AuthorLinkProps> = ({ actor, style }) => {
 			}}
 		>
 			{showAuthor && <span style={{ fontWeight: 500 }}>@{author}</span>}
+			{!showAuthor && <span style={{ fontWeight: 500 }}>Anonymous</span>}
 			{/* Link icon */}
 			<svg 
 				width="14" 
