@@ -314,7 +314,7 @@ export async function generateAdditionalActorImages(actor: Actor, stage: Stage):
                 console.log(`Generating ${emotion} emotion image for actor ${actor.name}`);
                 const imageUrl = await stage.makeImageFromImage({
                     image: actor.emotionPack['neutral'],
-                    prompt: `Give this character a ${EMOTION_PROMPTS[emotion]} or gesture. Maintain the original style.`,
+                    prompt: `Give this character a ${EMOTION_PROMPTS[emotion]}, gesture, or pose.`,
                     remove_background: true,
                     transfer_type: 'edit'
                 }, `actors/${actor.id}/${emotion}.png`, '');
