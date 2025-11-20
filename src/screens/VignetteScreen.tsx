@@ -358,7 +358,7 @@ export const VignetteScreen: FC<VignetteScreenProps> = ({ stage, setScreenType }
         });
     }
 
-    // Process stat changes and prepare data for StatChangeDisplay
+    // Process stat changes and prepare data for StatChangeDisplay (display only, does not apply changes)
     const processStatChanges = (endProperties: { [actorId: string]: { [stat: string]: number } }) => {
         const changes: Array<{
             actor: Actor;
@@ -401,15 +401,6 @@ export const VignetteScreen: FC<VignetteScreenProps> = ({ stage, setScreenType }
                         statName: statName,
                         oldValue: currentValue,
                         newValue: newValue
-                    });
-
-                    // Apply the change to the actor
-                    Object.keys(actor.stats).forEach(actorStat => {
-                        if (actorStat.toLowerCase() === normalizedStatName || 
-                            actorStat.toLowerCase().includes(normalizedStatName) ||
-                            normalizedStatName.includes(actorStat.toLowerCase())) {
-                            (actor.stats as any)[actorStat] = newValue;
-                        }
                     });
                 }
             });
@@ -746,6 +737,8 @@ export const VignetteScreen: FC<VignetteScreenProps> = ({ stage, setScreenType }
         // When the scene is concluded, switch back to the Station screen
         // Output stat change for now:
         console.log('Vignette concluded with stat changes:', vignette.endProperties || {});
+        stage().endVignette();
+        
         setScreenType(ScreenType.STATION);
     }
 }

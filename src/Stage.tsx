@@ -23,6 +23,8 @@ type SaveType = {
     layout: Layout;
     day: number;
     phase: number;
+    vignetteSummaries?: [];
+    pastVignettes?: VignetteData[];
     currentVignette?: VignetteData;
 }
 
@@ -126,7 +128,7 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
         // When incrementing phase, maybe move some actors around in the layout.
         for (const actorId in save.actors) {
             const actor = save.actors[actorId];
-            actor.locationId = save.layout.getModulesWhere(m => ['echo', 'common', 'generator'].includes(m.type) || m.ownerId == actorId).sort(() => Math.random() - 0.5)[0]?.id || '';
+            actor.locationId = save.layout.getModulesWhere(m => m.type !== 'quarters' || m.ownerId == actorId).sort(() => Math.random() - 0.5)[0]?.id || '';
         }
         this.saveGame();
     }
@@ -321,6 +323,32 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
     setVignette(vignette: VignetteData) {
         const save = this.getSave() as any;
         save.currentVignette = vignette;
+    }
+
+    endVignette() {
+        const save = this.getSave() as any;
+        if (save.currentVignette) {
+            if (!save.pastVignette) {
+                save.pastVignette = [];
+            }
+            // Apply endProperties to actors
+            const endProps = save.currentVignette.endProperties || {};
+            for (const actorId in endProps) {
+                const actorChanges = endProps[actorId];
+                const actor = save.actors[actorId];
+                if (actor) {
+                    for (const prop in actorChanges) {
+                        if (prop in actor) {
+                            (actor as any)[prop] += actorChanges[prop];
+                        }
+                    }
+                }
+            }
+
+            save.currentVignette.context = {...save.currentVignette.context, day: this.getSave().day};
+            save.pastVignette.push(save.currentVignette);
+            save.currentVignette = undefined;
+        }
     }
 
     async continueVignette() {

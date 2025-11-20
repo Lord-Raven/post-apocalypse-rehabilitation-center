@@ -62,9 +62,9 @@ export function generateVignettePrompt(vignette: VignetteData, stage: Stage, con
 export async function generateVignetteScript(vignette: VignetteData, stage: Stage): Promise<{ entries: ScriptEntry[]; endScene: boolean; statChanges: { [actorId: string]: { [stat: string]: number } } }> {
     // Build a scene log when continuing so the generator can see prior script entries
     // Insert [Character EXPRESSES Emotion] tags as needed
-    const scriptLog = (vignette.generating && vignette.script && vignette.script.length > 0)
-        ? vignette.script.map(e => `${e.speaker}: ${Object.keys(e.actorEmotions || {}).map(emotion => `[${e.speaker} EXPRESSES ${emotion.toUpperCase()}]`).join(' ')} ${e.message}`).join('\n')
-        : '(None so far)';
+    const buildScriptLog = (vignette: VignetteData) => (vignette.script && vignette.script.length > 0 ?
+        vignette.script.map(e => `${e.speaker}:${Object.keys(e.actorEmotions || {}).map(emotion => ` [${e.speaker} EXPRESSES ${emotion.toUpperCase()}]`).join('')} ${e.message}`).join('\n')
+        : '(None so far)');
 
     const playerName = stage.getSave().player.name;
 
@@ -91,7 +91,6 @@ export async function generateVignetteScript(vignette: VignetteData, stage: Stag
     let fullPrompt = `{{messages}}\nPremise:\nThis is a sci-fi visual novel game set on a space station that resurrects and rehabilitates patients who died in the multiverse-wide apocalypse: ` +
         `the Post-Apocalyptic Rehabilitation Center. ` +
         `The thrust of the game has the player character, ${playerName}, managing this station and interacting with patients and crew, as they navigate this complex futuristic universe together. ` +
-        `\n\nCrew:\nAt this point in the story, the player is running the operation on their own, with no fellow crew members. ` +
         // List characters who are here, along with full stat details:
         `\n\nPresent Characters:\n${presentActors.map(actor => {
             const roleModule = stage.getLayout().getModulesWhere((m: any) => 
@@ -119,13 +118,19 @@ export async function generateVignetteScript(vignette: VignetteData, stage: Stag
         'System: CHARACTER NAME: [CHARACTER NAME EXPRESSES OPTIMISM] Action in prose. "Dialogue in quotation marks."\nNARRATOR: Conclusive ending to the scene in prose.' +
         `\n[CHARACTER NAME: RELEVANT STAT + 1]` +
         `\n[END SCENE]` +
-        `\n\nScript Log:\nSystem: ${scriptLog}` +
+        (stage.getSave().pastVignettes && stage.getSave().pastVignettes?.length || 0 > 0 ? 
+            // Include last 5 vignette scripts for context and style reference
+            '\n\nRecent Scene Scripts for additional context:' + stage.getSave().pastVignettes?.filter((v, index) => index > (stage.getSave().pastVignettes?.length || 0) - 5).map((v, index) => 
+                `\n\n  Scene in ${stage.getSave().layout.getModuleById(v.moduleId || '')?.type || 'Unknown'} (${stage.getSave().day - v.context.day}) days ago:\n` +
+                `System: ${buildScriptLog(v)}`).join('') :
+            '') +
+        `\n\nCurrent Scene Script Log to Continue:\nSystem: ${buildScriptLog(vignette)}` +
         `\n\nInstruction:\nAt the "System:" prompt, generate a short scene script based upon this scenario, and the specified Scene Prompt. Follow the structure of the strict Example Script formatting above. ` +
         `Actions are depicted in prose and character dialogue in quotation marks. Emotion tags (e.g. [CHARACTER NAME EXPRESSES JOY]) should be used to indicate significant emotional shifts—` +
         `these cues will be utilized by the game engine to visually display appropriate character emotions; only the known, listed emotions can be used here.\n` +
         `This response should end when it makes sense to give ${playerName} a chance to respond or contribute, ` +
         `or, if the scene feels satisfactorily complete, the entire scene can be concluded with an "[END SCENE]" or ` +
-        `"[CHARACTER NAME: RELEVANT STAT + x]" tag(s), which can be used to apply stat changes to the specified Present Character(s). These changes should reflect an outcome of the scene; ` +
+        `"[CHARACTER NAME: RELEVANT STAT + x]" tag(s), which can be used to apply stat changes to the specified Present Character(s). These changes should reflect an overt or implied outcome of the scene; ` +
         `they should be incremental, typically (but not exclusively) positive, and applied only when the scene is complete.${wrapupPrompt}`;
 
     // Retry logic if response is null or response.result is empty
