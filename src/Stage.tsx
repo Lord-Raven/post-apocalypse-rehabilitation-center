@@ -251,7 +251,7 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
         const imageUrl = (await this.generator.imageToImage(imageToImageRequest))?.url ?? defaultUrl;
         if (imageToImageRequest.remove_background && imageUrl != defaultUrl && this.imagePipeline) {
             try {
-                return this.removeBackground(imageUrl, storageName);
+                return this.removeBackground(imageUrl, true, storageName);
             } catch (exception: any) {
                 console.error(`Error removing background from image, error`, exception);
                 return imageUrl;
@@ -260,18 +260,57 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
         return imageUrl;
     }
 
-    async removeBackground(imageUrl: string, storageName: string) {
+    async removeBackground(imageUrl: string, soften: boolean, storageName: string) {
         if (!imageUrl || !this.imagePipeline) return imageUrl;
         console.log(`removeBackground(${imageUrl}, ${storageName})`);
         try {
             const response = await fetch(imageUrl);
             const backgroundlessResponse = await this.imagePipeline.predict("/remove_background", {image: await response.blob()});
             // Depth URL is the HF URL; back it up to Chub by creating a File from the image data:
-            return await this.uploadBlob(storageName, await (await fetch(backgroundlessResponse.data[1].url)).blob(), {type: 'image/png'});
+            // If soften is true, we can apply a slight blur to reduce noise and accumulated artifacts.
+            
+            let finalBlob = await (await fetch(backgroundlessResponse.data[1].url)).blob();
+            
+            if (soften) {
+                finalBlob = await this.softenImage(finalBlob);
+            }
+            
+            return await this.uploadBlob(storageName, finalBlob, {type: 'image/png'});
         } catch (error) {
             console.error(`Error removing background or storing result`, error);
             return imageUrl;
         }
+    }
+
+    async softenImage(blob: Blob): Promise<Blob> {
+        return new Promise((resolve, reject) => {
+            const img = new Image();
+            img.onload = () => {
+                const canvas = document.createElement('canvas');
+                const ctx = canvas.getContext('2d');
+                if (!ctx) {
+                    reject(new Error('Failed to get canvas context'));
+                    return;
+                }
+                
+                canvas.width = img.width;
+                canvas.height = img.height;
+                
+                // Apply slight blur filter to smooth the image
+                ctx.filter = 'blur(1px)';
+                ctx.drawImage(img, 0, 0);
+                
+                canvas.toBlob((result) => {
+                    if (result) {
+                        resolve(result);
+                    } else {
+                        reject(new Error('Failed to convert canvas to blob'));
+                    }
+                }, 'image/png');
+            };
+            img.onerror = () => reject(new Error('Failed to load image'));
+            img.src = URL.createObjectURL(blob);
+        });
     }
 
     async uploadBlob(fileName: string, blob: Blob, propertyBag: BlobPropertyBag): Promise<string> {

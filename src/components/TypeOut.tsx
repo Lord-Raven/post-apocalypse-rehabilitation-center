@@ -102,6 +102,12 @@ export const TypeOut: React.FC<TypeOutProps> = ({
     
     const textContent = React.useMemo(() => extractTextContent(children), [children]);
     const prevTextContentRef = React.useRef<string>('');
+    const onTypingCompleteRef = React.useRef(onTypingComplete);
+    
+    // Keep the callback ref up to date without causing re-renders
+    React.useEffect(() => {
+        onTypingCompleteRef.current = onTypingComplete;
+    }, [onTypingComplete]);
     
     React.useEffect(() => {
         // Only reset if the actual text content has changed
@@ -109,25 +115,27 @@ export const TypeOut: React.FC<TypeOutProps> = ({
             prevTextContentRef.current = textContent;
             setDisplayLength(0);
             setFinished(false);
-            let idx = 0;
 
             if (!textContent) {
                 setFinished(true);
-                onTypingComplete?.();
+                onTypingCompleteRef.current?.();
                 return;
             }
 
             // Start interval to reveal characters
+            // Use a ref to track the current index so it persists across closures
+            const idxRef = { current: 0 };
+            
             timerRef.current = window.setInterval(() => {
-                idx += 1;
-                setDisplayLength(idx);
-                if (idx >= textContent.length) {
+                idxRef.current += 1;
+                setDisplayLength(idxRef.current);
+                if (idxRef.current >= textContent.length) {
                     if (timerRef.current !== null) {
                         clearInterval(timerRef.current);
                         timerRef.current = null;
                     }
                     setFinished(true);
-                    onTypingComplete?.();
+                    onTypingCompleteRef.current?.();
                 }
             }, speed);
 
@@ -138,7 +146,7 @@ export const TypeOut: React.FC<TypeOutProps> = ({
                 }
             };
         }
-    }, [textContent, speed, onTypingComplete]);
+    }, [textContent, speed]);
 
     // Effect to handle finishTyping prop
     React.useEffect(() => {
@@ -151,9 +159,9 @@ export const TypeOut: React.FC<TypeOutProps> = ({
             // Set to full length and mark as finished
             setDisplayLength(textContent.length);
             setFinished(true);
-            onTypingComplete?.();
+            onTypingCompleteRef.current?.();
         }
-    }, [finishTyping, finished, textContent.length, onTypingComplete]);
+    }, [finishTyping, finished, textContent.length]);
 
     // Determine what to display
     const displayContent = React.useMemo(() => {

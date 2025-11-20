@@ -280,16 +280,27 @@ export async function generatePrimaryActorImage(actor: Actor, stage: Stage): Pro
             }, '');
         }
 
-        // Use stage.makeImageFromImage to create a neutral expression based on imageUrl or the avatar image
+        // Use stage.makeImageFromImage to create a base image.
         imageUrl = await stage.makeImageFromImage({
             image: imageUrl || actor.avatarImageUrl,
-            prompt: `Create a waist-up, solo portrait of this character (${actor.description}) with a calm, neutral expression. Maintain a margin of negative space over their head/hair.`,
+            prompt: `Create a waist-up portrait of this character (${actor.description}) with a neutral expression and pose. Maintain a margin of negative space over their head/hair.`,
+            remove_background: true,
+            transfer_type: 'edit'
+        }, `actors/${actor.id}/base.png`, '');
+        
+        console.log(`Generated base emotion image for actor ${actor.name} from avatar image: ${imageUrl || ''}`);
+        
+        actor.emotionPack['base'] = imageUrl || '';
+
+        // Now create the neutral expression from the base image
+        const neutralImageUrl = await stage.makeImageFromImage({
+            image: actor.emotionPack['base'],
+            prompt: `Give this character a neutral expression and pose. Maintain the original style.`,
             remove_background: true,
             transfer_type: 'edit'
         }, `actors/${actor.id}/neutral.png`, '');
-        console.log(`Generated neutral emotion image for actor ${actor.name} from avatar image: ${imageUrl || ''}`);
-        
-        actor.emotionPack['neutral'] = imageUrl || '';
+        console.log(`Generated neutral emotion image for actor ${actor.name}: ${neutralImageUrl || ''}`);
+        actor.emotionPack['neutral'] = neutralImageUrl || '';
     }
 }
 

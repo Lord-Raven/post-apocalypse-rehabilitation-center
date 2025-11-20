@@ -82,7 +82,7 @@ export const ActorCard: FC<ActorCardProps> = ({
         },
         style: {
             padding: '12px',
-            border: '2px solid rgba(0, 255, 136, 0.2)',
+            border: `2px solid ${actor.themeColor || '#00ff88'}`,
             borderRadius: '8px',
             background: 'rgba(0, 10, 20, 0.5)',
             cursor: isDragging ? 'grabbing' : (draggable ? 'grab' : (clickable ? 'pointer' : 'default')),
@@ -123,7 +123,7 @@ export const ActorCard: FC<ActorCardProps> = ({
                             flexShrink: 0,
                             borderRadius: '6px',
                             overflow: 'hidden',
-                            border: '2px solid #00ff88',
+                            border: `2px solid ${actor.themeColor || '#00ff88'}`,
                             backgroundImage: `url(${actor.emotionPack?.neutral || actor.avatarImageUrl})`,
                             backgroundSize: 'cover',
                             backgroundPosition: 'top center',

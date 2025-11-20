@@ -37,12 +37,13 @@ export function generateVignettePrompt(vignette: VignetteData, stage: Stage, con
                 `Continue the introduction of ${actor.name}, expanding on their personality or motivations.`;
         case VignetteType.VISIT_CHARACTER:
             return !continuing ?
-                `This scene depicts the player's visit with ${actor.name} in ${actor.name}'s quarters. Bear in mind that ${actor.name} is from another universe, and may be unaware of details of this one. ` +
+                `This scene depicts the player's visit with ${actor.name} in ${actor.name}'s quarters, which have been redecorated to match ${actor.name}'s style (${actor.style}). Bear in mind that ${actor.name} is from another universe, and may be unaware of details of this one. ` +
                     `Potentially explore ${actor.name}'s thoughts, feelings, or troubles in this intimate setting.` :
                 `Continue this scene with ${actor.name}, potentially exploring their thoughts, feelings, or troubles in this intimate setting.`;
         case VignetteType.RANDOM_ENCOUNTER:
             return !continuing ?
-                `This scene depicts a chance encounter in the ${module?.type || 'unknown'} module. Bear in mind that patients are from another universe, and may be unaware of details of this one. ` +
+                `This scene depicts a chance encounter in the ${module?.type || 'unknown'} module${module?.ownerId ? ` which has been redecorated to suit ${stage.getSave().actors[module.ownerId]?.name || 'its owner'}'s style (${stage.getSave().actors[module.ownerId]?.style})` : ''}. ` +
+                `Bear in mind that patients are from another universe, and may be unaware of details of this one. ` +
                     `Explore the setting and what might arise from this unexpected meeting.` :
                 `Continue this chance encounter in the ${module?.type || 'unknown'} module, exploring what might arise from this unexpected meeting.`;
         case VignetteType.ROLE_ASSIGNMENT:
@@ -53,7 +54,7 @@ export function generateVignettePrompt(vignette: VignetteData, stage: Stage, con
         case VignetteType.NEW_MODULE:
             return !continuing ?
                 `This scene depicts an exchange between the player and some of the patients regarding the opening of a new module, the ${module?.type || 'unknown'}. ` :
-                `Continue this scene, exploring the crew's thoughts or feelings toward the new module, the ${module?.type || 'unknown'}.`;
+                `Continue this scene, exploring the crew's thoughts or feelings toward this latest addition to the PARC.`;
         default:
             return '';
     }
