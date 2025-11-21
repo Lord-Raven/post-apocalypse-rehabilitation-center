@@ -777,7 +777,6 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType}) =>
                                                             );
                                                             return roleModules.length > 0 ? roleModules[0].getAttribute('role') : undefined;
                                                         })()}
-                                                        forceExpanded={true}
                                                         isDragging={draggedActor?.id === actor.id}
                                                         draggable={true}
                                                         onDragStart={(e: React.DragEvent) => {

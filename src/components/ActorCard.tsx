@@ -4,11 +4,17 @@ import Actor from '../actors/Actor';
 import Nameplate from './Nameplate';
 import AuthorLink from './AuthorLink';
 
+export enum ActorCardSection {
+    STATS = 'stats',
+    PORTRAIT = 'portrait',
+}
+
 interface ActorCardProps {
     actor: Actor;
     role?: string;
-    /** If true, the card is always expanded. If false, it can be toggled. */
-    forceExpanded?: boolean;
+    collapsedSections?: ActorCardSection[];
+    expandedSections?: ActorCardSection[];
+    layout?: 'horizontal' | 'vertical';
     /** Whether the card is currently expanded (only used when forceExpanded is false) */
     isExpanded?: boolean;
     /** Callback when the card is clicked (only used when forceExpanded is false) */
@@ -46,7 +52,9 @@ const STATS_LIST = [
 export const ActorCard: FC<ActorCardProps> = ({
     actor,
     role,
-    forceExpanded = false,
+    collapsedSections = [ActorCardSection.STATS, ActorCardSection.PORTRAIT],
+    expandedSections = [],
+    layout = 'horizontal',
     isExpanded = false,
     onClick,
     isDragging = false,
@@ -57,8 +65,8 @@ export const ActorCard: FC<ActorCardProps> = ({
     style,
     className
 }) => {
-    const expanded = forceExpanded || isExpanded;
-    const clickable = !forceExpanded && onClick;
+    const currentSections = (isExpanded && expandedSections?.length === 0) ? expandedSections : collapsedSections;
+    const clickable = !!onClick;
 
     // Default hover behavior
     const defaultWhileHover = {
@@ -97,26 +105,79 @@ export const ActorCard: FC<ActorCardProps> = ({
 
     return (
         <motion.div {...wrapperProps}>
-            {expanded && (
-                /* Nameplate at the top when expanded */
-                <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '8px' }}>
-                    <Nameplate 
-                        actor={actor} 
-                        size="small"
-                        role={role}
-                        layout="stacked"
-                    />
-                </div>
-            )}
+            {/* Nameplate at the top */}
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '8px' }}>
+                <Nameplate 
+                    actor={actor} 
+                    size="small"
+                    role={role}
+                    layout="stacked"
+                />
+            </div>
             
-            {/* Two-column layout when expanded, portrait only when collapsed */}
-            {expanded ? (
-                // Vertical layout: stats on left, portrait on right (default)
-                <div style={{ display: 'flex', gap: '12px', alignItems: 'stretch' }}>
-                    {/* Tall character portrait */}
+            {/* Columnar format. */}
+            {currentSections.map(section => {
+                if (section === ActorCardSection.STATS) {
+                    <div style={{ display: 'flex', gap: '12px', alignItems: 'stretch' }}>
+                        {/* Tall character portrait */}
+                        <div style={{ 
+                            flex: '1',
+                            minHeight: '100%',
+                            borderRadius: '6px',
+                            overflow: 'hidden',
+                            border: `2px solid ${actor.themeColor || '#00ff88'}`,
+                            backgroundImage: `url(${actor.emotionPack?.neutral || actor.avatarImageUrl})`,
+                            backgroundSize: 'cover',
+                            backgroundPosition: 'top center',
+                            backgroundRepeat: 'no-repeat',
+                            position: 'relative',
+                            display: 'flex',
+                            alignItems: 'flex-end',
+                            justifyContent: 'flex-end',
+                            padding: '8px'
+                        }}/>
+
+                        {/* Stats with letter grades. Each row here should be 1/8th of the container height. */}
+                        <div className="stat-list" style={{ 
+                            flex: '2', 
+                            background: 'rgba(0,0,0,0.8)', 
+                            borderRadius: '6px',
+                            padding: '8px 10px',
+                            overflow: 'hidden',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            justifyContent: 'flex-start'
+                        }}>
+                            {STATS_LIST.map(([label, key]) => {
+                                const grade = actor.scoreToGrade(actor.stats[key as keyof typeof actor.stats]);
+                                return (
+                                    <div className="stat-row" key={`${actor.id}_${label}`} style={{
+                                        height: '12.5%',
+                                        gap: '8px',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'space-between'
+                                    }}>
+                                        <span className="stat-label" style={{
+                                            fontSize: '10px',
+                                            letterSpacing: '0.5px',
+                                            flex: '1'
+                                        }}>{label}</span>
+                                        <span className="stat-grade" data-grade={grade} style={{
+                                            fontSize: '1.6rem',
+                                            textShadow: '3px 3px 0 rgba(0,0,0,0.88)',
+                                            transform: 'skewX(-8deg) rotate(-4deg)'
+                                        }}>{grade}</span>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    </div>
+                } else if (section === ActorCardSection.PORTRAIT) {
+                /* Collapsed state: Just the portrait with nameplate overlaid at bottom */
                     <div style={{ 
-                        flex: '1',
-                        minHeight: '100%',
+                        width: '100%',
+                        height: '100%',
                         borderRadius: '6px',
                         overflow: 'hidden',
                         border: `2px solid ${actor.themeColor || '#00ff88'}`,
@@ -127,79 +188,15 @@ export const ActorCard: FC<ActorCardProps> = ({
                         position: 'relative',
                         display: 'flex',
                         alignItems: 'flex-end',
-                        justifyContent: 'flex-end',
-                        padding: '8px'
-                    }}/>
-
-                    {/* Stats with letter grades. Each row here should be 1/9th of the container height. */}
-                    <div className="stat-list" style={{ 
-                        flex: '2', 
-                        background: 'rgba(0,0,0,0.8)', 
-                        borderRadius: '6px',
-                        padding: '8px 10px',
-                        overflow: 'hidden',
-                        display: 'flex',
-                        flexDirection: 'column',
-                        justifyContent: 'flex-start'
+                        justifyContent: 'center'
                     }}>
-                        {STATS_LIST.map(([label, key]) => {
-                            const grade = actor.scoreToGrade(actor.stats[key as keyof typeof actor.stats]);
-                            return (
-                                <div className="stat-row" key={`${actor.id}_${label}`} style={{
-                                    height: '11.11%',
-                                    gap: '8px',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    justifyContent: 'space-between'
-                                }}>
-                                    <span className="stat-label" style={{
-                                        fontSize: '10px',
-                                        letterSpacing: '0.5px',
-                                        flex: '1'
-                                    }}>{label}</span>
-                                    <span className="stat-grade" data-grade={grade} style={{
-                                        fontSize: '1.6rem',
-                                        textShadow: '3px 3px 0 rgba(0,0,0,0.88)',
-                                        transform: 'skewX(-8deg) rotate(-4deg)'
-                                    }}>{grade}</span>
-                                </div>
-                            );
-                        })}
-                        {/* Author link in bottom - takes final 1/9th */}
-                        <div style={{ height: '11.11%', display: 'flex', alignItems: 'center' }}>
-                            <AuthorLink actor={actor} />
-                        </div>
                     </div>
-                </div>
-            ) : (
-                /* Collapsed state: Just the portrait with nameplate overlaid at bottom */
-                <div style={{ 
-                    width: '100%',
-                    height: '100%',
-                    borderRadius: '6px',
-                    overflow: 'hidden',
-                    border: `2px solid ${actor.themeColor || '#00ff88'}`,
-                    backgroundImage: `url(${actor.emotionPack?.neutral || actor.avatarImageUrl})`,
-                    backgroundSize: 'cover',
-                    backgroundPosition: 'top center',
-                    backgroundRepeat: 'no-repeat',
-                    position: 'relative',
-                    display: 'flex',
-                    alignItems: 'flex-end',
-                    justifyContent: 'center'
-                }}>
-                    {/* Nameplate at bottom */}
-                    <div style={{ padding: '8px' }}>
-                        <Nameplate 
-                            actor={actor} 
-                            size="small"
-                            style={{
-                                transform: 'scale(0.8)'
-                            }}
-                        />
-                    </div>
-                </div>
-            )}
+                }
+            })}
+            {/* Author link in bottom */}
+            <div style={{ display: 'flex', alignItems: 'center' }}>
+                <AuthorLink actor={actor} />
+            </div>
         </motion.div>
     );
 };

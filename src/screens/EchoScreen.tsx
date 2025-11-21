@@ -8,7 +8,7 @@ import { Stage } from '../Stage';
 import { VignetteType } from '../Vignette';
 import Nameplate from '../components/Nameplate';
 import Actor, { generateActorDecor } from '../actors/Actor';
-import ActorCard from '../components/ActorCard';
+import ActorCard, { ActorCardSection } from '../components/ActorCard';
 import { BlurredBackground } from '../components/BlurredBackground';
 import AuthorLink from '../components/AuthorLink';
 import { RemoveButton } from '../components/RemoveButton';
@@ -207,8 +207,11 @@ export const EchoScreen: FC<EchoScreenProps> = ({stage, setScreenType}) => {
 							title="Remove from reserves"
 							variant="topRight"
 							size="small"
-						/>							<ActorCard
+						/>							
+						<ActorCard
 								actor={actor}
+								collapsedSections={[ActorCardSection.PORTRAIT]}
+								expandedSections={[ActorCardSection.PORTRAIT, ActorCardSection.STATS]}
 								isExpanded={isExpanded}
 								onClick={() => setExpandedCandidateId(isExpanded ? null : actor.id)}
 								draggable

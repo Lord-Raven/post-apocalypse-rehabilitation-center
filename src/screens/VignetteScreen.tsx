@@ -13,7 +13,7 @@ import StatChangeDisplay from './StatChangeDisplay';
 import Nameplate from '../components/Nameplate';
 import { BlurredBackground } from '../components/BlurredBackground';
 import { useTooltip } from '../contexts/TooltipContext';
-import ActorCard from '../components/ActorCard';
+import ActorCard, { ActorCardSection } from '../components/ActorCard';
 
 import {
     Box, 
@@ -471,7 +471,7 @@ export const VignetteScreen: FC<VignetteScreenProps> = ({ stage, setScreenType }
                             );
                             return roleModules.length > 0 ? roleModules[0].getAttribute('role') : undefined;
                         })()}
-                        forceExpanded={true}
+                        collapsedSections={[ActorCardSection.STATS]}
                     />
                 </div>
             )}
