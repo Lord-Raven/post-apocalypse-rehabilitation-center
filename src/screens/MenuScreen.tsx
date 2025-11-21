@@ -4,6 +4,9 @@ import { ScreenType } from './BaseScreen';
 import { Stage } from '../Stage';
 import { BlurredBackground } from '../components/BlurredBackground';
 import { GridOverlay, Title, Button } from '../components/UIComponents';
+import { SettingsScreen } from './SettingsScreen';
+import { useTooltip } from '../contexts/TooltipContext';
+import { Save } from '@mui/icons-material';
 
 /*
  * This screen represents both the start-up and in-game menu screen. It should present basic options: new game, load game, settings.
@@ -16,6 +19,9 @@ interface MenuScreenProps {
 
 export const MenuScreen: FC<MenuScreenProps> = ({ stage, setScreenType }) => {
     const [hoveredButton, setHoveredButton] = React.useState<string | null>(null);
+    const [showSettings, setShowSettings] = React.useState(false);
+    const [isNewGameSettings, setIsNewGameSettings] = React.useState(false);
+    const { setTooltip, clearTooltip } = useTooltip();
     
     // Check if a save exists (if there are any actors or the layout has been modified)
     const saveExists = () => {
@@ -29,10 +35,9 @@ export const MenuScreen: FC<MenuScreenProps> = ({ stage, setScreenType }) => {
     };
 
     const handleNewGame = () => {
-        // For now, just go to station - in the future this might reset the save
-        setScreenType(ScreenType.STATION);
-        stage().newGame();
-        stage().startGame();
+        // Show settings screen for new game setup
+        setIsNewGameSettings(true);
+        setShowSettings(true);
     };
 
     const handleLoad = () => {
@@ -40,9 +45,30 @@ export const MenuScreen: FC<MenuScreenProps> = ({ stage, setScreenType }) => {
         console.log('Load game clicked - functionality to be implemented');
     };
 
+    const handleSave = () => {
+        if (stage().initialized) {
+            // Display "Saving game..." message in the TooltipBar with 2 second expiry
+            setTooltip('Saving game...', Save, undefined, 2000);
+            console.log('Saving game.');
+            stage().saveGame();
+        }
+    };
+
     const handleSettings = () => {
-        // Placeholder for settings functionality
-        console.log('Settings clicked - functionality to be implemented');
+        // Show settings screen
+        setIsNewGameSettings(false);
+        setShowSettings(true);
+    };
+
+    const handleSettingsClose = () => {
+        setShowSettings(false);
+        
+        // If this was new game settings, start the game
+        if (isNewGameSettings) {
+            stage().newGame();
+            stage().startGame();
+            setScreenType(ScreenType.STATION);
+        }
     };
 
     const menuButtons = [
@@ -58,6 +84,12 @@ export const MenuScreen: FC<MenuScreenProps> = ({ stage, setScreenType }) => {
             onClick: handleNewGame,
             enabled: true 
         },
+        {
+            key: 'save',
+            label: 'Save Game',
+            onClick: handleSave,
+            enabled: stage().initialized
+        },
         { 
             key: 'load', 
             label: 'Load Game', 
@@ -68,7 +100,7 @@ export const MenuScreen: FC<MenuScreenProps> = ({ stage, setScreenType }) => {
             key: 'settings', 
             label: 'Settings', 
             onClick: handleSettings,
-            enabled: false // Disabled for now
+            enabled: true
         }
     ];
 
@@ -164,6 +196,15 @@ export const MenuScreen: FC<MenuScreenProps> = ({ stage, setScreenType }) => {
                 </motion.div>
             </motion.div>
             </div>
+
+            {/* Settings Modal */}
+            {showSettings && (
+                <SettingsScreen
+                    stage={stage}
+                    onClose={handleSettingsClose}
+                    isNewGame={isNewGameSettings}
+                />
+            )}
         </BlurredBackground>
     );
 };

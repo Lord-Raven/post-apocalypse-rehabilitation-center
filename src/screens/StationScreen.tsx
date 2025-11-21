@@ -8,7 +8,7 @@ import { Stage } from '../Stage';
 import ActorCard from '../components/ActorCard';
 import { PhaseIndicator as SharedPhaseIndicator, Title } from '../components/UIComponents';
 import { useTooltip } from '../contexts/TooltipContext';
-import { SwapHoriz, Home, Work } from '@mui/icons-material';
+import { SwapHoriz, Home, Work, Menu } from '@mui/icons-material';
 import { VignetteType } from '../Vignette';
 import { generateActorDecor } from '../actors/Actor';
 
@@ -618,6 +618,32 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType}) =>
                     overflow: 'hidden',
                 }}
             >
+                {/* Menu Button - Top Right */}
+                <motion.button
+                    whileHover={{ scale: 1.1, rotate: 90 }}
+                    whileTap={{ scale: 0.9 }}
+                    onClick={() => setScreenType(ScreenType.MENU)}
+                    style={{
+                        position: 'absolute',
+                        top: '20px',
+                        right: '20px',
+                        zIndex: 100,
+                        background: 'rgba(0, 20, 40, 0.9)',
+                        border: '3px solid #00ff88',
+                        borderRadius: '12px',
+                        padding: '12px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        cursor: 'pointer',
+                        color: '#00ff88',
+                        boxShadow: '0 0 20px rgba(0, 255, 136, 0.3)',
+                    }}
+                    onMouseEnter={() => setTooltip('Open Menu', Menu)}
+                    onMouseLeave={() => clearTooltip()}
+                >
+                    <Menu style={{ fontSize: '28px' }} />
+                </motion.button>
                 {/* Station modules (background grid moved onto this element so it moves with the centered content) */}
                 <div
                     className="station-modules"

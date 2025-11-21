@@ -52,6 +52,7 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
 
     emotionPipeline: any;
     imagePipeline: any;
+    initialized: boolean = false;
 
     constructor(data: InitialData<InitStateType, ChatStateType, MessageStateType, ConfigType>) {
 
@@ -166,6 +167,8 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
     }
 
     startGame() {
+        if (this.initialized) return;
+        this.initialized = true;
         // Called when a game is loaded or a new game is started
         console.log('Starting game...');
         if (this.reserveActors.length < this.RESERVE_ACTORS && !this.reserveActorsLoadPromise) {
