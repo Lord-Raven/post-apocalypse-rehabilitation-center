@@ -131,7 +131,7 @@ export const ActorCard: FC<ActorCardProps> = ({
                         padding: '8px'
                     }}/>
 
-                    {/* Stats with letter grades */}
+                    {/* Stats with letter grades. Each row here should be 1/9th of the container height. */}
                     <div className="stat-list" style={{ 
                         flex: '2', 
                         background: 'rgba(0,0,0,0.8)', 
@@ -140,13 +140,13 @@ export const ActorCard: FC<ActorCardProps> = ({
                         overflow: 'hidden',
                         display: 'flex',
                         flexDirection: 'column',
-                        justifyContent: 'space-around'
+                        justifyContent: 'flex-start'
                     }}>
                         {STATS_LIST.map(([label, key]) => {
                             const grade = actor.scoreToGrade(actor.stats[key as keyof typeof actor.stats]);
                             return (
                                 <div className="stat-row" key={`${actor.id}_${label}`} style={{
-                                    padding: '3px 0px',
+                                    height: '11.11%',
                                     gap: '8px',
                                     display: 'flex',
                                     alignItems: 'center',
@@ -165,8 +165,10 @@ export const ActorCard: FC<ActorCardProps> = ({
                                 </div>
                             );
                         })}
-                        {/* Author link in bottom */}
-                        <AuthorLink actor={actor} />
+                        {/* Author link in bottom - takes final 1/9th */}
+                        <div style={{ height: '11.11%', display: 'flex', alignItems: 'center' }}>
+                            <AuthorLink actor={actor} />
+                        </div>
                     </div>
                 </div>
             ) : (

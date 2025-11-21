@@ -26,7 +26,12 @@ interface BaseScreenProps {
 const BaseScreenContent: FC<{ stage: () => Stage }> = ({ stage }) => {
     const [errorMessage, setErrorMessage] = React.useState<string | null>(null);
     const [screenType, setScreenType] = React.useState<ScreenType>(ScreenType.MENU);
-    const { message, icon, actionCost } = useTooltip();
+    const { message, icon, actionCost, clearTooltip } = useTooltip();
+
+    // Clear tooltip whenever screen type changes
+    React.useEffect(() => {
+        clearTooltip();
+    }, [screenType, clearTooltip]);
 
     return (
         <div style={{ position: 'relative', width: '100vw', height: '100vh' }}>
