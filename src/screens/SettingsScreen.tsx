@@ -37,11 +37,12 @@ export const SettingsScreen: FC<SettingsScreenProps> = ({ stage, onClose, isNewG
         'Robot': ['Robot', 'Android', 'Cyborg'],
         'Elf': ['Elf', 'Elven', 'Dark Elf'],
         'Monster': ['Monster', 'Beast', 'Creature', 'Monstergirl'],
-        'Historical': ['Historical', 'History'],
         'Anime': ['Anime', 'Manga', 'Cartoon'],
         'Movies & TV': ['Movies & TV', 'Film', 'Television', 'Series'],
         'Game Character': ['Game Character', 'Video Game', 'games', 'game', 'videogames'],
         'Original Character': ['Original Character', 'OC', 'Original'],
+        'Historical': ['Historical', 'History'],
+        'Celebrity': ['Celebrity', 'Famous'],
         'Tsundere': ['Tsundere'],
         'Yandere': ['Yandere'],
         'Virgin': ['Virgin'],
@@ -80,7 +81,8 @@ export const SettingsScreen: FC<SettingsScreenProps> = ({ stage, onClose, isNewG
         aideDescription: stage().getSave().aide?.description || 
             (`Your holographic aide is acutely familiar with the technical details of your Post-Apocalypse Rehabilitation Center, so you don't have to be! ` +
             `Your StationAide™ comes pre-programmed with a friendly and non-condescending demeanor that will leave you feeling empowered and never patronized; ` +
-            `your bespoke projection comes with an industry-leading feminine form in a pleasing shade of default blue, but, as always, StationAide™ remains infinitely customizable to suit your tastes.`),
+            `your bespoke projection comes with an industry-leading feminine form in a pleasing shade of default blue, but, as always, StationAide™ remains infinitely customizable to suit your tastes.\n\n` +
+            `StationAide™. "When life hands you space stations..."`),
         // Tag toggles; disabling these can be used to filter undesired content. Load from save array, if one. Otherwise, default to true.
         tagToggles: stage().getSave().bannedTags ? Object.fromEntries(
             Object.keys(tagMap).map(key => [
@@ -254,7 +256,7 @@ export const SettingsScreen: FC<SettingsScreenProps> = ({ stage, onClose, isNewG
                                 />
                             </div>
 
-                            {/* HoloAide™ Name */}
+                            {/* StationAide™ Name */}
                             <div>
                                 <label 
                                     htmlFor="aide-name"
@@ -266,19 +268,19 @@ export const SettingsScreen: FC<SettingsScreenProps> = ({ stage, onClose, isNewG
                                         marginBottom: '8px',
                                     }}
                                 >
-                                    HoloAide™ Name (Unused as yet)
+                                    StationAide™ Name (Unused as yet)
                                 </label>
                                 <TextInput
                                     id="aide-name"
                                     fullWidth
                                     value={settings.aideName}
                                     onChange={(e) => handleInputChange('aideName', e.target.value)}
-                                    placeholder="Enter HoloAide™ name"
+                                    placeholder="Enter StationAide™ name"
                                     style={{ fontSize: '16px' }}
                                 />
                             </div>
 
-                            {/* HoloAide™ Description */}
+                            {/* StationAide™ Description */}
                             <div>
                                 <label 
                                     htmlFor="aide-description"
@@ -290,14 +292,14 @@ export const SettingsScreen: FC<SettingsScreenProps> = ({ stage, onClose, isNewG
                                         marginBottom: '8px',
                                     }}
                                 >
-                                    HoloAide™ Description
+                                    StationAide™ Description
                                 </label>
                                 <textarea
                                     id="aide-description"
                                     className="text-input-primary"
                                     value={settings.aideDescription}
                                     onChange={(e) => handleInputChange('aideDescription', e.target.value)}
-                                    placeholder="Describe your HoloAide™..."
+                                    placeholder="Describe your StationAide™..."
                                     rows={4}
                                     style={{
                                         width: '100%',
