@@ -6,7 +6,7 @@ import { BlurredBackground } from '../components/BlurredBackground';
 import { GridOverlay, Title, Button } from '../components/UIComponents';
 import { SettingsScreen } from './SettingsScreen';
 import { useTooltip } from '../contexts/TooltipContext';
-import { Save } from '@mui/icons-material';
+import { Save, PlayArrow, FiberNew, Folder, Settings } from '@mui/icons-material';
 
 /*
  * This screen represents both the start-up and in-game menu screen. It should present basic options: new game, load game, settings.
@@ -76,31 +76,41 @@ export const MenuScreen: FC<MenuScreenProps> = ({ stage, setScreenType }) => {
             key: 'continue', 
             label: 'Continue', 
             onClick: handleContinue,
-            enabled: true 
+            enabled: true,
+            tooltip: 'Resume your current game',
+            icon: PlayArrow
         }] : []),
         { 
             key: 'new', 
             label: 'New Game', 
             onClick: handleNewGame,
-            enabled: true 
+            enabled: true,
+            tooltip: 'Start a fresh playthrough',
+            icon: FiberNew
         },
         {
             key: 'save',
             label: 'Save Game',
             onClick: handleSave,
-            enabled: stage().initialized
+            enabled: stage().initialized,
+            tooltip: 'Save your current progress',
+            icon: Save
         },
         { 
             key: 'load', 
             label: 'Load Game', 
             onClick: handleLoad,
-            enabled: false // Disabled for now
+            enabled: false, // Disabled for now
+            tooltip: 'Load a previously saved game (coming soon)',
+            icon: Folder
         },
         { 
             key: 'settings', 
             label: 'Settings', 
             onClick: handleSettings,
-            enabled: true
+            enabled: true,
+            tooltip: 'Adjust game settings and preferences',
+            icon: Settings
         }
     ];
 
@@ -162,8 +172,14 @@ export const MenuScreen: FC<MenuScreenProps> = ({ stage, setScreenType }) => {
                         >
                             <Button
                                 variant="menu"
-                                onMouseEnter={() => setHoveredButton(button.enabled ? button.key : null)}
-                                onMouseLeave={() => setHoveredButton(null)}
+                                onMouseEnter={() => {
+                                    setHoveredButton(button.enabled ? button.key : null);
+                                    setTooltip(button.tooltip, button.icon);
+                                }}
+                                onMouseLeave={() => {
+                                    setHoveredButton(null);
+                                    clearTooltip();
+                                }}
                                 whileTap={{ scale: button.enabled ? 0.95 : 1 }}
                                 onClick={button.enabled ? button.onClick : undefined}
                                 disabled={!button.enabled}

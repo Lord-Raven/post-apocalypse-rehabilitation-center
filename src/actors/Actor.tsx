@@ -1,5 +1,5 @@
 import { Emotion, EMOTION_PROMPTS, EmotionPack } from "../Emotion";
-import { Module, ModuleType } from "../Module";
+import { Module } from "../Module";
 import { Stage } from "../Stage";
 import { v4 as generateUuid } from 'uuid';
 

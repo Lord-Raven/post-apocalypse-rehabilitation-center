@@ -213,7 +213,6 @@ export const EchoScreen: FC<EchoScreenProps> = ({stage, setScreenType}) => {
 								onClick={() => setExpandedCandidateId(isExpanded ? null : actor.id)}
 								draggable
 								onDragStart={(e) => handleDragStart(e, actor, 'reserve')}
-							layout="horizontal"
 							style={{
 								height: '20vh',
 								border: `3px solid ${actor.themeColor || '#00ff88'}`,
