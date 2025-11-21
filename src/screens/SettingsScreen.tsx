@@ -13,89 +13,81 @@ interface SettingsScreenProps {
 interface SettingsData {
     playerName: string;
     playerDescription: string;
-    assistantName: string;
-    assistantDescription: string;
+    aideName: string;
+    aideDescription: string;
     tagToggles: { [key: string]: boolean };
 }
 
 export const SettingsScreen: FC<SettingsScreenProps> = ({ stage, onClose, isNewGame = false }) => {
-    // Load existing settings or use defaults
-    const [settings, setSettings] = useState<SettingsData>({
-        playerName: stage().getSave().player?.name || '',
-        playerDescription: '',
-        assistantName: 'Assistant',
-        assistantDescription: 'Your helpful companion in the Post-Apocalypse Rehabilitation Center.',
-        // Tag toggles; disabling these can be used to filter undesired content
-        tagToggles: {
-            'NSFW': true,
-            'Male': true,
-            'Female': true,
-            'Transgender': true,
-            'Futanari': true,
-            'Bisexual': true,
-            'Gay': true,
-            'Lesbian': true,
-            'Asexual': true,
-            'Human': true,
-            'Non-Human': true,
-            'Anthro': true,
-            'Robot': true,
-            'Elf': true,
-            'Monster': true,
-            'Historical': true,
-            'Anime': true,
-            'Game Character': true,
-            'Movies & TV': true,
-            'Original Character': true,
-            'Tsundere': true,
-            'Yandere': true,
-            'Virgin': true,
-            'Submissive': true,
-            'Dominant': true,
-            'Sadistic': true,
-            'Masochistic': true,
-            'BDSM': true,
-            'Villain': true,
-            'Tomboy': true,
-            'Femboy': true,
-            'MILF': true,
-            'Goth': true,
-            'Big Breasts': true,
-            'Big Butt': true,
-            'Big Dick': true,
-            'Small Breasts': true,
-            'Small Butt': true,
-            'Small Dick': true,
-            'Petite': true,
-            'Chubby': true,
-            'Muscular': true,
-            'Giant': true,
-            'Size Difference': true,
-            'Fantasy': true,
-            'Sci-Fi': true,
-            'Romance': true,
-            'Comedy': true,
-            'Horror': true,
-            'NTR': true,
-        }
-    });
 
     // Each toggle can map to multiple tags when saved.
     const tagMap: { [key: string]: string[] } = {
         'NSFW': ['NSFW', 'Explicit'],
         'Male': ['Male', 'Boy', 'Man'],
         'Female': ['Female', 'Girl', 'Woman'],
-        'NTR': ['NTR', 'Cuckold', 'Cheating', 'Infidelity', 'Affair', 'Netori', 'Netorare'],
+        'Transgender': ['Trans', 'Transgender'],
+        'Futanari': ['Futanari', 'Futa'],
+        'Bisexual': ['Bisexual', 'Bi'],
+        'Gay': ['Gay'],
+        'Lesbian': ['Lesbian'],
+        'Asexual': ['Asexual', 'Ace'],
+        'Human': ['Human'],
+        'Non-Human': ['Non-Human'],
+        'Anthro': ['Anthro', 'Furry'],
+        'Robot': ['Robot', 'Android', 'Cyborg'],
+        'Elf': ['Elf', 'Elven', 'Dark Elf'],
+        'Monster': ['Monster', 'Beast', 'Creature', 'Monstergirl'],
+        'Historical': ['Historical', 'History'],
+        'Anime': ['Anime', 'Manga', 'Cartoon'],
+        'Movies & TV': ['Movies & TV', 'Film', 'Television', 'Series'],
         'Game Character': ['Game Character', 'Video Game', 'games', 'game', 'videogames'],
-        'Original Character': ['Original Character', 'OC', 'original'],
+        'Original Character': ['Original Character', 'OC', 'Original'],
+        'Tsundere': ['Tsundere'],
+        'Yandere': ['Yandere'],
+        'Virgin': ['Virgin'],
+        'Submissive': ['Submissive', 'Sub'],
+        'Dominant': ['Dominant', 'Dom'],
+        'Sadistic': ['Sadistic', 'Sadism'],
+        'Masochistic': ['Masochistic', 'Masochism'],
+        'BDSM': ['BDSM', 'Bondage', 'Discipline'],
+        'Tomboy': ['Tomboy'],
+        'Femboy': ['Femboy'],
+        'Goth': ['Goth'],
         'MILF': ['MILF', 'mother', 'mom', 'mommy'],
+        'Big Breasts': ['Big Breasts', 'Large Breasts', 'Big Boobs', 'Large Boobs', 'Huge Boobs', 'Huge Breasts'],
+        'Big Butt': ['Big Butt', 'Large Butt', 'Big Ass', 'Huge Butt'],
+        'Big Dick': ['Big Dick', 'Huge Dick', 'Large Dick', 'Big Cock', 'Huge Cock', 'Large Cock'],
+        'Small Breasts': ['Small Breasts', 'Flat'],
+        'Small Butt': ['Small Butt'],
+        'Small Dick': ['Small Dick'],
+        'Petite': ['Petite'],
+        'Chubby': ['Chubby'],
         'Muscular': ['Muscular'],
+        'Giant': ['Giant', 'Giantess'],
+        'Size Difference': ['Size Difference'],
         'Fantasy': ['Fantasy'],
         'Sci-Fi': ['Sci-Fi', 'Science Fiction'],
         'Romance': ['Romance', 'Love', 'Drama'],
         'Villain': ['Villain', 'Evil'],
-
+        'NTR': ['NTR', 'Cuckold', 'Cheating', 'Infidelity', 'Affair', 'Netori', 'Netorare'],
     }
+
+    // Load existing settings or use defaults
+    const [settings, setSettings] = useState<SettingsData>({
+        playerName: stage().getSave().player?.name || '',
+        playerDescription: '',
+        aideName: stage().getSave().aide?.name || 'StationAide™',
+        aideDescription: stage().getSave().aide?.description || 
+            (`Your holographic aide is acutely familiar with the technical details of your Post-Apocalypse Rehabilitation Center, so you don't have to be! ` +
+            `Your StationAide™ comes pre-programmed with a friendly and non-condescending demeanor that will leave you feeling empowered and never patronized; ` +
+            `your bespoke projection comes with an industry-leading feminine form in a pleasing shade of default blue, but, as always, StationAide™ remains infinitely customizable to suit your tastes.`),
+        // Tag toggles; disabling these can be used to filter undesired content. Load from save array, if one. Otherwise, default to true.
+        tagToggles: stage().getSave().bannedTags ? Object.fromEntries(
+            Object.keys(tagMap).map(key => [
+                key, !stage().getSave().bannedTags?.some(bannedTag => tagMap[key].includes(bannedTag))
+            ])
+        ) : Object.keys(tagMap).reduce((acc, key) => ({...acc, [key]: true}), {})
+    });
 
     const handleSave = () => {
         // TODO: Actually save settings to Stage/Save
@@ -263,10 +255,10 @@ export const SettingsScreen: FC<SettingsScreenProps> = ({ stage, onClose, isNewG
                                 />
                             </div>
 
-                            {/* Assistant Name */}
+                            {/* HoloAide™ Name */}
                             <div>
                                 <label 
-                                    htmlFor="assistant-name"
+                                    htmlFor="aide-name"
                                     style={{
                                         display: 'block',
                                         color: '#00ff88',
@@ -275,22 +267,22 @@ export const SettingsScreen: FC<SettingsScreenProps> = ({ stage, onClose, isNewG
                                         marginBottom: '8px',
                                     }}
                                 >
-                                    Assistant Name (Unused as yet)
+                                    HoloAide™ Name (Unused as yet)
                                 </label>
                                 <TextInput
-                                    id="assistant-name"
+                                    id="aide-name"
                                     fullWidth
-                                    value={settings.assistantName}
-                                    onChange={(e) => handleInputChange('assistantName', e.target.value)}
-                                    placeholder="Enter assistant name"
+                                    value={settings.aideName}
+                                    onChange={(e) => handleInputChange('aideName', e.target.value)}
+                                    placeholder="Enter HoloAide™ name"
                                     style={{ fontSize: '16px' }}
                                 />
                             </div>
 
-                            {/* Assistant Description */}
+                            {/* HoloAide™ Description */}
                             <div>
                                 <label 
-                                    htmlFor="assistant-description"
+                                    htmlFor="aide-description"
                                     style={{
                                         display: 'block',
                                         color: '#00ff88',
@@ -299,14 +291,14 @@ export const SettingsScreen: FC<SettingsScreenProps> = ({ stage, onClose, isNewG
                                         marginBottom: '8px',
                                     }}
                                 >
-                                    Assistant Description
+                                    HoloAide™ Description
                                 </label>
                                 <textarea
-                                    id="assistant-description"
+                                    id="aide-description"
                                     className="text-input-primary"
-                                    value={settings.assistantDescription}
-                                    onChange={(e) => handleInputChange('assistantDescription', e.target.value)}
-                                    placeholder="Describe your assistant..."
+                                    value={settings.aideDescription}
+                                    onChange={(e) => handleInputChange('aideDescription', e.target.value)}
+                                    placeholder="Describe your HoloAide™..."
                                     rows={4}
                                     style={{
                                         width: '100%',

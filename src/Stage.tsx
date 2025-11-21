@@ -17,7 +17,8 @@ type ChatStateType = {
 }
 
 type SaveType = {
-    player: {name: string};
+    player: {name: string, description: string};
+    aide: {name: string, description: string};
     echoes: (Actor | null)[]; // actors currently in echo slots (can be null for empty slots)
     actors: {[key: string]: Actor};
     bannedTags?: string[];
@@ -91,7 +92,13 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
         layout.setModuleAt(DEFAULT_GRID_SIZE/2, DEFAULT_GRID_SIZE/2, createModule('echo chamber', { id: `echo-${DEFAULT_GRID_SIZE/2}-${DEFAULT_GRID_SIZE/2}`, connections: [], attributes: {} }));
         layout.setModuleAt(DEFAULT_GRID_SIZE/2 - 1, DEFAULT_GRID_SIZE/2, createModule("commons", { id: `common-${DEFAULT_GRID_SIZE/2 - 1}-${DEFAULT_GRID_SIZE/2}`, connections: [], attributes: {} }));
         layout.setModuleAt(DEFAULT_GRID_SIZE/2, DEFAULT_GRID_SIZE/2 - 1, createModule("generator", { id: `generator-${DEFAULT_GRID_SIZE/2}-${DEFAULT_GRID_SIZE/2 - 1}`, connections: [], attributes: {} }));
-        this.freshSave = { player: {name: Object.values(users)[0].name}, echoes: [], actors: {}, layout: layout, day: 1, phase: 0, currentVignette: undefined };
+        this.freshSave = { player: {name: Object.values(users)[0].name, description: ''}, 
+            aide: {
+                name: 'StationAide™', 
+                description: `Your holographic assistant is acutely familiar with the technical details of your Post-Apocalypse Rehabilitation Center, so you don't have to be! ` +
+                `Your StationAide™ comes pre-programmed with a friendly and non-condescending demeanor that will leave you feeling empowered and never patronized; ` +
+                `your bespoke projection comes with an industry-leading feminine form in a pleasing shade of default blue, but, as always, StationAide™ remains infinitely customizable to suit your tastes.`}, 
+            echoes: [], actors: {}, layout: layout, day: 1, phase: 0, currentVignette: undefined };
 
         // ensure at least one save exists and has a layout
         if (!this.saves.length) {
