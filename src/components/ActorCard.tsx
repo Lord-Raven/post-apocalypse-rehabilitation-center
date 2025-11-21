@@ -135,7 +135,7 @@ export const ActorCard: FC<ActorCardProps> = ({
                                                 flex: '1'
                                             }}>{stat}</span>
                                             <span className="stat-grade" data-grade={grade} style={{
-                                                fontSize: '100%',
+                                                fontSize: '120%',
                                                 textShadow: '3px 3px 0 rgba(0,0,0,0.88)',
                                                 transform: 'skewX(-8deg) rotate(-4deg)'
                                             }}>{grade}</span>
