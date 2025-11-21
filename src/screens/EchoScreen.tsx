@@ -248,7 +248,7 @@ export const EchoScreen: FC<EchoScreenProps> = ({stage, setScreenType}) => {
 								onDrop={(e) => handleDropOnEchoSlot(e, slotIndex)}
 								onDragOver={handleDragOver}
 								whileHover={{ 
-									scale: actor ? (isSelected ? 1.05 : 1.02) : 1,
+									scale: actor ? (isSelected ? 1.15 : 1.05) : 1,
 									filter: 'brightness(1.1)'
 								}}
 								whileTap={{ scale: actor ? 0.98 : 1 }}
@@ -269,6 +269,7 @@ export const EchoScreen: FC<EchoScreenProps> = ({stage, setScreenType}) => {
 									alignItems: actor ? 'stretch' : 'center',
 									borderRadius: 12,
 									overflow: 'hidden',
+									scale: actor ? (isSelected ? 1.1 : 1) : 1,
 									background: actor 
 										? `linear-gradient(
 												135deg, 

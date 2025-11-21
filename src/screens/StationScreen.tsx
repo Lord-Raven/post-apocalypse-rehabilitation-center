@@ -242,6 +242,18 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType}) =>
         setLayout(stage().getLayout());
     }, [stage().getLayout()]);
 
+    // Handle Escape key to open menu
+    React.useEffect(() => {
+        const handleKeyDown = (e: KeyboardEvent) => {
+            if (e.key === 'Escape') {
+                setScreenType(ScreenType.MENU);
+            }
+        };
+
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, [setScreenType]);
+
     const renderDayPhaseDisplay = () => {
         return (
             <motion.div
