@@ -7,7 +7,7 @@ import { ScreenType } from './BaseScreen';
 import { Stage } from '../Stage';
 import { VignetteType } from '../Vignette';
 import Nameplate from '../components/Nameplate';
-import Actor, { generateActorDecor } from '../actors/Actor';
+import Actor, { generateActorDecor, Stat } from '../actors/Actor';
 import ActorCard, { ActorCardSection } from '../components/ActorCard';
 import { BlurredBackground } from '../components/BlurredBackground';
 import AuthorLink from '../components/AuthorLink';
@@ -259,6 +259,9 @@ export const EchoScreen: FC<EchoScreenProps> = ({stage, setScreenType}) => {
 								}}
 								className={`echo-slot ${actor && !actor.isPrimaryImageReady ? 'loading-echo-slot' : ''}`}
 								style={{
+									...((actor && !actor.isPrimaryImageReady && actor.themeColor) && {
+										'--shimmer-color': actor.themeColor
+									} as React.CSSProperties),
 									animationDelay: `${slotIndex * 0.7}s`,
 									cursor: actor ? 'pointer' : 'default',
 									height: '65vh',
@@ -323,7 +326,7 @@ export const EchoScreen: FC<EchoScreenProps> = ({stage, setScreenType}) => {
 									/>
 									{/* Stats */}
 									<div className="stat-list" style={{ padding: '8px 12px', background: 'rgba(0,0,0,0.8)', flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'space-evenly' }}>
-										{Object.keys(actor.stats).map((key) => {
+										{Object.keys(Stat).map((key) => {
 											const grade = actor.scoreToGrade(actor.stats[key as keyof typeof actor.stats]);
 											return (
 												<div className="stat-row" key={`${actor.id}_${key}`}>

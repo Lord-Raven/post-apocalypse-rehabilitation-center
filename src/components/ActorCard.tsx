@@ -1,6 +1,6 @@
 import React, { FC } from 'react';
 import { motion } from 'framer-motion';
-import Actor from '../actors/Actor';
+import Actor, { Stat } from '../actors/Actor';
 import Nameplate from './Nameplate';
 import AuthorLink from './AuthorLink';
 
@@ -33,17 +33,6 @@ interface ActorCardProps {
     /** Additional class name */
     className?: string;
 }
-
-const STATS_LIST = [
-    ['Brawn', 'brawn'],
-    ['Wits', 'wits'],
-    ['Nerve', 'nerve'],
-    ['Skill', 'skill'],
-    ['Charm', 'charm'],
-    ['Lust', 'lust'],
-    ['Joy', 'joy'],
-    ['Trust', 'trust'],
-] as const;
 
 /**
  * Reusable actor card component that displays actor information.
@@ -131,23 +120,23 @@ export const ActorCard: FC<ActorCardProps> = ({
                                 flexDirection: 'column',
                                 justifyContent: 'flex-start'
                             }}>
-                                {STATS_LIST.map(([label, key]) => {
-                                    const grade = actor.scoreToGrade(actor.stats[key as keyof typeof actor.stats]);
+                                {Object.values(Stat).map((stat) => {
+                                    const grade = actor.scoreToGrade(actor.stats[stat]);
                                     return (
-                                        <div className="stat-row" key={`${actor.id}_${label}`} style={{
-                                            height: '12.5%',
-                                            gap: '8px',
+                                        <div className="stat-row" key={`${actor.id}_${stat}`} style={{
+                                            height: '12%',
+                                            marginBottom: '0.5%',
                                             display: 'flex',
                                             alignItems: 'center',
                                             justifyContent: 'space-between'
                                         }}>
                                             <span className="stat-label" style={{
-                                                fontSize: '10px',
-                                                letterSpacing: '0.5px',
+                                                fontSize: '1.4rem',
+                                                textShadow: '2px 2px 0 rgba(0,0,0,0.88)',
                                                 flex: '1'
-                                            }}>{label}</span>
+                                            }}>{stat}</span>
                                             <span className="stat-grade" data-grade={grade} style={{
-                                                fontSize: '1.6rem',
+                                                fontSize: '1.8rem',
                                                 textShadow: '3px 3px 0 rgba(0,0,0,0.88)',
                                                 transform: 'skewX(-8deg) rotate(-4deg)'
                                             }}>{grade}</span>
