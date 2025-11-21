@@ -219,7 +219,7 @@ export const SettingsScreen: FC<SettingsScreenProps> = ({ stage, onClose, isNewG
                                         marginBottom: '8px',
                                     }}
                                 >
-                                    Assistant Name
+                                    Assistant Name (Unused as yet)
                                 </label>
                                 <TextInput
                                     id="assistant-name"

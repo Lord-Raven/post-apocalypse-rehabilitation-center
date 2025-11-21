@@ -218,8 +218,7 @@ export const EchoScreen: FC<EchoScreenProps> = ({stage, setScreenType}) => {
 								onDragStart={(e) => handleDragStart(e, actor, 'reserve')}
 							style={{
 								height: '20vh',
-								border: `3px solid ${actor.themeColor || '#00ff88'}`,
-									boxShadow: `0 6px 18px rgba(0,0,0,0.4), 0 0 20px ${actor.themeColor ? actor.themeColor + '66' : 'rgba(0, 255, 136, 0.4)'}`,
+								boxShadow: `0 6px 18px rgba(0,0,0,0.4), 0 0 20px ${actor.themeColor ? actor.themeColor + '66' : 'rgba(0, 255, 136, 0.4)'}`,
 								padding: '8px',
 								overflow: 'hidden'
 							}}

@@ -66,6 +66,7 @@ export const ActorCard: FC<ActorCardProps> = ({
     className
 }) => {
     const currentSections = (isExpanded && expandedSections?.length > 0) ? expandedSections : collapsedSections;
+    console.log("ActorCard rendering. isExpanded:", isExpanded, "currentSections:", currentSections);
     const clickable = !!onClick;
 
     // Default hover behavior
@@ -87,7 +88,7 @@ export const ActorCard: FC<ActorCardProps> = ({
         },
         style: {
             padding: '12px',
-            border: `2px solid #00ff88`,
+            border: `3px solid #00ff88`,
             borderRadius: '8px',
             background: 'rgba(0, 10, 20, 0.5)',
             cursor: isDragging ? 'grabbing' : (draggable ? 'grab' : (clickable ? 'pointer' : 'default')),
@@ -115,9 +116,10 @@ export const ActorCard: FC<ActorCardProps> = ({
                 />
             </div>
             
-            {/* Columnar format. */}
+            {/* One section per column format. */}
             {currentSections.map(section => {
                 if (section === ActorCardSection.STATS) {
+                    console.log("Displaying stats for actor:", actor.name);
                     return <div style={{ display: 'flex', gap: '12px', alignItems: 'stretch' }}>
                         {/* Tall character portrait */}
                         <div style={{ 

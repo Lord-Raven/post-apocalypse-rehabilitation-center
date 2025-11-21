@@ -34,7 +34,7 @@ export const TooltipBar: FC<TooltipBarProps> = ({ message, Icon, visible = true,
                 >
                     <Box
                         sx={{
-                            display: 'flex',
+                            display: 'inline-flex',
                             alignItems: 'center',
                             gap: '12px',
                             padding: '16px 24px',
@@ -43,8 +43,7 @@ export const TooltipBar: FC<TooltipBarProps> = ({ message, Icon, visible = true,
                             borderRadius: '12px',
                             boxShadow: '0 8px 32px rgba(0, 255, 136, 0.3), 0 0 20px rgba(0, 255, 136, 0.2)',
                             backdropFilter: 'blur(10px)',
-                            maxWidth: '600px',
-                            minWidth: 'fit-content',
+                            maxWidth: '50vw',
                         }}
                     >
                         {Icon && (
