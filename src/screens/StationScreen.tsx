@@ -620,9 +620,9 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType}) =>
             >
                 {/* Menu Button - Top Right */}
                 <motion.button
-                    whileHover={{ scale: 1.1, rotate: 90 }}
+                    whileHover={{ scale: 1.2 }}
                     whileTap={{ scale: 0.9 }}
-                    onClick={() => setScreenType(ScreenType.MENU)}
+                    onClick={() => {clearTooltip(); setScreenType(ScreenType.MENU)}}
                     style={{
                         position: 'absolute',
                         top: '20px',
