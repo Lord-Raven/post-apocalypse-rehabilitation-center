@@ -108,10 +108,8 @@ export const ActorCard: FC<ActorCardProps> = ({
             <div style={{ display: 'flex', flexDirection: 'row', minHeight: '200px' }}>
                 {currentSections.map(section => {
                     if (section === ActorCardSection.STATS) {
-                        return <div key="stats" style={{ display: 'flex', gap: '12px', alignItems: 'stretch', flex: 1 }}>
-                            {/* Stats with letter grades. Each row here should be 1/8th of the container height. */}
-                            <div className="stat-list" style={{ 
-                                flex: '2', 
+                        return <div className="stat-list" style={{ 
+                                flex: '1', 
                                 background: 'rgba(0,0,0,0.8)', 
                                 borderRadius: '6px',
                                 padding: '8px 10px',
@@ -120,10 +118,12 @@ export const ActorCard: FC<ActorCardProps> = ({
                                 flexDirection: 'column',
                                 justifyContent: 'flex-start'
                             }}>
+                                {/* Stats with letter grades. Each row here should be 1/8th of the container height. */}
                                 {Object.values(Stat).map((stat) => {
                                     const grade = actor.scoreToGrade(actor.stats[stat]);
                                     return (
                                         <div className="stat-row" key={`${actor.id}_${stat}`} style={{
+                                            height: '12.5%',
                                             maxHeight: '12.5%',
                                             display: 'flex',
                                             alignItems: 'center',
@@ -143,7 +143,6 @@ export const ActorCard: FC<ActorCardProps> = ({
                                     );
                                 })}
                             </div>
-                        </div>
                     } else if (section === ActorCardSection.PORTRAIT) {
                         return <div key="portrait" style={{ 
                             width: '100%',
