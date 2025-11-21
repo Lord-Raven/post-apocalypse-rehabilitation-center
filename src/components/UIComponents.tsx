@@ -137,7 +137,8 @@ export const PhaseIndicator: FC<PhaseIndicatorProps> = ({ currentPhase, totalPha
 		<div className="phase-indicator">
 			{Array.from({ length: totalPhases }).map((_, index) => {
 				const isSpent = index < currentPhase;
-				const HourglassIcon = isSpent ? HourglassBottom : HourglassTop;
+				// Strangely, HourglassTop looks like the sand is in the bottom and HourglassBottom looks like the sand is in the top (if the sand is the negative space)
+				const HourglassIcon = isSpent ? HourglassTop : HourglassBottom;
 				
 				return (
 					<motion.div

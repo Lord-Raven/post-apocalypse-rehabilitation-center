@@ -66,7 +66,6 @@ export const ActorCard: FC<ActorCardProps> = ({
     className
 }) => {
     const currentSections = (isExpanded && expandedSections?.length === 0) ? expandedSections : collapsedSections;
-    console.log('Current sections for ActorCard:', currentSections);
     const clickable = !!onClick;
 
     // Default hover behavior
@@ -119,7 +118,7 @@ export const ActorCard: FC<ActorCardProps> = ({
             {/* Columnar format. */}
             {currentSections.map(section => {
                 if (section === ActorCardSection.STATS) {
-                    <div style={{ display: 'flex', gap: '12px', alignItems: 'stretch' }}>
+                    return <div style={{ display: 'flex', gap: '12px', alignItems: 'stretch' }}>
                         {/* Tall character portrait */}
                         <div style={{ 
                             flex: '1',
@@ -176,7 +175,7 @@ export const ActorCard: FC<ActorCardProps> = ({
                     </div>
                 } else if (section === ActorCardSection.PORTRAIT) {
                 /* Collapsed state: Just the portrait with nameplate overlaid at bottom */
-                    <div style={{ 
+                    return <div style={{ 
                         width: '100%',
                         height: '100%',
                         borderRadius: '6px',
