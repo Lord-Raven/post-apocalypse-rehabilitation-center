@@ -272,25 +272,25 @@ export const EchoScreen: FC<EchoScreenProps> = ({stage, setScreenType}) => {
 									alignItems: actor ? 'stretch' : 'center',
 									borderRadius: 12,
 									overflow: 'hidden',
-									scale: actor ? (isSelected ? 1.1 : 1) : 1,
+									scale: (actor && isSelected) ? 1.1 : 1,
 									background: actor 
 										? `linear-gradient(
 												135deg, 
 												rgba(0, 255, 136, 0.15) 0%, 
 												rgba(0, 200, 255, 0.1) 50%, 
-												rgba(128, 0, 255, 0.15) 100%
+												rgba(109, 87, 131, 0.15) 100%
 											), url(${actor.emotionPack['neutral'] || actor.avatarImageUrl})`
 										: 'linear-gradient(135deg, rgba(0,255,136,0.15), rgba(0,200,255,0.1))',
 									backgroundSize: actor ? 'cover, cover' : 'cover',
 									backgroundPosition: actor ? 'center, center top' : 'center',
 									backgroundBlendMode: actor ? 'overlay, normal' : 'normal',
 									backgroundRepeat: 'no-repeat',
-									border: selectedSlotIndex === slotIndex 
+									border: isSelected
 										? `5px solid ${actor?.themeColor || '#ffffff'}` 
 										: actor 
-											? (actor.isPrimaryImageReady ? `4px solid ${actor.themeColor || '#00ff88'}` : '4px solid #ffaa00')
+											? `4px solid ${actor.themeColor || '#00ff88'}`
 											: '3px dashed rgba(0,255,136,0.5)',
-									boxShadow: selectedSlotIndex === slotIndex 
+									boxShadow: isSelected
 										? `0 12px 40px ${actor?.themeColor ? actor.themeColor + '40' : 'rgba(0,255,136,0.25)'}, inset 0 0 50px ${actor?.themeColor ? actor.themeColor + '20' : 'rgba(0,255,136,0.1)'}` 
 										: actor
 											? `0 8px 25px rgba(0,0,0,0.4), inset 0 0 30px ${actor.themeColor ? actor.themeColor + '15' : 'rgba(0,255,136,0.05)'}, 0 0 20px ${actor.themeColor ? actor.themeColor + '30' : 'rgba(0,255,136,0.1)'}`
