@@ -12,6 +12,8 @@ import { Emotion } from '../Emotion';
 import StatChangeDisplay from './StatChangeDisplay';
 import Nameplate from '../components/Nameplate';
 import { BlurredBackground } from '../components/BlurredBackground';
+import { useTooltip } from '../contexts/TooltipContext';
+import ActorCard from '../components/ActorCard';
 
 import {
     Box, 
@@ -28,7 +30,8 @@ import {
     ArrowForwardIos,
     Send,
     Close,
-    Casino
+    Casino,
+    Computer
 } from '@mui/icons-material';
 import TypeOut from '../components/TypeOut';
 
@@ -240,6 +243,7 @@ interface VignetteScreenProps {
 }
 
 export const VignetteScreen: FC<VignetteScreenProps> = ({ stage, setScreenType }) => {
+    const { setTooltip, clearTooltip } = useTooltip();
     const [index, setIndex] = React.useState<number>(0);
     const [inputText, setInputText] = React.useState<string>('');
     const [sceneEnded, setSceneEnded] = React.useState<boolean>(false);
@@ -257,6 +261,7 @@ export const VignetteScreen: FC<VignetteScreenProps> = ({ stage, setScreenType }
             newValue: number;
         }>;
     }>>([]);
+    const [hoveredActor, setHoveredActor] = React.useState<Actor | null>(null);
 
 
     useEffect(() => {
@@ -340,20 +345,33 @@ export const VignetteScreen: FC<VignetteScreenProps> = ({ stage, setScreenType }
             const increment = actors.length > 1 ? (i / (actors.length - 1)) : 0.5;
             const xPosition = Math.round(increment * range) + (100 - range) / 2;
             const isSpeaking = actor === speaker;
+            const isHovered = hoveredActor === actor;
+            
             return (
-                <ActorImage
+                <div
                     key={actor.id}
-                    actor={actor}
-                    emotion={emotion}
-                    imageUrl={actor.emotionPack[emotion] || actor.emotionPack['neutral'] || ''}
-                    xPosition={xPosition}
-                    yPosition={0}
-                    zIndex={1}
-                    speaker={isSpeaking}
-                    highlightColor="rgba(255,255,255,0)"
-                    panX={0}
-                    panY={0}
-                />
+                    style={{
+                        position: 'absolute',
+                        inset: 0,
+                        pointerEvents: 'auto',
+                        zIndex: 1
+                    }}
+                    onMouseEnter={() => setHoveredActor(actor)}
+                    onMouseLeave={() => setHoveredActor(null)}
+                >
+                    <ActorImage
+                        actor={actor}
+                        emotion={emotion}
+                        imageUrl={actor.emotionPack[emotion] || actor.emotionPack['neutral'] || ''}
+                        xPosition={xPosition}
+                        yPosition={0}
+                        zIndex={1}
+                        speaker={isSpeaking}
+                        highlightColor={isHovered ? "rgba(255,255,255,0.2)" : "rgba(255,255,255,0)"}
+                        panX={0}
+                        panY={0}
+                    />
+                </div>
             );
         });
     }
@@ -435,6 +453,29 @@ export const VignetteScreen: FC<VignetteScreenProps> = ({ stage, setScreenType }
                 <StatChangeDisplay characterChanges={characterStatChanges} layout={stage().getSave().layout} />
             )}
 
+            {/* Actor Card - shown when hovering over an actor, only if no stat changes are displayed */}
+            {hoveredActor && !(sceneEnded && characterStatChanges.length > 0 && index === vignette.script.length - 1) && (
+                <div style={{
+                    position: 'absolute',
+                    top: '5%',
+                    right: '5%',
+                    width: '20vw',
+                    height: '30vh',
+                    zIndex: 3
+                }}>
+                    <ActorCard
+                        actor={hoveredActor}
+                        role={(() => {
+                            const roleModules = stage().getSave().layout.getModulesWhere((m: any) => 
+                                m && m.type !== 'quarters' && m.ownerId === hoveredActor.id
+                            );
+                            return roleModules.length > 0 ? roleModules[0].getAttribute('role') : undefined;
+                        })()}
+                        forceExpanded={true}
+                    />
+                </div>
+            )}
+
             {/* Bottom text window */}
             <Paper 
                 elevation={8}
@@ -470,7 +511,16 @@ export const VignetteScreen: FC<VignetteScreenProps> = ({ stage, setScreenType }
 
                         {/* Progress indicator */}
                         <Chip
-                            label={loading ? <LoadingIndicator active={loading} /> : `${index + 1} / ${vignette.script.length}`}
+                            label={loading ? 
+                                <CircularProgress size={16} sx={{ color: '#bfffd0' }} 
+                                    onMouseEnter={() => {
+                                        setTooltip('Awaiting content from LLM', Computer);
+                                    }}
+                                    onMouseLeave={() => {
+                                        clearTooltip();
+                                    }}
+                                /> : 
+                                `${index + 1} / ${vignette.script.length}`}
                             sx={{ 
                                 minWidth: 80,
                                 fontWeight: 700, 
@@ -526,6 +576,12 @@ export const VignetteScreen: FC<VignetteScreenProps> = ({ stage, setScreenType }
                         onClick={() => {
                             console.log('Re-roll clicked');
                             handleReroll();
+                        }}
+                        onMouseEnter={() => {
+                            setTooltip('Re-generate events from this point', Casino);
+                        }}
+                        onMouseLeave={() => {
+                            clearTooltip();
                         }}
                         disabled={loading}
                         size="small"
