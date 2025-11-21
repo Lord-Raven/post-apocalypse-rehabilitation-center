@@ -44,6 +44,7 @@ export const TooltipBar: FC<TooltipBarProps> = ({ message, Icon, visible = true,
                             boxShadow: '0 8px 32px rgba(0, 255, 136, 0.3), 0 0 20px rgba(0, 255, 136, 0.2)',
                             backdropFilter: 'blur(10px)',
                             maxWidth: '600px',
+                            minWidth: 'fit-content',
                         }}
                     >
                         {Icon && (
@@ -52,6 +53,7 @@ export const TooltipBar: FC<TooltipBarProps> = ({ message, Icon, visible = true,
                                     color: '#00ff88',
                                     fontSize: '28px',
                                     filter: 'drop-shadow(0 0 8px rgba(0, 255, 136, 0.5))',
+                                    flexShrink: 0,
                                 }}
                             />
                         )}
@@ -62,7 +64,7 @@ export const TooltipBar: FC<TooltipBarProps> = ({ message, Icon, visible = true,
                                 fontSize: '16px',
                                 fontWeight: 600,
                                 textShadow: '0 0 10px rgba(0, 255, 136, 0.3)',
-                                whiteSpace: 'nowrap',
+                                textAlign: 'center',
                             }}
                         >
                             {message}

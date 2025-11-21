@@ -20,6 +20,7 @@ type SaveType = {
     player: {name: string};
     echoes: (Actor | null)[]; // actors currently in echo slots (can be null for empty slots)
     actors: {[key: string]: Actor};
+    bannedTags?: string[];
     layout: Layout;
     day: number;
     phase: number;
@@ -38,7 +39,7 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
     readonly RESERVE_ACTORS = 5;
     readonly FETCH_AT_TIME = 10;
     readonly MAX_PAGES = 100;
-    readonly characterSearchQuery = `https://inference.chub.ai/search?first=${this.FETCH_AT_TIME}&exclude_tags=FUZZ%2Cchild%2Cteenager%2Cnarrator%2Cunderage%2CMultiple%20Character&page={pageNumber}&sort=random&asc=false&include_forks=false&nsfw=true&nsfl=false&nsfw_only=false&require_images=false&require_example_dialogues=false&require_alternate_greetings=false&require_custom_prompt=false&exclude_mine=false&min_tokens=200&max_tokens=10000&require_expressions=false&require_lore=false&mine_first=false&require_lore_embedded=false&require_lore_linked=false&my_favorites=false&inclusive_or=true&recommended_verified=false&count=false`;
+    readonly characterSearchQuery = `https://inference.chub.ai/search?first=${this.FETCH_AT_TIME}&exclude_tags={{ADDITIONAL_EXCLUSIONS}}FUZZ%2Cchild%2Cteenager%2Cnarrator%2Cunderage%2CMultiple%20Character&page={pageNumber}&sort=random&asc=false&include_forks=false&nsfw=true&nsfl=false&nsfw_only=false&require_images=false&require_example_dialogues=false&require_alternate_greetings=false&require_custom_prompt=false&exclude_mine=false&min_tokens=200&max_tokens=10000&require_expressions=false&require_lore=false&mine_first=false&require_lore_embedded=false&require_lore_linked=false&my_favorites=false&inclusive_or=true&recommended_verified=false&count=false`;
     readonly characterDetailQuery = 'https://inference.chub.ai/api/characters/{fullPath}?full=true';
 
     private pageNumber = Math.floor(Math.random() * this.MAX_PAGES);
@@ -187,7 +188,9 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
                 console.log('Loading reserve actors...');
                 while (this.reserveActors.length < this.RESERVE_ACTORS) {
                     // Populate reserveActors; this is loaded with data from a service, calling the characterServiceQuery URL:
-                    const response = await fetch(this.characterSearchQuery.replace('{pageNumber}', this.pageNumber.toString()));
+                    const additionalExclusions = (this.getSave().bannedTags || []).map(tag => encodeURIComponent(tag)).join('%2C');
+                    console.log('Applying additionalExclusions:', additionalExclusions);
+                    const response = await fetch(this.characterSearchQuery.replace('{pageNumber}', this.pageNumber.toString()).replace('{{ADDITIONAL_EXCLUSIONS}}', additionalExclusions ? additionalExclusions + '%2C' : ''));
                     const searchResults = await response.json();
                     console.log(searchResults);
                     // Need to do a secondary lookup for each character in searchResults, to get the details we actually care about:

@@ -90,7 +90,7 @@ export async function generateVignetteScript(vignette: VignetteData, stage: Stag
     }
 
     let fullPrompt = `{{messages}}\nPremise:\nThis is a sci-fi visual novel game set on a space station that resurrects and rehabilitates patients who died in the multiverse-wide apocalypse: ` +
-        `the Post-Apocalyptic Rehabilitation Center. ` +
+        `the Post-Apocalypse Rehabilitation Center. ` +
         `The thrust of the game has the player character, ${playerName}, managing this station and interacting with patients and crew, as they navigate this complex futuristic universe together. ` +
         // List characters who are here, along with full stat details:
         `\n\nPresent Characters:\n${presentActors.map(actor => {

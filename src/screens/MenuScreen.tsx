@@ -151,7 +151,7 @@ export const MenuScreen: FC<MenuScreenProps> = ({ stage, setScreenType }) => {
                     transition={{ delay: 0.3, duration: 0.5 }}
                 >
                     <Title variant="glow" style={{ textAlign: 'center', marginBottom: '40px', fontSize: '28px' }}>
-                        Apocalypse Rehabilitation Center
+                        Post-Apocalypse Rehabilitation Center
                     </Title>
                 </motion.div>
 

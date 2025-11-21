@@ -24,13 +24,22 @@ export const SettingsScreen: FC<SettingsScreenProps> = ({ stage, onClose, isNewG
         playerName: stage().getSave().player?.name || '',
         playerDescription: '',
         assistantName: 'Assistant',
-        assistantDescription: 'Your helpful companion in the Apocalypse Rehabilitation Center.',
+        assistantDescription: 'Your helpful companion in the Post-Apocalypse Rehabilitation Center.',
         tagToggles: {
             'NSFW': true,
             'Female': true,
             'Male': true,
+            'NTR': true,
         }
     });
+
+    // Each toggle can map to multiple tags when saved.
+    const tagMap: { [key: string]: string[] } = {
+        'NSFW': ['NSFW', 'Explicit'],
+        'Female': ['Female', 'Girl', 'Woman'],
+        'Male': ['Male', 'Boy', 'Man'],
+        'NTR': ['NTR', 'Cuckold', 'Cheating', 'Infidelity', 'Affair', 'Netori', 'Netorare'],
+    }
 
     const handleSave = () => {
         // TODO: Actually save settings to Stage/Save
@@ -39,6 +48,10 @@ export const SettingsScreen: FC<SettingsScreenProps> = ({ stage, onClose, isNewG
         // Update player name in save
         const save = stage().getSave();
         save.player.name = settings.playerName;
+
+        save.bannedTags = Object.keys(settings.tagToggles).filter(key => !settings.tagToggles[key]).map(key => tagMap[key]).flat();
+
+
         stage().saveGame();
         
         onClose();

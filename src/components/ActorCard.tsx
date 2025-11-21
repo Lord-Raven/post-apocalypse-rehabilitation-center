@@ -65,7 +65,7 @@ export const ActorCard: FC<ActorCardProps> = ({
     style,
     className
 }) => {
-    const currentSections = (isExpanded && expandedSections?.length === 0) ? expandedSections : collapsedSections;
+    const currentSections = (isExpanded && expandedSections?.length > 0) ? expandedSections : collapsedSections;
     const clickable = !!onClick;
 
     // Default hover behavior
@@ -87,7 +87,7 @@ export const ActorCard: FC<ActorCardProps> = ({
         },
         style: {
             padding: '12px',
-            border: `2px solid ${actor.themeColor || '#00ff88'}`,
+            border: `2px solid #00ff88`,
             borderRadius: '8px',
             background: 'rgba(0, 10, 20, 0.5)',
             cursor: isDragging ? 'grabbing' : (draggable ? 'grab' : (clickable ? 'pointer' : 'default')),
