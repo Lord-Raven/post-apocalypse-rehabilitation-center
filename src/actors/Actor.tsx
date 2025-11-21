@@ -112,10 +112,8 @@ export async function loadReserveActor(fullPath: string, stage: Stage): Promise<
         description: item.node.definition.description.replaceAll('{{char}}', dataName).replaceAll('{{user}}', 'Individual X'),
         personality: item.node.definition.personality.replaceAll('{{char}}', dataName).replaceAll('{{user}}', 'Individual X'),
         avatar: item.node.max_res_url,
-        tags: item.node.definition.topics || []
+        tags: item.node.topics || []
     };
-
-    console.log(item.node);
 
     // I was discarding curly braces, but instead, let's swap "{" and "}" for "(" and ")" to preserve content while removing JSON-like structures.
     data.name = data.name.replace(/{/g, '(').replace(/}/g, ')');
@@ -130,10 +128,10 @@ export async function loadReserveActor(fullPath: string, stage: Stage): Promise<
     } else if (/[\u3040-\u30ff\u3400-\u4dbf\u4e00-\u9fff\uf900-\ufaff]/.test(`${data.name}${data.description}${data.personality}`)) {
         console.log(`Immediately discarding actor due to non-english characters: ${data.name}`);
         return null;
-    }/*else if (data.tags.length < 3) {
+    } else if (data.tags.length < 3) {
         console.log(`Immediately discarding actor due to insufficient tags: ${data.name}`);
         return null;
-    }*/
+    }
     // Take this data and use text generation to get an updated distillation of this character, including a physical description.
     const generatedResponse = await stage.generator.textGen({
         prompt: `{{messages}}This is preparatory request for structured and formatted game content.` +
