@@ -124,14 +124,13 @@ export const ActorCard: FC<ActorCardProps> = ({
                                     const grade = actor.scoreToGrade(actor.stats[stat]);
                                     return (
                                         <div className="stat-row" key={`${actor.id}_${stat}`} style={{
-                                            height: '12%',
-                                            marginBottom: '0.5%',
+                                            maxHeight: '12.5%',
                                             display: 'flex',
                                             alignItems: 'center',
                                             justifyContent: 'space-between'
                                         }}>
                                             <span className="stat-label" style={{
-                                                fontSize: '1.4rem',
+                                                fontSize: '1.2rem',
                                                 textShadow: '2px 2px 0 rgba(0,0,0,0.88)',
                                                 flex: '1'
                                             }}>{stat}</span>
@@ -166,7 +165,7 @@ export const ActorCard: FC<ActorCardProps> = ({
                 })}
             </div>
             {/* Author link in bottom */}
-            <div style={{ display: 'flex', alignItems: 'center' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 <AuthorLink actor={actor} />
             </div>
         </motion.div>

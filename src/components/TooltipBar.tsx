@@ -27,7 +27,6 @@ export const TooltipBar: FC<TooltipBarProps> = ({ message, Icon, visible = true,
                         position: 'fixed',
                         bottom: '40px',
                         left: '50%',
-                        transform: 'translateX(-50%)',
                         zIndex: 9999,
                         pointerEvents: 'none',
                     }}
@@ -46,6 +45,7 @@ export const TooltipBar: FC<TooltipBarProps> = ({ message, Icon, visible = true,
                             backdropFilter: 'blur(10px)',
                             maxWidth: '50vw',
                             minWidth: 'fit-content',
+                            transform: 'translateX(-50%)',
                         }}
                     >
                         {Icon && (
