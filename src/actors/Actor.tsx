@@ -119,6 +119,9 @@ export async function loadReserveActor(fullPath: string, stage: Stage): Promise<
     data.name = data.name.replace(/{/g, '(').replace(/}/g, ')');
     data.description = data.description.replace(/{/g, '(').replace(/}/g, ')');
     data.personality = data.personality.replace(/{/g, '(').replace(/}/g, ')');
+
+    console.log(item.node);
+    console.log(`${data.name} tags: ${data.tags.join(', ')}`);
     
     if (bannedWords.some(word => data.description.toLowerCase().includes(word) || data.personality.toLowerCase().includes(word) || data.name.toLowerCase().includes(word))) {
         console.log(`Immediately discarding actor due to banned words: ${data.name}`);
@@ -126,10 +129,10 @@ export async function loadReserveActor(fullPath: string, stage: Stage): Promise<
     } else if (/[\u3040-\u30ff\u3400-\u4dbf\u4e00-\u9fff\uf900-\ufaff]/.test(`${data.name}${data.description}${data.personality}`)) {
         console.log(`Immediately discarding actor due to non-english characters: ${data.name}`);
         return null;
-    } else if (data.tags.length < 3) {
+    }/* else if (data.tags.length < 3) {
         console.log(`Immediately discarding actor due to insufficient tags: ${data.name}`);
         return null;
-    }
+    }*/
     // Take this data and use text generation to get an updated distillation of this character, including a physical description.
     const generatedResponse = await stage.generator.textGen({
         prompt: `{{messages}}This is preparatory request for structured and formatted game content.` +
