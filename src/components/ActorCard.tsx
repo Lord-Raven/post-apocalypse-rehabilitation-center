@@ -66,6 +66,7 @@ export const ActorCard: FC<ActorCardProps> = ({
     className
 }) => {
     const currentSections = (isExpanded && expandedSections?.length === 0) ? expandedSections : collapsedSections;
+    console.log('Current sections for ActorCard:', currentSections);
     const clickable = !!onClick;
 
     // Default hover behavior

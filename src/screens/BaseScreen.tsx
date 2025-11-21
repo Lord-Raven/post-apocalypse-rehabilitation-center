@@ -31,7 +31,7 @@ const BaseScreenContent: FC<{ stage: () => Stage }> = ({ stage }) => {
     // Clear tooltip whenever screen type changes
     React.useEffect(() => {
         clearTooltip();
-    }, [screenType, clearTooltip]);
+    }, [screenType]);
 
     return (
         <div style={{ position: 'relative', width: '100vw', height: '100vh' }}>
