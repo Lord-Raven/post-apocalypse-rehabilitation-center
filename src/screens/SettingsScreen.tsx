@@ -160,8 +160,7 @@ export const SettingsScreen: FC<SettingsScreenProps> = ({ stage, onClose, isNewG
                     <GlassPanel 
                         variant="bright"
                         style={{
-                            maxWidth: '600px',
-                            width: '90vw',
+                            width: '80vw',
                             maxHeight: '85vh',
                             overflow: 'auto',
                             position: 'relative',

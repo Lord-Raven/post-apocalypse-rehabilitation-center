@@ -1,7 +1,7 @@
 import {ReactElement, useEffect, useState} from "react";
 import {StageBase, StageResponse, InitialData, Message} from "@chub-ai/stages-ts";
 import {LoadResponse} from "@chub-ai/stages-ts/dist/types/load";
-import Actor, { loadReserveActor, generatePrimaryActorImage, commitActorToEcho } from "./actors/Actor";
+import Actor, { loadReserveActor, generatePrimaryActorImage, commitActorToEcho, Stat } from "./actors/Actor";
 import { DEFAULT_GRID_SIZE, Layout, createModule } from './Module';
 import { BaseScreen } from "./screens/BaseScreen";
 import {Client} from "@gradio/client";
@@ -393,10 +393,10 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
     }
 
     endVignette() {
-        const save = this.getSave() as any;
+        const save = this.getSave();
         if (save.currentVignette) {
-            if (!save.pastVignette) {
-                save.pastVignette = [];
+            if (!save.pastVignettes) {
+                save.pastVignettes = [];
             }
             // Apply endProperties to actors
             const endProps = save.currentVignette.endProperties || {};
@@ -404,16 +404,16 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
                 const actorChanges = endProps[actorId];
                 const actor = save.actors[actorId];
                 if (actor) {
-                    for (const prop in actorChanges) {
-                        if (prop in actor) {
-                            (actor as any)[prop] += actorChanges[prop];
-                        }
+                    // Apply to actor.stats; actorChanges is a map of stat name to change amount
+                    for (const prop of Object.keys(actorChanges)) {
+                        const stat = (prop as keyof typeof actor.stats);
+                        actor.stats[stat] += actorChanges[prop];
                     }
                 }
             }
 
             save.currentVignette.context = {...save.currentVignette.context, day: this.getSave().day};
-            save.pastVignette.push(save.currentVignette);
+            save.pastVignettes.push(save.currentVignette);
             save.currentVignette = undefined;
         }
     }

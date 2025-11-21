@@ -105,7 +105,7 @@ export async function loadReserveActor(fullPath: string, stage: Stage): Promise<
     const response = await fetch(stage.characterDetailQuery.replace('{fullPath}', fullPath));
     const item = await response.json();
     const dataName = item.node.definition.name.replaceAll('{{char}}', item.node.definition.name).replaceAll('{{user}}', 'Individual X');
-    const bannedWords = ['underage', 'minor', 'child', 'infant', 'baby', 'toddler', 'youngster', 'highschool', 'teen', 'adolescent', 'school'];
+    const bannedWords = ['underage', 'minor', 'child', 'infant', 'baby', 'toddler', 'youngster', 'teen', 'adolescent', 'school'];
     const data = {
         name: dataName,
         fullPath: item.node.fullPath,
