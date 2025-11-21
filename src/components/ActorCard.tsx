@@ -105,7 +105,7 @@ export const ActorCard: FC<ActorCardProps> = ({
             </div>
             
             {/* Sections in rows. */}
-            <div style={{ display: 'flex', flexDirection: 'row', minHeight: '200px' }}>
+            <div style={{ display: 'flex', flexDirection: 'row', minHeight: '200px', overflow: 'hidden' }}>
                 {currentSections.map(section => {
                     if (section === ActorCardSection.STATS) {
                         return <div className="stat-list" style={{ 
@@ -113,7 +113,7 @@ export const ActorCard: FC<ActorCardProps> = ({
                                 background: 'rgba(0,0,0,0.8)', 
                                 borderRadius: '6px',
                                 padding: '8px 10px',
-                                overflow: 'hidden',
+                                overflow: 'visible',
                                 display: 'flex',
                                 flexDirection: 'column',
                                 justifyContent: 'flex-start'
@@ -123,19 +123,19 @@ export const ActorCard: FC<ActorCardProps> = ({
                                     const grade = actor.scoreToGrade(actor.stats[stat]);
                                     return (
                                         <div className="stat-row" key={`${actor.id}_${stat}`} style={{
-                                            height: '12.5%',
-                                            maxHeight: '12.5%',
+                                            height: '12%',
+                                            maxHeight: '12%',
                                             display: 'flex',
                                             alignItems: 'center',
                                             justifyContent: 'space-between'
                                         }}>
                                             <span className="stat-label" style={{
-                                                fontSize: '1.2rem',
+                                                fontSize: '12%',
                                                 textShadow: '2px 2px 0 rgba(0,0,0,0.88)',
                                                 flex: '1'
                                             }}>{stat}</span>
                                             <span className="stat-grade" data-grade={grade} style={{
-                                                fontSize: '1.8rem',
+                                                fontSize: '15%',
                                                 textShadow: '3px 3px 0 rgba(0,0,0,0.88)',
                                                 transform: 'skewX(-8deg) rotate(-4deg)'
                                             }}>{grade}</span>
