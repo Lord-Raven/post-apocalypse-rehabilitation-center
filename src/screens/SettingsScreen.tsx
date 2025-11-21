@@ -25,10 +25,57 @@ export const SettingsScreen: FC<SettingsScreenProps> = ({ stage, onClose, isNewG
         playerDescription: '',
         assistantName: 'Assistant',
         assistantDescription: 'Your helpful companion in the Post-Apocalypse Rehabilitation Center.',
+        // Tag toggles; disabling these can be used to filter undesired content
         tagToggles: {
             'NSFW': true,
-            'Female': true,
             'Male': true,
+            'Female': true,
+            'Transgender': true,
+            'Futanari': true,
+            'Bisexual': true,
+            'Gay': true,
+            'Lesbian': true,
+            'Asexual': true,
+            'Human': true,
+            'Non-Human': true,
+            'Anthro': true,
+            'Robot': true,
+            'Elf': true,
+            'Monster': true,
+            'Historical': true,
+            'Anime': true,
+            'Game Character': true,
+            'Movies & TV': true,
+            'Original Character': true,
+            'Tsundere': true,
+            'Yandere': true,
+            'Virgin': true,
+            'Submissive': true,
+            'Dominant': true,
+            'Sadistic': true,
+            'Masochistic': true,
+            'BDSM': true,
+            'Villain': true,
+            'Tomboy': true,
+            'Femboy': true,
+            'MILF': true,
+            'Goth': true,
+            'Big Breasts': true,
+            'Big Butt': true,
+            'Big Dick': true,
+            'Small Breasts': true,
+            'Small Butt': true,
+            'Small Dick': true,
+            'Petite': true,
+            'Chubby': true,
+            'Muscular': true,
+            'Giant': true,
+            'Size Difference': true,
+            'Fantasy': true,
+            'Sci-Fi': true,
+            'Romance': true,
+            'Comedy': true,
+            'Horror': true,
             'NTR': true,
         }
     });
@@ -36,9 +83,18 @@ export const SettingsScreen: FC<SettingsScreenProps> = ({ stage, onClose, isNewG
     // Each toggle can map to multiple tags when saved.
     const tagMap: { [key: string]: string[] } = {
         'NSFW': ['NSFW', 'Explicit'],
-        'Female': ['Female', 'Girl', 'Woman'],
         'Male': ['Male', 'Boy', 'Man'],
+        'Female': ['Female', 'Girl', 'Woman'],
         'NTR': ['NTR', 'Cuckold', 'Cheating', 'Infidelity', 'Affair', 'Netori', 'Netorare'],
+        'Game Character': ['Game Character', 'Video Game', 'games', 'game', 'videogames'],
+        'Original Character': ['Original Character', 'OC', 'original'],
+        'MILF': ['MILF', 'mother', 'mom', 'mommy'],
+        'Muscular': ['Muscular'],
+        'Fantasy': ['Fantasy'],
+        'Sci-Fi': ['Sci-Fi', 'Science Fiction'],
+        'Romance': ['Romance', 'Love', 'Drama'],
+        'Villain': ['Villain', 'Evil'],
+
     }
 
     const handleSave = () => {
@@ -49,7 +105,7 @@ export const SettingsScreen: FC<SettingsScreenProps> = ({ stage, onClose, isNewG
         const save = stage().getSave();
         save.player.name = settings.playerName;
 
-        save.bannedTags = Object.keys(settings.tagToggles).filter(key => !settings.tagToggles[key]).map(key => tagMap[key]).flat();
+        save.bannedTags = Object.keys(settings.tagToggles).filter(key => !settings.tagToggles[key]).map(key => tagMap[key] ? tagMap[key] : [key]).flat();
 
 
         stage().saveGame();

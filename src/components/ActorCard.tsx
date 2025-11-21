@@ -120,23 +120,6 @@ export const ActorCard: FC<ActorCardProps> = ({
                 {currentSections.map(section => {
                     if (section === ActorCardSection.STATS) {
                         return <div key="stats" style={{ display: 'flex', gap: '12px', alignItems: 'stretch', flex: 1 }}>
-                            {/* Tall character portrait */}
-                            <div style={{ 
-                                flex: '1',
-                                borderRadius: '6px',
-                                overflow: 'hidden',
-                                border: `2px solid ${actor.themeColor || '#00ff88'}`,
-                                backgroundImage: `url(${actor.emotionPack?.neutral || actor.avatarImageUrl})`,
-                                backgroundSize: 'cover',
-                                backgroundPosition: 'top center',
-                                backgroundRepeat: 'no-repeat',
-                                position: 'relative',
-                                display: 'flex',
-                                alignItems: 'flex-end',
-                                justifyContent: 'flex-end',
-                                padding: '8px'
-                            }}/>
-
                             {/* Stats with letter grades. Each row here should be 1/8th of the container height. */}
                             <div className="stat-list" style={{ 
                                 flex: '2', 
