@@ -25,7 +25,7 @@ export const SettingsScreen: FC<SettingsScreenProps> = ({ stage, onClose, isNewG
         'NSFW': ['NSFW', 'Explicit'],
         'Male': ['Male', 'Boy', 'Man'],
         'Female': ['Female', 'Girl', 'Woman'],
-        'Transgender': ['Trans', 'Transgender'],
+        'Transgender': ['Trans', 'Transgender', 'Transexual','Transfem','Transmasc'],
         'Futanari': ['Futanari', 'Futa'],
         'Bisexual': ['Bisexual', 'Bi'],
         'Gay': ['Gay'],
@@ -41,8 +41,6 @@ export const SettingsScreen: FC<SettingsScreenProps> = ({ stage, onClose, isNewG
         'Movies & TV': ['Movies & TV', 'Film', 'Television', 'Series'],
         'Game Character': ['Game Character', 'Video Game', 'games', 'game', 'videogames'],
         'Original Character': ['Original Character', 'OC', 'Original'],
-        'Historical': ['Historical', 'History'],
-        'Celebrity': ['Celebrity', 'Famous'],
         'Tsundere': ['Tsundere'],
         'Yandere': ['Yandere'],
         'Virgin': ['Virgin'],
@@ -82,7 +80,7 @@ export const SettingsScreen: FC<SettingsScreenProps> = ({ stage, onClose, isNewG
             (`Your holographic aide is acutely familiar with the technical details of your Post-Apocalypse Rehabilitation Center, so you don't have to be! ` +
             `Your StationAide™ comes pre-programmed with a friendly and non-condescending demeanor that will leave you feeling empowered and never patronized; ` +
             `your bespoke projection comes with an industry-leading feminine form in a pleasing shade of default blue, but, as always, StationAide™ remains infinitely customizable to suit your tastes.\n\n` +
-            `StationAide™. "When life hands you space stations..."`),
+            `StationAide™. "When life gives you space stations..."`),
         // Tag toggles; disabling these can be used to filter undesired content. Load from save array, if one. Otherwise, default to true.
         tagToggles: stage().getSave().bannedTags ? Object.fromEntries(
             Object.keys(tagMap).map(key => [

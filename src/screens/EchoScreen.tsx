@@ -188,7 +188,7 @@ export const EchoScreen: FC<EchoScreenProps> = ({stage, setScreenType}) => {
 						display: 'inline-block',
 						position: 'relative',
 						animationDelay: `${0.2 + index * 0.7}s`,
-						width: isExpanded ? '48vh' : '16vh',
+						width: isExpanded ? '32vh' : '16vh',
 						transition: 'width 0.3s ease'
 					}}
 					whileHover={{ 
@@ -247,6 +247,9 @@ export const EchoScreen: FC<EchoScreenProps> = ({stage, setScreenType}) => {
 								onClick={() => setSelectedSlotIndex(actor ? slotIndex : null)}
 								onDrop={(e) => handleDropOnEchoSlot(e, slotIndex)}
 								onDragOver={handleDragOver}
+								animate={{
+									scale: (actor && isSelected) ? 1.1 : 1
+								}}
 								whileHover={{ 
 									scale: actor ? (isSelected ? 1.15 : 1.05) : 1,
 									filter: 'brightness(1.1)'
@@ -272,7 +275,6 @@ export const EchoScreen: FC<EchoScreenProps> = ({stage, setScreenType}) => {
 									alignItems: actor ? 'stretch' : 'center',
 									borderRadius: 12,
 									overflow: 'hidden',
-									scale: (actor && isSelected) ? 1.1 : 1,
 									background: actor 
 										? `linear-gradient(
 												135deg, 

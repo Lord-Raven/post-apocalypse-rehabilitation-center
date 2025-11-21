@@ -48,6 +48,7 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
         'underage',
         'multi-character',
         'multiple character',
+        'multiple characters',
         'nonenglish',
         'non-english',
         'famous people',

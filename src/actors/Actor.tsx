@@ -105,7 +105,25 @@ export async function loadReserveActor(fullPath: string, stage: Stage): Promise<
     const response = await fetch(stage.characterDetailQuery.replace('{fullPath}', fullPath));
     const item = await response.json();
     const dataName = item.node.definition.name.replaceAll('{{char}}', item.node.definition.name).replaceAll('{{user}}', 'Individual X');
-    const bannedWords = ['underage', 'minor', 'child', 'infant', 'baby', 'toddler', 'youngster', 'teen', 'adolescent', 'school'];
+    // Attempt to substitute words to avert bad content into something more agreeable (if the distillation still has these, then drop the card).
+    const bannedWordSubstitutes: {[key: string]: string} = {
+        // Try to age up some terms in the hopes that the character can be salvaged.
+        'underage': 'young adult',
+        'adolescent': 'young adult',
+        'youngster': 'young adult',
+        'teen': 'young adult',
+        'highschooler': 'young adult',
+        // Don't bother with these; just set it to the same word so it gets discarded.
+        'child': 'child',
+        'toddler': 'toddler',
+        'infant': 'infant',
+        // Assume that these words are being used in an innocuous way, unless they come back in the distillation.
+        'kid': 'joke',
+        'baby': 'honey',
+        'minor': 'trivial',
+        'old-school': 'retro',
+        'high school': 'college',
+        'school': 'college'};
     const data = {
         name: dataName,
         fullPath: item.node.fullPath,
@@ -118,8 +136,17 @@ export async function loadReserveActor(fullPath: string, stage: Stage): Promise<
     data.name = data.name.replace(/{/g, '(').replace(/}/g, ')');
     data.description = data.description.replace(/{/g, '(').replace(/}/g, ')');
     data.personality = data.personality.replace(/{/g, '(').replace(/}/g, ')');
-    
-    if (bannedWords.some(word => data.description.toLowerCase().includes(word) || data.personality.toLowerCase().includes(word) || data.name.toLowerCase().includes(word))) {
+
+    // Apply banned word substitutions:
+    for (const [bannedWord, substitute] of Object.entries(bannedWordSubstitutes)) {
+        // Need to do a case-insensitive replacement for each occurrence:
+        const regex = new RegExp(bannedWord, 'gi');
+        data.name = data.name.replace(regex, substitute);
+        data.description = data.description.replace(regex, substitute);
+        data.personality = data.personality.replace(regex, substitute);
+    }
+
+    if (Object.keys(bannedWordSubstitutes).some(word => data.description.toLowerCase().includes(word) || data.personality.toLowerCase().includes(word) || data.name.toLowerCase().includes(word))) {
         console.log(`Immediately discarding actor due to banned words: ${data.name}`);
         return null;
     } else if (/[\u3040-\u30ff\u3400-\u4dbf\u4e00-\u9fff\uf900-\ufaff]/.test(`${data.name}${data.description}${data.personality}`)) {
@@ -247,7 +274,7 @@ export async function loadReserveActor(fullPath: string, stage: Stage): Promise<
     } else if (!newActor.profile) {
         console.log(`Discarding actor due to missing profile: ${newActor.name}`);
         return null;
-    } else if (bannedWords.some(word => newActor.description.toLowerCase().includes(word))) {
+    } else if (Object.keys(bannedWordSubstitutes).some(word => newActor.description.toLowerCase().includes(word))) {
         console.log(`Discarding actor due to banned words in description: ${newActor.name}`);
         return null;
     } else if (Object.entries(newActor.stats).every(([key, value]) => value === DEFAULT_TRAIT_MAP[key as Stat])) {
