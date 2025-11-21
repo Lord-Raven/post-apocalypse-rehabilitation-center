@@ -106,6 +106,7 @@ export async function loadReserveActor(fullPath: string, stage: Stage): Promise<
     const item = await response.json();
     const dataName = item.node.definition.name.replaceAll('{{char}}', item.node.definition.name).replaceAll('{{user}}', 'Individual X');
     const bannedWords = ['underage', 'minor', 'child', 'infant', 'baby', 'toddler', 'youngster', 'teen', 'adolescent', 'school'];
+    const requireAtLeastOneOfTheseGenderTags = ['male', 'female', 'non-binary', 'trans', 'genderqueer', 'genderfluid', 'agender', 'bigender', 'androgyne', 'intersex', 'futa', 'futanari', 'hermaphrodite'];
     const data = {
         name: dataName,
         fullPath: item.node.fullPath,
@@ -131,7 +132,11 @@ export async function loadReserveActor(fullPath: string, stage: Stage): Promise<
     } else if (data.tags.length < 3) {
         console.log(`Immediately discarding actor due to insufficient tags: ${data.name}`);
         return null;
+    } else if (!requireAtLeastOneOfTheseGenderTags.some(tag => data.tags.includes(tag))) {
+        console.log(`Immediately discarding actor due to zero gender tags: ${data.name}`);
+        return null;
     }
+
     // Take this data and use text generation to get an updated distillation of this character, including a physical description.
     const generatedResponse = await stage.generator.textGen({
         prompt: `{{messages}}This is preparatory request for structured and formatted game content.` +

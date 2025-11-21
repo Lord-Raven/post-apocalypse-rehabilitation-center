@@ -130,12 +130,12 @@ export const ActorCard: FC<ActorCardProps> = ({
                                             justifyContent: 'space-between'
                                         }}>
                                             <span className="stat-label" style={{
-                                                fontSize: '12%',
+                                                fontSize: '80%',
                                                 textShadow: '2px 2px 0 rgba(0,0,0,0.88)',
                                                 flex: '1'
                                             }}>{stat}</span>
                                             <span className="stat-grade" data-grade={grade} style={{
-                                                fontSize: '15%',
+                                                fontSize: '100%',
                                                 textShadow: '3px 3px 0 rgba(0,0,0,0.88)',
                                                 transform: 'skewX(-8deg) rotate(-4deg)'
                                             }}>{grade}</span>
