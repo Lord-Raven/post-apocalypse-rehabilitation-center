@@ -31,7 +31,9 @@ import {
     Send,
     Close,
     Casino,
-    Computer
+    Computer,
+    VolumeUp,
+    VolumeOff
 } from '@mui/icons-material';
 import TypeOut from '../components/TypeOut';
 
@@ -262,6 +264,7 @@ export const VignetteScreen: FC<VignetteScreenProps> = ({ stage, setScreenType }
         }>;
     }>>([]);
     const [hoveredActor, setHoveredActor] = React.useState<Actor | null>(null);
+    const [audioEnabled, setAudioEnabled] = React.useState<boolean>(true);
 
 
     useEffect(() => {
@@ -302,7 +305,7 @@ export const VignetteScreen: FC<VignetteScreenProps> = ({ stage, setScreenType }
             setDisplayName(matchingActor?.name || (isPlayerSpeaker ? playerName : ''));
             setDisplayMessage(formatMessage(vignette.script[index]?.message || ''));
             setFinishTyping(false); // Reset typing state when message changes
-            if (vignette.script[index]?.speechUrl) {
+            if (audioEnabled && vignette.script[index]?.speechUrl) {
                 console.log('Playing TTS audio from URL:', vignette.script[index].speechUrl);
                 const audio = new Audio(vignette.script[index].speechUrl);
                 audio.play();
@@ -575,6 +578,29 @@ export const VignetteScreen: FC<VignetteScreenProps> = ({ stage, setScreenType }
                             />
                         )}
                     </Box>
+
+                    {/* Audio toggle button */}
+                    <IconButton
+                        onClick={() => setAudioEnabled(!audioEnabled)}
+                        onMouseEnter={() => {
+                            setTooltip(audioEnabled ? 'Disable TTS audio' : 'Enable TTS audio', audioEnabled ? VolumeUp : VolumeOff);
+                        }}
+                        onMouseLeave={() => {
+                            clearTooltip();
+                        }}
+                        size="small"
+                        sx={{
+                            color: audioEnabled ? '#00ff88' : '#ff6b6b',
+                            border: `1px solid ${audioEnabled ? 'rgba(0,255,136,0.2)' : 'rgba(255,107,107,0.2)'}`,
+                            transition: 'all 0.3s ease',
+                            '&:hover': {
+                                borderColor: audioEnabled ? 'rgba(0,255,136,0.4)' : 'rgba(255,107,107,0.4)',
+                                color: audioEnabled ? '#00ffaa' : '#ff5252',
+                            }
+                        }}
+                    >
+                        {audioEnabled ? <VolumeUp fontSize="small" /> : <VolumeOff fontSize="small" />}
+                    </IconButton>
 
                     {/* Re-roll button */}
                     <IconButton

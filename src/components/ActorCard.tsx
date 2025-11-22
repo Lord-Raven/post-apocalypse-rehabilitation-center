@@ -144,13 +144,14 @@ export const ActorCard: FC<ActorCardProps> = ({
                                 })}
                             </div>
                     } else if (section === ActorCardSection.PORTRAIT) {
+                        const targetEmotion = actor.stats[Stat.Joy] > 8 ? 'joy' : (actor.stats[Stat.Joy] > 5 ? 'approval' : (actor.stats[Stat.Joy] > 2 ? 'neutral' : 'disappointment'));
                         return <div key="portrait" style={{ 
                             width: '100%',
                             flex: 1,
                             borderRadius: '6px',
                             overflow: 'hidden',
                             border: `2px solid ${actor.themeColor || '#00ff88'}`,
-                            backgroundImage: `url(${actor.emotionPack?.neutral || actor.avatarImageUrl})`,
+                            backgroundImage: `url(${actor.emotionPack?.[targetEmotion] || actor.avatarImageUrl})`,
                             backgroundSize: 'cover',
                             backgroundPosition: 'top center',
                             backgroundRepeat: 'no-repeat',
