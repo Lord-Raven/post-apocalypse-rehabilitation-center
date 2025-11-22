@@ -96,6 +96,9 @@ export const SettingsScreen: FC<SettingsScreenProps> = ({ stage, onClose, isNewG
         // Update player name in save
         const save = stage().getSave();
         save.player.name = settings.playerName;
+        save.player.description = settings.playerDescription;
+        save.aide.name = settings.aideName;
+        save.aide.description = settings.aideDescription;
 
         save.bannedTags = Object.keys(settings.tagToggles).filter(key => !settings.tagToggles[key]).map(key => tagMap[key] ? tagMap[key] : [key]).flat();
 

@@ -90,6 +90,9 @@ export async function generateSkitScript(skit: SkitData, stage: Stage): Promise<
         });
     }
 
+    let pastSkits = stage.getSave().timeline?.filter(event => event.skit).map(event => event.skit as SkitData) || []
+    pastSkits = pastSkits.filter((v, index) => index > (pastSkits.length || 0) - 5);
+
     let fullPrompt = `{{messages}}\nPremise:\nThis is a sci-fi visual novel game set on a space station that resurrects and rehabilitates patients who died in the multiverse-wide apocalypse: ` +
         `the Post-Apocalypse Rehabilitation Center. ` +
         `The thrust of the game has the player character, ${playerName}, is the Director of this station, interacting with patients and crew as they navigate this complex futuristic universe together. ` +
@@ -104,7 +107,7 @@ export async function generateSkitScript(skit: SkitData, stage: Stage): Promise<
             `  Role Description: ${roleModule?.getAttribute('roleDescription') || 'This character has no assigned role aboard the PARC. They are to focus upon their own needs.'}\n` +
             `  Stats:\n    ${Object.entries(actor.stats).map(([stat, value]) => `${stat}: ${value}`).join('\n    ')}`}).join('\n')}` +
         // List non-present characters for reference; just need description and profile:
-        `\n\nOther Characters:\n${absentActors.map(actor => {
+        `\n\nAbsent Characters:\n${absentActors.map(actor => {
             // Just role name and not full details.
             const roleModule = stage.getLayout().getModulesWhere((m: any) => 
                 m && m.type !== 'quarters' && m.ownerId === actor.id
@@ -121,16 +124,17 @@ export async function generateSkitScript(skit: SkitData, stage: Stage): Promise<
         'System: CHARACTER NAME: [CHARACTER NAME EXPRESSES OPTIMISM] Action in prose. "Dialogue in quotation marks."\nNARRATOR: Conclusive ending to the scene in prose.' +
         `\n[CHARACTER NAME: RELEVANT STAT + 1]` +
         `\n[END SCENE]` +
-        (stage.getSave().pastSkits && stage.getSave().pastSkits?.length || 0 > 0 ? 
+        (pastSkits.length || 0 > 0 ? 
             // Include last 5 skit scripts for context and style reference
-            '\n\nRecent Scene Scripts for additional context:' + stage.getSave().pastSkits?.filter((v, index) => index > (stage.getSave().pastSkits?.length || 0) - 5).map((v, index) => 
+            '\n\nRecent Scene Scripts for additional context:' + pastSkits.map((v, index) => 
                 `\n\n  Scene in ${stage.getSave().layout.getModuleById(v.moduleId || '')?.type || 'Unknown'} (${stage.getSave().day - v.context.day}) days ago:\n` +
                 `System: ${buildScriptLog(v)}`).join('') :
             '') +
         `\n\nCurrent Scene Script Log to Continue:\nSystem: ${buildScriptLog(skit)}` +
-        `\n\nInstruction:\nAt the "System:" prompt, generate a short scene script based upon this scenario, and the specified Scene Prompt. Follow the structure of the strict Example Script formatting above. ` +
+        `\n\nInstruction:\nAt the "System:" prompt, generate a short scene script based upon this scenario, and the specified Scene Prompt, involving the Present Characters (Absent Characters are listed for reference only). ` +
+        `Follow the structure of the strict Example Script formatting above. ` +
         `Actions are depicted in prose and character dialogue in quotation marks. Emotion tags (e.g. [CHARACTER NAME EXPRESSES JOY]) should be used to indicate significant emotional shifts—` +
-        `these cues will be utilized by the game engine to visually display appropriate character emotions; only the known, listed emotions can be used here.\n` +
+        `these cues will be utilized by the game engine to visually display appropriate character emotions.\n` +
         `This response should end when it makes sense to give ${playerName} a chance to respond or contribute, ` +
         `or, if the scene feels satisfactorily complete, the entire scene can be concluded with an "[END SCENE]" or ` +
         `"[CHARACTER NAME: RELEVANT STAT + x]" tag(s), which can be used to apply stat changes to the specified Present Character(s). These changes should reflect an overt or implied outcome of the scene; ` +

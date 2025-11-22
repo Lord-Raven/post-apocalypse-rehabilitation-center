@@ -17,6 +17,15 @@ type ChatStateType = {
     lastSaveSlot: number;
 }
 
+type TimelineEvent = {
+    day: number;
+    phase: number;
+    description: string;
+    skit?: SkitData;
+}
+
+type Timeline = TimelineEvent[];
+
 type SaveType = {
     player: {name: string, description: string};
     aide: {name: string, description: string};
@@ -26,8 +35,7 @@ type SaveType = {
     layout: Layout;
     day: number;
     phase: number;
-    skitSummaries?: [];
-    pastSkits?: SkitData[];
+    timeline?: Timeline;
     currentSkit?: SkitData;
 }
 
@@ -147,7 +155,7 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
             // Increment actor role count
             for (let actor of Object.values(save.actors)) {
                 // Find non-quarters module assigned to this actor and increment held role count
-                const targetModule = save.layout.getModulesWhere(m => m.ownerId === actor.id && !['quarters', 'echo', 'common', 'generator'].includes(m.type))[0];
+                const targetModule = save.layout.getModulesWhere(m => m.ownerId === actor.id && m.type !== 'quarters')[0];
                 const roleName: string = targetModule?.getAttribute('role') || '';
                 if (roleName && Object.keys(actor.heldRoles).indexOf(roleName) !== -1) {
                     actor.heldRoles[roleName] += 1;
@@ -420,8 +428,8 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
     endSkit() {
         const save = this.getSave();
         if (save.currentSkit) {
-            if (!save.pastSkits) {
-                save.pastSkits = [];
+            if (!save.timeline) {
+                save.timeline = [];
             }
             // Apply endProperties to actors
             const endProps = save.currentSkit.endProperties || {};
@@ -438,7 +446,12 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
             }
 
             save.currentSkit.context = {...save.currentSkit.context, day: this.getSave().day};
-            save.pastSkits.push(save.currentSkit);
+            save.timeline.push({
+                day: save.day,
+                phase: save.phase,
+                description: `${save.currentSkit.type} skit.`,
+                skit: save.currentSkit
+            });
             save.currentSkit = undefined;
         }
     }

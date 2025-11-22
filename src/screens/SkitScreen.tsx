@@ -379,7 +379,7 @@ export const SkitScreen: FC<SkitScreenProps> = ({ stage, setScreenType }) => {
                     highlightColor={isHovered ? "rgba(255,255,255,0.2)" : "rgba(255,255,255,0)"}
                     panX={0}
                     panY={0}
-                    onMouseEnter={() => setHoveredActor(actor)}
+                    onMouseEnter={() => {console.log(`Hovering over ${actor.name}`); setHoveredActor(actor)}}
                     onMouseLeave={() => setHoveredActor(null)}
                 />
             );
