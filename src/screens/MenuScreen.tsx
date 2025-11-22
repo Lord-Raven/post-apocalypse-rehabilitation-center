@@ -29,6 +29,18 @@ export const MenuScreen: FC<MenuScreenProps> = ({ stage, setScreenType }) => {
         return Object.keys(save.actors).length > 0 || save.day > 1 || save.phase > 0;
     };
 
+    // Handle escape key to continue game if available
+    React.useEffect(() => {
+        const handleKeyDown = (event: KeyboardEvent) => {
+            if (event.key === 'Escape' && saveExists() && !showSettings) {
+                handleContinue();
+            }
+        };
+
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, [showSettings]);
+
     const handleContinue = () => {
         setScreenType(ScreenType.STATION);
         stage().startGame();
