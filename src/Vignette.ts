@@ -13,6 +13,7 @@ export enum VignetteType {
 export interface ScriptEntry {
     speaker: string;
     message: string;
+    speechUrl: string; // URL of TTS audio
     actorEmotions?: {[key: string]: Emotion}; // actor name -> emotion string
 }
 
@@ -283,7 +284,7 @@ export async function generateVignetteScript(vignette: VignetteData, stage: Stag
                     // Remove any remaining non-emotion tags
                     message = message.replace(/\[([^\]]+)\]/g, '').trim();
                     
-                    const entry: ScriptEntry = { speaker, message };
+                    const entry: ScriptEntry = { speaker, message, speechUrl: '' };
                     if (Object.keys(combinedEmotionTags[index]).length > 0) {
                         entry.actorEmotions = combinedEmotionTags[index];
                     }
@@ -303,6 +304,29 @@ export async function generateVignetteScript(vignette: VignetteData, stage: Stag
                     if (matched) {
                         entry.speaker = matched.name;
                     }
+                }
+
+                // TTS for each entry's dialogue
+                for (const entry of scriptEntries) {
+                    // Only TTS if entry.speaker matches an actor from stage().getSave().actors and entry.message includes dialogue in quotes.
+                    if (!Object.values(stage.getSave().actors).some(a => namesMatch(a.name.toLowerCase(), entry.speaker.toLowerCase())) || !entry.message.includes('"')) {
+                        entry.speechUrl = '';
+                        continue;
+                    }
+                    const transcript = entry.message.split('"').filter((_, i) => i % 2 === 1).join(' (pause) ').trim();
+                    stage.generator.speak({
+                        transcript: transcript,
+                        voice_id: undefined // Use default voice
+                    }).then(ttsResponse => {
+                        if (ttsResponse && ttsResponse.url) {
+                            entry.speechUrl = ttsResponse.url;
+                        } else {
+                            entry.speechUrl = '';
+                        }
+                    }).catch(err => {
+                        console.error('Error generating TTS:', err);
+                        entry.speechUrl = '';
+                    });
                 }
                 
 

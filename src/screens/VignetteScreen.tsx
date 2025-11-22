@@ -302,6 +302,11 @@ export const VignetteScreen: FC<VignetteScreenProps> = ({ stage, setScreenType }
             setDisplayName(matchingActor?.name || (isPlayerSpeaker ? playerName : ''));
             setDisplayMessage(formatMessage(vignette.script[index]?.message || ''));
             setFinishTyping(false); // Reset typing state when message changes
+            if (vignette.script[index]?.speechUrl) {
+                console.log('Playing TTS audio from URL:', vignette.script[index].speechUrl);
+                const audio = new Audio(vignette.script[index].speechUrl);
+                audio.play();
+            }
         } else {
             setSpeaker(null);
             setDisplayName('');
@@ -766,7 +771,7 @@ export const VignetteScreen: FC<VignetteScreenProps> = ({ stage, setScreenType }
         const stageVignette = stage().getSave().currentVignette;
         if (!stageVignette) return;
         if (inputText.trim()) {
-            stageVignette?.script.push({ speaker: stage().getSave().player.name.toUpperCase(), message: inputText });
+            stageVignette?.script.push({ speaker: stage().getSave().player.name.toUpperCase(), message: inputText, speechUrl: '' });
         }
         setVignette({...stageVignette as VignetteData});
         setLoading(true);
