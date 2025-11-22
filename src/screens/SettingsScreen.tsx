@@ -60,7 +60,7 @@ export const SettingsScreen: FC<SettingsScreenProps> = ({ stage, onClose, isNewG
         'Small Butt': ['Small Butt'],
         'Small Dick': ['Small Dick'],
         'Petite': ['Petite'],
-        'Chubby': ['Chubby'],
+        'Chubby': ['Chubby', 'Fat'],
         'Muscular': ['Muscular'],
         'Giant': ['Giant', 'Giantess'],
         'Size Difference': ['Size Difference'],

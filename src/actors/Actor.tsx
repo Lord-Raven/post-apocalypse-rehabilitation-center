@@ -124,6 +124,25 @@ export async function loadReserveActor(fullPath: string, stage: Stage): Promise<
         'old-school': 'retro',
         'high school': 'college',
         'school': 'college'};
+    // Mapping of voice IDs to a description of the voice, so the AI can choose an ID based on the character profile.
+    const voiceMap: {[key: string]: string} = {
+        '03a438b7-ebfa-4f72-9061-f086d8f1fca6': 'female - calm and soothing', // HQ Female Lowrange
+        'a2533977-83cb-4c10-9955-0277e047538f': 'female - energetic and lively', // LQ Female Midrange
+        '057d53b3-bb28-47f1-9c19-a85a79851863': 'female - low and warm', // HQ Female Midrange
+        '6e6619ba-4880-4cf3-a5df-d0697ba46656': 'female - high and soft', // LQ Female Highrange
+        'd6e05564-eea9-4181-aee9-fa0d7315f67d': 'male - cool and confident', // HQ Male Lowrange
+        'dc42cdc0-3f05-43a9-b843-7920e2e041aa': 'male - low and murmuring', // HQ Male Highrange
+        'e6b74abb-f4b2-4a84-b9ef-c390512f2f47': 'male - posh and articulate', // HQ Male Midrange
+        'bright_female_20s': 'female - bright and cheerful',
+        'resonant_male_40s': 'male - resonant and mature',
+        'gentle_female_30s': 'female - gentle and caring',
+        'whispery_female_40s': 'female - whispery and mysterious',
+        'formal_female_30s': 'female - formal and refined',
+        'professional_female_30s': 'female - professional and direct',
+        'calm_female_20s': 'female - calm and soothing',
+        'light_male_20s': 'male - light and thoughtful',
+        'animated_male_20s': 'male - hip and lively',
+    };
     const data = {
         name: dataName,
         fullPath: item.node.fullPath,
@@ -158,7 +177,7 @@ export async function loadReserveActor(fullPath: string, stage: Stage): Promise<
     const generatedResponse = await stage.generator.textGen({
         prompt: `{{messages}}This is preparatory request for structured and formatted game content.` +
             `\n\nBackground: This game is a futuristic multiverse setting that pulls characters from across eras and timelines and settings. ` +
-            `The player of this game ${stage.getSave().player.name} manages a space station and rehabilitiation center that resurrects victims of a multiversal calamity and helps them adapt to a new life. ` +
+            `The player of this game, ${stage.getSave().player.name}, manages a space station and rehabilitiation center that resurrects victims of a multiversal calamity and helps them adapt to a new life. ` +
             `The player's motives and ethics are open-ended; they may be benevolent or self-serving, and the characters they interact with may respond accordingly. ` +
             `\n\nThe Original Details below describe a character or scenario (${data.name}) from another universe. This request and response must digest and distill these details to suit the game's narrative scenario, ` +
             `crafting a character who has been rematerialized into this universe through an "echo chamber," their essence reconstituted from the whispers of a black hole. ` +
@@ -171,11 +190,14 @@ export async function loadReserveActor(fullPath: string, stage: Stage): Promise<
             `Bear in mind the character's current, diminished state—as a newly reconstituted and relatively powerless individual—and not their original potential when scoring these traits (but omit your reasons from the response structure); ` +
             `some characters may not respond well to being essentially resurrected into a new timeline, losing much of what they once had. Others may be grateful for a new beginning.\n\n` +
             `Original Details about ${data.name}:\n${data.description} ${data.personality}\n\n` +
+            `Available Voices:\n` +
+            Object.entries(voiceMap).map(([voiceId, voiceDesc]) => '  - ' + voiceId + ': ' + voiceDesc).join('\n') +
             `Instructions: After carefully considering this description and the rules provided, generate a concise breakdown for a character based upon these details in the following strict format:\n` +
             `System: NAME: Their simple name\n` +
             `DESCRIPTION: A vivid description of the character's physical appearance, attire, and any distinguishing features.\n` +
             `PROFILE: A brief summary of the character's key personality traits and behaviors.\n` +
             `STYLE: A concise description of the character's sense of overall style, mood, interests, or aesthetic, to be applied to the way they decorate their space.\n` +
+            `VOICE: Output the specific voice ID from the Available Voices section that best matches the character's personality\n` +
             `COLOR: A hex color that reflects the character's theme or mood—use darker or richer colors that will contrast with white text.\n` +
             `FONT: A web-safe font family that reflects the character's personality.\n` +
             Object.entries(Stat).map(([key, value]) => {
@@ -187,6 +209,7 @@ export async function loadReserveActor(fullPath: string, stage: Stage): Promise<
             `DESCRIPTION: A tall, athletic woman with short, dark hair and piercing blue eyes. She wears a simple, utilitarian outfit made from durable materials.\n` +
             `PROFILE: Jane is confident and determined, with a strong sense of justice. She is quick to anger but also quick to forgive. She is fiercely independent and will do whatever it takes to protect those she cares about.\n` +
             `STYLE: Practical and no-nonsense, favoring functionality over fashion. Prefers muted colors and simple designs that allow freedom and comfort.\n` +
+            `VOICE: 03a438b7-ebfa-4f72-9061-f086d8f1fca6\n` +
             `COLOR: #333333\n` +
             `FONT: Arial\n` +
             `BRAWN: 5\n` +

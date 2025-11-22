@@ -125,6 +125,11 @@ export const EMOTION_SYNONYMS: {[key: string]: Emotion} = {
     penitence: Emotion.guilt,
     annoyance: Emotion.disappointment,
     gratitude: Emotion.kindness,
+    kindliness: Emotion.kindness,
+    adoration: Emotion.love,
+    pridefulness: Emotion.pride,
+    inquisitiveness: Emotion.wonder,
+    panic: Emotion.fear,
 }
 
 export const EMOTION_PROMPTS: {[emotion in Emotion]?: string} = {
