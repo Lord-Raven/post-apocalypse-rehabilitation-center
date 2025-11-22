@@ -454,7 +454,7 @@ export const SkitScreen: FC<SkitScreenProps> = ({ stage, setScreenType }) => {
             <div style={{ position: 'relative', width: '100vw', height: '100vh' }}>
 
             {/* Actors */}
-            <div style={{ position: 'absolute', inset: 0, zIndex: 1, pointerEvents: 'none' }}>
+            <div style={{ position: 'absolute', inset: 0, zIndex: 1 }}>
                 {renderActors(stage().getSave().layout.getModuleById(skit.moduleId || ''), Object.values(stage().getSave().actors).filter(actor => actor.locationId === (skit.moduleId || '')) || [], skit.script && skit.script.length > 0 ? skit.script[index]?.speaker : undefined)}
             </div>
 
