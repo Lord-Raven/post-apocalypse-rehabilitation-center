@@ -37,12 +37,6 @@ import {
 } from '@mui/icons-material';
 import TypeOut from '../components/TypeOut';
 
-// Small component that shows a loading indicator
-const LoadingIndicator: React.FC<{ active?: boolean }> = ({ active }) => {
-    if (!active) return <span>...</span>;
-    return <CircularProgress size={16} sx={{ color: '#bfffd0' }} />;
-};
-
 // Helper function to format text with dialogue, italics, and bold styling
 const formatMessage = (text: string): JSX.Element => {
     if (!text) return <></>;
@@ -265,6 +259,7 @@ export const VignetteScreen: FC<VignetteScreenProps> = ({ stage, setScreenType }
     }>>([]);
     const [hoveredActor, setHoveredActor] = React.useState<Actor | null>(null);
     const [audioEnabled, setAudioEnabled] = React.useState<boolean>(true);
+    const currentAudioRef = React.useRef<HTMLAudioElement | null>(null);
 
 
     useEffect(() => {
@@ -306,9 +301,18 @@ export const VignetteScreen: FC<VignetteScreenProps> = ({ stage, setScreenType }
             setDisplayMessage(formatMessage(vignette.script[index]?.message || ''));
             setFinishTyping(false); // Reset typing state when message changes
             if (audioEnabled && vignette.script[index]?.speechUrl) {
+                // Stop any currently playing audio
+                if (currentAudioRef.current) {
+                    currentAudioRef.current.pause();
+                    currentAudioRef.current.currentTime = 0;
+                }
+                
                 console.log('Playing TTS audio from URL:', vignette.script[index].speechUrl);
                 const audio = new Audio(vignette.script[index].speechUrl);
-                audio.play();
+                currentAudioRef.current = audio;
+                audio.play().catch(err => {
+                    console.error('Error playing audio:', err);
+                });
             }
         } else {
             setSpeaker(null);
@@ -364,8 +368,6 @@ export const VignetteScreen: FC<VignetteScreenProps> = ({ stage, setScreenType }
                         pointerEvents: 'auto',
                         zIndex: 1
                     }}
-                    onMouseEnter={() => setHoveredActor(actor)}
-                    onMouseLeave={() => setHoveredActor(null)}
                 >
                     <ActorImage
                         actor={actor}
@@ -378,6 +380,8 @@ export const VignetteScreen: FC<VignetteScreenProps> = ({ stage, setScreenType }
                         highlightColor={isHovered ? "rgba(255,255,255,0.2)" : "rgba(255,255,255,0)"}
                         panX={0}
                         panY={0}
+                        onMouseEnter={() => setHoveredActor(actor)}
+                        onMouseLeave={() => setHoveredActor(null)}
                     />
                 </div>
             );

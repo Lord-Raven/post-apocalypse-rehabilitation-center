@@ -18,6 +18,8 @@ interface ActorImageProps {
     highlightColor: string;
     panX: number;
     panY: number;
+    onMouseEnter?: () => void;
+    onMouseLeave?: () => void;
 }
 
 const ActorImage: FC<ActorImageProps> = ({
@@ -30,7 +32,9 @@ const ActorImage: FC<ActorImageProps> = ({
     speaker,
     highlightColor,
     panX,
-    panY
+    panY,
+    onMouseEnter,
+    onMouseLeave
 }) => {
     const [processedImageUrl, setProcessedImageUrl] = useState<string>('');
     const [prevImageUrl, setPrevImageUrl] = useState<string>('');
@@ -112,7 +116,9 @@ const ActorImage: FC<ActorImageProps> = ({
             initial={'absent'}
             exit='absent'
             animate={speaker ? 'talking' : 'idle'}
-            style={{position: 'absolute', width: 'auto', aspectRatio, overflow: 'visible'}}>
+            style={{position: 'absolute', width: 'auto', aspectRatio, overflow: 'visible'}}
+            onMouseEnter={onMouseEnter}
+            onMouseLeave={onMouseLeave}>
             {/* Blurred background layer */}
             <AnimatePresence>
                 {prevImageUrl && prevImageUrl !== processedImageUrl && (
