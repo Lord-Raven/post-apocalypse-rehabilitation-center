@@ -1,5 +1,5 @@
 import Actor, { getStatDescription, namesMatch, Stat } from "./actors/Actor";
-import { Emotion, EMOTION_SYNONYMS } from "./Emotion";
+import { Emotion, EMOTION_SYNONYMS } from "./actors/Emotion";
 import { Stage } from "./Stage";
 
 export enum VignetteType {

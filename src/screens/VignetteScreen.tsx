@@ -8,7 +8,7 @@ import Actor, { namesMatch } from '../actors/Actor';
 import { Stage } from '../Stage';
 import { VignetteData } from '../Vignette';
 import ActorImage from '../actors/ActorImage';
-import { Emotion } from '../Emotion';
+import { Emotion } from '../actors/Emotion';
 import StatChangeDisplay from './StatChangeDisplay';
 import Nameplate from '../components/Nameplate';
 import { BlurredBackground } from '../components/BlurredBackground';
@@ -321,7 +321,7 @@ export const VignetteScreen: FC<VignetteScreenProps> = ({ stage, setScreenType }
             setFinishTyping(false);
         }
 
-    }, [index, vignette, stage]);
+    }, [index, vignette]);
 
     const next = () => {
         if (finishTyping) {
@@ -360,30 +360,21 @@ export const VignetteScreen: FC<VignetteScreenProps> = ({ stage, setScreenType }
             const isHovered = hoveredActor === actor;
             
             return (
-                <div
+                <ActorImage
                     key={actor.id}
-                    style={{
-                        position: 'absolute',
-                        inset: 0,
-                        pointerEvents: 'auto',
-                        zIndex: 1
-                    }}
-                >
-                    <ActorImage
-                        actor={actor}
-                        emotion={emotion}
-                        imageUrl={actor.emotionPack[emotion] || actor.emotionPack['neutral'] || ''}
-                        xPosition={xPosition}
-                        yPosition={0}
-                        zIndex={isSpeaking ? 5 : 1}
-                        speaker={isSpeaking}
-                        highlightColor={isHovered ? "rgba(255,255,255,0.2)" : "rgba(255,255,255,0)"}
-                        panX={0}
-                        panY={0}
-                        onMouseEnter={() => setHoveredActor(actor)}
-                        onMouseLeave={() => setHoveredActor(null)}
-                    />
-                </div>
+                    actor={actor}
+                    emotion={emotion}
+                    imageUrl={actor.emotionPack[emotion] || actor.emotionPack['neutral'] || ''}
+                    xPosition={xPosition}
+                    yPosition={0}
+                    zIndex={55 - Math.abs(xPosition)} // Higher zIndex for center positions}
+                    speaker={isSpeaking}
+                    highlightColor={isHovered ? "rgba(255,255,255,0.2)" : "rgba(255,255,255,0)"}
+                    panX={0}
+                    panY={0}
+                    onMouseEnter={() => setHoveredActor(actor)}
+                    onMouseLeave={() => setHoveredActor(null)}
+                />
             );
         });
     }

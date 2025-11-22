@@ -1,7 +1,7 @@
 import {motion, Variants, easeOut, easeIn, AnimatePresence} from "framer-motion";
 import {FC, useState, useEffect, useRef, useMemo, memo} from "react";
 import Actor from "./Actor";
-import { Emotion } from "../Emotion";
+import { Emotion } from "./Emotion";
 
 const IDLE_HEIGHT: number = 80;
 const SPEAKING_HEIGHT: number = 90;

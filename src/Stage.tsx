@@ -1,12 +1,13 @@
 import {ReactElement, useEffect, useState} from "react";
 import {StageBase, StageResponse, InitialData, Message} from "@chub-ai/stages-ts";
 import {LoadResponse} from "@chub-ai/stages-ts/dist/types/load";
-import Actor, { loadReserveActor, generatePrimaryActorImage, commitActorToEcho, Stat } from "./actors/Actor";
+import Actor, { loadReserveActor, generatePrimaryActorImage, commitActorToEcho, Stat, generateAdditionalActorImages } from "./actors/Actor";
 import { DEFAULT_GRID_SIZE, Layout, createModule } from './Module';
 import { BaseScreen } from "./screens/BaseScreen";
 import {Client} from "@gradio/client";
 import { generateVignetteScript, VignetteData } from "./Vignette";
 import { smartRehydrate } from "./SaveRehydration";
+import { Emotion } from "./actors/Emotion";
 
 type MessageStateType = any;
 type ConfigType = any;
@@ -201,6 +202,25 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
         console.log('Starting game...');
         if (this.reserveActors.length < this.RESERVE_ACTORS && !this.reserveActorsLoadPromise) {
             this.reserveActorsLoadPromise = this.loadReserveActors();
+        }
+        // If there are any actors in the save with missing emotion images, kick one of them off now.
+        const save = this.getSave();
+        for (const actorId in save.actors) {
+            const actor = save.actors[actorId];
+            if (!actor.emotionPack || !actor.emotionPack[Emotion.neutral] || actor.emotionPack[Emotion.neutral] == actor.avatarImageUrl) {
+                generatePrimaryActorImage(actor, this).then(() => {
+                    this.saveGame();
+                });
+                break; // only do one at a time
+            } else if (!actor.emotionPack || Object.values(Emotion).some(emotion => emotion !== Emotion.neutral && (
+                    !actor.emotionPack[emotion] || 
+                    actor.emotionPack[emotion] == actor.avatarImageUrl || 
+                    actor.emotionPack[emotion] == actor.emotionPack[Emotion.neutral]))) {
+                generateAdditionalActorImages(actor, this).then(() => {
+                    this.saveGame();
+                });
+                break; // only do one at a time
+            }
         }
     }
 
