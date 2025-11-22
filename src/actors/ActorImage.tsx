@@ -85,7 +85,6 @@ const ActorImage: FC<ActorImageProps> = ({
             bottom: `${baseY}vh`,
             height: `${IDLE_HEIGHT - yPosition * 2}vh`,
             filter: 'brightness(0.8)',
-            zIndex: zIndex,
             transition: { x: { ease: easeIn, duration: 0.5 }, bottom: { duration: 0.5 }, opacity: { ease: easeOut, duration: 0.5 } }
         },
         talking: {
@@ -94,7 +93,6 @@ const ActorImage: FC<ActorImageProps> = ({
             bottom: `${baseY}vh`,
             height: `${SPEAKING_HEIGHT}vh`,
             filter: 'brightness(1)',
-            zIndex: 100,
             transition: { x: { ease: easeIn, duration: 0.3 }, bottom: { duration: 0.3 }, opacity: { ease: easeOut, duration: 0.3 } }
         },
         idle: {
@@ -103,7 +101,6 @@ const ActorImage: FC<ActorImageProps> = ({
             bottom: `${baseY}vh`,
             height: `${IDLE_HEIGHT - yPosition * 2}vh`,
             filter: 'brightness(0.8)',
-            zIndex: zIndex,
             transition: { x: { ease: easeIn, duration: 0.3 }, bottom: { duration: 0.3 }, opacity: { ease: easeOut, duration: 0.3 } }
         }
     }), [baseX, baseY, yPosition, zIndex]);
@@ -116,7 +113,7 @@ const ActorImage: FC<ActorImageProps> = ({
             initial={'absent'}
             exit='absent'
             animate={speaker ? 'talking' : 'idle'}
-            style={{position: 'absolute', width: 'auto', aspectRatio, overflow: 'visible'}}
+            style={{position: 'absolute', width: 'auto', aspectRatio, overflow: 'visible', zIndex: speaker ? 100 : zIndex}}
             onMouseEnter={onMouseEnter}
             onMouseLeave={onMouseLeave}>
             {/* Blurred background layer */}
