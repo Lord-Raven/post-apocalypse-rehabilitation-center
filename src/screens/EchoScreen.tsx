@@ -5,7 +5,7 @@ import React, { FC } from 'react';
 import { motion } from 'framer-motion';
 import { ScreenType } from './BaseScreen';
 import { Stage } from '../Stage';
-import { VignetteType } from '../Vignette';
+import { SkitType } from '../Skit';
 import Nameplate from '../components/Nameplate';
 import Actor, { generateActorDecor, Stat } from '../actors/Actor';
 import ActorCard, { ActorCardSection } from '../components/ActorCard';
@@ -83,8 +83,8 @@ export const EchoScreen: FC<EchoScreenProps> = ({stage, setScreenType}) => {
 			stage().removeActorFromEcho(selected.id);
 			// Possibly set other properties on the selected actor as needed
 			selected.birth(stage().getSave().day);
-			stage().setVignette({
-                    type: VignetteType.INTRO_CHARACTER,
+			stage().setSkit({
+                    type: SkitType.INTRO_CHARACTER,
                     actorId: selected.id,
                     moduleId: sceneRoom?.id,
                     script: [],
@@ -92,7 +92,7 @@ export const EchoScreen: FC<EchoScreenProps> = ({stage, setScreenType}) => {
                     context: {},
                     endScene: false
                 });
-			setScreenType(ScreenType.VIGNETTE);
+			setScreenType(ScreenType.SKIT);
 		}
 	};
 

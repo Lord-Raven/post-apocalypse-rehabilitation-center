@@ -1,4 +1,4 @@
-import { VignetteType } from './Vignette';
+import { SkitType } from './Skit';
 import { Stage } from "./Stage";
 import { ScreenType } from './screens/BaseScreen';
 
@@ -32,18 +32,18 @@ export interface ModuleIntrinsic {
 }
 
 const randomAction = (module: Module, stage: Stage, setScreenType: (type: ScreenType) => void) => {
-            // If there are actors here, open a vignette with them:
+            // If there are actors here, open a skit with them:
             if (Object.values(stage.getSave().actors).some(a => a.locationId === module.id)) {
-                console.log("Opening vignette.");
-                stage.setVignette({
-                    type: VignetteType.RANDOM_ENCOUNTER,
+                console.log("Opening skit.");
+                stage.setSkit({
+                    type: SkitType.RANDOM_ENCOUNTER,
                     moduleId: module.id,
                     script: [],
                     generating: true,
                     context: {},
                     endScene: false
                 });
-                setScreenType(ScreenType.VIGNETTE);
+                setScreenType(ScreenType.SKIT);
             }
         };
 
@@ -88,12 +88,12 @@ export const MODULE_DEFAULTS: Record<ModuleType, ModuleIntrinsic> = {
         baseImageUrl: 'https://media.charhub.io/5e39db53-9d66-459d-8926-281b3b089b36/8ff20bdb-b719-4cf7-bf53-3326d6f9fcaa.png', 
         defaultImageUrl: 'https://media.charhub.io/99ffcdf5-a01b-43cf-81e5-e7098d8058f5/d1ec2e67-9124-4b8b-82d9-9685cfb973d2.png',
         action: (module: Module, stage: Stage, setScreenType: (type: ScreenType) => void) => {
-            // Open the vignette screen to speak to occupants
+            // Open the skit screen to speak to occupants
             if (module.ownerId) {
-                console.log("Opening vignette.");
+                console.log("Opening skit.");
                 stage.getSave().actors[module.ownerId].locationId = module.id; // Ensure actor is in the module
-                stage.setVignette({
-                    type: VignetteType.VISIT_CHARACTER,
+                stage.setSkit({
+                    type: SkitType.VISIT_CHARACTER,
                     actorId: module.ownerId,
                     moduleId: module.id,
                     script: [],
@@ -101,7 +101,7 @@ export const MODULE_DEFAULTS: Record<ModuleType, ModuleIntrinsic> = {
                     context: {},
                     endScene: false
                 });
-                setScreenType(ScreenType.VIGNETTE);
+                setScreenType(ScreenType.SKIT);
             }
         },
         available: (stage: Stage) => {

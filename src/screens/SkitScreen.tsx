@@ -1,12 +1,12 @@
 /*
- * This screen displays Visual Novel vignette scenes, displaying dialogue and characters as they interact with the player and each other.
+ * This screen displays Visual Novel skit scenes, displaying dialogue and characters as they interact with the player and each other.
  */
 import React, { FC, useEffect } from 'react';
 import { ScreenType } from './BaseScreen';
 import { Module } from '../Module';
 import Actor, { namesMatch } from '../actors/Actor';
 import { Stage } from '../Stage';
-import { VignetteData } from '../Vignette';
+import { SkitData } from '../Skit';
 import ActorImage from '../actors/ActorImage';
 import { Emotion } from '../actors/Emotion';
 import StatChangeDisplay from './StatChangeDisplay';
@@ -233,17 +233,17 @@ const formatInlineStyles = (text: string): JSX.Element => {
     return formatHeaders(text);
 };
 
-interface VignetteScreenProps {
+interface SkitScreenProps {
     stage: () => Stage;
     setScreenType: (type: ScreenType) => void;
 }
 
-export const VignetteScreen: FC<VignetteScreenProps> = ({ stage, setScreenType }) => {
+export const SkitScreen: FC<SkitScreenProps> = ({ stage, setScreenType }) => {
     const { setTooltip, clearTooltip } = useTooltip();
     const [index, setIndex] = React.useState<number>(0);
     const [inputText, setInputText] = React.useState<string>('');
     const [sceneEnded, setSceneEnded] = React.useState<boolean>(false);
-    const [vignette, setVignette] = React.useState<VignetteData>(stage().getSave().currentVignette as VignetteData);
+    const [skit, setSkit] = React.useState<SkitData>(stage().getSave().currentSkit as SkitData);
     const [loading, setLoading] = React.useState<boolean>(false);
     const [speaker, setSpeaker] = React.useState<Actor|null>(null);
     const [displayName, setDisplayName] = React.useState<string>('');
@@ -263,30 +263,30 @@ export const VignetteScreen: FC<VignetteScreenProps> = ({ stage, setScreenType }
 
 
     useEffect(() => {
-        if (vignette.script.length == 0) {
+        if (skit.script.length == 0) {
             setLoading(true);
-            stage().continueVignette().then(() => {
-                setVignette({...stage().getSave().currentVignette as VignetteData});
+            stage().continueSkit().then(() => {
+                setSkit({...stage().getSave().currentSkit as SkitData});
                 setLoading(false);
-                const vignetteData = stage().getSave().currentVignette;
-                const ended = vignetteData?.endScene || false;
+                const skitData = stage().getSave().currentSkit;
+                const ended = skitData?.endScene || false;
                 setSceneEnded(ended);
                 
                 // Process stat changes when scene ends
                 if (ended) {
-                    if (vignetteData?.endProperties) {
-                        processStatChanges(vignetteData.endProperties);
+                    if (skitData?.endProperties) {
+                        processStatChanges(skitData.endProperties);
                     }
                     stage().incPhase();
                 }
             });
         }
-    }, [vignette]);
+    }, [skit]);
 
     // speaker is set by index change
     useEffect(() => {
-        if (vignette.script && vignette.script.length > 0) {
-            const currentSpeakerName = vignette.script[index]?.speaker?.trim() || '';
+        if (skit.script && skit.script.length > 0) {
+            const currentSpeakerName = skit.script[index]?.speaker?.trim() || '';
             const actors = Object.values(stage().getSave().actors);
             const matchingActor = actors.find(actor => 
                 actor.name && namesMatch(actor.name.trim().toLowerCase(), currentSpeakerName.toLowerCase())
@@ -298,17 +298,17 @@ export const VignetteScreen: FC<VignetteScreenProps> = ({ stage, setScreenType }
             
             setSpeaker(matchingActor || null);
             setDisplayName(matchingActor?.name || (isPlayerSpeaker ? playerName : ''));
-            setDisplayMessage(formatMessage(vignette.script[index]?.message || ''));
+            setDisplayMessage(formatMessage(skit.script[index]?.message || ''));
             setFinishTyping(false); // Reset typing state when message changes
-            if (audioEnabled && vignette.script[index]?.speechUrl) {
+            if (audioEnabled && skit.script[index]?.speechUrl) {
                 // Stop any currently playing audio
                 if (currentAudioRef.current) {
                     currentAudioRef.current.pause();
                     currentAudioRef.current.currentTime = 0;
                 }
                 
-                console.log('Playing TTS audio from URL:', vignette.script[index].speechUrl);
-                const audio = new Audio(vignette.script[index].speechUrl);
+                console.log('Playing TTS audio from URL:', skit.script[index].speechUrl);
+                const audio = new Audio(skit.script[index].speechUrl);
                 currentAudioRef.current = audio;
                 audio.play().catch(err => {
                     console.error('Error playing audio:', err);
@@ -321,11 +321,11 @@ export const VignetteScreen: FC<VignetteScreenProps> = ({ stage, setScreenType }
             setFinishTyping(false);
         }
 
-    }, [index, vignette]);
+    }, [index, skit]);
 
     const next = () => {
         if (finishTyping) {
-            setIndex(prevIndex => Math.min(prevIndex + 1, vignette.script.length - 1));
+            setIndex(prevIndex => Math.min(prevIndex + 1, skit.script.length - 1));
         } else {
             setFinishTyping(true);
         }
@@ -343,10 +343,10 @@ export const VignetteScreen: FC<VignetteScreenProps> = ({ stage, setScreenType }
             // Get emotion for this actor from current script entry
             let emotion = Emotion.neutral;
             
-            if (vignette.script && vignette.script.length > 0 && index < vignette.script.length) {
-                // scan backward through vignette script to find most recent emotion for this actor:
+            if (skit.script && skit.script.length > 0 && index < skit.script.length) {
+                // scan backward through skit script to find most recent emotion for this actor:
                 for (let j = index; j >= 0; j--) {
-                    const entry = vignette.script[j];
+                    const entry = skit.script[j];
                     if (entry.actorEmotions && entry.actorEmotions[actor.name]) {
                         emotion = entry.actorEmotions[actor.name];
                         break;
@@ -437,7 +437,7 @@ export const VignetteScreen: FC<VignetteScreenProps> = ({ stage, setScreenType }
         setCharacterStatChanges(changes);
     };
 
-    const module = stage().getSave().layout.getModuleById(vignette.moduleId || '');
+    const module = stage().getSave().layout.getModuleById(skit.moduleId || '');
     const decorImageUrl = module ? stage().getSave().actors[module.ownerId || '']?.decorImageUrls[module.type] || module.getAttribute('defaultImageUrl') : '';
 
     return (
@@ -448,16 +448,16 @@ export const VignetteScreen: FC<VignetteScreenProps> = ({ stage, setScreenType }
 
             {/* Actors */}
             <div style={{ position: 'absolute', inset: 0, zIndex: 1, pointerEvents: 'none' }}>
-                {renderActors(stage().getSave().layout.getModuleById(vignette.moduleId || ''), Object.values(stage().getSave().actors).filter(actor => actor.locationId === (vignette.moduleId || '')) || [], vignette.script && vignette.script.length > 0 ? vignette.script[index]?.speaker : undefined)}
+                {renderActors(stage().getSave().layout.getModuleById(skit.moduleId || ''), Object.values(stage().getSave().actors).filter(actor => actor.locationId === (skit.moduleId || '')) || [], skit.script && skit.script.length > 0 ? skit.script[index]?.speaker : undefined)}
             </div>
 
             {/* Stat Change Display - shown when scene ends with stat changes */}
-            {sceneEnded && characterStatChanges.length > 0 && index === vignette.script.length - 1 && (
+            {sceneEnded && characterStatChanges.length > 0 && index === skit.script.length - 1 && (
                 <StatChangeDisplay characterChanges={characterStatChanges} layout={stage().getSave().layout} />
             )}
 
             {/* Actor Card - shown when hovering over an actor, only if no stat changes are displayed */}
-            {hoveredActor && !(sceneEnded && characterStatChanges.length > 0 && index === vignette.script.length - 1) && (
+            {hoveredActor && !(sceneEnded && characterStatChanges.length > 0 && index === skit.script.length - 1) && (
                 <div style={{
                     position: 'absolute',
                     top: '5%',
@@ -523,7 +523,7 @@ export const VignetteScreen: FC<VignetteScreenProps> = ({ stage, setScreenType }
                                         clearTooltip();
                                     }}
                                 /> : 
-                                `${index + 1} / ${vignette.script.length}`}
+                                `${index + 1} / ${skit.script.length}`}
                             sx={{ 
                                 minWidth: 80,
                                 fontWeight: 700, 
@@ -540,7 +540,7 @@ export const VignetteScreen: FC<VignetteScreenProps> = ({ stage, setScreenType }
 
                         <IconButton 
                             onClick={next} 
-                            disabled={index === vignette.script.length - 1 || loading}
+                            disabled={index === skit.script.length - 1 || loading}
                             size="small"
                             sx={{ 
                                 color: '#cfe', 
@@ -660,7 +660,7 @@ export const VignetteScreen: FC<VignetteScreenProps> = ({ stage, setScreenType }
                             color: '#e9fff7'
                         }}
                     >
-                        {vignette.script && vignette.script.length > 0 ? (
+                        {skit.script && skit.script.length > 0 ? (
                             <TypeOut
                                 key={`message-box-${index}`}
                                 speed={20}
@@ -682,16 +682,16 @@ export const VignetteScreen: FC<VignetteScreenProps> = ({ stage, setScreenType }
                         onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) => {
                             if (e.key === 'Enter') {
                                 e.preventDefault();
-                                if (index === vignette.script.length - 1 && !sceneEnded) handleSubmit();
+                                if (index === skit.script.length - 1 && !sceneEnded) handleSubmit();
                                 else if (sceneEnded) handleClose();
                             }
                         }}
                         placeholder={
-                            index === vignette.script.length - 1 
+                            index === skit.script.length - 1 
                                 ? (sceneEnded ? 'Scene concluded' : 'Type your course of action...') 
                                 : (loading ? 'Generating...' : 'Advance to the final line...')
                         }
-                        disabled={!(index === vignette.script.length - 1) || sceneEnded || loading}
+                        disabled={!(index === skit.script.length - 1) || sceneEnded || loading}
                         variant="outlined"
                         size="small"
                         sx={{
@@ -730,13 +730,13 @@ export const VignetteScreen: FC<VignetteScreenProps> = ({ stage, setScreenType }
                     />
                     <Button
                         onClick={() => { if (sceneEnded) handleClose(); else handleSubmit(); }}
-                        disabled={!(index === vignette.script.length - 1) || loading}
+                        disabled={!(index === skit.script.length - 1) || loading}
                         variant="contained"
                         startIcon={sceneEnded ? <Close /> : <Send />}
                         sx={{
                             background: sceneEnded 
                                 ? 'linear-gradient(90deg,#ff8c66,#ff5a3b)' 
-                                : (index === vignette.script.length - 1 && !sceneEnded) 
+                                : (index === skit.script.length - 1 && !sceneEnded) 
                                     ? 'linear-gradient(90deg,#00ff88,#00b38f)' 
                                     : 'rgba(255,255,255,0.04)',
                             color: sceneEnded ? '#fff' : '#00221a',
@@ -745,7 +745,7 @@ export const VignetteScreen: FC<VignetteScreenProps> = ({ stage, setScreenType }
                             '&:hover': {
                                 background: sceneEnded 
                                     ? 'linear-gradient(90deg,#ff7a52,#ff4621)' 
-                                    : (index === vignette.script.length - 1 && !sceneEnded) 
+                                    : (index === skit.script.length - 1 && !sceneEnded) 
                                         ? 'linear-gradient(90deg,#00e67a,#009a7b)' 
                                         : 'rgba(255,255,255,0.06)',
                             },
@@ -765,52 +765,52 @@ export const VignetteScreen: FC<VignetteScreenProps> = ({ stage, setScreenType }
 
     // Handle reroll
     function handleReroll() {
-        const stageVignette = stage().getSave().currentVignette;
-        if (!stageVignette) return;
+        const stageSkit = stage().getSave().currentSkit;
+        if (!stageSkit) return;
         // Cut out this index through the end of the script and re-generate:
-        stageVignette.script = stageVignette.script.slice(0, index);
+        stageSkit.script = stageSkit.script.slice(0, index);
         setLoading(true);
         setInputText('');
-        stage().continueVignette().then(() => {
-            const vignetteData = stage().getSave().currentVignette;
-            setVignette({...vignetteData as VignetteData});
-            setIndex(Math.min(index, (vignetteData?.script.length || 1) - 1));
+        stage().continueSkit().then(() => {
+            const skitData = stage().getSave().currentSkit;
+            setSkit({...skitData as SkitData});
+            setIndex(Math.min(index, (skitData?.script.length || 1) - 1));
             setLoading(false);
-            const ended = vignetteData?.endScene || false;
+            const ended = skitData?.endScene || false;
             setSceneEnded(ended);
             
             // Process stat changes when scene ends
-            if (ended && vignetteData?.endProperties) {
-                processStatChanges(vignetteData.endProperties);
+            if (ended && skitData?.endProperties) {
+                processStatChanges(skitData.endProperties);
             }
         });
     }
     
     // Handle submission of player's guidance (or blank submit to continue the scene autonomously)
     function handleSubmit() {
-        // Add input text to vignette script as a player speaker action:
-        const stageVignette = stage().getSave().currentVignette;
-        if (!stageVignette) return;
+        // Add input text to skit script as a player speaker action:
+        const stageSkit = stage().getSave().currentSkit;
+        if (!stageSkit) return;
         if (inputText.trim()) {
-            stageVignette?.script.push({ speaker: stage().getSave().player.name.toUpperCase(), message: inputText, speechUrl: '' });
+            stageSkit?.script.push({ speaker: stage().getSave().player.name.toUpperCase(), message: inputText, speechUrl: '' });
         }
-        setVignette({...stageVignette as VignetteData});
+        setSkit({...stageSkit as SkitData});
         setLoading(true);
-        setIndex(stageVignette.script.length - 1);
+        setIndex(stageSkit.script.length - 1);
         setInputText('');
-        const oldIndex = stageVignette.script.length;
-        stage().continueVignette().then(() => {
-            const newIndex = Math.min(oldIndex, (stage().getSave().currentVignette?.script.length || 1) - 1);
-            const vignetteData = stage().getSave().currentVignette;
-            setVignette({...vignetteData as VignetteData});
+        const oldIndex = stageSkit.script.length;
+        stage().continueSkit().then(() => {
+            const newIndex = Math.min(oldIndex, (stage().getSave().currentSkit?.script.length || 1) - 1);
+            const skitData = stage().getSave().currentSkit;
+            setSkit({...skitData as SkitData});
             setIndex(newIndex);
             setLoading(false);
-            const ended = vignetteData?.endScene || false;
+            const ended = skitData?.endScene || false;
             setSceneEnded(ended);
             
             // Process stat changes when scene ends
-            if (ended && vignetteData?.endProperties) {
-                processStatChanges(vignetteData.endProperties);
+            if (ended && skitData?.endProperties) {
+                processStatChanges(skitData.endProperties);
             }
         });
     }
@@ -818,11 +818,11 @@ export const VignetteScreen: FC<VignetteScreenProps> = ({ stage, setScreenType }
     function handleClose() {
         // When the scene is concluded, switch back to the Station screen
         // Output stat change for now:
-        console.log('Vignette concluded with stat changes:', vignette.endProperties || {});
-        stage().endVignette();
+        console.log('Skit concluded with stat changes:', skit.endProperties || {});
+        stage().endSkit();
         
         setScreenType(ScreenType.STATION);
     }
 }
 
-export default VignetteScreen;
+export default SkitScreen;

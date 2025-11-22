@@ -1,6 +1,6 @@
 import React, { FC } from 'react';
 import { Stage } from '../Stage';
-import { VignetteScreen } from './VignetteScreen';
+import { SkitScreen } from './SkitScreen';
 import { StationScreen } from './StationScreen';
 import { EchoScreen } from './EchoScreen';
 import { MenuScreen } from './MenuScreen';
@@ -16,7 +16,7 @@ export enum ScreenType {
     MENU = 'menu',
     STATION = 'station',
     ECHO = 'echo',
-    VIGNETTE = 'vignette',
+    SKIT = 'skit',
 }
 
 interface BaseScreenProps {
@@ -47,9 +47,9 @@ const BaseScreenContent: FC<{ stage: () => Stage }> = ({ stage }) => {
                 // Render echo screen
                 <EchoScreen stage={stage} setScreenType={setScreenType} />
             )}
-            {screenType === ScreenType.VIGNETTE && (
-                // Render vignette screen
-                <VignetteScreen stage={stage} setScreenType={setScreenType} />
+            {screenType === ScreenType.SKIT && (
+                // Render skit screen
+                <SkitScreen stage={stage} setScreenType={setScreenType} />
             )}
             
             {/* Unified tooltip bar that renders over all screens */}

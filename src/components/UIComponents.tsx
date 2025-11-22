@@ -1,6 +1,6 @@
 /**
  * Shared UI Components
- * Reusable styled components based on the VignetteScreen blue theme
+ * Reusable styled components based on the SkitScreen blue theme
  */
 
 import React, { FC, ReactNode } from 'react';

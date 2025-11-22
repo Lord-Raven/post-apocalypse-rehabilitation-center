@@ -31,7 +31,7 @@ class Actor {
     themeFontFamily: string;
     voiceId: string;
     birthDay: number = -1; // Day they were "born" into the game world
-    participations: number = 0; // Number of vignettes they've participated in
+    participations: number = 0; // Number of skits they've participated in
     isImageLoadingComplete: boolean = false; // Whether all emotion pack images have been generated
     heldRoles: { [key: string]: number } = {}; // Roles ever held by this actor and the number of days spent in each
     decorImageUrls: {[key: string]: string} = {}; // ModuleType to decor image URL mapping

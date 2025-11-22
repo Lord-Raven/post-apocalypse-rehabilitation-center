@@ -5,7 +5,7 @@ import Actor, { loadReserveActor, generatePrimaryActorImage, commitActorToEcho, 
 import { DEFAULT_GRID_SIZE, Layout, createModule } from './Module';
 import { BaseScreen } from "./screens/BaseScreen";
 import {Client} from "@gradio/client";
-import { generateVignetteScript, VignetteData } from "./Vignette";
+import { generateSkitScript, SkitData } from "./Skit";
 import { smartRehydrate } from "./SaveRehydration";
 import { Emotion } from "./actors/Emotion";
 
@@ -26,9 +26,9 @@ type SaveType = {
     layout: Layout;
     day: number;
     phase: number;
-    vignetteSummaries?: [];
-    pastVignettes?: VignetteData[];
-    currentVignette?: VignetteData;
+    skitSummaries?: [];
+    pastSkits?: SkitData[];
+    currentSkit?: SkitData;
 }
 
 export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateType, ConfigType> {
@@ -104,7 +104,7 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
                 description: `Your holographic assistant is acutely familiar with the technical details of your Post-Apocalypse Rehabilitation Center, so you don't have to be! ` +
                 `Your StationAide™ comes pre-programmed with a friendly and non-condescending demeanor that will leave you feeling empowered and never patronized; ` +
                 `your bespoke projection comes with an industry-leading feminine form in a pleasing shade of default blue, but, as always, StationAide™ remains infinitely customizable to suit your tastes.`}, 
-            echoes: [], actors: {}, layout: layout, day: 1, phase: 0, currentVignette: undefined };
+            echoes: [], actors: {}, layout: layout, day: 1, phase: 0, currentSkit: undefined };
 
         // ensure at least one save exists and has a layout
         if (!this.saves.length) {
@@ -412,19 +412,19 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
         return [...echoes, ...Array(Math.max(0, 3 - echoes.length)).fill(null)].slice(0, 3);
     }
 
-    setVignette(vignette: VignetteData) {
+    setSkit(skit: SkitData) {
         const save = this.getSave() as any;
-        save.currentVignette = vignette;
+        save.currentSkit = skit;
     }
 
-    endVignette() {
+    endSkit() {
         const save = this.getSave();
-        if (save.currentVignette) {
-            if (!save.pastVignettes) {
-                save.pastVignettes = [];
+        if (save.currentSkit) {
+            if (!save.pastSkits) {
+                save.pastSkits = [];
             }
             // Apply endProperties to actors
-            const endProps = save.currentVignette.endProperties || {};
+            const endProps = save.currentSkit.endProperties || {};
             for (const actorId in endProps) {
                 const actorChanges = endProps[actorId];
                 const actor = save.actors[actorId];
@@ -437,25 +437,25 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
                 }
             }
 
-            save.currentVignette.context = {...save.currentVignette.context, day: this.getSave().day};
-            save.pastVignettes.push(save.currentVignette);
-            save.currentVignette = undefined;
+            save.currentSkit.context = {...save.currentSkit.context, day: this.getSave().day};
+            save.pastSkits.push(save.currentSkit);
+            save.currentSkit = undefined;
         }
     }
 
-    async continueVignette() {
-        const vignette = (this.getSave() as any).currentVignette as VignetteData;
-        if (!vignette) return;
-        vignette.generating = true;
+    async continueSkit() {
+        const skit = (this.getSave() as any).currentSkit as SkitData;
+        if (!skit) return;
+        skit.generating = true;
         try {
-            const { entries, endScene, statChanges } = await generateVignetteScript(vignette, this);
-            vignette.script.push(...entries);
-            vignette.endScene = endScene;
-            vignette.endProperties = statChanges;
+            const { entries, endScene, statChanges } = await generateSkitScript(skit, this);
+            skit.script.push(...entries);
+            skit.endScene = endScene;
+            skit.endProperties = statChanges;
         } catch (err) {
-            console.error('Error continuing vignette script', err);
+            console.error('Error continuing skit script', err);
         } finally {
-            vignette.generating = false;
+            skit.generating = false;
         }
         return;
     }

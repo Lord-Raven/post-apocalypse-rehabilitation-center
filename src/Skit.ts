@@ -2,7 +2,7 @@ import Actor, { getStatDescription, namesMatch, Stat } from "./actors/Actor";
 import { Emotion, EMOTION_SYNONYMS } from "./actors/Emotion";
 import { Stage } from "./Stage";
 
-export enum VignetteType {
+export enum SkitType {
     INTRO_CHARACTER = 'INTRO CHARACTER',
     VISIT_CHARACTER = 'VISIT CHARACTER',
     ROLE_ASSIGNMENT = 'ROLE ASSIGNMENT',
@@ -17,8 +17,8 @@ export interface ScriptEntry {
     actorEmotions?: {[key: string]: Emotion}; // actor name -> emotion string
 }
 
-export interface VignetteData {
-    type: VignetteType;
+export interface SkitData {
+    type: SkitType;
     moduleId: string;
     actorId?: string;
     script: ScriptEntry[];
@@ -28,31 +28,31 @@ export interface VignetteData {
     endProperties?: { [actorId: string]: { [stat: string]: number } };
 }
 
-export function generateVignettePrompt(vignette: VignetteData, stage: Stage, continuing: boolean): string {
-    const actor = stage.getSave().actors[vignette.actorId || ''];
-    const module = stage.getSave().layout.getModuleById(vignette.moduleId || '');
-    switch (vignette.type) {
-        case VignetteType.INTRO_CHARACTER:
+export function generateSkitPrompt(skit: SkitData, stage: Stage, continuing: boolean): string {
+    const actor = stage.getSave().actors[skit.actorId || ''];
+    const module = stage.getSave().layout.getModuleById(skit.moduleId || '');
+    switch (skit.type) {
+        case SkitType.INTRO_CHARACTER:
             return !continuing ? 
                 `This scene will introduce a new character, ${actor.name}, fresh from their echo chamber. ${actor.name} will have no knowledge of this universe. Establish their personality and possibly some motivations.` :
                 `Continue the introduction of ${actor.name}, expanding on their personality or motivations.`;
-        case VignetteType.VISIT_CHARACTER:
+        case SkitType.VISIT_CHARACTER:
             return !continuing ?
                 `This scene depicts the player's visit with ${actor.name} in ${actor.name}'s quarters, which have been redecorated to match ${actor.name}'s style (${actor.style}). Bear in mind that ${actor.name} is from another universe, and may be unaware of details of this one. ` +
                     `Potentially explore ${actor.name}'s thoughts, feelings, or troubles in this intimate setting.` :
                 `Continue this scene with ${actor.name}, potentially exploring their thoughts, feelings, or troubles in this intimate setting.`;
-        case VignetteType.RANDOM_ENCOUNTER:
+        case SkitType.RANDOM_ENCOUNTER:
             return !continuing ?
                 `This scene depicts a chance encounter in the ${module?.type || 'unknown'} module${module?.ownerId ? ` which has been redecorated to suit ${stage.getSave().actors[module.ownerId]?.name || 'its owner'}'s style (${stage.getSave().actors[module.ownerId]?.style})` : ''}. ` +
                 `Bear in mind that patients are from another universe, and may be unaware of details of this one. ` +
                     `Explore the setting and what might arise from this unexpected meeting.` :
                 `Continue this chance encounter in the ${module?.type || 'unknown'} module, exploring what might arise from this unexpected meeting.`;
-        case VignetteType.ROLE_ASSIGNMENT:
+        case SkitType.ROLE_ASSIGNMENT:
             return !continuing ?
-                `This scene depicts an exchange between the player and ${actor.name}, following the player's decision to newly assign ${actor.name} to the role of ${vignette.context.role || 'something new'} in the ${module?.type || 'unknown'} module. ` +
+                `This scene depicts an exchange between the player and ${actor.name}, following the player's decision to newly assign ${actor.name} to the role of ${skit.context.role || 'something new'} in the ${module?.type || 'unknown'} module. ` +
                     `Bear in mind ${actor.name}'s personality, stats, and experience within this setting (or lack thereof) as you portray their reaction and to this new role. ` :
                 `Continue this scene with ${actor.name}, potentially exploring their thoughts or feelings toward their new role.`;
-        case VignetteType.NEW_MODULE:
+        case SkitType.NEW_MODULE:
             return !continuing ?
                 `This scene depicts an exchange between the player and some of the patients regarding the opening of a new module, the ${module?.type || 'unknown'}. ` :
                 `Continue this scene, exploring the crew's thoughts or feelings toward this latest addition to the PARC.`;
@@ -61,29 +61,29 @@ export function generateVignettePrompt(vignette: VignetteData, stage: Stage, con
     }
 }
 
-export async function generateVignetteScript(vignette: VignetteData, stage: Stage): Promise<{ entries: ScriptEntry[]; endScene: boolean; statChanges: { [actorId: string]: { [stat: string]: number } } }> {
+export async function generateSkitScript(skit: SkitData, stage: Stage): Promise<{ entries: ScriptEntry[]; endScene: boolean; statChanges: { [actorId: string]: { [stat: string]: number } } }> {
     // Build a scene log when continuing so the generator can see prior script entries
     // Insert [Character EXPRESSES Emotion] tags as needed
-    const buildScriptLog = (vignette: VignetteData) => (vignette.script && vignette.script.length > 0 ?
-        vignette.script.map(e => `${e.speaker}:${Object.keys(e.actorEmotions || {}).map(emotion => ` [${e.speaker} EXPRESSES ${emotion.toUpperCase()}]`).join('')} ${e.message}`).join('\n')
+    const buildScriptLog = (skit: SkitData) => (skit.script && skit.script.length > 0 ?
+        skit.script.map(e => `${e.speaker}:${Object.keys(e.actorEmotions || {}).map(emotion => ` [${e.speaker} EXPRESSES ${emotion.toUpperCase()}]`).join('')} ${e.message}`).join('\n')
         : '(None so far)');
 
     const playerName = stage.getSave().player.name;
 
-    // There are two optional phrases for gently/more firmly prodding the model toward wrapping up the scene, and then we calculate one to show based on the vignette.script.length and some randomness:
+    // There are two optional phrases for gently/more firmly prodding the model toward wrapping up the scene, and then we calculate one to show based on the skit.script.length and some randomness:
     const wrapUpPhrases = [
         ` Consider whether the scene can reach a natural stopping point in this response, but don't force it; if more development feels needed, allow the scene to continue.`, // Gently prod toward and ending.
         ` The scene is getting long and this response should try to aim for a satisfactory conclusion, potentially ending with stat boosts ([CHARACTER NAME: RELEVANT STAT + 1]) and/or an [END SCENE] tag.` // Firmer prod
     ];
 
     // Use script length + random(1, 10) > 12 for gentle or > 24 for firm.
-    const scriptLengthFactor = vignette.script.length + Math.floor(Math.random() * 10) + 1;
+    const scriptLengthFactor = skit.script.length + Math.floor(Math.random() * 10) + 1;
     const wrapupPrompt = scriptLengthFactor > 24 ? wrapUpPhrases[1] : (scriptLengthFactor > 12 ? wrapUpPhrases[0] : '');
-    const presentActors = Object.values(stage.getSave().actors).filter(a => a.locationId === (vignette.moduleId || ''));
-    const absentActors = Object.values(stage.getSave().actors).filter(a => a.locationId !== (vignette.moduleId || ''));
+    const presentActors = Object.values(stage.getSave().actors).filter(a => a.locationId === (skit.moduleId || ''));
+    const absentActors = Object.values(stage.getSave().actors).filter(a => a.locationId !== (skit.moduleId || ''));
 
-    // Update participation counts if this is the start of the vignette
-    if (vignette.script.length === 0) {
+    // Update participation counts if this is the start of the skit
+    if (skit.script.length === 0) {
         // Increment participation count for present actors
         presentActors.forEach(a => {
             a.participations = (a.participations || 0) + 1;
@@ -113,20 +113,20 @@ export async function generateVignetteScript(vignette: VignetteData, stage: Stag
         // List stat meanings, for reference:
         `\n\nStats:\n${Object.values(Stat).map(stat => `${stat.toUpperCase()}: ${getStatDescription(stat)}`).join('\n')}` +
         `\n\nEmotions:\n${Object.values(Emotion).map(emotion => `${emotion.toUpperCase()}`).join(', ')}` +
-        `\n\nScene Prompt:\n${generateVignettePrompt(vignette, stage, vignette.script.length > 0)}` +
+        `\n\nScene Prompt:\n${generateSkitPrompt(skit, stage, skit.script.length > 0)}` +
         `\n\nExample Script Format:\n` +
         'System: CHARACTER NAME: They do actions in prose. "Their dialogue is in quotation marks."\nANOTHER CHARACTER NAME: [ANOTHER CHARACTER EXPRESSES JOY][CHARACTER NAME EXPRESSES SURPRISE] "Dialogue in quotation marks."\nNARRATOR: [CHARACTER NAME EXPRESSES RELIEF] Descriptive content that is not attributed to a character.' +
         `\n\nExample Ending Script Format:\n` +
         'System: CHARACTER NAME: [CHARACTER NAME EXPRESSES OPTIMISM] Action in prose. "Dialogue in quotation marks."\nNARRATOR: Conclusive ending to the scene in prose.' +
         `\n[CHARACTER NAME: RELEVANT STAT + 1]` +
         `\n[END SCENE]` +
-        (stage.getSave().pastVignettes && stage.getSave().pastVignettes?.length || 0 > 0 ? 
-            // Include last 5 vignette scripts for context and style reference
-            '\n\nRecent Scene Scripts for additional context:' + stage.getSave().pastVignettes?.filter((v, index) => index > (stage.getSave().pastVignettes?.length || 0) - 5).map((v, index) => 
+        (stage.getSave().pastSkits && stage.getSave().pastSkits?.length || 0 > 0 ? 
+            // Include last 5 skit scripts for context and style reference
+            '\n\nRecent Scene Scripts for additional context:' + stage.getSave().pastSkits?.filter((v, index) => index > (stage.getSave().pastSkits?.length || 0) - 5).map((v, index) => 
                 `\n\n  Scene in ${stage.getSave().layout.getModuleById(v.moduleId || '')?.type || 'Unknown'} (${stage.getSave().day - v.context.day}) days ago:\n` +
                 `System: ${buildScriptLog(v)}`).join('') :
             '') +
-        `\n\nCurrent Scene Script Log to Continue:\nSystem: ${buildScriptLog(vignette)}` +
+        `\n\nCurrent Scene Script Log to Continue:\nSystem: ${buildScriptLog(skit)}` +
         `\n\nInstruction:\nAt the "System:" prompt, generate a short scene script based upon this scenario, and the specified Scene Prompt. Follow the structure of the strict Example Script formatting above. ` +
         `Actions are depicted in prose and character dialogue in quotation marks. Emotion tags (e.g. [CHARACTER NAME EXPRESSES JOY]) should be used to indicate significant emotional shifts—` +
         `these cues will be utilized by the game engine to visually display appropriate character emotions; only the known, listed emotions can be used here.\n` +
@@ -176,7 +176,7 @@ export async function generateVignetteScript(vignette: VignetteData, stage: Stag
                     const bracketTagRegex = /\[([^\]]+)\]/g;
                     let tagMatch: RegExpExecArray | null;
                     // Prepare list of present actors (based on module/location)
-                    const presentActors: Actor[] = Object.values(stage.getSave().actors).filter(a => a.locationId === (vignette.moduleId || ''));
+                    const presentActors: Actor[] = Object.values(stage.getSave().actors).filter(a => a.locationId === (skit.moduleId || ''));
                     
                     // Lookp through all tags:
                     for (const tag of trimmed.match(/\[[^\]]+\]/g) || []) {
@@ -299,7 +299,7 @@ export async function generateVignetteScript(vignette: VignetteData, stage: Stag
                         continue;
                     }
                     // Adjust speaker name to match actor name if possible
-                    const presentActors = Object.values(stage.getSave().actors).filter(a => a.locationId === (vignette.moduleId || ''));
+                    const presentActors = Object.values(stage.getSave().actors).filter(a => a.locationId === (skit.moduleId || ''));
                     const matched = presentActors.find(a => namesMatch(a.name.toLowerCase(), entry.speaker.toLowerCase()));
                     if (matched) {
                         entry.speaker = matched.name;
@@ -314,7 +314,9 @@ export async function generateVignetteScript(vignette: VignetteData, stage: Stag
                         entry.speechUrl = '';
                         continue;
                     }
-                    const transcript = entry.message.split('"').filter((_, i) => i % 2 === 1).join('.........').trim();
+                    let transcript = entry.message.split('"').filter((_, i) => i % 2 === 1).join('.........').trim();
+                    // Strip asterisks or other markdown-like emphasis characters
+                    transcript = transcript.replace(/[\*_~`]+/g, '');
                     stage.generator.speak({
                         transcript: transcript,
                         voice_id: actor.voiceId ?? undefined
@@ -334,7 +336,7 @@ export async function generateVignetteScript(vignette: VignetteData, stage: Stag
                 return { entries: scriptEntries, endScene: endScene, statChanges: statChanges };
             }
         } catch (error) {
-            console.error('Error generating vignette script:', error);
+            console.error('Error generating skit script:', error);
         }
         retries--;
     }
@@ -343,6 +345,6 @@ export async function generateVignetteScript(vignette: VignetteData, stage: Stag
 
 
 export default {
-    VignetteType
+    SkitType: SkitType
 };
 

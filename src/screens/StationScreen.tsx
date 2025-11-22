@@ -9,7 +9,7 @@ import ActorCard from '../components/ActorCard';
 import { PhaseIndicator as SharedPhaseIndicator, Title } from '../components/UIComponents';
 import { useTooltip } from '../contexts/TooltipContext';
 import { SwapHoriz, Home, Work, Menu } from '@mui/icons-material';
-import { VignetteType } from '../Vignette';
+import { SkitType } from '../Skit';
 import { generateActorDecor } from '../actors/Actor';
 
 // Styled components for the day/phase display
@@ -36,7 +36,7 @@ const StyledDayCard = styled(Card)(({ theme }) => ({
 }));
 
 /*
- * This screen allows the player to manage their space station, including viewing resources, upgrading facilities, or visiting locations (transitioning to vignette scenes).
+ * This screen allows the player to manage their space station, including viewing resources, upgrading facilities, or visiting locations (transitioning to skit scenes).
  * This React Vite component is primarily a large space station built from different modules. Probably 80% of the left side of the screen should be a space scene with a subtle grid.
  * The grid should house a couple of starter modules. Additional modules can be added by clicking "+" icons near modules with extendable sections.
  * It should be balanced and visually appealing, with a clear layout for each module.
@@ -87,10 +87,10 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType}) =>
         setLayout(stage().getLayout());
         setShowModuleSelector(false);
         setSelectedPosition(null);
-        // Possibly kick off a vignette about the new module, if no others exist in layout:
+        // Possibly kick off a skit about the new module, if no others exist in layout:
         const existingModules = stage().getLayout().getModulesWhere(m => m.type === moduleType);
         if (existingModules.length === 1 && Object.keys(stage().getSave().actors).length > 0) { // New module is the only one of its type
-            // Grab a few random patients to pull to the new module for a vignette:
+            // Grab a few random patients to pull to the new module for a skit:
             const randomPatients = Object.values(stage().getSave().actors)
                 .filter(a => a.locationId !== newModule.id)
                 .sort(() => 0.5 - Math.random()) // shuffle, then randomly grab 1-3 patients:
@@ -99,13 +99,13 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType}) =>
                 p.locationId = newModule.id;
             });
 
-            stage().setVignette({
-                type: VignetteType.NEW_MODULE,
+            stage().setSkit({
+                type: SkitType.NEW_MODULE,
                 moduleId: newModule.id,
                 script: [],
                 context: { moduleType }
             });
-            setScreenType(ScreenType.VIGNETTE);
+            setScreenType(ScreenType.SKIT);
         } else {
             stage().incPhase(1);
         }
@@ -210,17 +210,17 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType}) =>
             generateActorDecor(actor, targetModule, stage());
             const roleName: string = targetModule.getAttribute('role') || '';
             if (roleName && Object.keys(actor.heldRoles).indexOf(roleName) === -1) {
-                // This character has never held this role before; initialize counter and also kick off a little vignette about it.
+                // This character has never held this role before; initialize counter and also kick off a little skit about it.
                 actor.heldRoles[roleName] = 0;
-                phaseCost = 0; // The vignette will advance the phase.
-                stage().setVignette({
-                    type: VignetteType.ROLE_ASSIGNMENT,
+                phaseCost = 0; // The skit will advance the phase.
+                stage().setSkit({
+                    type: SkitType.ROLE_ASSIGNMENT,
                     moduleId: targetModule.id,
                     actorId: actorId,
                     script: [],
                     context: { role: roleName }
                 });
-                setScreenType(ScreenType.VIGNETTE);
+                setScreenType(ScreenType.SKIT);
             }
         }
 
