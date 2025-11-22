@@ -261,6 +261,13 @@ export const SkitScreen: FC<SkitScreenProps> = ({ stage, setScreenType }) => {
     const [audioEnabled, setAudioEnabled] = React.useState<boolean>(true);
     const currentAudioRef = React.useRef<HTMLAudioElement | null>(null);
 
+    // If audioEnabled changes to false, stop any currently playing audio
+    useEffect(() => {
+        if (!audioEnabled && currentAudioRef.current) {
+            currentAudioRef.current.pause();
+            currentAudioRef.current.currentTime = 0;
+        }
+    }, [audioEnabled]);
 
     useEffect(() => {
         if (skit.script.length == 0) {

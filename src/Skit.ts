@@ -92,7 +92,8 @@ export async function generateSkitScript(skit: SkitData, stage: Stage): Promise<
 
     let fullPrompt = `{{messages}}\nPremise:\nThis is a sci-fi visual novel game set on a space station that resurrects and rehabilitates patients who died in the multiverse-wide apocalypse: ` +
         `the Post-Apocalypse Rehabilitation Center. ` +
-        `The thrust of the game has the player character, ${playerName}, managing this station and interacting with patients and crew, as they navigate this complex futuristic universe together. ` +
+        `The thrust of the game has the player character, ${playerName}, is the Director of this station, interacting with patients and crew as they navigate this complex futuristic universe together. ` +
+        `\n\n${playerName}'s description: ${stage.getSave().player.description}` +
         // List characters who are here, along with full stat details:
         `\n\nPresent Characters:\n${presentActors.map(actor => {
             const roleModule = stage.getLayout().getModulesWhere((m: any) => 
