@@ -313,7 +313,7 @@ export async function generateVignetteScript(vignette: VignetteData, stage: Stag
                         entry.speechUrl = '';
                         continue;
                     }
-                    const transcript = entry.message.split('"').filter((_, i) => i % 2 === 1).join(' (pause) ').trim();
+                    const transcript = entry.message.split('"').filter((_, i) => i % 2 === 1).join('<break time="500ms"/> ').trim();
                     stage.generator.speak({
                         transcript: transcript,
                         voice_id: undefined // Use default voice
