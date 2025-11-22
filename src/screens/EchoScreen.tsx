@@ -27,6 +27,18 @@ export const EchoScreen: FC<EchoScreenProps> = ({stage, setScreenType}) => {
 	const reserveActors = stage().reserveActors;
 	const echoSlots = stage().getEchoSlots();
 
+	// Floating animation variants (recreates CSS float animation)
+	const floatAnimation = {
+		y: [0, -3, -1, -4, 0],
+		x: [0, 1, -1, 0.5, 0],
+		rotate: [0, 0.5, -0.3, 0.2, 0],
+		transition: {
+			duration: 6,
+			repeat: Infinity,
+			ease: "easeInOut"
+		}
+	};
+
 	const cancel = () => {
 		setScreenType(ScreenType.STATION);
 	};
@@ -183,24 +195,33 @@ export const EchoScreen: FC<EchoScreenProps> = ({stage, setScreenType}) => {
 					return (
 					<motion.div
 					key={`reserve_${actor.id}`}
-					className={`echo-slot`}
 					style={{ 
 						display: 'inline-block',
 						position: 'relative',
-						animationDelay: `${0.2 + index * 0.7}s`,
 						width: isExpanded ? '32vh' : '16vh',
 						transition: 'width 0.3s ease'
 					}}
+					animate={{
+						y: [0, -3, -1, -4, 0],
+						x: [0, 1, -1, 0.5, 0],
+						rotate: [0, 0.5, -0.3, 0.2, 0],
+						transition: {
+							duration: 6,
+							repeat: Infinity,
+							ease: "easeInOut",
+							delay: 0.2 + index * 0.7
+						}
+					}}
 					whileHover={{ 
-						scale: isExpanded ? 1.02 : 1.05,
-						filter: 'brightness(1.1)'
+						scale: 1.05,
+						filter: 'brightness(1.1)',
+						transition: {
+							type: "spring",
+							stiffness: 150,
+							damping: 15
+						}
 					}}
 					whileTap={{ scale: 0.98 }}
-					transition={{
-						type: "spring",
-						stiffness: 150,
-						damping: 15
-					}}
 					>
 						<RemoveButton
 							onClick={(e: React.MouseEvent) => removeReserveActor(actor.id, e)}
@@ -248,19 +269,47 @@ export const EchoScreen: FC<EchoScreenProps> = ({stage, setScreenType}) => {
 								onDrop={(e) => handleDropOnEchoSlot(e, slotIndex)}
 								onDragOver={handleDragOver}
 								animate={{
-									scale: (actor && isSelected) ? 1.1 : 1
+									scale: (actor && isSelected) ? 1.1 : 1,
+									y: [0, -3, -1, -4, 0],
+									x: [0, 1, -1, 0.5, 0],
+									rotate: [0, 0.5, -0.3, 0.2, 0],
+									transition: {
+										scale: {
+											type: "spring",
+											stiffness: 150,
+											damping: 15
+										},
+										y: {
+											duration: 6,
+											repeat: Infinity,
+											ease: "easeInOut",
+											delay: slotIndex * 0.7
+										},
+										x: {
+											duration: 6,
+											repeat: Infinity,
+											ease: "easeInOut",
+											delay: slotIndex * 0.7
+										},
+										rotate: {
+											duration: 6,
+											repeat: Infinity,
+											ease: "easeInOut",
+											delay: slotIndex * 0.7
+										}
+									}
 								}}
 								whileHover={{ 
 									scale: actor ? (isSelected ? 1.15 : 1.05) : 1,
-									filter: 'brightness(1.1)'
+									filter: 'brightness(1.1)',
+									transition: {
+										type: "spring",
+										stiffness: 150,
+										damping: 15
+									}
 								}}
 								whileTap={{ scale: actor ? 0.98 : 1 }}
-								transition={{
-									type: "spring",
-									stiffness: 150,
-									damping: 15
-								}}
-								className={`echo-slot ${actor && !actor.isPrimaryImageReady ? 'loading-echo-slot' : ''}`}
+								className={actor && !actor.isPrimaryImageReady ? 'loading-echo-slot' : ''}
 								style={{
 									...((actor && !actor.isPrimaryImageReady && actor.themeColor) && {
 										'--shimmer-color': actor.themeColor
@@ -328,11 +377,11 @@ export const EchoScreen: FC<EchoScreenProps> = ({stage, setScreenType}) => {
 									/>
 									{/* Stats */}
 									<div className="stat-list" style={{ padding: '8px 12px', background: 'rgba(0,0,0,0.8)', flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'space-evenly' }}>
-										{Object.keys(Stat).map((key) => {
-											const grade = actor.scoreToGrade(actor.stats[key as keyof typeof actor.stats]);
+										{Object.values(Stat).map((stat) => {
+											const grade = actor.scoreToGrade(actor.stats[stat]);
 											return (
-												<div className="stat-row" key={`${actor.id}_${key}`}>
-													<span className="stat-label">{key}</span>
+												<div className="stat-row" key={`${actor.id}_${stat}`}>
+													<span className="stat-label">{stat}</span>
 													<span className="stat-grade" data-grade={grade}>{grade}</span>
 												</div>
 											);
