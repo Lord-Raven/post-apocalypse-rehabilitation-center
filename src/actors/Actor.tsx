@@ -2,6 +2,7 @@ import { Emotion, EMOTION_PROMPTS, EmotionPack } from "./Emotion";
 import { Module } from "../Module";
 import { Stage } from "../Stage";
 import { v4 as generateUuid } from 'uuid';
+import { VoiceChatOutlined } from "@mui/icons-material";
 
 // Core character stats as an enum so other parts of the app can reference them safely
 // Using single-syllable words, each starting with a different letter
@@ -28,6 +29,7 @@ class Actor {
     emotionPack: EmotionPack;
     themeColor: string;
     themeFontFamily: string;
+    voiceId: string;
     birthDay: number = -1; // Day they were "born" into the game world
     participations: number = 0; // Number of vignettes they've participated in
     isImageLoadingComplete: boolean = false; // Whether all emotion pack images have been generated
@@ -47,7 +49,7 @@ class Actor {
         return actor;
     }
 
-    constructor(id: string, name: string, fullPath: string, avatarImageUrl: string, description: string, profile: string, style: string, emotionPack: EmotionPack, stats: Record<Stat, number>, themeColor: string, themeFontFamily: string) {
+    constructor(id: string, name: string, fullPath: string, avatarImageUrl: string, description: string, profile: string, style: string, voiceId: string, emotionPack: EmotionPack, stats: Record<Stat, number>, themeColor: string, themeFontFamily: string) {
         this.id = id;
         this.name = name;
         this.fullPath = fullPath;
@@ -55,6 +57,7 @@ class Actor {
         this.description = description;
         this.profile = profile;
         this.style = style;
+        this.voiceId = voiceId;
         this.emotionPack = emotionPack;
         // populate the consolidated mapping for easier, enum-based lookups
         this.stats = stats;
@@ -268,6 +271,7 @@ export async function loadReserveActor(fullPath: string, stage: Stage): Promise<
         parsedData['description'] || '',
         parsedData['profile'] || '',
         parsedData['style'] || '',
+        parsedData['voice'] || '',
         {}, 
         {
             [Stat.Brawn]: parseInt(parsedData['brawn']) || DEFAULT_TRAIT_MAP[Stat.Brawn],

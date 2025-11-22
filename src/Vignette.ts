@@ -308,15 +308,16 @@ export async function generateVignetteScript(vignette: VignetteData, stage: Stag
 
                 // TTS for each entry's dialogue
                 for (const entry of scriptEntries) {
+                    const actor = Object.values(stage.getSave().actors).find(a => namesMatch(a.name.toLowerCase(), entry.speaker.toLowerCase()));
                     // Only TTS if entry.speaker matches an actor from stage().getSave().actors and entry.message includes dialogue in quotes.
-                    if (!Object.values(stage.getSave().actors).some(a => namesMatch(a.name.toLowerCase(), entry.speaker.toLowerCase())) || !entry.message.includes('"')) {
+                    if (!actor || !entry.message.includes('"')) {
                         entry.speechUrl = '';
                         continue;
                     }
-                    const transcript = entry.message.split('"').filter((_, i) => i % 2 === 1).join('......').trim();
+                    const transcript = entry.message.split('"').filter((_, i) => i % 2 === 1).join('.........').trim();
                     stage.generator.speak({
                         transcript: transcript,
-                        voice_id: undefined // Use default voice
+                        voice_id: actor.voiceId ?? undefined
                     }).then(ttsResponse => {
                         if (ttsResponse && ttsResponse.url) {
                             entry.speechUrl = ttsResponse.url;
