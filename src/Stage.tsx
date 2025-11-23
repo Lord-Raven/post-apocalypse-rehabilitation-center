@@ -167,6 +167,7 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
         for (const actorId in save.actors) {
             const actor = save.actors[actorId];
             actor.locationId = save.layout.getModulesWhere(m => m.type !== 'quarters' || m.ownerId == actorId).sort(() => Math.random() - 0.5)[0]?.id || '';
+            console.log(`Moved actor ${actor.name} to location ${actor.locationId}`);
         }
         this.saveGame();
     }
@@ -453,6 +454,7 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
                 skit: save.currentSkit
             });
             save.currentSkit = undefined;
+            this.incPhase();
         }
     }
 

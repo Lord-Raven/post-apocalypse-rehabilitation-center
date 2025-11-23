@@ -113,9 +113,7 @@ const ActorImage: FC<ActorImageProps> = ({
             initial={'absent'}
             exit='absent'
             animate={speaker ? 'talking' : 'idle'}
-            style={{position: 'absolute', width: 'auto', aspectRatio, overflow: 'visible', zIndex: speaker ? 100 : zIndex}}
-            onMouseEnter={onMouseEnter}
-            onMouseLeave={onMouseLeave}>
+            style={{position: 'absolute', width: 'auto', aspectRatio, overflow: 'visible', zIndex: speaker ? 100 : zIndex}}>
             {/* Blurred background layer */}
             <AnimatePresence>
                 {prevImageUrl && prevImageUrl !== processedImageUrl && (
@@ -180,8 +178,9 @@ const ActorImage: FC<ActorImageProps> = ({
                             opacity: 0.75,
                             zIndex: 5,
                             transform: `translate(calc(${modX}vw - 50%), ${modY}vh)`,
-                            pointerEvents: 'none'
                         }}
+                        onMouseEnter={onMouseEnter}
+                        onMouseLeave={onMouseLeave}
                         alt={`${actor.name} (${emotion})`}
                     />
                 )}

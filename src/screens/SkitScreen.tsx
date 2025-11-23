@@ -284,7 +284,6 @@ export const SkitScreen: FC<SkitScreenProps> = ({ stage, setScreenType }) => {
                     if (skitData?.endProperties) {
                         processStatChanges(skitData.endProperties);
                     }
-                    stage().incPhase();
                 }
             });
         }
@@ -379,7 +378,7 @@ export const SkitScreen: FC<SkitScreenProps> = ({ stage, setScreenType }) => {
                     highlightColor={isHovered ? "rgba(255,255,255,0.2)" : "rgba(255,255,255,0)"}
                     panX={0}
                     panY={0}
-                    onMouseEnter={() => {console.log(`Hovering over ${actor.name}`); setHoveredActor(actor)}}
+                    onMouseEnter={() => setHoveredActor(actor)}
                     onMouseLeave={() => setHoveredActor(null)}
                 />
             );
@@ -469,7 +468,7 @@ export const SkitScreen: FC<SkitScreenProps> = ({ stage, setScreenType }) => {
                     position: 'absolute',
                     top: '5%',
                     right: '5%',
-                    width: '20vw',
+                    width: '15vw',
                     height: '30vh',
                     zIndex: 3
                 }}>
