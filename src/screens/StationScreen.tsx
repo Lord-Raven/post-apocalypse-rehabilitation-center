@@ -7,7 +7,7 @@ import { Layout, Module, createModule, ModuleType, MODULE_DEFAULTS, StationStat,
 import { Stage } from '../Stage';
 import ActorCard from '../components/ActorCard';
 import ModuleCard from '../components/ModuleCard';
-import { PhaseIndicator as SharedPhaseIndicator, Title } from '../components/UIComponents';
+import { PhaseIndicator as SharedPhaseIndicator } from '../components/UIComponents';
 import { useTooltip } from '../contexts/TooltipContext';
 import { SwapHoriz, Home, Work, Menu, Build, Hotel, Restaurant, Security, Favorite } from '@mui/icons-material';
 import { SkitType } from '../Skit';
@@ -977,7 +977,7 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType}) =>
                                                 gridColumn: '1 / -1'
                                             }}>No modules currently on station</p>
                                         ) : (
-                                            layout.getLayout().flat().filter(m => m !== null).map((module: Module) => (
+                                            layout.getLayout().flat().filter(m => m !== null).map((module: Module<ModuleType>) => (
                                                 <ModuleCard
                                                     key={module.id}
                                                     module={module}
