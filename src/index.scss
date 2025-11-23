@@ -87,7 +87,8 @@ html, body, #root {
 
 .stat-label {
   font-size: 1.2vh;
-  opacity: 0.95;
+  color: var(--color-primary);
+  text-shadow: 0 0 10px var(--color-primary-50);
   z-index: 1;
 }
 
@@ -97,10 +98,9 @@ html, body, #root {
 }
 
 .module-label {
-  font-size: 18px;
-  text-transform: capitalize;
-  color: var(--text-secondary);
-  text-shadow: 0 1px 0 rgba(0, 0, 0, 0.6);
+  font-size: 14px;
+  color: var(--color-primary);
+  text-shadow: 0 0 8px var(--color-primary-50);
 }
 .stat-grade {
   /* big, bold, skewed/rotated letter with a crisp drop shadow */

@@ -72,7 +72,7 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType}) =>
     const { setTooltip, clearTooltip } = useTooltip();
 
     const gridSize = 6;
-    const cellSize = '15vh';
+    const cellSize = '12vh';
 
     const openModuleSelector = (x: number, y: number) => {
         setSelectedPosition({x, y});
@@ -571,6 +571,7 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType}) =>
                                                         textAlign: 'center',
                                                         pointerEvents: 'none',
                                                         zIndex: 2,
+                                                        fontSize: '14px',
                                                     }}
                                                 >{module.type}</div>
                                             </>
@@ -676,7 +677,6 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType}) =>
                                     alignItems: 'center',
                                     gap: '4px',
                                     flex: 1,
-                                    cursor: 'help',
                                 }}
                             >
                                 {/* Stat Name and Grade - Inline */}
@@ -688,9 +688,7 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType}) =>
                                     <span
                                         className="stat-label"
                                         style={{
-                                            color: '#00ff88',
                                             fontSize: '0.9rem',
-                                            textShadow: '0 0 10px rgba(0, 255, 136, 0.5)',
                                         }}
                                     >
                                         {statName}
@@ -788,7 +786,7 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType}) =>
                     className="station-modules"
                     style={{
                         position: 'absolute',
-                        top: '56%',
+                        top: '50%',
                         left: '50%',
                         transform: 'translate(-50%, -50%)',
                         width: `calc(${gridSize} * ${cellSize})`,
@@ -859,9 +857,10 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType}) =>
                                     borderRadius: '5px',
                                     cursor: 'pointer',
                                     textAlign: 'left',
+                                    fontSize: '1rem',
                                 }}
                             >
-                                <span>{item}</span>
+                                <span style={{ fontWeight: 700, letterSpacing: '0.08em' }}>{item}</span>
                                 <span style={{ 
                                     transform: isExpanded ? 'rotate(180deg)' : 'rotate(0deg)',
                                     transition: 'transform 0.2s ease'
