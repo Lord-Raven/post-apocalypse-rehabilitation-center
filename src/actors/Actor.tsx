@@ -98,7 +98,7 @@ class Actor {
         const fallbackUrl = neutralUrl || this.avatarImageUrl || '';
 
         // Check if we need to generate the image
-        if (stage && (!emotionUrl || emotionUrl === this.avatarImageUrl || emotionUrl === this.emotionPack['base'] || emotionUrl === neutralUrl)) {
+        if (stage && (!emotionUrl || emotionUrl === this.avatarImageUrl || emotionUrl === this.emotionPack['base'] || (emotionKey !== 'neutral' && emotionUrl === neutralUrl))) {
             // Kick off generation in the background (don't wait)
             generateEmotionImage(this, emotion as Emotion, stage);
         }
