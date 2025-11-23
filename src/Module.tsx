@@ -260,7 +260,8 @@ export class Module<T extends ModuleType = ModuleType> {
      * Rehydrate a Module from saved data
      */
     static fromSave(savedModule: any): Module {
-        return createModule(savedModule.type, {
+        const type = savedModule.type === 'medbay' ? 'infirmary' : savedModule.type; // Backwards compatibility
+        return createModule(type as ModuleType, {
             id: savedModule.id,
             connections: savedModule.connections,
             attributes: savedModule.attributes,

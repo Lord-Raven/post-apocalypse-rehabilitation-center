@@ -976,20 +976,22 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType}) =>
                                                 gridColumn: '1 / -1'
                                             }}>No modules currently on station</p>
                                         ) : (
-                                            layout.getModulesWhere(m => true).map((module: Module) => (
-                                                <ModuleCard
-                                                    key={module.id}
-                                                    module={module}
-                                                    stage={stage()}
-                                                    onClick={() => {
-                                                        console.log(`Clicked module ${module.id} of type ${module.type}`);
-                                                        const action = module.getAction();
-                                                        if (action) {
-                                                            action(module, stage(), setScreenType);
-                                                        }
-                                                    }}
-                                                />
-                                            ))
+                                            layout.getModulesWhere(m => true)
+                                                .sort((a: Module, b: Module) => a.type.localeCompare(b.type))
+                                                .map((module: Module) => (
+                                                    <ModuleCard
+                                                        key={module.id}
+                                                        module={module}
+                                                        stage={stage()}
+                                                        onClick={() => {
+                                                            console.log(`Clicked module ${module.id} of type ${module.type}`);
+                                                            const action = module.getAction();
+                                                            if (action) {
+                                                                action(module, stage(), setScreenType);
+                                                            }
+                                                        }}
+                                                    />
+                                                ))
                                         )}
                                     </div>
                                 )}
