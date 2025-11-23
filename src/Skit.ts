@@ -102,10 +102,10 @@ export async function generateSkitScript(skit: SkitData, stage: Stage): Promise<
         `The PARC is an isolated station near a black hole. It serves as both sanctuary and containment for its diverse inhabitants, who hail from various alternate realities. ` +
         `${playerName} is the only non-patient aboard the station (although they may hire patients on as crew or staff); as a result, the station may feel a bit lonely or alienating at times. ` +
         `Much of the day-to-day maintenance and operation of the station is automated by the station's AI systems and various drones, enabling ${playerName} to focus on patient care and rehabilitation.` +
-        /*(stage.getSave().stationStats ? (
+        (stage.getSave().stationStats ? (
             `\n\nThe PARC's current stats and impacts:\n` +
-            Object.entries(stage.getSave().stationStats || {}).map(([stat, value]) => `  ${stat.toUpperCase()} (${value}): ${STATION_STAT_PROMPTS[stat as StationStat][getStatRating(value)]}`).join('\n')
-        ) : '') +*/
+            Object.values(StationStat).map(stat => `  ${stat.toUpperCase()} (${stage.getSave().stationStats?.[stat] || 3}): ${STATION_STAT_PROMPTS[stat][getStatRating(stage.getSave().stationStats?.[stat] || 3)]}`).join('\n')
+        ) : '') +
         `\n\n${playerName}'s profile: ${stage.getSave().player.description}` +
         // List characters who are here, along with full stat details:
         `\n\nPresent Characters:\n${presentActors.map(actor => {

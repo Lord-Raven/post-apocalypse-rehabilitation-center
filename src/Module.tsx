@@ -1,4 +1,3 @@
-import { ManageHistoryRounded } from '@mui/icons-material';
 import { SkitType } from './Skit';
 import { Stage } from "./Stage";
 import { ScreenType } from './screens/BaseScreen';
@@ -17,7 +16,13 @@ export type ModuleType = 'echo chamber' | 'generator' | 'quarters' | 'commons' |
     // Spicy pack:
     'brothel' | 'dungeon' | 'black market' | 'harem' | 
     */
-export type StationStat = 'Systems' | 'Comfort' | 'Provision' | 'Security' | 'Harmony';
+export enum StationStat {
+    SYSTEMS = 'Systems',
+    COMFORT = 'Comfort',
+    PROVISION = 'Provision',
+    SECURITY = 'Security',
+    HARMONY = 'Harmony'
+}
 
 export const STATION_STAT_DESCRIPTIONS: Record<StationStat, string> = {
     'Systems': 'Mechanical and structural health of the station',
