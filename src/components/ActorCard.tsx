@@ -105,7 +105,7 @@ export const ActorCard: FC<ActorCardProps> = ({
             </div>
             
             {/* Sections in rows. */}
-            <div style={{ display: 'flex', flexDirection: 'row', overflow: 'hidden' }}>
+            <div style={{ display: 'flex', flexDirection: 'row', overflow: 'hidden', height: '100%' }}>
                 {currentSections.map(section => {
                     if (section === ActorCardSection.STATS) {
                         return <div className="stat-list" style={{ 

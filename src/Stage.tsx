@@ -24,6 +24,9 @@ type TimelineEvent = {
     skit?: SkitData;
 }
 
+// Need a good term for integrity, representing station mechanical health
+type StationStatType = 'Integrity' | 'Comfort' | 'Provision' | 'Harmony' | 'Security';
+
 type Timeline = TimelineEvent[];
 
 type SaveType = {
@@ -37,6 +40,8 @@ type SaveType = {
     phase: number;
     timeline?: Timeline;
     currentSkit?: SkitData;
+
+    
 }
 
 export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateType, ConfigType> {
