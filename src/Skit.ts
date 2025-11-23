@@ -100,7 +100,6 @@ export async function generateSkitScript(skit: SkitData, stage: Stage): Promise<
         `The PARC is an isolated station near a black hole. It serves as both sanctuary and containment for its diverse inhabitants, who hail from various alternate realities. ` +
         `${playerName} is the only non-patient aboard the station (although they may hire patients on as crew or staff); as a result, the station may feel a bit lonely or alienating at times. ` +
         `Much of the day-to-day maintenance and operation of the station is automated by the station's AI systems and various drones, enabling ${playerName} to focus on patient care and rehabilitation.` +
-        
         (stage.getSave().stationStats ? (
             `\n\nThe PARC's current stats and impacts:\n` +
             Object.entries(stage.getSave().stationStats || {}).map(([stat, value]) => `  ${stat.toUpperCase()} (${value}): ${STATION_STAT_PROMPTS[stat as StationStat][getStatRating(value)]}`).join('\n')
@@ -141,8 +140,9 @@ export async function generateSkitScript(skit: SkitData, stage: Stage): Promise<
                 `System: ${buildScriptLog(v)}`).join('') :
             '') +
         `\n\nCurrent Scene Script Log to Continue:\nSystem: ${buildScriptLog(skit)}` +
-        `\n\nInstruction:\nAt the "System:" prompt, generate a short scene script based upon this scenario, and the specified Scene Prompt, involving the Present Characters (Absent Characters are listed for reference only). ` +
-        `Follow the structure of the strict Example Script formatting above. ` +
+        `\n\nInstruction:\nAt the "System:" prompt, generate a short scene script based upon this scenario and the specified Scene Prompt, involving the Present Characters (Absent Characters are listed for reference only). ` +
+        `The script should consider characters' stats, their relationships, past events, and the station's stats and their potential impact upon this scene. ` +
+        `\nFollow the structure of the strict Example Script formatting above. ` +
         `Actions are depicted in prose and character dialogue in quotation marks. Emotion tags (e.g. [CHARACTER NAME EXPRESSES JOY]) should be used to indicate significant emotional shifts—` +
         `these cues will be utilized by the game engine to visually display appropriate character emotions.\n` +
         `This response should end when it makes sense to give ${playerName} a chance to respond or contribute, ` +
