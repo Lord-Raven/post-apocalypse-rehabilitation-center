@@ -6,6 +6,7 @@ import { ScreenType } from './BaseScreen';
 import { Layout, Module, createModule, ModuleType, MODULE_DEFAULTS, StationStat, STATION_STAT_DESCRIPTIONS } from '../Module';
 import { Stage } from '../Stage';
 import ActorCard from '../components/ActorCard';
+import ModuleCard from '../components/ModuleCard';
 import { PhaseIndicator as SharedPhaseIndicator, Title } from '../components/UIComponents';
 import { useTooltip } from '../contexts/TooltipContext';
 import { SwapHoriz, Home, Work, Menu, Build, Hotel, Restaurant, Security, Favorite } from '@mui/icons-material';
@@ -813,6 +814,10 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType}) =>
                     background: 'rgba(0, 20, 40, 0.9)',
                     borderLeft: '2px solid #00ff88',
                     padding: '20px',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    height: '100vh',
+                    overflow: 'hidden',
                 }}
             >
                 {/* Enhanced Day and Phase Display */}
@@ -828,7 +833,13 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType}) =>
                         <motion.div 
                             key={item} 
                             layout
-                            style={{ margin: '10px 0' }}
+                            style={{ 
+                                margin: '10px 0',
+                                flex: isExpanded ? '1 1 auto' : '0 0 auto',
+                                display: 'flex',
+                                flexDirection: 'column',
+                                minHeight: 0,
+                            }}
                             animate={{ x: isHeaderHovered ? 10 : 0 }}
                             transition={{ 
                                 layout: { duration: 0.3, ease: 'easeInOut' },
@@ -886,6 +897,10 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType}) =>
                                     border: isExpanded ? '2px solid rgba(0, 255, 136, 0.3)' : 'none',
                                     borderTop: 'none',
                                     borderRadius: '0 0 5px 5px',
+                                    flex: isExpanded ? '1 1 auto' : '0 0 auto',
+                                    display: 'flex',
+                                    flexDirection: 'column',
+                                    minHeight: 0,
                                 }}
                                 onAnimationComplete={() => {
                                     // Clear previous expanded state once animation is complete
@@ -896,7 +911,7 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType}) =>
                             >
                                 {/* Always render content, but with conditional styling for visibility */}
                                 {itemKey === 'patients' && (
-                                    <div style={{ padding: '15px', maxHeight: '50vh', overflowY: 'auto' }}>
+                                    <div style={{ padding: '15px', flex: '1 1 auto', overflowY: 'auto', minHeight: 0 }}>
                                         {Object.values(stage().getSave().actors).length === 0 ? (
                                             <p style={{ color: '#00ff88', opacity: 0.5, fontStyle: 'italic', fontSize: '0.85rem', fontWeight: 700 }}>No patients currently on station</p>
                                         ) : (
@@ -941,11 +956,47 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType}) =>
                                         )}
                                     </div>
                                 )}
-                                {itemKey !== 'patients' && (
+                                {itemKey === 'modules' && (
+                                    <div style={{ 
+                                        padding: '15px', 
+                                        flex: '1 1 auto', 
+                                        overflowY: 'auto', 
+                                        minHeight: 0,
+                                        display: 'grid',
+                                        gridTemplateColumns: 'repeat(auto-fill, minmax(120px, 1fr))',
+                                        gap: '12px',
+                                        alignContent: 'start'
+                                    }}>
+                                        {layout.getLayout().flat().filter(m => m !== null).length === 0 ? (
+                                            <p style={{ 
+                                                color: '#00ff88', 
+                                                opacity: 0.5, 
+                                                fontStyle: 'italic', 
+                                                fontSize: '0.85rem', 
+                                                fontWeight: 700,
+                                                gridColumn: '1 / -1'
+                                            }}>No modules currently on station</p>
+                                        ) : (
+                                            layout.getLayout().flat().filter(m => m !== null).map((module: Module) => (
+                                                <ModuleCard
+                                                    key={module.id}
+                                                    module={module}
+                                                    stage={stage()}
+                                                    onClick={() => {
+                                                        console.log(`Clicked module ${module.id} of type ${module.type}`);
+                                                        const action = module.getAction();
+                                                        if (action) {
+                                                            action(module, stage(), setScreenType);
+                                                        }
+                                                    }}
+                                                />
+                                            ))
+                                        )}
+                                    </div>
+                                )}
+                                {itemKey === 'requests' && (
                                     <div style={{ padding: '15px', color: '#00ff88', opacity: 0.5, fontSize: '0.85rem', fontWeight: 700, fontStyle: 'italic' }}>
-                                        {itemKey === 'crew' && 'Crew management coming soon...'}
-                                        {itemKey === 'modules' && 'Module management coming soon...'}
-                                        {itemKey === 'requests' && 'Request management coming soon...'}
+                                        Request management coming soon...
                                     </div>
                                 )}
                             </motion.div>
