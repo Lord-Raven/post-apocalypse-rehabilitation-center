@@ -105,7 +105,7 @@ export const ActorCard: FC<ActorCardProps> = ({
             </div>
             
             {/* Sections in rows. */}
-            <div style={{ display: 'flex', flexDirection: 'row', minHeight: '200px', overflow: 'hidden' }}>
+            <div style={{ display: 'flex', flexDirection: 'row', overflow: 'hidden' }}>
                 {currentSections.map(section => {
                     if (section === ActorCardSection.STATS) {
                         return <div className="stat-list" style={{ 
@@ -116,15 +116,16 @@ export const ActorCard: FC<ActorCardProps> = ({
                                 overflow: 'visible',
                                 display: 'flex',
                                 flexDirection: 'column',
-                                justifyContent: 'flex-start'
+                                justifyContent: 'flex-start',
+                                height: '100%'
                             }}>
                                 {/* Stats with letter grades. Each row here should be 1/8th of the container height. */}
                                 {Object.values(Stat).map((stat) => {
                                     const grade = actor.scoreToGrade(actor.stats[stat]);
                                     return (
                                         <div className="stat-row" key={`${actor.id}_${stat}`} style={{
-                                            height: '12%',
-                                            maxHeight: '12%',
+                                            height: '12.5%',
+                                            maxHeight: '12.5%',
                                             display: 'flex',
                                             alignItems: 'center',
                                             justifyContent: 'space-between'
