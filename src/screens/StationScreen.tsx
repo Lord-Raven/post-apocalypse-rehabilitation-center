@@ -3,12 +3,12 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Typography, Card, CardContent } from '@mui/material';
 import { styled } from '@mui/material/styles';
 import { ScreenType } from './BaseScreen';
-import { Layout, Module, createModule, ModuleType, MODULE_DEFAULTS, StationStat } from '../Module';
+import { Layout, Module, createModule, ModuleType, MODULE_DEFAULTS, StationStat, STATION_STAT_DESCRIPTIONS } from '../Module';
 import { Stage } from '../Stage';
 import ActorCard from '../components/ActorCard';
 import { PhaseIndicator as SharedPhaseIndicator, Title } from '../components/UIComponents';
 import { useTooltip } from '../contexts/TooltipContext';
-import { SwapHoriz, Home, Work, Menu } from '@mui/icons-material';
+import { SwapHoriz, Home, Work, Menu, Build, Hotel, Restaurant, Security, Favorite } from '@mui/icons-material';
 import { SkitType } from '../Skit';
 import { generateActorDecor } from '../actors/Actor';
 import { scoreToGrade } from '../utils';
@@ -655,29 +655,40 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType}) =>
                     {(['Systems', 'Comfort', 'Provision', 'Security', 'Harmony'] as StationStat[]).map((statName) => {
                         const statValue = stage().getSave().stationStats?.[statName] || 5;
                         const grade = scoreToGrade(statValue);
+                        // Map stat names to appropriate icons
+                        const statIcons: Record<StationStat, any> = {
+                            'Systems': Build,
+                            'Comfort': Hotel,
+                            'Provision': Restaurant,
+                            'Security': Security,
+                            'Harmony': Favorite
+                        };
+                        const StatIcon = statIcons[statName];
                         return (
                             <motion.div
                                 key={statName}
                                 whileHover={{ scale: 1.05, y: -3 }}
+                                onMouseEnter={() => setTooltip(STATION_STAT_DESCRIPTIONS[statName], StatIcon)}
+                                onMouseLeave={() => clearTooltip()}
                                 style={{
                                     display: 'flex',
                                     flexDirection: 'column',
                                     alignItems: 'center',
-                                    gap: '6px',
+                                    gap: '4px',
                                     flex: 1,
+                                    cursor: 'help',
                                 }}
                             >
                                 {/* Stat Name and Grade - Inline */}
                                 <div style={{
                                     display: 'flex',
                                     alignItems: 'center',
-                                    gap: '10px',
+                                    gap: '8px',
                                 }}>
-                                    <Typography
-                                        variant="caption"
+                                    <span
                                         style={{
                                             color: '#00ff88',
-                                            fontSize: '0.75rem',
+                                            fontSize: '0.9rem',
                                             fontWeight: 700,
                                             textTransform: 'uppercase',
                                             letterSpacing: '0.5px',
@@ -685,7 +696,7 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType}) =>
                                         }}
                                     >
                                         {statName}
-                                    </Typography>
+                                    </span>
                                     
                                     {/* Grade Display */}
                                     <span
@@ -707,7 +718,6 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType}) =>
                                     display: 'flex',
                                     gap: '2px',
                                     width: '100%',
-                                    justifyContent: 'center',
                                 }}>
                                     {Array.from({ length: 10 }, (_, i) => {
                                         const isLit = i < statValue;
@@ -726,8 +736,8 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType}) =>
                                                 animate={{ scaleY: 1 }}
                                                 transition={{ delay: 0.5 + (i * 0.05) }}
                                                 style={{
-                                                    width: '8px',
-                                                    height: '12px',
+                                                    flex: 1,
+                                                    height: '4px',
                                                     borderRadius: '2px',
                                                     background: isLit 
                                                         ? pipColor
@@ -849,7 +859,8 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType}) =>
                                     border: '3px solid #00ff88',
                                     borderRadius: '5px',
                                     color: '#00ff88',
-                                    fontSize: '16px',
+                                    fontSize: '1rem',
+                                    fontWeight: 700,
                                     cursor: 'pointer',
                                     textAlign: 'left',
                                 }}
@@ -892,7 +903,7 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType}) =>
                                 {itemKey === 'patients' && (
                                     <div style={{ padding: '15px', maxHeight: '50vh', overflowY: 'auto' }}>
                                         {Object.values(stage().getSave().actors).length === 0 ? (
-                                            <p style={{ color: '#888', fontStyle: 'italic', fontSize: '12px' }}>No patients currently on station</p>
+                                            <p style={{ color: '#00ff88', opacity: 0.5, fontStyle: 'italic', fontSize: '0.85rem', fontWeight: 700 }}>No patients currently on station</p>
                                         ) : (
                                             Object.values(stage().getSave().actors).map((actor: any) => (
                                                 <div 
@@ -936,7 +947,7 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType}) =>
                                     </div>
                                 )}
                                 {itemKey !== 'patients' && (
-                                    <div style={{ padding: '15px', color: '#888', fontSize: '12px' }}>
+                                    <div style={{ padding: '15px', color: '#00ff88', opacity: 0.5, fontSize: '0.85rem', fontWeight: 700, fontStyle: 'italic' }}>
                                         {itemKey === 'crew' && 'Crew management coming soon...'}
                                         {itemKey === 'modules' && 'Module management coming soon...'}
                                         {itemKey === 'requests' && 'Request management coming soon...'}
@@ -994,6 +1005,7 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType}) =>
                                     marginBottom: '20px',
                                     textAlign: 'center',
                                     textShadow: '0 0 10px rgba(0, 255, 136, 0.5)',
+                                    fontWeight: 900,
                                 }}
                             >
                                 Select Module Type
@@ -1038,7 +1050,7 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType}) =>
                                                         color: '#00ff88',
                                                         textTransform: 'capitalize',
                                                         fontWeight: 700,
-                                                        fontSize: '16px',
+                                                        fontSize: '1rem',
                                                     }}
                                                 >
                                                     {moduleType}
@@ -1047,9 +1059,11 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType}) =>
                                                     <Typography
                                                         variant="body2"
                                                         style={{
-                                                            color: '#00cc66',
-                                                            fontSize: '12px',
+                                                            color: '#00ff88',
+                                                            opacity: 0.7,
+                                                            fontSize: '0.85rem',
                                                             marginTop: '4px',
+                                                            fontWeight: 700,
                                                         }}
                                                     >
                                                         {moduleDefaults.role}
@@ -1072,7 +1086,8 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType}) =>
                                     border: '2px solid #00ff88',
                                     borderRadius: '8px',
                                     color: '#00ff88',
-                                    fontSize: '16px',
+                                    fontSize: '1rem',
+                                    fontWeight: 700,
                                     cursor: 'pointer',
                                     display: 'block',
                                     marginLeft: 'auto',

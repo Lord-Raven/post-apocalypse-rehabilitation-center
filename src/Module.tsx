@@ -16,13 +16,15 @@ export type ModuleType = 'echo chamber' | 'generator' | 'quarters' | 'commons' |
     // Spicy pack:
     'brothel' | 'dungeon' | 'black market' | 'harem' | 
     */
-export type StationStat =
-    'Systems' | // Mechanical and structural health of the station
-    'Comfort' | // Overall comfort and livability for inhabitants
-    'Provision' | // Availability of food, water, and essential supplies
-    'Security' | // Safety and defense against external and internal threats
-    'Harmony'; // Social cohesion and morale among inhabitants
+export type StationStat = 'Systems' | 'Comfort' | 'Provision' | 'Security' | 'Harmony';
 
+export const STATION_STAT_DESCRIPTIONS: Record<StationStat, string> = {
+    'Systems': 'Mechanical and structural health of the station',
+    'Comfort': 'Overall comfort and livability for inhabitants',
+    'Provision': 'Availability of food, water, and essential supplies',
+    'Security': 'Safety and defense against external and internal threats',
+    'Harmony': 'Social cohesion and morale among inhabitants'
+};
 
 export interface ModuleIntrinsic {
     maintenance: number; // Additional workload for engineering

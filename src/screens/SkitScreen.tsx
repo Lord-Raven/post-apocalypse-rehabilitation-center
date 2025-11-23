@@ -306,7 +306,9 @@ export const SkitScreen: FC<SkitScreenProps> = ({ stage, setScreenType }) => {
             setDisplayName(matchingActor?.name || (isPlayerSpeaker ? playerName : ''));
             setDisplayMessage(formatMessage(skit.script[index]?.message || ''));
             setFinishTyping(false); // Reset typing state when message changes
+            console.log('SkitScreen: Displaying message index', index, 'Speaker:', matchingActor ? matchingActor.name : (isPlayerSpeaker ? playerName : 'N/A'));
             if (audioEnabled && skit.script[index]?.speechUrl) {
+                console.log('Ought to play audio');
                 // Stop any currently playing audio
                 if (currentAudioRef.current) {
                     currentAudioRef.current.pause();
@@ -584,7 +586,7 @@ export const SkitScreen: FC<SkitScreenProps> = ({ stage, setScreenType }) => {
                     <IconButton
                         onClick={() => setAudioEnabled(!audioEnabled)}
                         onMouseEnter={() => {
-                            setTooltip(audioEnabled ? 'Disable TTS audio' : 'Enable TTS audio', audioEnabled ? VolumeUp : VolumeOff);
+                            setTooltip(audioEnabled ? 'Disable speech audio' : 'Enable speech audio', audioEnabled ? VolumeUp : VolumeOff);
                         }}
                         onMouseLeave={() => {
                             clearTooltip();
@@ -809,6 +811,7 @@ export const SkitScreen: FC<SkitScreenProps> = ({ stage, setScreenType }) => {
             const newIndex = Math.min(oldIndex, (stage().getSave().currentSkit?.script.length || 1) - 1);
             const skitData = stage().getSave().currentSkit;
             setSkit({...skitData as SkitData});
+            console.log('setIndex after new skit generated.');
             setIndex(newIndex);
             setLoading(false);
             const ended = skitData?.endScene || false;
