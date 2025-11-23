@@ -547,7 +547,7 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType}) =>
                                                     {actors.map((actor) => (
                                                         <img
                                                             key={actor.id}
-                                                            src={actor.emotionPack?.neutral}
+                                                            src={actor.getEmotionImage(actor.getDefaultEmotion(), stage())}
                                                             alt={actor.name}
                                                             style={{
                                                                 height: `calc(0.6 * ${cellSize})`,
@@ -962,10 +962,9 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType}) =>
                                         flex: '1 1 auto', 
                                         overflowY: 'auto', 
                                         minHeight: 0,
-                                        display: 'grid',
-                                        gridTemplateColumns: 'repeat(auto-fill, minmax(120px, 1fr))',
-                                        gap: '12px',
-                                        alignContent: 'start'
+                                        display: 'flex',
+                                        flexDirection: 'column',
+                                        gap: '10px',
                                     }}>
                                         {layout.getModulesWhere(m => true).length === 0 ? (
                                             <p style={{ 

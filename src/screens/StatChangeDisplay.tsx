@@ -108,7 +108,7 @@ const StatChangeDisplay: FC<StatChangeDisplayProps> = ({ characterChanges, layou
                                     borderRadius: '12px',
                                     overflow: 'hidden',
                                     border: '3px solid rgba(0,255,136,0.4)',
-                                    backgroundImage: `url(${charChange.actor.emotionPack?.neutral || charChange.actor.avatarImageUrl})`,
+                                    backgroundImage: `url(${charChange.actor.getEmotionImage(charChange.actor.getDefaultEmotion())})`,
                                     backgroundSize: 'cover',
                                     backgroundPosition: 'top center',
                                     backgroundRepeat: 'no-repeat',

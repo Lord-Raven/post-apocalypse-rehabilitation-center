@@ -29,11 +29,11 @@ export const ModuleCard: FC<ModuleCardProps> = ({
     onClick
 }) => {
     const actor = module.ownerId ? stage.getSave().actors[module.ownerId] : null;
-    const role = module.getAttribute('role') || module.type;
+    const role = module.type === 'quarters' ? 'Occupant' : (module.getAttribute('role') || module.type);
     
     // Default hover behavior
     const defaultWhileHover = {
-        scale: 1.03,
+        scale: 1.02,
         boxShadow: '0 0 20px rgba(0, 255, 136, 0.5)',
     };
 
@@ -46,84 +46,99 @@ export const ModuleCard: FC<ModuleCardProps> = ({
             style={{
                 position: 'relative',
                 width: '100%',
-                aspectRatio: '1',
+                height: '80px',
                 border: '3px solid #00ff88',
                 borderRadius: '8px',
                 overflow: 'hidden',
                 cursor: onClick ? 'pointer' : 'default',
+                display: 'flex',
                 ...style
             }}
             className={className}
         >
-            {/* Module background image */}
+            {/* Left side: Module image with actor portrait */}
             <div
                 style={{
-                    position: 'absolute',
-                    inset: 0,
-                    backgroundImage: `url(${actor?.decorImageUrls?.[module.type] || module.getAttribute('defaultImageUrl')})`,
-                    backgroundSize: 'cover',
-                    backgroundPosition: 'center',
-                    backgroundRepeat: 'no-repeat',
+                    position: 'relative',
+                    width: '80px',
+                    height: '100%',
+                    flexShrink: 0,
+                    borderRight: '2px solid rgba(0, 255, 136, 0.3)',
                 }}
-            />
-
-            {/* Actor portrait overlay (if assigned) */}
-            {actor && actor.emotionPack?.neutral && (
+            >
+                {/* Module background image */}
                 <div
                     style={{
                         position: 'absolute',
                         inset: 0,
-                        backgroundImage: `url(${actor.emotionPack.neutral})`,
-                        backgroundSize: 'contain',
-                        backgroundPosition: 'bottom center',
+                        backgroundImage: `url(${actor?.decorImageUrls?.[module.type] || module.getAttribute('defaultImageUrl')})`,
+                        backgroundSize: 'cover',
+                        backgroundPosition: 'center',
                         backgroundRepeat: 'no-repeat',
-                        opacity: 0.9,
                     }}
                 />
-            )}
 
-            {/* Module name label */}
-            <div
-                style={{
-                    position: 'absolute',
-                    top: 0,
-                    left: 0,
-                    right: 0,
-                    padding: '6px 8px',
-                    background: 'rgba(0, 0, 0, 0.8)',
-                    color: '#00ff88',
-                    fontSize: '0.85rem',
-                    fontWeight: 700,
-                    textAlign: 'center',
-                    textTransform: 'capitalize',
-                    textShadow: '0 1px 0 rgba(0,0,0,0.6)',
-                    borderBottom: '2px solid rgba(0, 255, 136, 0.3)',
-                }}
-            >
-                {module.type}
+                {/* Actor portrait overlay (if assigned) */}
+                {actor && actor.isPrimaryImageReady && (
+                    <div
+                        style={{
+                            position: 'absolute',
+                            inset: 0,
+                            backgroundImage: `url(${actor.getEmotionImage(actor.getDefaultEmotion(), stage)})`,
+                            backgroundSize: 'contain',
+                            backgroundPosition: 'top center',
+                            backgroundRepeat: 'no-repeat',
+                            opacity: 0.9,
+                        }}
+                    />
+                )}
             </div>
 
-            {/* Role label (bottom) */}
-            {role && (
+            {/* Right side: Module info */}
+            <div
+                style={{
+                    flex: 1,
+                    display: 'flex',
+                    flexDirection: 'column',
+                    justifyContent: 'center',
+                    padding: '8px 12px',
+                    background: 'rgba(0, 0, 0, 0.6)',
+                    overflow: 'hidden',
+                }}
+            >
+                {/* Module name */}
                 <div
                     style={{
-                        position: 'absolute',
-                        bottom: 0,
-                        left: 0,
-                        right: 0,
-                        padding: '6px 8px',
-                        background: 'rgba(0, 0, 0, 0.8)',
+                        color: '#00ff88',
+                        fontSize: '0.9rem',
+                        fontWeight: 700,
+                        textTransform: 'capitalize',
+                        textShadow: '0 1px 0 rgba(0,0,0,0.6)',
+                        marginBottom: '4px',
+                        whiteSpace: 'nowrap',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                    }}
+                >
+                    {module.type}
+                </div>
+
+                {/* Role and assignment */}
+                <div
+                    style={{
                         color: actor ? '#ffc800' : '#00ff88',
                         fontSize: '0.75rem',
                         fontWeight: 700,
-                        textAlign: 'center',
                         textShadow: '0 1px 0 rgba(0,0,0,0.6)',
-                        borderTop: '2px solid rgba(0, 255, 136, 0.3)',
+                        opacity: actor ? 1 : 0.7,
+                        whiteSpace: 'nowrap',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
                     }}
                 >
                     {actor ? `${role}: ${actor.name}` : `${role}: Unassigned`}
                 </div>
-            )}
+            </div>
         </motion.div>
     );
 };

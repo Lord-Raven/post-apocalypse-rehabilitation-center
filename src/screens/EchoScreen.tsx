@@ -312,17 +312,17 @@ export const EchoScreen: FC<EchoScreenProps> = ({stage, setScreenType}) => {
 									justifyContent: actor ? 'flex-end' : 'center',
 									alignItems: actor ? 'stretch' : 'center',
 									borderRadius: 12,
-									overflow: 'hidden',
-									background: actor 
-										? `linear-gradient(
-												135deg, 
-												rgba(0, 255, 136, 0.15) 0%, 
-												rgba(0, 200, 255, 0.1) 50%, 
-												rgba(109, 87, 131, 0.15) 100%
-											), url(${actor.emotionPack['neutral'] || actor.avatarImageUrl})`
-										: 'linear-gradient(135deg, rgba(0,255,136,0.15), rgba(0,200,255,0.1))',
-									backgroundSize: actor ? 'cover, cover' : 'cover',
-									backgroundPosition: actor ? 'center, center top' : 'center',
+								overflow: 'hidden',
+								background: actor 
+									? `linear-gradient(
+											135deg, 
+											rgba(0, 255, 136, 0.15) 0%, 
+											rgba(0, 200, 255, 0.1) 50%, 
+											rgba(109, 87, 131, 0.15) 100%
+										), url(${actor.getEmotionImage('neutral', stage())})`
+									: 'linear-gradient(135deg, rgba(0,255,136,0.15), rgba(0,200,255,0.1))',
+								backgroundSize: actor ? 'cover, cover' : 'cover',
+								backgroundPosition: actor ? 'center, center top' : 'center',
 									backgroundBlendMode: actor ? 'overlay, normal' : 'normal',
 									backgroundRepeat: 'no-repeat',
 									border: isSelected

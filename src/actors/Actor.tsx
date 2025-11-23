@@ -70,6 +70,43 @@ class Actor {
         return !!this.emotionPack['neutral'];
     }
 
+    /**
+     * Get the default emotion for this actor based on their Joy stat.
+     * Returns joy (>8), approval (>5), neutral (>2), or disappointment (<=2).
+     * @returns The default emotion for this actor
+     */
+    getDefaultEmotion(): Emotion {
+        const joyValue = this.stats[Stat.Joy];
+        if (joyValue > 8) return Emotion.joy;
+        if (joyValue > 5) return Emotion.approval;
+        if (joyValue > 2) return Emotion.neutral;
+        return Emotion.disappointment;
+    }
+
+    /**
+     * Get the emotion image for this actor, falling back to neutral if not available.
+     * If the emotion is not defined or matches the base/neutral image, kick off generation
+     * in the background (don't wait for it).
+     * @param emotion The emotion to get the image for
+     * @param stage Optional stage instance to use for image generation
+     * @returns The URL of the emotion image
+     */
+    getEmotionImage(emotion: Emotion | string, stage?: Stage): string {
+        const emotionKey = typeof emotion === 'string' ? emotion : emotion;
+        const emotionUrl = this.emotionPack[emotionKey];
+        const neutralUrl = this.emotionPack['neutral'] || this.emotionPack['base'];
+        const fallbackUrl = neutralUrl || this.avatarImageUrl || '';
+
+        // Check if we need to generate the image
+        if (stage && (!emotionUrl || emotionUrl === this.avatarImageUrl || emotionUrl === this.emotionPack['base'] || emotionUrl === neutralUrl)) {
+            // Kick off generation in the background (don't wait)
+            generateEmotionImage(this, emotion as Emotion, stage);
+        }
+
+        // Return the emotion image or fallback
+        return emotionUrl || fallbackUrl;
+    }
+
     birth(day: number) {
         this.birthDay = day;
     }
@@ -361,20 +398,24 @@ export async function generateAdditionalActorImages(actor: Actor, stage: Stage):
         // Generate in serial and not parallel as below:
         for (const emotion of Object.values(Emotion)) {
             if (!actor.emotionPack[emotion]) {
-                console.log(`Generating ${emotion} emotion image for actor ${actor.name}`);
-                const imageUrl = await stage.makeImageFromImage({
-                    image: actor.emotionPack['neutral'],
-                    prompt: `Give this character a ${EMOTION_PROMPTS[emotion]}, gesture, or pose.`,
-                    remove_background: true,
-                    transfer_type: 'edit'
-                }, `actors/${actor.id}/${emotion}.png`, '');
-                console.log(`Generated ${emotion} emotion image for actor ${actor.name}: ${imageUrl || ''}`);
-                
-                actor.emotionPack[emotion] = imageUrl || '';
+                await generateEmotionImage(actor, emotion, stage);
             }
         }
     }
     actor.isImageLoadingComplete = true;
+}
+
+async function generateEmotionImage(actor: Actor, emotion: Emotion, stage: Stage): Promise<string> {
+    console.log(`Generating ${emotion} emotion image for actor ${actor.name}`);
+    const imageUrl = await stage.makeImageFromImage({
+        image: actor.emotionPack['neutral'] || '',
+        prompt: `Give this character a ${EMOTION_PROMPTS[emotion]}, gesture, or pose.`,
+        remove_background: true,
+        transfer_type: 'edit'
+    }, `actors/${actor.id}/${emotion}.png`, '');
+    console.log(`Generated ${emotion} emotion image for actor ${actor.name}: ${imageUrl || ''}`);
+    actor.emotionPack[emotion] = imageUrl || '';
+    return imageUrl || '';
 }
 
 export async function generateActorDecor(actor: Actor, module: Module, stage: Stage): Promise<string> {
