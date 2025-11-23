@@ -967,7 +967,7 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType}) =>
                                         gap: '12px',
                                         alignContent: 'start'
                                     }}>
-                                        {layout.getLayout().flat().filter(m => m !== null).length === 0 ? (
+                                        {layout.getModulesWhere(m => true).length === 0 ? (
                                             <p style={{ 
                                                 color: '#00ff88', 
                                                 opacity: 0.5, 
@@ -977,7 +977,7 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType}) =>
                                                 gridColumn: '1 / -1'
                                             }}>No modules currently on station</p>
                                         ) : (
-                                            layout.getLayout().flat().filter(m => m !== null).map((module: Module<ModuleType>) => (
+                                            layout.getModulesWhere(m => true).map((module: Module) => (
                                                 <ModuleCard
                                                     key={module.id}
                                                     module={module}
