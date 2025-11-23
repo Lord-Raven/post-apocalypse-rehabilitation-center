@@ -330,7 +330,7 @@ export const SkitScreen: FC<SkitScreenProps> = ({ stage, setScreenType }) => {
             setFinishTyping(false);
         }
 
-    }, [index, skit]);
+    }, [index]);
 
     const next = () => {
         if (finishTyping) {
