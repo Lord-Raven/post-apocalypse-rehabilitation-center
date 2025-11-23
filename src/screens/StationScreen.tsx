@@ -631,6 +631,124 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType}) =>
                     overflow: 'hidden',
                 }}
             >
+                {/* Station Stats Display - Top Bar */}
+                <motion.div
+                    initial={{ opacity: 0, y: -20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.6, delay: 0.3 }}
+                    style={{
+                        position: 'absolute',
+                        top: '20px',
+                        left: '20px',
+                        right: '80px', // Leave space for menu button
+                        display: 'flex',
+                        gap: '20px',
+                        padding: '15px 25px',
+                        background: 'linear-gradient(135deg, rgba(0, 30, 60, 0.85) 0%, rgba(0, 20, 40, 0.85) 100%)',
+                        border: '2px solid #00ff88',
+                        borderRadius: '12px',
+                        boxShadow: '0 0 30px rgba(0, 255, 136, 0.3), inset 0 0 20px rgba(0, 255, 136, 0.1)',
+                        backdropFilter: 'blur(10px)',
+                        zIndex: 90,
+                    }}
+                >
+                    {(['Systems', 'Comfort', 'Provision', 'Security', 'Harmony'] as StationStat[]).map((statName) => {
+                        const statValue = stage().getSave().stationStats?.[statName] || 5;
+                        const grade = scoreToGrade(statValue);
+                        return (
+                            <motion.div
+                                key={statName}
+                                whileHover={{ scale: 1.05, y: -3 }}
+                                style={{
+                                    display: 'flex',
+                                    flexDirection: 'column',
+                                    alignItems: 'center',
+                                    gap: '6px',
+                                    flex: 1,
+                                }}
+                            >
+                                {/* Stat Name and Grade - Inline */}
+                                <div style={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '10px',
+                                }}>
+                                    <Typography
+                                        variant="caption"
+                                        style={{
+                                            color: '#00ff88',
+                                            fontSize: '0.75rem',
+                                            fontWeight: 700,
+                                            textTransform: 'uppercase',
+                                            letterSpacing: '0.5px',
+                                            textShadow: '0 0 10px rgba(0, 255, 136, 0.5)',
+                                        }}
+                                    >
+                                        {statName}
+                                    </Typography>
+                                    
+                                    {/* Grade Display */}
+                                    <span
+                                        className="stat-grade"
+                                        data-grade={grade}
+                                        style={{
+                                            fontSize: '1.8rem',
+                                            fontWeight: 900,
+                                            textShadow: '0 2px 8px rgba(0, 0, 0, 0.8), 0 0 20px currentColor',
+                                            lineHeight: 1,
+                                        }}
+                                    >
+                                        {grade}
+                                    </span>
+                                </div>
+                                
+                                {/* Ten-pip bar */}
+                                <div style={{
+                                    display: 'flex',
+                                    gap: '2px',
+                                    width: '100%',
+                                    justifyContent: 'center',
+                                }}>
+                                    {Array.from({ length: 10 }, (_, i) => {
+                                        const isLit = i < statValue;
+                                        // Get color based on grade
+                                        let pipColor = '#00ff88';
+                                        if (grade.startsWith('F')) pipColor = '#ff6b6b';
+                                        else if (grade.startsWith('D')) pipColor = '#ffb47a';
+                                        else if (grade.startsWith('C')) pipColor = '#d0d0d0';
+                                        else if (grade.startsWith('B')) pipColor = '#3bd3ff';
+                                        else if (grade.startsWith('A')) pipColor = '#ffdd2f';
+                                        
+                                        return (
+                                            <motion.div
+                                                key={i}
+                                                initial={{ scaleY: 0 }}
+                                                animate={{ scaleY: 1 }}
+                                                transition={{ delay: 0.5 + (i * 0.05) }}
+                                                style={{
+                                                    width: '8px',
+                                                    height: '12px',
+                                                    borderRadius: '2px',
+                                                    background: isLit 
+                                                        ? pipColor
+                                                        : 'rgba(255, 255, 255, 0.1)',
+                                                    boxShadow: isLit 
+                                                        ? `0 0 8px ${pipColor}, inset 0 1px 2px rgba(255, 255, 255, 0.3)`
+                                                        : 'none',
+                                                    border: isLit 
+                                                        ? `1px solid ${pipColor}`
+                                                        : '1px solid rgba(255, 255, 255, 0.2)',
+                                                    transition: 'all 0.3s ease',
+                                                }}
+                                            />
+                                        );
+                                    })}
+                                </div>
+                            </motion.div>
+                        );
+                    })}
+                </motion.div>
+
                 {/* Menu Button - Top Right */}
                 <motion.button
                     whileHover={{ scale: 1.2 }}
@@ -678,74 +796,6 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType}) =>
                 >
                     {renderGrid()}
                 </div>
-
-                {/* Station Stats Display - Bottom Bar */}
-                <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.6, delay: 0.3 }}
-                    style={{
-                        position: 'absolute',
-                        bottom: '20px',
-                        left: '50%',
-                        transform: 'translateX(-50%)',
-                        display: 'flex',
-                        gap: '30px',
-                        padding: '20px 40px',
-                        background: 'linear-gradient(135deg, rgba(0, 30, 60, 0.85) 0%, rgba(0, 20, 40, 0.85) 100%)',
-                        border: '2px solid #00ff88',
-                        borderRadius: '15px',
-                        boxShadow: '0 0 30px rgba(0, 255, 136, 0.3), inset 0 0 20px rgba(0, 255, 136, 0.1)',
-                        backdropFilter: 'blur(10px)',
-                    }}
-                >
-                    {(['Integrity', 'Comfort', 'Provision', 'Security', 'Harmony'] as StationStat[]).map((statName) => {
-                        const statValue = stage().getSave().stationStats?.[statName] || 5;
-                        const grade = scoreToGrade(statValue);
-                        return (
-                            <motion.div
-                                key={statName}
-                                whileHover={{ scale: 1.1, y: -5 }}
-                                style={{
-                                    display: 'flex',
-                                    flexDirection: 'column',
-                                    alignItems: 'center',
-                                    gap: '8px',
-                                    minWidth: '80px',
-                                }}
-                            >
-                                {/* Stat Name */}
-                                <Typography
-                                    variant="caption"
-                                    style={{
-                                        color: '#00ff88',
-                                        fontSize: '0.85rem',
-                                        fontWeight: 700,
-                                        textTransform: 'uppercase',
-                                        letterSpacing: '0.5px',
-                                        textShadow: '0 0 10px rgba(0, 255, 136, 0.5)',
-                                    }}
-                                >
-                                    {statName}
-                                </Typography>
-                                
-                                {/* Grade Display */}
-                                <span
-                                    className="stat-grade"
-                                    data-grade={grade}
-                                    style={{
-                                        fontSize: '2.5rem',
-                                        fontWeight: 900,
-                                        textShadow: '0 2px 8px rgba(0, 0, 0, 0.8), 0 0 20px currentColor',
-                                        lineHeight: 1,
-                                    }}
-                                >
-                                    {grade}
-                                </span>
-                            </motion.div>
-                        );
-                    })}
-                </motion.div>
             </div>
 
             {/* Side Menu - 20vw right side */}

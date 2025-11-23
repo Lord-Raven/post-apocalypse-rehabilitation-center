@@ -216,16 +216,25 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
         
         const save = this.getSave();
         // Initialize stationStats if missing
-        if (!save.stationStats) {
+        if (!save.stationStats || Object.keys(save.stationStats).length < 5) {
             save.stationStats = {
-                'Integrity': 3,
+                'Systems': 3,
                 'Comfort': 3,
                 'Provision': 3,
                 'Security': 3,
                 'Harmony': 3
             };
         }
-    
+
+        // If any echo actors are missing primary images, kick those off now.
+        for (const echoActor of save.echoes) {
+            if (echoActor && (!echoActor.emotionPack || !echoActor.emotionPack[Emotion.neutral] || echoActor.emotionPack[Emotion.neutral] == echoActor.avatarImageUrl)) {
+                generatePrimaryActorImage(echoActor, this).then(() => {
+                    this.saveGame();
+                });
+            }
+        }
+
         // If there are any actors in the save with missing emotion images, kick one of them off now.
         for (const actorId in save.actors) {
             const actor = save.actors[actorId];

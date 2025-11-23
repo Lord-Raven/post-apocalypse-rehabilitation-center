@@ -17,7 +17,7 @@ export type ModuleType = 'echo chamber' | 'generator' | 'quarters' | 'commons' |
     'brothel' | 'dungeon' | 'black market' | 'harem' | 
     */
 export type StationStat =
-    'Integrity' | // Mechanical and structural health of the station
+    'Systems' | // Mechanical and structural health of the station
     'Comfort' | // Overall comfort and livability for inhabitants
     'Provision' | // Availability of food, water, and essential supplies
     'Security' | // Safety and defense against external and internal threats
