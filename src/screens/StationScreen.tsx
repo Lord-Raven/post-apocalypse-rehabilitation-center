@@ -558,21 +558,21 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType}) =>
                                                 </div>
 
                                                 {/* Label bar: shaded, spans full width, overlays above actors (z-index) and is bottom-aligned */}
-                                                <div style={{
-                                                    position: 'absolute',
-                                                    left: 0,
-                                                    right: 0,
-                                                    bottom: '6px',
-                                                    width: '100%',
-                                                    background: 'rgba(0,0,0,0.6)',
-                                                    color: '#dfffe6',
-                                                    padding: '6px 8px',
-                                                    textAlign: 'center',
-                                                    fontWeight: 700,
-                                                    textTransform: 'capitalize',
-                                                    pointerEvents: 'none',
-                                                    zIndex: 2,
-                                                }}>{module.type}</div>
+                                                <div 
+                                                    className="module-label"
+                                                    style={{
+                                                        position: 'absolute',
+                                                        left: 0,
+                                                        right: 0,
+                                                        bottom: '6px',
+                                                        width: '100%',
+                                                        background: 'rgba(0,0,0,0.6)',
+                                                        padding: '6px 8px',
+                                                        textAlign: 'center',
+                                                        pointerEvents: 'none',
+                                                        zIndex: 2,
+                                                    }}
+                                                >{module.type}</div>
                                             </>
                                         );
                                     })()}
@@ -686,12 +686,10 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType}) =>
                                     gap: '8px',
                                 }}>
                                     <span
+                                        className="stat-label"
                                         style={{
                                             color: '#00ff88',
                                             fontSize: '0.9rem',
-                                            fontWeight: 700,
-                                            textTransform: 'uppercase',
-                                            letterSpacing: '0.5px',
                                             textShadow: '0 0 10px rgba(0, 255, 136, 0.5)',
                                         }}
                                     >
@@ -790,7 +788,7 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType}) =>
                     className="station-modules"
                     style={{
                         position: 'absolute',
-                        top: '50%',
+                        top: '56%',
                         left: '50%',
                         transform: 'translate(-50%, -50%)',
                         width: `calc(${gridSize} * ${cellSize})`,
@@ -847,6 +845,7 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType}) =>
                                 onMouseEnter={() => setIsHeaderHovered(true)}
                                 onMouseLeave={() => setIsHeaderHovered(false)}
                                 whileTap={{ scale: 0.95 }}
+                                className="section-header"
                                 style={{
                                     display: 'flex',
                                     alignItems: 'center',
@@ -858,9 +857,6 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType}) =>
                                         : 'transparent',
                                     border: '3px solid #00ff88',
                                     borderRadius: '5px',
-                                    color: '#00ff88',
-                                    fontSize: '1rem',
-                                    fontWeight: 700,
                                     cursor: 'pointer',
                                     textAlign: 'left',
                                 }}

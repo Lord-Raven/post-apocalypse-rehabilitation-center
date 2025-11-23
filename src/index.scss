@@ -76,14 +76,31 @@ html, body, #root {
   position: relative;
   overflow: visible;
 }
+.stat-label,
+.section-header,
+.module-label {
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: rgba(255, 255, 255, 0.95);
+}
+
 .stat-label {
   font-size: 1.2vh;
-  color: rgba(255,255,255,0.9);
-  text-transform: uppercase;
-  letter-spacing: 0.1vh;
-  font-weight: 600;
   opacity: 0.95;
   z-index: 1;
+}
+
+.section-header {
+  font-size: 1rem;
+  color: var(--color-primary);
+}
+
+.module-label {
+  font-size: 18px;
+  text-transform: capitalize;
+  color: var(--text-secondary);
+  text-shadow: 0 1px 0 rgba(0, 0, 0, 0.6);
 }
 .stat-grade {
   /* big, bold, skewed/rotated letter with a crisp drop shadow */
@@ -423,14 +440,10 @@ html, body, #root {
 
 /* Module/Tile Styles */
 .module-tile {
+  @extend .module-label;
   border: 3px solid var(--color-primary);
   border-radius: 10px;
   cursor: pointer;
-  color: var(--text-secondary);
-  font-weight: 700;
-  font-size: 18px;
-  text-transform: capitalize;
-  text-shadow: 0 1px 0 rgba(0, 0, 0, 0.6);
   overflow: hidden;
   transition: all 0.2s ease;
   

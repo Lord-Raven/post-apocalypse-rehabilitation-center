@@ -175,11 +175,8 @@ const StatChangeDisplay: FC<StatChangeDisplayProps> = ({ characterChanges, layou
                                     {/* Stat name */}
                                     <Typography
                                         variant="body1"
+                                        className="stat-label"
                                         sx={{
-                                            color: 'rgba(255,255,255,0.95)',
-                                            fontWeight: 700,
-                                            textTransform: 'uppercase',
-                                            letterSpacing: '0.8px',
                                             fontSize: '0.9rem'
                                         }}
                                     >

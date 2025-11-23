@@ -141,7 +141,7 @@ const ActorImage: FC<ActorImageProps> = ({
             <AnimatePresence>
                 {processedImageUrl && (
                     <motion.img
-                        key={processedImageUrl}
+                        key={`${actor.id}_${imageUrl}_bg`}
                         src={processedImageUrl}
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
@@ -164,7 +164,7 @@ const ActorImage: FC<ActorImageProps> = ({
             <AnimatePresence>
                 {processedImageUrl && (
                     <motion.img
-                        key={processedImageUrl + "_main"}
+                        key={`${actor.id}_${imageUrl}_main`}
                         src={processedImageUrl}
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 0.75 }}
