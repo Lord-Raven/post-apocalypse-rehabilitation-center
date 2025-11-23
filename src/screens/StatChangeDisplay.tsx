@@ -129,17 +129,25 @@ const StatChangeDisplay: FC<StatChangeDisplayProps> = ({ characterChanges, layou
                             transition={{ duration: 0.4, delay: 0.7 + charIndex * 0.2 }}
                             style={{ marginBottom: '20px' }}
                         >
-                            <Nameplate 
-                                actor={charChange.actor} 
-                                size="large"
-                                role={layout ? (() => {
-                                    const roleModules = layout.getModulesWhere((m: any) => 
-                                        m && m.type !== 'quarters' && m.ownerId === charChange.actor.id
-                                    );
-                                    return roleModules.length > 0 ? roleModules[0].getAttribute('role') : undefined;
-                                })() : undefined}
-                                layout="inline"
-                            />
+                            {charChange.actor.id === 'STATION' ? (
+                                <Nameplate 
+                                    name="Space Station"
+                                    size="large"
+                                    layout="inline"
+                                />
+                            ) : (
+                                <Nameplate 
+                                    actor={charChange.actor} 
+                                    size="large"
+                                    role={layout ? (() => {
+                                        const roleModules = layout.getModulesWhere((m: any) => 
+                                            m && m.type !== 'quarters' && m.ownerId === charChange.actor.id
+                                        );
+                                        return roleModules.length > 0 ? roleModules[0].getAttribute('role') : undefined;
+                                    })() : undefined}
+                                    layout="inline"
+                                />
+                            )}
                         </motion.div>
 
                         {/* Stat changes */}

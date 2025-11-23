@@ -26,6 +26,67 @@ export const STATION_STAT_DESCRIPTIONS: Record<StationStat, string> = {
     'Harmony': 'Social cohesion and morale among inhabitants'
 };
 
+export function getStatRating(score: number): StatRating {
+    if (score <= 2) {
+        return StatRating.POOR;
+    } else if (score <= 4) {
+        return StatRating.BELOW_AVERAGE;
+    } else if (score <= 6) {
+        return StatRating.AVERAGE;
+    } else if (score <= 8) {
+        return StatRating.GOOD;
+    } else {
+        return StatRating.EXCELLENT;
+    }
+}
+
+// Mapping of StationStat to a set of prompt additions based on the 1-10 rating of the stat
+// 5 ratings: 1-2 (poor), 3-4 (below average), 5-6 (average), 7-8 (good), 9-10 (excellent)
+export enum StatRating {
+    POOR = 'poor',
+    BELOW_AVERAGE = 'below average',
+    AVERAGE = 'average',
+    GOOD = 'good',
+    EXCELLENT = 'excellent'
+}
+export const STATION_STAT_PROMPTS: Record<StationStat, Record<StatRating, string>> = {
+    'Systems': {
+        [StatRating.POOR]: 'The station is plagued by frequent mechanical failures, computer glitches, and structural issues, making it barely operational.',
+        [StatRating.BELOW_AVERAGE]: 'The station experiences occasional mechanical and electronic problems and minor structural concerns that need attention.',
+        [StatRating.AVERAGE]: 'The station is generally functional with standard maintenance keeping systems operational, if finicky.',
+        [StatRating.GOOD]: 'The station runs smoothly with well-maintained systems and minimal issues.',
+        [StatRating.EXCELLENT]: 'The station boasts state-of-the-art systems and impeccable structural integrity, operating flawlessly.'
+    },
+    'Comfort': {
+        [StatRating.POOR]: 'Living conditions are harsh, filthy, and downright unhealthy, leading to widespread dissatisfaction among inhabitants.',
+        [StatRating.BELOW_AVERAGE]: 'Living conditions are subpar, messy, and unpleasant, with many inhabitants feeling uneasy in their environment.',
+        [StatRating.AVERAGE]: 'Living conditions and cleanliness are acceptable, providing a basic level of comfort for inhabitants.',
+        [StatRating.GOOD]: 'The station offers a comfortable, clean, and pleasant living environment for its inhabitants.',
+        [StatRating.EXCELLENT]: 'Inhabitants enjoy luxurious, impeccable, and healthful living conditions, enhancing their overall well-being.'
+    },
+    'Provision': {
+        [StatRating.POOR]: 'Essential supplies are scarce, leading to frequent shortages and hardships for inhabitants.',
+        [StatRating.BELOW_AVERAGE]: 'Provision levels are inconsistent, with occasional shortages of food, water, and supplies.',
+        [StatRating.AVERAGE]: 'The station maintains a steady supply of essentials, meeting the basic needs of inhabitants.',
+        [StatRating.GOOD]: 'Provision levels are reliable, ensuring inhabitants have access to necessary supplies without issue.',
+        [StatRating.EXCELLENT]: 'The station is abundantly stocked with essentials, providing more than enough for all inhabitants.'
+    },
+    'Security': {
+        [StatRating.POOR]: 'The station is vulnerable to threats, with inadequate defenses and frequent security concerns.',
+        [StatRating.BELOW_AVERAGE]: 'Security measures are weak, leading to occasional malfeasance and safety concerns among inhabitants.',
+        [StatRating.AVERAGE]: 'The station has standard security protocols in place; inhabitants may occasionally act out but are generally kept in check.',
+        [StatRating.GOOD]: 'Security is robust, effectively protecting the station and its inhabitants from threats.',
+        [StatRating.EXCELLENT]: 'The station boasts top-tier security systems, ensuring unparalleled safety and protection for all.'
+    },
+    'Harmony': {
+        [StatRating.POOR]: 'Social tensions run high and morale is non-existent, leading to frequent conflicts and a toxic atmosphere among inhabitants.',
+        [StatRating.BELOW_AVERAGE]: 'Harmony is lacking and morale is low, with noticeable divisions and occasional disputes among inhabitants.',
+        [StatRating.AVERAGE]: 'The social environment is stable, with decent morale and generally peaceful coexistence.',
+        [StatRating.GOOD]: 'A strong sense of community and high morale prevails, fostering good vibes and positive relationships among inhabitants.',
+        [StatRating.EXCELLENT]: 'Inhabitants enjoy a harmonious and supportive social environment, thriving together in unity.'
+    }
+};
+
 export interface ModuleIntrinsic {
     maintenance: number; // Additional workload for engineering
     mess: number; // Additional mess for the custodian

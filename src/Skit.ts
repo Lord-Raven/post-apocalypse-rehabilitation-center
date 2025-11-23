@@ -1,5 +1,6 @@
 import Actor, { getStatDescription, namesMatch, Stat } from "./actors/Actor";
 import { Emotion, EMOTION_SYNONYMS } from "./actors/Emotion";
+import { getStatRating, STATION_STAT_PROMPTS, StationStat } from "./Module";
 import { Stage } from "./Stage";
 
 export enum SkitType {
@@ -93,10 +94,18 @@ export async function generateSkitScript(skit: SkitData, stage: Stage): Promise<
     let pastSkits = stage.getSave().timeline?.filter(event => event.skit).map(event => event.skit as SkitData) || []
     pastSkits = pastSkits.filter((v, index) => index > (pastSkits.length || 0) - 5);
 
-    let fullPrompt = `{{messages}}\nPremise:\nThis is a sci-fi visual novel game set on a space station that resurrects and rehabilitates patients who died in the multiverse-wide apocalypse: ` +
+    let fullPrompt = `{{messages}}\nPremise:\nThis is a sci-fi visual novel game set on a space station that resurrects and rehabilitates patients who died in a multiverse-wide apocalypse: ` +
         `the Post-Apocalypse Rehabilitation Center. ` +
-        `The thrust of the game has the player character, ${playerName}, is the Director of this station, interacting with patients and crew as they navigate this complex futuristic universe together. ` +
-        `\n\n${playerName}'s description: ${stage.getSave().player.description}` +
+        `The thrust of the game positions the player character, ${playerName}, as the Director of the PARC station, interacting with patients and crew as they navigate this complex futuristic universe together. ` +
+        `The PARC is an isolated station near a black hole. It serves as both sanctuary and containment for its diverse inhabitants, who hail from various alternate realities. ` +
+        `${playerName} is the only non-patient aboard the station (although they may hire patients on as crew or staff); as a result, the station may feel a bit lonely or alienating at times. ` +
+        `Much of the day-to-day maintenance and operation of the station is automated by the station's AI systems and various drones, enabling ${playerName} to focus on patient care and rehabilitation.` +
+        
+        (stage.getSave().stationStats ? (
+            `\n\nThe PARC's current stats and impacts:\n` +
+            Object.entries(stage.getSave().stationStats || {}).map(([stat, value]) => `  ${stat.toUpperCase()} (${value}): ${STATION_STAT_PROMPTS[stat as StationStat][getStatRating(value)]}`).join('\n')
+        ) : '') +
+        `\n\n${playerName}'s profile: ${stage.getSave().player.description}` +
         // List characters who are here, along with full stat details:
         `\n\nPresent Characters:\n${presentActors.map(actor => {
             const roleModule = stage.getLayout().getModulesWhere((m: any) => 
@@ -123,6 +132,7 @@ export async function generateSkitScript(skit: SkitData, stage: Stage): Promise<
         `\n\nExample Ending Script Format:\n` +
         'System: CHARACTER NAME: [CHARACTER NAME EXPRESSES OPTIMISM] Action in prose. "Dialogue in quotation marks."\nNARRATOR: Conclusive ending to the scene in prose.' +
         `\n[CHARACTER NAME: RELEVANT STAT + 1]` +
+        `\n[STATION: RELEVANT STAT + 1]` +
         `\n[END SCENE]` +
         (pastSkits.length || 0 > 0 ? 
             // Include last 5 skit scripts for context and style reference
@@ -137,8 +147,11 @@ export async function generateSkitScript(skit: SkitData, stage: Stage): Promise<
         `these cues will be utilized by the game engine to visually display appropriate character emotions.\n` +
         `This response should end when it makes sense to give ${playerName} a chance to respond or contribute, ` +
         `or, if the scene feels satisfactorily complete, the entire scene can be concluded with an "[END SCENE]" or ` +
-        `"[CHARACTER NAME: RELEVANT STAT + x]" tag(s), which can be used to apply stat changes to the specified Present Character(s). These changes should reflect an overt or implied outcome of the scene; ` +
-        `they should be incremental, typically (but not exclusively) positive, and applied only when the scene is complete.${wrapupPrompt}`;
+        `"[CHARACTER NAME: RELEVANT STAT + x]" tag(s)—which can be used to apply stat changes to the specified Present Character(s)—` +
+        `or "[STATION: RELEVANT STAT + x]" tag(s)—which can be used to apply stat changes to the station as a whole (the station has five different stats). ` +
+        `Multiple stat change tags can be included, but they always end the scene, so be certain that the narrative moment feels complete before including them. ` +
+        `These changes should reflect an overt or implied outcome of the scene; ` +
+        `they should be incremental, typically (but not exclusively) positive, and applied only when the scene is ended.${wrapupPrompt}`;
 
     // Retry logic if response is null or response.result is empty
     let retries = 3;
@@ -170,20 +183,17 @@ export async function generateSkitScript(skit: SkitData, stage: Stage): Promise<
 
                     const newEmotionTags: {[key: string]: Emotion} = {};
 
+
+                    // Prepare list of present actors (based on module/location)
+                    const presentActors: Actor[] = Object.values(stage.getSave().actors).filter(a => a.locationId === (skit.moduleId || ''));
+                    
                     // Process tags in the line:
                     // Detect [END SCENE] or [END] to determine whether the scene ends here
                     // Detect separate stat-change tags of the form:
                     // [Character Name: Stat +1]
-                    // or [Character Name - Stat +1]
+                    // or [STATION: Stat +1]
                     // Also look for expression tags:
                     // [Character Name EXPRESSES Emotion]
-                    // Look at all bracketed tags in the response
-                    const bracketTagRegex = /\[([^\]]+)\]/g;
-                    let tagMatch: RegExpExecArray | null;
-                    // Prepare list of present actors (based on module/location)
-                    const presentActors: Actor[] = Object.values(stage.getSave().actors).filter(a => a.locationId === (skit.moduleId || ''));
-                    
-                    // Lookp through all tags:
                     for (const tag of trimmed.match(/\[[^\]]+\]/g) || []) {
                         const raw = tag.slice(1, -1).trim();
                         if (!raw) continue;
@@ -197,7 +207,7 @@ export async function generateSkitScript(skit: SkitData, stage: Stage): Promise<
                             continue;
                         }
 
-                        // Attempt to split into "name" and "stat +/-1" by first ':' or '-' delimiter
+                        // Attempt to split into "name" and "stat +/-1" by first ':'
                         const split = raw.split(":");
                         if (split.length >= 2) {
                             console.log(`Processing stat change tag: ${raw}`);
@@ -206,29 +216,53 @@ export async function generateSkitScript(skit: SkitData, stage: Stage): Promise<
 
                             // Find matching present actor using namesMatch
                             const matched = presentActors.find(a => namesMatch(a.name.toLowerCase(), candidateName.toLowerCase()));
-                            if (!matched) continue;
+                            if (!matched) {
+                                // Check for STATION tag
+                                if (candidateName.toUpperCase() === 'STATION') {
+                                    // Process station stat changes
+                                    // payload may contain multiple stat adjustments separated by '|' or ','
+                                    const adjustments = payload.split('|').flatMap(p => p.split(',')).map(p => p.trim()).filter(Boolean);
+                                    for (const adj of adjustments) {
+                                        // Capture stat name and signed number e.g. "Trust + 2"
+                                        const m = adj.match(/([A-Za-z\s]+)\s*([+-]\s*\d+)/i);
+                                        if (!m) continue;
+                                        const statNameRaw = m[1].trim();
+                                        const num = parseInt(m[2].replace(/\s+/g, ''), 10) || 0;
 
-                            // payload may contain multiple stat adjustments separated by '|' or ','
-                            const adjustments = payload.split('|').flatMap(p => p.split(',')).map(p => p.trim()).filter(Boolean);
-                            for (const adj of adjustments) {
-                                // Capture stat name and signed number e.g. "Trust + 2"
-                                const m = adj.match(/([A-Za-z\s]+)\s*([+-]\s*\d+)/i);
-                                if (!m) continue;
-                                const statNameRaw = m[1].trim();
-                                const num = parseInt(m[2].replace(/\s+/g, ''), 10) || 0;
+                                        // Normalize stat name to possible Stat enum value if possible
+                                        let statKey = statNameRaw.toLowerCase().trim();
+                                        const enumMatch = Object.values(Stat).find(s => s.toLowerCase() === statKey || s.toLowerCase().includes(statKey) || statKey.includes(s.toLowerCase()));
+                                        if (enumMatch) statKey = enumMatch;
 
-                                // Normalize stat name to possible Stat enum value if possible
-                                let statKey = statNameRaw.toLowerCase().trim();
-                                const enumMatch = Object.values(Stat).find(s => s.toLowerCase() === statKey || s.toLowerCase().includes(statKey) || statKey.includes(s.toLowerCase()));
-                                if (enumMatch) statKey = enumMatch;
+                                        if (!statChanges['STATION']) statChanges['STATION'] = {};
+                                        statChanges['STATION'][statKey] = (statChanges['STATION'][statKey] || 0) + num;
+                                    }
+                                    endScene = true;
+                                }
+                                continue;
+                            } else {
+                                // payload may contain multiple stat adjustments separated by '|' or ','
+                                const adjustments = payload.split('|').flatMap(p => p.split(',')).map(p => p.trim()).filter(Boolean);
+                                for (const adj of adjustments) {
+                                    // Capture stat name and signed number e.g. "Trust + 2"
+                                    const m = adj.match(/([A-Za-z\s]+)\s*([+-]\s*\d+)/i);
+                                    if (!m) continue;
+                                    const statNameRaw = m[1].trim();
+                                    const num = parseInt(m[2].replace(/\s+/g, ''), 10) || 0;
 
-                                if (!statChanges[matched.id]) statChanges[matched.id] = {};
-                                statChanges[matched.id][statKey] = (statChanges[matched.id][statKey] || 0) + num;
+                                    // Normalize stat name to possible Stat enum value if possible
+                                    let statKey = statNameRaw.toLowerCase().trim();
+                                    const enumMatch = Object.values(Stat).find(s => s.toLowerCase() === statKey || s.toLowerCase().includes(statKey) || statKey.includes(s.toLowerCase()));
+                                    if (enumMatch) statKey = enumMatch;
+
+                                    if (!statChanges[matched.id]) statChanges[matched.id] = {};
+                                    statChanges[matched.id][statKey] = (statChanges[matched.id][statKey] || 0) + num;
+                                }
+                                endScene = true;
                             }
-                            endScene = true;
                         }
 
-                        // Look for expresses tags here, too:
+                        // Look for expresses tags:
                         const emotionTagRegex = /([^[\]]+)\s+EXPRESSES\s+([^[\]]+)/gi;
                         let emotionMatch = emotionTagRegex.exec(raw);
                         if (emotionMatch) {

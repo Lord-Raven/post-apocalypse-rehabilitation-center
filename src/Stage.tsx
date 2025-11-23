@@ -458,6 +458,34 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
             const endProps = save.currentSkit.endProperties || {};
             for (const actorId in endProps) {
                 const actorChanges = endProps[actorId];
+                
+                // Handle special "STATION" id for station stat changes
+                if (actorId === 'STATION') {
+                    if (!save.stationStats) {
+                        save.stationStats = {
+                            Systems: 3,
+                            Comfort: 3,
+                            Provision: 3,
+                            Security: 3,
+                            Harmony: 3
+                        };
+                    }
+                    // Apply to save.stationStats; actorChanges is a map of stat name to change amount
+                    for (const prop of Object.keys(actorChanges)) {
+                        // Find matching station stat (case-insensitive)
+                        for (const statKey of Object.keys(save.stationStats)) {
+                            if (statKey.toLowerCase() === prop.toLowerCase() ||
+                                statKey.toLowerCase().includes(prop.toLowerCase()) ||
+                                prop.toLowerCase().includes(statKey.toLowerCase())) {
+                                const currentValue = save.stationStats[statKey as StationStat];
+                                save.stationStats[statKey as StationStat] = Math.max(1, Math.min(10, currentValue + actorChanges[prop]));
+                                break;
+                            }
+                        }
+                    }
+                    continue;
+                }
+                
                 const actor = save.actors[actorId];
                 if (actor) {
                     // Apply to actor.stats; actorChanges is a map of stat name to change amount

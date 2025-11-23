@@ -388,7 +388,7 @@ export const SkitScreen: FC<SkitScreenProps> = ({ stage, setScreenType }) => {
         });
     }
 
-    // Process stat changes and prepare data for StatChangeDisplay (display only, does not apply changes)
+    // Process stat changes and prepare data for StatChangeDisplay (display only, does not apply changes); there may be a special actorId: "STATION" which uses StationStats
     const processStatChanges = (endProperties: { [actorId: string]: { [stat: string]: number } }) => {
         const changes: Array<{
             actor: Actor;
@@ -400,6 +400,76 @@ export const SkitScreen: FC<SkitScreenProps> = ({ stage, setScreenType }) => {
         }> = [];
 
         Object.entries(endProperties).forEach(([actorId, statChanges]) => {
+            // Handle special "STATION" id for station stat changes
+            if (actorId === 'STATION') {
+                const stationChanges: Array<{
+                    statName: string;
+                    oldValue: number;
+                    newValue: number;
+                }> = [];
+
+                Object.entries(statChanges).forEach(([statName, change]) => {
+                    // Match stat name to StationStat (case-insensitive)
+                    const stationStats = stage().getSave().stationStats || {};
+                    let matchedStat: string | undefined;
+                    let currentValue = 5; // default
+
+                    // Try to find matching station stat
+                    for (const [key, value] of Object.entries(stationStats)) {
+                        if (key.toLowerCase() === statName.toLowerCase() ||
+                            key.toLowerCase().includes(statName.toLowerCase()) ||
+                            statName.toLowerCase().includes(key.toLowerCase())) {
+                            matchedStat = key;
+                            currentValue = value as number;
+                            break;
+                        }
+                    }
+
+                    if (matchedStat) {
+                        const newValue = Math.max(1, Math.min(10, currentValue + change));
+                        stationChanges.push({
+                            statName: matchedStat,
+                            oldValue: currentValue,
+                            newValue: newValue
+                        });
+                    }
+                });
+
+                if (stationChanges.length > 0) {
+                    // Create a pseudo-actor for the station
+                    const stationActor = {
+                        id: 'STATION',
+                        name: 'Station',
+                        fullPath: '',
+                        locationId: '',
+                        avatarImageUrl: 'https://media.charhub.io/41b7b65d-839b-4d31-8c11-64ee50e817df/0fc1e223-ad07-41c4-bdae-c9545d5c5e34.png',
+                        description: 'The space station',
+                        profile: 'The PARC space station',
+                        style: '',
+                        emotionPack: {
+                            neutral: 'https://media.charhub.io/41b7b65d-839b-4d31-8c11-64ee50e817df/0fc1e223-ad07-41c4-bdae-c9545d5c5e34.png'
+                        },
+                        themeColor: '#00ff88',
+                        themeFontFamily: 'Inter',
+                        voiceId: '',
+                        birthDay: -1,
+                        participations: 0,
+                        isImageLoadingComplete: true,
+                        heldRoles: {},
+                        decorImageUrls: {},
+                        stats: {},
+                        isPrimaryImageReady: true,
+                        birth: () => {}
+                    } as unknown as Actor;
+
+                    changes.push({
+                        actor: stationActor,
+                        statChanges: stationChanges
+                    });
+                }
+                return;
+            }
+
             const actor = stage().getSave().actors[actorId];
             if (!actor) return;
 
