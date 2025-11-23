@@ -4,6 +4,7 @@ import { Paper, Typography, Box, Avatar } from '@mui/material';
 import { TrendingUp } from '@mui/icons-material';
 import Actor from '../actors/Actor';
 import Nameplate from '../components/Nameplate';
+import { scoreToGrade } from '../utils';
 
 interface StatChange {
     statName: string;
@@ -190,14 +191,14 @@ const StatChangeDisplay: FC<StatChangeDisplayProps> = ({ characterChanges, layou
                                         {/* Old grade */}
                                         <span
                                             className="stat-grade"
-                                            data-grade={charChange.actor.scoreToGrade(statChange.oldValue)}
+                                            data-grade={scoreToGrade(statChange.oldValue)}
                                             style={{
                                                 fontSize: '2rem',
                                                 opacity: 0.6,
                                                 filter: 'grayscale(0.5)'
                                             }}
                                         >
-                                            {charChange.actor.scoreToGrade(statChange.oldValue)}
+                                            {scoreToGrade(statChange.oldValue)}
                                         </span>
 
                                         {/* Arrow */}
@@ -224,7 +225,7 @@ const StatChangeDisplay: FC<StatChangeDisplayProps> = ({ characterChanges, layou
                                         {/* New grade */}
                                         <motion.span
                                             className="stat-grade"
-                                            data-grade={charChange.actor.scoreToGrade(statChange.newValue)}
+                                            data-grade={scoreToGrade(statChange.newValue)}
                                             style={{
                                                 fontSize: '2rem'
                                             }}
@@ -232,7 +233,7 @@ const StatChangeDisplay: FC<StatChangeDisplayProps> = ({ characterChanges, layou
                                             animate={{ scale: 1, opacity: 1 }}
                                             transition={{ duration: 0.5, delay: 0.9 + charIndex * 0.2 + statIndex * 0.1 }}
                                         >
-                                            {charChange.actor.scoreToGrade(statChange.newValue)}
+                                            {scoreToGrade(statChange.newValue)}
                                         </motion.span>
                                     </Box>
                                 </motion.div>

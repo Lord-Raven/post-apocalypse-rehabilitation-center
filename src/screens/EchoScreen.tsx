@@ -9,6 +9,7 @@ import { SkitType } from '../Skit';
 import Nameplate from '../components/Nameplate';
 import Actor, { generateActorDecor, Stat } from '../actors/Actor';
 import ActorCard, { ActorCardSection } from '../components/ActorCard';
+import { scoreToGrade } from '../utils';
 import { BlurredBackground } from '../components/BlurredBackground';
 import AuthorLink from '../components/AuthorLink';
 import { RemoveButton } from '../components/RemoveButton';
@@ -26,18 +27,6 @@ export const EchoScreen: FC<EchoScreenProps> = ({stage, setScreenType}) => {
 	const [refreshKey, setRefreshKey] = React.useState(0); // Force re-renders when data changes
 	const reserveActors = stage().reserveActors;
 	const echoSlots = stage().getEchoSlots();
-
-	// Floating animation variants (recreates CSS float animation)
-	const floatAnimation = {
-		y: [0, -3, -1, -4, 0],
-		x: [0, 1, -1, 0.5, 0],
-		rotate: [0, 0.5, -0.3, 0.2, 0],
-		transition: {
-			duration: 6,
-			repeat: Infinity,
-			ease: "easeInOut"
-		}
-	};
 
 	const cancel = () => {
 		setScreenType(ScreenType.STATION);
@@ -378,7 +367,7 @@ export const EchoScreen: FC<EchoScreenProps> = ({stage, setScreenType}) => {
 									{/* Stats */}
 									<div className="stat-list" style={{ padding: '8px 12px', background: 'rgba(0,0,0,0.8)', flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'space-evenly' }}>
 										{Object.values(Stat).map((stat) => {
-											const grade = actor.scoreToGrade(actor.stats[stat]);
+											const grade = scoreToGrade(actor.stats[stat]);
 											return (
 												<div className="stat-row" key={`${actor.id}_${stat}`}>
 													<span className="stat-label">{stat}</span>

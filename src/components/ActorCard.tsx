@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import Actor, { Stat } from '../actors/Actor';
 import Nameplate from './Nameplate';
 import AuthorLink from './AuthorLink';
+import { scoreToGrade } from '../utils';
 
 export enum ActorCardSection {
     STATS = 'stats',
@@ -94,80 +95,83 @@ export const ActorCard: FC<ActorCardProps> = ({
 
     return (
         <motion.div {...wrapperProps}>
-            {/* Nameplate at the top */}
-            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '8px' }}>
-                <Nameplate 
-                    actor={actor} 
-                    size="small"
-                    role={role}
-                    layout="stacked"
-                />
-            </div>
-            
-            {/* Sections in rows. */}
-            <div style={{ display: 'flex', flexDirection: 'row', overflow: 'hidden', height: '100%' }}>
-                {currentSections.map(section => {
-                    if (section === ActorCardSection.STATS) {
-                        return <div className="stat-list" style={{ 
-                                flex: '1', 
-                                background: 'rgba(0,0,0,0.8)', 
+            <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+                {/* Nameplate at the top - takes minimum height needed */}
+                <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '8px', flexShrink: 0 }}>
+                    <Nameplate 
+                        actor={actor} 
+                        size="small"
+                        role={role}
+                        layout="stacked"
+                    />
+                </div>
+                
+                {/* Sections row - takes remaining space */}
+                <div style={{ display: 'flex', flexDirection: 'row', overflow: 'hidden', flex: 1, minHeight: 0 }}>
+                    {currentSections.map(section => {
+                        if (section === ActorCardSection.STATS) {
+                            return <div key="stats" className="stat-list" style={{ 
+                                    flex: '1', 
+                                    background: 'rgba(0,0,0,0.8)', 
+                                    borderRadius: '6px',
+                                    padding: '8px 10px',
+                                    overflow: 'visible',
+                                    display: 'flex',
+                                    flexDirection: 'column',
+                                    justifyContent: 'flex-start',
+                                    height: '100%'
+                                }}>
+                                    {/* Stats with letter grades. Each row here should be 1/8th of the container height. */}
+                                    {Object.values(Stat).map((stat) => {
+                                        const grade = scoreToGrade(actor.stats[stat]);
+                                        return (
+                                            <div className="stat-row" key={`${actor.id}_${stat}`} style={{
+                                                height: '12.5%',
+                                                maxHeight: '12.5%',
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                justifyContent: 'space-between'
+                                            }}>
+                                                <span className="stat-label" style={{
+                                                    fontSize: '80%',
+                                                    textShadow: '2px 2px 0 rgba(0,0,0,0.88)',
+                                                    flex: '1'
+                                                }}>{stat}</span>
+                                                <span className="stat-grade" data-grade={grade} style={{
+                                                    fontSize: '150%',
+                                                    textShadow: '3px 3px 0 rgba(0,0,0,0.88)',
+                                                    transform: 'skewX(-8deg) rotate(-4deg)'
+                                                }}>{grade}</span>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                        } else if (section === ActorCardSection.PORTRAIT) {
+                            const targetEmotion = actor.stats[Stat.Joy] > 8 ? 'joy' : (actor.stats[Stat.Joy] > 5 ? 'approval' : (actor.stats[Stat.Joy] > 2 ? 'neutral' : 'disappointment'));
+                            return <div key="portrait" style={{ 
+                                width: '100%',
+                                flex: 1,
                                 borderRadius: '6px',
-                                padding: '8px 10px',
-                                overflow: 'visible',
+                                overflow: 'hidden',
+                                border: `2px solid ${actor.themeColor || '#00ff88'}`,
+                                backgroundImage: `url(${actor.emotionPack?.[targetEmotion] || actor.avatarImageUrl})`,
+                                backgroundSize: 'cover',
+                                backgroundPosition: 'top center',
+                                backgroundRepeat: 'no-repeat',
+                                position: 'relative',
                                 display: 'flex',
-                                flexDirection: 'column',
-                                justifyContent: 'flex-start',
-                                height: '100%'
+                                alignItems: 'flex-end',
+                                justifyContent: 'center'
                             }}>
-                                {/* Stats with letter grades. Each row here should be 1/8th of the container height. */}
-                                {Object.values(Stat).map((stat) => {
-                                    const grade = actor.scoreToGrade(actor.stats[stat]);
-                                    return (
-                                        <div className="stat-row" key={`${actor.id}_${stat}`} style={{
-                                            height: '12.5%',
-                                            maxHeight: '12.5%',
-                                            display: 'flex',
-                                            alignItems: 'center',
-                                            justifyContent: 'space-between'
-                                        }}>
-                                            <span className="stat-label" style={{
-                                                fontSize: '80%',
-                                                textShadow: '2px 2px 0 rgba(0,0,0,0.88)',
-                                                flex: '1'
-                                            }}>{stat}</span>
-                                            <span className="stat-grade" data-grade={grade} style={{
-                                                fontSize: '150%',
-                                                textShadow: '3px 3px 0 rgba(0,0,0,0.88)',
-                                                transform: 'skewX(-8deg) rotate(-4deg)'
-                                            }}>{grade}</span>
-                                        </div>
-                                    );
-                                })}
                             </div>
-                    } else if (section === ActorCardSection.PORTRAIT) {
-                        const targetEmotion = actor.stats[Stat.Joy] > 8 ? 'joy' : (actor.stats[Stat.Joy] > 5 ? 'approval' : (actor.stats[Stat.Joy] > 2 ? 'neutral' : 'disappointment'));
-                        return <div key="portrait" style={{ 
-                            width: '100%',
-                            flex: 1,
-                            borderRadius: '6px',
-                            overflow: 'hidden',
-                            border: `2px solid ${actor.themeColor || '#00ff88'}`,
-                            backgroundImage: `url(${actor.emotionPack?.[targetEmotion] || actor.avatarImageUrl})`,
-                            backgroundSize: 'cover',
-                            backgroundPosition: 'top center',
-                            backgroundRepeat: 'no-repeat',
-                            position: 'relative',
-                            display: 'flex',
-                            alignItems: 'flex-end',
-                            justifyContent: 'center'
-                        }}>
-                        </div>
-                    }
-                })}
-            </div>
-            {/* Author link in bottom */}
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <AuthorLink actor={actor} />
+                        }
+                    })}
+                </div>
+
+                {/* Author link at bottom - takes minimum height needed */}
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', marginTop: '8px', flexShrink: 0 }}>
+                    <AuthorLink actor={actor} />
+                </div>
             </div>
         </motion.div>
     );

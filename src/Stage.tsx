@@ -2,7 +2,7 @@ import {ReactElement, useEffect, useState} from "react";
 import {StageBase, StageResponse, InitialData, Message} from "@chub-ai/stages-ts";
 import {LoadResponse} from "@chub-ai/stages-ts/dist/types/load";
 import Actor, { loadReserveActor, generatePrimaryActorImage, commitActorToEcho, Stat, generateAdditionalActorImages } from "./actors/Actor";
-import { DEFAULT_GRID_SIZE, Layout, createModule } from './Module';
+import { DEFAULT_GRID_SIZE, Layout, StationStat, createModule } from './Module';
 import { BaseScreen } from "./screens/BaseScreen";
 import {Client} from "@gradio/client";
 import { generateSkitScript, SkitData } from "./Skit";
@@ -24,9 +24,6 @@ type TimelineEvent = {
     skit?: SkitData;
 }
 
-// Need a good term for integrity, representing station mechanical health
-type StationStatType = 'Integrity' | 'Comfort' | 'Provision' | 'Harmony' | 'Security';
-
 type Timeline = TimelineEvent[];
 
 type SaveType = {
@@ -40,8 +37,7 @@ type SaveType = {
     phase: number;
     timeline?: Timeline;
     currentSkit?: SkitData;
-
-    
+    stationStats?: {[key in StationStat]: number};
 }
 
 export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateType, ConfigType> {
@@ -217,8 +213,20 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
         if (this.reserveActors.length < this.RESERVE_ACTORS && !this.reserveActorsLoadPromise) {
             this.reserveActorsLoadPromise = this.loadReserveActors();
         }
-        // If there are any actors in the save with missing emotion images, kick one of them off now.
+        
         const save = this.getSave();
+        // Initialize stationStats if missing
+        if (!save.stationStats) {
+            save.stationStats = {
+                'Integrity': 3,
+                'Comfort': 3,
+                'Provision': 3,
+                'Security': 3,
+                'Harmony': 3
+            };
+        }
+    
+        // If there are any actors in the save with missing emotion images, kick one of them off now.
         for (const actorId in save.actors) {
             const actor = save.actors[actorId];
             if (!actor.emotionPack || !actor.emotionPack[Emotion.neutral] || actor.emotionPack[Emotion.neutral] == actor.avatarImageUrl) {

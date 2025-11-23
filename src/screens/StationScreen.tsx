@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Typography, Card, CardContent } from '@mui/material';
 import { styled } from '@mui/material/styles';
 import { ScreenType } from './BaseScreen';
-import { Layout, Module, createModule, ModuleType, MODULE_DEFAULTS } from '../Module';
+import { Layout, Module, createModule, ModuleType, MODULE_DEFAULTS, StationStat } from '../Module';
 import { Stage } from '../Stage';
 import ActorCard from '../components/ActorCard';
 import { PhaseIndicator as SharedPhaseIndicator, Title } from '../components/UIComponents';
@@ -11,6 +11,7 @@ import { useTooltip } from '../contexts/TooltipContext';
 import { SwapHoriz, Home, Work, Menu } from '@mui/icons-material';
 import { SkitType } from '../Skit';
 import { generateActorDecor } from '../actors/Actor';
+import { scoreToGrade } from '../utils';
 
 // Styled components for the day/phase display
 const StyledDayCard = styled(Card)(({ theme }) => ({
@@ -677,6 +678,74 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType}) =>
                 >
                     {renderGrid()}
                 </div>
+
+                {/* Station Stats Display - Bottom Bar */}
+                <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.6, delay: 0.3 }}
+                    style={{
+                        position: 'absolute',
+                        bottom: '20px',
+                        left: '50%',
+                        transform: 'translateX(-50%)',
+                        display: 'flex',
+                        gap: '30px',
+                        padding: '20px 40px',
+                        background: 'linear-gradient(135deg, rgba(0, 30, 60, 0.85) 0%, rgba(0, 20, 40, 0.85) 100%)',
+                        border: '2px solid #00ff88',
+                        borderRadius: '15px',
+                        boxShadow: '0 0 30px rgba(0, 255, 136, 0.3), inset 0 0 20px rgba(0, 255, 136, 0.1)',
+                        backdropFilter: 'blur(10px)',
+                    }}
+                >
+                    {(['Integrity', 'Comfort', 'Provision', 'Security', 'Harmony'] as StationStat[]).map((statName) => {
+                        const statValue = stage().getSave().stationStats?.[statName] || 5;
+                        const grade = scoreToGrade(statValue);
+                        return (
+                            <motion.div
+                                key={statName}
+                                whileHover={{ scale: 1.1, y: -5 }}
+                                style={{
+                                    display: 'flex',
+                                    flexDirection: 'column',
+                                    alignItems: 'center',
+                                    gap: '8px',
+                                    minWidth: '80px',
+                                }}
+                            >
+                                {/* Stat Name */}
+                                <Typography
+                                    variant="caption"
+                                    style={{
+                                        color: '#00ff88',
+                                        fontSize: '0.85rem',
+                                        fontWeight: 700,
+                                        textTransform: 'uppercase',
+                                        letterSpacing: '0.5px',
+                                        textShadow: '0 0 10px rgba(0, 255, 136, 0.5)',
+                                    }}
+                                >
+                                    {statName}
+                                </Typography>
+                                
+                                {/* Grade Display */}
+                                <span
+                                    className="stat-grade"
+                                    data-grade={grade}
+                                    style={{
+                                        fontSize: '2.5rem',
+                                        fontWeight: 900,
+                                        textShadow: '0 2px 8px rgba(0, 0, 0, 0.8), 0 0 20px currentColor',
+                                        lineHeight: 1,
+                                    }}
+                                >
+                                    {grade}
+                                </span>
+                            </motion.div>
+                        );
+                    })}
+                </motion.div>
             </div>
 
             {/* Side Menu - 20vw right side */}

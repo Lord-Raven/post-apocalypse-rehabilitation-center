@@ -3,6 +3,7 @@ import { Module } from "../Module";
 import { Stage } from "../Stage";
 import { v4 as generateUuid } from 'uuid';
 import { VoiceChatOutlined } from "@mui/icons-material";
+import { scoreToGrade } from "../utils";
 
 // Core character stats as an enum so other parts of the app can reference them safely
 // Using single-syllable words, each starting with a different letter
@@ -63,12 +64,6 @@ class Actor {
         this.stats = stats;
         this.themeColor = themeColor;
         this.themeFontFamily = themeFontFamily;
-    }
-
-    scoreToGrade(score: number): string {
-        const scoreClamped = Math.max(1, Math.min(10, score));
-        const scoreArray = ['F', 'D', 'C', 'C+', 'B-', 'B', 'B+', 'A-', 'A', 'A+'];
-        return scoreArray[scoreClamped - 1];
     }
 
     get isPrimaryImageReady(): boolean {
