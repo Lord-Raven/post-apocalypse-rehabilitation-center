@@ -128,9 +128,9 @@ export async function generateSkitScript(skit: SkitData, stage: Stage): Promise<
         `\n\nStats:\n${Object.values(Stat).map(stat => `${stat.toUpperCase()}: ${getStatDescription(stat)}`).join('\n')}` +
         `\n\nEmotions:\n${Object.values(Emotion).map(emotion => `${emotion.toUpperCase()}`).join(', ')}` +
         `\n\nScene Prompt:\n${generateSkitPrompt(skit, stage, skit.script.length > 0)}` +
-        (module ? (`\n\nModule Details:\n  This scene is set in ` +
+        /*(module ? (`\n\nModule Details:\n  This scene is set in ` +
             `${module.type === 'quarters' ? `${moduleOwner ? `${moduleOwner.name}'s` : 'a vacant'} quarters` : 
-            `the ${module.type || 'Unknown'}`}. ${module.getAttribute('skitPrompt') || 'No description available.'}\n`) : '') +
+            `the ${module.type || 'Unknown'}`}. ${module.getAttribute('skitPrompt') || 'No description available.'}\n`) : '') +*/
         `\n\nExample Script Format:\n` +
         'System: CHARACTER NAME: They do actions in prose. "Their dialogue is in quotation marks."\nANOTHER CHARACTER NAME: [ANOTHER CHARACTER EXPRESSES JOY][CHARACTER NAME EXPRESSES SURPRISE] "Dialogue in quotation marks."\nNARRATOR: [CHARACTER NAME EXPRESSES RELIEF] Descriptive content that is not attributed to a character.' +
         `\n\nExample Ending Script Format:\n` +
