@@ -385,8 +385,8 @@ export async function generateActorDecor(actor: Actor, module: Module, stage: St
     // Generate a decor image based on the module's description and the actor's description
     const decorImageUrl = await stage.makeImageFromImage({
         image: module.getAttribute('baseImageUrl') || '',
-        prompt: `Go over this sterile sci-fi ${module.type} with a clean visual novel look. ` +
-                `Redecorate this space, updating furnishings or details to suit this style: ${actor.style}`,
+        prompt: `This is sci-fi ${module.type}: ${module.getAttribute('imagePrompt') || ''}. Give this image a clean, visual novel look, ` +
+                `redecorating the space with furnishings or details to suit this style: ${actor.style}`,
         remove_background: false,
         transfer_type: 'edit'
     }, `actors/${actor.id}/${module.type}/decor.png`, module.getAttribute('baseImageUrl') || '');

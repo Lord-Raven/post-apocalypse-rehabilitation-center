@@ -1,8 +1,9 @@
+import { ManageHistoryRounded } from '@mui/icons-material';
 import { SkitType } from './Skit';
 import { Stage } from "./Stage";
 import { ScreenType } from './screens/BaseScreen';
 
-export type ModuleType = 'echo chamber' | 'generator' | 'quarters' | 'commons' | 'medbay' | 'gym' | 'lounge' | 'armory';
+export type ModuleType = 'echo chamber' | 'generator' | 'quarters' | 'commons' | 'infirmary' | 'gym' | 'lounge' | 'armory';
     /*| 'hydroponics' | 'laboratory' | 'observatory' | 'security' | 'storage' | 'market' |
     'brig' | 'showers' | 'conservatory' |
     // Administration pack:
@@ -88,9 +89,8 @@ export const STATION_STAT_PROMPTS: Record<StationStat, Record<StatRating, string
 };
 
 export interface ModuleIntrinsic {
-    maintenance: number; // Additional workload for engineering
-    mess: number; // Additional mess for the custodian
-    entertainment: number; // Entertainment value for the crew or penalty for boring, workaday modules
+    skitPrompt?: string; // Additional prompt text to influence the script in skit generation
+    imagePrompt?: string; // Additional prompt text to describe the module in decor image generation
     role?: string;
     roleDescription?: string;
     baseImageUrl: string; // Base image that is used for theming through image2image calls
@@ -119,9 +119,8 @@ const randomAction = (module: Module, stage: Stage, setScreenType: (type: Screen
 
 export const MODULE_DEFAULTS: Record<ModuleType, ModuleIntrinsic> = {
     'echo chamber': {
-        maintenance: 1,
-        mess: 0,
-        entertainment: 0,
+        skitPrompt: 'The echo chamber is where the player fuses echoes from the nearby black hole. Scenes in this room typically involve newly echofused patients as they get their bearings.',
+        imagePrompt: 'A futuristic lab with a bank of cryo pods along the left wall and some advanced computer systems against the right wall.',
         role: 'Assistant',
         roleDescription: `Manage station operations, monitoring the crew and supplementing their needs as the director's right hand.`,
         baseImageUrl: 'https://media.charhub.io/2f92a39f-02be-41fd-b61d-56de04a9ecc4/62d30715-01e1-4581-beb4-61cf31134955.png',
@@ -138,9 +137,8 @@ export const MODULE_DEFAULTS: Record<ModuleType, ModuleIntrinsic> = {
         }
     },
     generator: {
-        maintenance: 1,
-        mess: 0,
-        entertainment: -1,
+        skitPrompt: 'The generator room serves as an engineering hub of sorts, where many of the station\'s mechanical systems can be managed. Scenes here often involve the station\'s overall systems health and stability.',
+        imagePrompt: 'A sci-fi chamber dominated by a large, glowing generator, filled with humming machinery, control panels, and energy conduits.',
         role: 'Engineer',
         roleDescription: `Oversee the station's mechanical systems, ensuring all modules receive adequate energy and maintenance to function optimally.`,
         baseImageUrl: 'https://media.charhub.io/e53eeeb3-81a9-4020-a336-070c65edbb8a/4141ed00-9ab7-47f5-a4ce-21983b013e46.png',
@@ -152,9 +150,8 @@ export const MODULE_DEFAULTS: Record<ModuleType, ModuleIntrinsic> = {
         }
     },
     quarters: {
-        maintenance: 2,
-        mess: 1,
-        entertainment: -1,
+        skitPrompt: 'Crew quarters are personal living spaces for station inhabitants. Scenes here often involve personal interactions:  revelations, troubles, interests, or relaxation.',
+        imagePrompt: 'A sci-fi living quarters with a bed, personal storage, and ambient lighting, reflecting the occupant\'s personality.',
         baseImageUrl: 'https://media.charhub.io/5e39db53-9d66-459d-8926-281b3b089b36/8ff20bdb-b719-4cf7-bf53-3326d6f9fcaa.png', 
         defaultImageUrl: 'https://media.charhub.io/99ffcdf5-a01b-43cf-81e5-e7098d8058f5/d1ec2e67-9124-4b8b-82d9-9685cfb973d2.png',
         action: (module: Module, stage: Stage, setScreenType: (type: ScreenType) => void) => {
@@ -180,9 +177,8 @@ export const MODULE_DEFAULTS: Record<ModuleType, ModuleIntrinsic> = {
         }
     },
     commons: {
-        maintenance: -1,
-        mess: 2,
-        entertainment: 3,
+        skitPrompt: 'The commons area is a social hub for the station crew, where they gather to relax, eat, and interact. Scenes here often involve camaraderie, conflicts, and leisure activities among the crew.',
+        imagePrompt: 'A sci-fi common area with a large table, seating, and storage and kitchen facilities along the far wall.',
         // Maybe need a better term for this than "keeper"; this role is essentially cook/maid for the station:
         role: 'Custodian',
         roleDescription: `Maintain the station's communal areas, ensuring they remain inviting and well-stocked for crew relaxation and socialization.`,
@@ -194,10 +190,9 @@ export const MODULE_DEFAULTS: Record<ModuleType, ModuleIntrinsic> = {
             return stage.getLayout().getModulesWhere(m => m.type === 'commons').length === 0;
         }
     },
-    medbay: {
-        maintenance: 3,
-        mess: 1,
-        entertainment: -1,
+    infirmary: {
+        skitPrompt: 'The infirmary is the station\'s medical facility, where crew members receive treatment and care. Scenes here often involve medical incidents, health concerns, or ways to improve the crew\'s health and well-being.',
+        imagePrompt: 'A futuristic medical bay with treatment beds and advanced diagnostic equipment.',
         role: 'Medic',
         roleDescription: `Provide medical care and emergency response for the crew, ensuring their health and well-being.`,
         baseImageUrl: 'https://media.charhub.io/b62f09a0-7a42-47e7-b0be-f54dfac00f33/fe73db8c-2cb6-4744-9464-6d26ecf776c0.png',
@@ -205,13 +200,12 @@ export const MODULE_DEFAULTS: Record<ModuleType, ModuleIntrinsic> = {
         action: randomAction,
         available: (stage: Stage) => {
             // Can have only one in stage.getSave().layout:
-            return stage.getLayout().getModulesWhere(m => m.type === 'medbay').length === 0;
+            return stage.getLayout().getModulesWhere(m => m.type === 'infirmary').length === 0;
         }
     },
     gym: {
-        maintenance: 1,
-        mess: 1,
-        entertainment: 2,
+        skitPrompt: 'The gym is the station\'s fitness center, where crew members work out and maintain their physical health. Scenes here often involve training sessions, fitness challenges, or ways to boost crew morale through physical activity.',
+        imagePrompt: 'A sci-fi gym with advanced exercise equipment and weightlifting stations.',
         role: 'Trainer',
         roleDescription: `Oversee the physical fitness and training of the crew, ensuring they remain in peak condition for their duties aboard the station.`,
         baseImageUrl: 'https://media.charhub.io/349ca504-7b7e-4afd-8a52-43dd7b166bc7/d91d37e1-eb9d-4211-a28f-16b8d4d341d1.png',
@@ -223,9 +217,8 @@ export const MODULE_DEFAULTS: Record<ModuleType, ModuleIntrinsic> = {
         }
     },
     lounge: {
-        maintenance: 1,
-        mess: 2,
-        entertainment: 4,
+        skitPrompt: 'The lounge is a recreational area for the station crew, where they can unwind with a drink and socialize. Scenes here often involve leisure activities, social interactions, and ways to boost crew morale through relaxation and entertainment.',
+        imagePrompt: 'A sci-fi lounge with comfortable seating, a wet bar, and entertainment systems.',
         role: 'Concierge',
         roleDescription: `Oversee the station's leisure facilities, ensuring crew members have a comfortable and enjoyable environment to relax and socialize.`,
         baseImageUrl: 'https://media.charhub.io/323b12cf-8687-4475-851b-7c1bdeff447a/0b71cb51-c160-47c9-848e-fab183eb9314.png',
@@ -237,9 +230,8 @@ export const MODULE_DEFAULTS: Record<ModuleType, ModuleIntrinsic> = {
         }
     },
     armory: {
-        maintenance: 2,
-        mess: 1,
-        entertainment: -2,
+        skitPrompt: 'The armory is the station\'s defense hub, where weapons and security systems are managed. Scenes here often involve security protocols, incident reports, or ways to enhance the station\'s safety and defense capabilities.',
+        imagePrompt: 'A sci-fi armory with weapon lockers, equipment racks, and security equipment.',
         role: 'Officer',
         roleDescription: `Manage the station's defenses and ensure the safety of the crew against external and internal threats.`,
         baseImageUrl: 'https://media.charhub.io/7ccddb81-bed6-4395-80c6-912fe2932e53/c58a4f32-270d-4b62-b2b4-bcc1a3dedc94.png',
