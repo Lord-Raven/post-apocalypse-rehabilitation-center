@@ -33,8 +33,9 @@ export const ModuleCard: FC<ModuleCardProps> = ({
     
     // Default hover behavior
     const defaultWhileHover = {
-        scale: 1.02,
-        boxShadow: '0 0 20px rgba(0, 255, 136, 0.5)',
+        x: 10,
+        backgroundColor: 'rgba(0, 255, 136, 0.15)',
+        borderColor: 'rgba(0, 255, 136, 0.5)',
     };
 
     return (
