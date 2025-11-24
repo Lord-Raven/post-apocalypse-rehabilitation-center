@@ -115,8 +115,7 @@ const randomAction = (module: Module, stage: Stage, setScreenType: (type: Screen
                     moduleId: module.id,
                     script: [],
                     generating: true,
-                    context: {},
-                    endScene: false
+                    context: {}
                 });
                 setScreenType(ScreenType.SKIT);
             }
@@ -170,8 +169,7 @@ export const MODULE_DEFAULTS: Record<ModuleType, ModuleIntrinsic> = {
                     moduleId: module.id,
                     script: [],
                     generating: true,
-                    context: {},
-                    endScene: false
+                    context: {}
                 });
                 setScreenType(ScreenType.SKIT);
             }
