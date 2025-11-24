@@ -440,6 +440,7 @@ export const SkitScreen: FC<SkitScreenProps> = ({ stage, setScreenType }) => {
 
                     if (matchedStat) {
                         const newValue = Math.max(1, Math.min(10, currentValue + change));
+                        if (newValue === currentValue) return; // No change
                         stationChanges.push({
                             statName: matchedStat,
                             oldValue: currentValue,
@@ -484,6 +485,7 @@ export const SkitScreen: FC<SkitScreenProps> = ({ stage, setScreenType }) => {
 
                 if (foundStat) {
                     const newValue = Math.max(1, Math.min(10, currentValue + change));
+                    if (newValue === currentValue) return; // No change
                     actorChanges.push({
                         statName: statName,
                         oldValue: currentValue,
