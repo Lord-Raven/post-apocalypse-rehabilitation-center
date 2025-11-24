@@ -250,7 +250,7 @@ export const SkitScreen: FC<SkitScreenProps> = ({ stage, setScreenType }) => {
     const [displayMessage, setDisplayMessage] = React.useState<JSX.Element>(<></>);
     const [finishTyping, setFinishTyping] = React.useState<boolean>(false);
     const [characterStatChanges, setCharacterStatChanges] = React.useState<Array<{
-        actor: Actor;
+        actor: Actor | undefined;
         statChanges: Array<{
             statName: string;
             oldValue: number;
@@ -391,7 +391,7 @@ export const SkitScreen: FC<SkitScreenProps> = ({ stage, setScreenType }) => {
     // Process stat changes and prepare data for StatChangeDisplay (display only, does not apply changes); there may be a special actorId: "STATION" which uses StationStats
     const processStatChanges = (endProperties: { [actorId: string]: { [stat: string]: number } }) => {
         const changes: Array<{
-            actor: Actor;
+            actor: Actor|undefined;
             statChanges: Array<{
                 statName: string;
                 oldValue: number;
@@ -436,34 +436,8 @@ export const SkitScreen: FC<SkitScreenProps> = ({ stage, setScreenType }) => {
                 });
 
                 if (stationChanges.length > 0) {
-                    // Create a pseudo-actor for the station
-                    const stationActor = {
-                        id: 'STATION',
-                        name: 'Station',
-                        fullPath: '',
-                        locationId: '',
-                        avatarImageUrl: 'https://media.charhub.io/41b7b65d-839b-4d31-8c11-64ee50e817df/0fc1e223-ad07-41c4-bdae-c9545d5c5e34.png',
-                        description: 'The space station',
-                        profile: 'The PARC space station',
-                        style: '',
-                        emotionPack: {
-                            neutral: 'https://media.charhub.io/41b7b65d-839b-4d31-8c11-64ee50e817df/0fc1e223-ad07-41c4-bdae-c9545d5c5e34.png'
-                        },
-                        themeColor: '#00ff88',
-                        themeFontFamily: 'Inter',
-                        voiceId: '',
-                        birthDay: -1,
-                        participations: 0,
-                        isImageLoadingComplete: true,
-                        heldRoles: {},
-                        decorImageUrls: {},
-                        stats: {},
-                        isPrimaryImageReady: true,
-                        birth: () => {}
-                    } as unknown as Actor;
-
                     changes.push({
-                        actor: stationActor,
+                        actor: undefined,
                         statChanges: stationChanges
                     });
                 }

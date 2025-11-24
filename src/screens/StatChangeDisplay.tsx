@@ -13,7 +13,7 @@ interface StatChange {
 }
 
 interface CharacterStatChanges {
-    actor: Actor;
+    actor: Actor | undefined;
     statChanges: StatChange[];
 }
 
@@ -78,7 +78,7 @@ const StatChangeDisplay: FC<StatChangeDisplayProps> = ({ characterChanges, layou
             {/* Character stat changes */}
             {characterChanges.map((charChange, charIndex) => (
                 <motion.div
-                    key={charChange.actor.id}
+                    key={charChange.actor ? `stat_${charChange.actor.id}` : `stat_PARC`}
                     initial={{ opacity: 0, y: 30 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.4, delay: 0.5 + charIndex * 0.2 }}
@@ -108,7 +108,8 @@ const StatChangeDisplay: FC<StatChangeDisplayProps> = ({ characterChanges, layou
                                     borderRadius: '12px',
                                     overflow: 'hidden',
                                     border: '3px solid rgba(0,255,136,0.4)',
-                                    backgroundImage: `url(${charChange.actor.getEmotionImage(charChange.actor.getDefaultEmotion())})`,
+                                    backgroundImage: `url(${charChange.actor == undefined ? "https://media.charhub.io/41b7b65d-839b-4d31-8c11-64ee50e817df/0fc1e223-ad07-41c4-bdae-c9545d5c5e34.png" : 
+                                        charChange.actor.getEmotionImage(charChange.actor.getDefaultEmotion())})`,
                                     backgroundSize: 'cover',
                                     backgroundPosition: 'top center',
                                     backgroundRepeat: 'no-repeat',
@@ -129,9 +130,9 @@ const StatChangeDisplay: FC<StatChangeDisplayProps> = ({ characterChanges, layou
                             transition={{ duration: 0.4, delay: 0.7 + charIndex * 0.2 }}
                             style={{ marginBottom: '20px' }}
                         >
-                            {charChange.actor.id === 'STATION' ? (
+                            {!charChange.actor ? (
                                 <Nameplate 
-                                    name="Space Station"
+                                    name="PARC"
                                     size="large"
                                     layout="inline"
                                 />
@@ -141,7 +142,7 @@ const StatChangeDisplay: FC<StatChangeDisplayProps> = ({ characterChanges, layou
                                     size="large"
                                     role={layout ? (() => {
                                         const roleModules = layout.getModulesWhere((m: any) => 
-                                            m && m.type !== 'quarters' && m.ownerId === charChange.actor.id
+                                            m && m.type !== 'quarters' && m.ownerId === charChange.actor?.id
                                         );
                                         return roleModules.length > 0 ? roleModules[0].getAttribute('role') : undefined;
                                     })() : undefined}
@@ -158,7 +159,7 @@ const StatChangeDisplay: FC<StatChangeDisplayProps> = ({ characterChanges, layou
                                 
                                 return (
                                 <motion.div
-                                    key={`${charChange.actor.id}-${statChange.statName}`}
+                                    key={`${charChange.actor ? charChange.actor.id : 'PARC'}-${statChange.statName}`}
                                     initial={{ opacity: 0, x: -20 }}
                                     animate={{ opacity: 1, x: 0 }}
                                     transition={{ duration: 0.3, delay: 0.8 + charIndex * 0.2 + statIndex * 0.1 }}
