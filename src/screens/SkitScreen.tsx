@@ -577,7 +577,7 @@ export const SkitScreen: FC<SkitScreenProps> = ({ stage, setScreenType }) => {
                                     }}
                                 /> : 
                                 <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                                    {index + 1 < skit.script.length && (
+                                    {index + 1 < skit.script.length && inputText.length > 0 && (
                                         <span 
                                             style={{ 
                                                 color: '#ffaa00',
@@ -595,9 +595,9 @@ export const SkitScreen: FC<SkitScreenProps> = ({ stage, setScreenType }) => {
                             sx={{ 
                                 minWidth: 80,
                                 fontWeight: 700, 
-                                color: index + 1 < skit.script.length ? '#ffdd99' : '#bfffd0', 
-                                background: index + 1 < skit.script.length ? 'rgba(255,170,0,0.08)' : 'rgba(255,255,255,0.02)', 
-                                border: index + 1 < skit.script.length ? '1px solid rgba(255,170,0,0.2)' : '1px solid rgba(255,255,255,0.03)',
+                                color: (index + 1 < skit.script.length && inputText.length > 0) ? '#ffdd99' : '#bfffd0', 
+                                background: (index + 1 < skit.script.length && inputText.length > 0) ? 'rgba(255,170,0,0.08)' : 'rgba(255,255,255,0.02)', 
+                                border: (index + 1 < skit.script.length && inputText.length > 0) ? '1px solid rgba(255,170,0,0.2)' : '1px solid rgba(255,255,255,0.03)',
                                 transition: 'all 0.3s ease',
                                 '& .MuiChip-label': {
                                     display: 'flex',

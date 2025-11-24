@@ -165,7 +165,7 @@ export async function generateSkitScript(skit: SkitData, stage: Stage): Promise<
             const response = await stage.generator.textGen({
                 prompt: fullPrompt,
                 min_tokens: 100,
-                max_tokens: 700,
+                max_tokens: 600,
                 include_history: true
             });
             if (response && response.result && response.result.trim().length > 0) {
