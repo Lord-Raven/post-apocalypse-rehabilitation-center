@@ -895,7 +895,7 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType}) =>
                                     layout: { duration: 0.3, ease: 'easeInOut' }
                                 }}
                                 style={{ 
-                                    overflow: 'hidden',
+                                    overflow: isExpanded ? 'visible' : 'hidden',
                                     background: 'rgba(0, 20, 40, 0.7)',
                                     border: isExpanded ? '2px solid rgba(0, 255, 136, 0.3)' : 'none',
                                     borderTop: 'none',
