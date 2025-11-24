@@ -239,10 +239,12 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType}) =>
         }
     };
 
-    // Need to make sure re-renders when layout is updated.
+    // Need to make sure re-renders when layout or save is updated.
     React.useEffect(() => {
         setLayout(stage().getLayout());
-    }, [stage().getLayout()]);
+        setDay(stage().getSave().day);
+        setPhase(stage().getSave().phase);
+    }, [stage().getLayout(), stage().getSave()]);
 
     // Handle Escape key to open menu
     React.useEffect(() => {

@@ -170,6 +170,7 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
             actor.locationId = save.layout.getModulesWhere(m => m.type !== 'quarters' || m.ownerId == actorId).sort(() => Math.random() - 0.5)[0]?.id || '';
             console.log(`Moved actor ${actor.name} to location ${actor.locationId}`);
         }
+        this.saves[this.saveSlot] = {...save}; // Update the current save slot with the modified save, ensuring a new object reference.
         this.saveGame();
     }
 

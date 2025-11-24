@@ -73,12 +73,12 @@ export const SettingsScreen: FC<SettingsScreenProps> = ({ stage, onClose, isNewG
 
     // Load existing settings or use defaults
     const [settings, setSettings] = useState<SettingsData>({
-        playerName: stage().getSave().player?.name || '',
-        playerDescription: '',
+        playerName: stage().getSave().player?.name || 'Director',
+        playerDescription: stage().getSave().player?.description || 'The PARC\'s enigmatic Director is the station\'s sole authority.',
         aideName: stage().getSave().aide?.name || 'StationAide™',
         aideDescription: stage().getSave().aide?.description || 
             (`Your holographic aide is acutely familiar with the technical details of your Post-Apocalypse Rehabilitation Center, so you don't have to be! ` +
-            `Your StationAide™ comes pre-programmed with a friendly and non-condescending demeanor that will leave you feeling empowered and never patronized; ` +
+            `Your StationAide™ comes pre-programmed with a friendly and non-condescending demeanor that will leave you feeling empowered but never patronized; ` +
             `your bespoke projection comes with an industry-leading feminine form in a pleasing shade of default blue, but, as always, StationAide™ remains infinitely customizable to suit your tastes.\n\n` +
             `StationAide™. "When life gives you space stations..."`),
         // Tag toggles; disabling these can be used to filter undesired content. Load from save array, if one. Otherwise, default to true.
