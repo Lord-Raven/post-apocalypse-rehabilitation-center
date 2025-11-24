@@ -351,31 +351,34 @@ export async function generateSkitScript(skit: SkitData, stage: Stage): Promise<
                 }
 
                 // TTS for each entry's dialogue
-                for (const entry of scriptEntries) {
+                const ttsPromises = scriptEntries.map(async (entry) => {
                     const actor = Object.values(stage.getSave().actors).find(a => namesMatch(a.name.toLowerCase(), entry.speaker.toLowerCase()));
                     // Only TTS if entry.speaker matches an actor from stage().getSave().actors and entry.message includes dialogue in quotes.
                     if (!actor || !entry.message.includes('"')) {
                         entry.speechUrl = '';
-                        continue;
+                        return;
                     }
                     let transcript = entry.message.split('"').filter((_, i) => i % 2 === 1).join('.........').trim();
                     // Strip asterisks or other markdown-like emphasis characters
                     transcript = transcript.replace(/[\*_~`]+/g, '');
-                    stage.generator.speak({
-                        transcript: transcript,
-                        voice_id: actor.voiceId ?? undefined
-                    }).then(ttsResponse => {
+                    try {
+                        const ttsResponse = await stage.generator.speak({
+                            transcript: transcript,
+                            voice_id: actor.voiceId ?? undefined
+                        });
                         if (ttsResponse && ttsResponse.url) {
                             entry.speechUrl = ttsResponse.url;
                         } else {
                             entry.speechUrl = '';
                         }
-                    }).catch(err => {
+                    } catch (err) {
                         console.error('Error generating TTS:', err);
                         entry.speechUrl = '';
-                    });
-                }
+                    }
+                });
                 
+                // Wait for all TTS generation to complete
+                await Promise.all(ttsPromises);
 
                 return { entries: scriptEntries, endScene: endScene, statChanges: statChanges };
             }
