@@ -7,6 +7,7 @@ import { Layout, Module, createModule, ModuleType, MODULE_DEFAULTS, StationStat,
 import { Stage } from '../Stage';
 import ActorCard from '../components/ActorCard';
 import ModuleCard from '../components/ModuleCard';
+import FactionCard from '../components/FactionCard';
 import { PhaseIndicator as SharedPhaseIndicator } from '../components/UIComponents';
 import { useTooltip } from '../contexts/TooltipContext';
 import { SwapHoriz, Home, Work, Menu, Build, Hotel, Restaurant, Security, Favorite } from '@mui/icons-material';
@@ -825,7 +826,7 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType}) =>
                 {/* Enhanced Day and Phase Display */}
                 {renderDayPhaseDisplay()}
 
-                {['Patients', 'Modules', 'Requests'].map(item => {
+                {['Patients', 'Modules', 'Factions', 'Requests'].map(item => {
                     const itemKey = item.toLowerCase();
                     const isExpanded = expandedMenu === itemKey;
                     const isContracting = previousExpandedMenu === itemKey && !isExpanded;
@@ -994,6 +995,38 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType}) =>
                                                         }}
                                                     />
                                                 ))
+                                        )}
+                                    </div>
+                                )}
+                                {itemKey === 'factions' && (
+                                    <div style={{ 
+                                        padding: '15px', 
+                                        flex: '1 1 auto', 
+                                        overflowY: 'auto', 
+                                        minHeight: 0,
+                                        display: 'flex',
+                                        flexDirection: 'column',
+                                        gap: '15px',
+                                    }}>
+                                        {stage().reserveFactions.length === 0 ? (
+                                            <p style={{ 
+                                                color: '#00ff88', 
+                                                opacity: 0.5, 
+                                                fontStyle: 'italic', 
+                                                fontSize: '0.85rem', 
+                                                fontWeight: 700 
+                                            }}>Loading factions...</p>
+                                        ) : (
+                                            stage().reserveFactions.map((faction) => (
+                                                <FactionCard
+                                                    key={faction.id}
+                                                    faction={faction}
+                                                    onClick={() => {
+                                                        console.log(`Clicked faction ${faction.name}`);
+                                                        // TODO: Add faction interaction logic
+                                                    }}
+                                                />
+                                            ))
                                         )}
                                     </div>
                                 )}

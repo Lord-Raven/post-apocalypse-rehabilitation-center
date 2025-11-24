@@ -1,15 +1,20 @@
 import { Stage } from "../Stage";
 import { v4 as generateUuid } from 'uuid';
+import Actor, { generatePrimaryActorImage, loadReserveActor } from "./Actor";
+import { AspectRatio } from "@chub-ai/stages-ts";
 
 class Faction {
     id: string;
     name: string;
     fullPath: string = '';
+    roles: string[] = [];
     description: string;
     visualStyle: string;
     themeColor: string;
     themeFont: string;
     reputation: number = 1; // 1-10, starts at 1
+    representative: Actor | null = null;
+    backgroundImageUrl: string = '';
 
     /**
      * Rehydrate a Faction from saved data
@@ -26,6 +31,7 @@ class Faction {
         fullPath: string,
         description: string,
         visualStyle: string,
+        roles: string[],
         themeColor: string,
         themeFont: string,
         reputation: number = 1
@@ -35,6 +41,7 @@ class Faction {
         this.fullPath = fullPath;
         this.description = description;
         this.visualStyle = visualStyle;
+        this.roles = roles;
         this.themeColor = themeColor;
         this.themeFont = themeFont;
         this.reputation = Math.max(1, Math.min(10, reputation)); // Clamp between 1-10
@@ -99,7 +106,7 @@ export async function loadReserveFaction(fullPath: string, stage: Stage): Promis
             `\n\nBackground: This game is a futuristic multiverse setting that pulls characters from across eras and timelines and settings. ` +
             `The player of this game, ${stage.getSave().player.name}, manages a space station called the Post-Apocalypse Rehabilitation Center, or PARC, which resurrects victims of a multiversal calamity and helps them adapt to a new life, ` +
             `with the goal of placing these characters into a new role in this universe. These new roles are offered by external factions, generally in exchange for a finder's fee or reputation boost. ` +
-            `Some roles are above board, while others may involve morally ambiguous or covert activities; some may even be illicit or compulsary. ` +
+            `Some roles are above board, while others may involve morally ambiguous or covert activities; many may even be illicit, sexual, or compulsory (essentially human trafficking). ` +
             `The player's motives and ethics are open-ended; they may be benevolent or self-serving, and the characters they interact with may respond accordingly. ` +
             `\n\nThe Original Details below describe a character, faction, organization, or setting (${data.name}) from another universe. ` +
             `This request and response must digest and distill these details into a new faction that suits the game's narrative scenario, ` +
@@ -109,7 +116,7 @@ export async function loadReserveFaction(fullPath: string, stage: Stage): Promis
             `\n\nInstructions: After carefully considering this description, generate a concise breakdown for a faction based upon these details in the following strict format:\n` +
             `System: NAME: The faction's simple name\n` +
             `DESCRIPTION: A vivid description of the faction's purpose, values, and role in the galaxy.\n` +
-            `DESIRES: A list of job roles that this faction may offer to recruit from the PARC.\n` +
+            `ROLES: A list of simple job roles that this faction may offer to recruit or purchase from the PARC.\n` +
             `VISUALSTYLE: A concise description of the faction's aesthetic, architectural style, uniform/clothing design, and overall visual identity.\n` +
             `COLOR: A hex color that reflects the faction's theme or mood—use darker or richer colors that will contrast with white text.\n` +
             `FONT: A web-safe font family that reflects the faction's personality or style.\n` +
@@ -117,7 +124,7 @@ export async function loadReserveFaction(fullPath: string, stage: Stage): Promis
             `Example Response:\n` +
             `NAME: The Stellar Concord\n` +
             `DESCRIPTION: A diplomatic federation of peaceful worlds dedicated to preserving knowledge and fostering cooperation across the galaxy. They value education, cultural exchange, and peaceful resolution of conflicts.\n` +
-            `DESIRES: Ambassador, Researcher, Bodyguard, Negotiator\n` +
+            `ROLES: Ambassador, Researcher, Bodyguard, Negotiator\n` +
             `VISUALSTYLE: Clean, elegant architecture with flowing curves and abundant natural light. Members wear formal robes in soft pastels with subtle geometric patterns. Spaces feature living plants and water features.\n` +
             `COLOR: #2a4a7c\n` +
             `FONT: Georgia, serif\n` +
@@ -157,6 +164,7 @@ export async function loadReserveFaction(fullPath: string, stage: Stage): Promis
         data.fullPath || '',
         parsedData['description'] || '',
         parsedData['visualstyle'] || '',
+        parsedData['roles'] ? parsedData['roles'].split(',').map((role: string) => role.trim()) : [],
         themeColor,
         parsedData['font'] || 'Arial, sans-serif',
         1 // Start with reputation of 1
@@ -181,6 +189,30 @@ export async function loadReserveFaction(fullPath: string, stage: Stage): Promis
     } else if (/[\u3040-\u30ff\u3400-\u4dbf\u4e00-\u9fff\uf900-\ufaff]/.test(`${newFaction.name}${newFaction.description}${newFaction.visualStyle}`)) {
         console.log(`Discarding faction due to non-english characters in name/description/visualStyle: ${newFaction.name}`);
         return null;
+    }
+
+    // Generate a background image for the faction:
+    stage.generator.makeImage({
+        prompt: `An evocative visual novel background from a futuristic sci-fi universe. ` +
+            `The scene should encapsulate the essence of this description: ${newFaction.description}. ` +
+            `Include suitable design elements: ${newFaction.visualStyle}. `,
+        aspect_ratio: AspectRatio.SQUARE
+    }).then((bgResponse) => {newFaction.backgroundImageUrl = bgResponse?.url || ''});
+
+    // Generate a representative Actor:
+    const actorData = {
+        name: newFaction.name,
+        fullPath: fullPath,
+        description: `This is a representative for the ${newFaction.name}. ${newFaction.description}. ${newFaction.visualStyle}`,
+        personality: ''
+    }
+    // retry a few times if it fails (or returns null):
+    for (let attempt = 0; attempt < 3; attempt++) {
+        newFaction.representative = await loadReserveActor(actorData, stage);
+        if (newFaction.representative) {
+            generatePrimaryActorImage(newFaction.representative, stage);
+            break;
+        }
     }
 
     return newFaction;

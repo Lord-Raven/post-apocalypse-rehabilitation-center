@@ -136,10 +136,24 @@ export function getStatDescription(stat: Stat | string): string {
     }
 }
 
-export async function loadReserveActor(fullPath: string, stage: Stage): Promise<Actor|null> {
+export async function loadReserveActorFromFullPath(fullPath: string, stage: Stage): Promise<Actor|null> {
     const response = await fetch(stage.characterDetailQuery.replace('{fullPath}', fullPath));
     const item = await response.json();
     const dataName = item.node.definition.name.replaceAll('{{char}}', item.node.definition.name).replaceAll('{{user}}', 'Individual X');
+
+    const data = {
+        name: dataName,
+        fullPath: item.node.fullPath,
+        description: item.node.definition.description.replaceAll('{{char}}', dataName).replaceAll('{{user}}', 'Individual X'),
+        personality: item.node.definition.personality.replaceAll('{{char}}', dataName).replaceAll('{{user}}', 'Individual X'),
+        avatar: item.node.max_res_url,
+    };
+    return loadReserveActor(data, stage);
+}
+
+
+export async function loadReserveActor(data: any, stage: Stage): Promise<Actor|null> {
+
     // Attempt to substitute words to avert bad content into something more agreeable (if the distillation still has these, then drop the card).
     const bannedWordSubstitutes: {[key: string]: string} = {
         // Try to age up some terms in the hopes that the character can be salvaged.
@@ -178,15 +192,8 @@ export async function loadReserveActor(fullPath: string, stage: Stage): Promise<
         'light_male_20s': 'male - light and thoughtful',
         'animated_male_20s': 'male - hip and lively',
     };
-    const data = {
-        name: dataName,
-        fullPath: item.node.fullPath,
-        description: item.node.definition.description.replaceAll('{{char}}', dataName).replaceAll('{{user}}', 'Individual X'),
-        personality: item.node.definition.personality.replaceAll('{{char}}', dataName).replaceAll('{{user}}', 'Individual X'),
-        avatar: item.node.max_res_url,
-    };
 
-    // I was discarding curly braces, but instead, let's swap "{" and "}" for "(" and ")" to preserve content while removing JSON-like structures.
+    // Preserve content while removing JSON-like structures.
     data.name = data.name.replace(/{/g, '(').replace(/}/g, ')');
     data.description = data.description.replace(/{/g, '(').replace(/}/g, ')');
     data.personality = data.personality.replace(/{/g, '(').replace(/}/g, ')');
