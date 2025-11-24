@@ -16,6 +16,8 @@ export interface ScriptEntry {
     message: string;
     speechUrl: string; // URL of TTS audio
     actorEmotions?: {[key: string]: Emotion}; // actor name -> emotion string
+    endScene?: boolean; // Whether this entry marks the end of the scene
+    endProperties?: { [actorId: string]: { [stat: string]: number } }; // Stat changes to apply when scene ends
 }
 
 export interface SkitData {
@@ -25,8 +27,6 @@ export interface SkitData {
     script: ScriptEntry[];
     generating?: boolean;
     context: any;
-    endScene?: boolean;
-    endProperties?: { [actorId: string]: { [stat: string]: number } };
 }
 
 export function generateSkitPrompt(skit: SkitData, stage: Stage, continuing: boolean): string {
@@ -379,6 +379,15 @@ export async function generateSkitScript(skit: SkitData, stage: Stage): Promise<
                 
                 // Wait for all TTS generation to complete
                 await Promise.all(ttsPromises);
+
+                // Attach endScene and endProperties to the final entry if the scene ended
+                if (endScene && scriptEntries.length > 0) {
+                    const finalEntry = scriptEntries[scriptEntries.length - 1];
+                    finalEntry.endScene = true;
+                    if (Object.keys(statChanges).length > 0) {
+                        finalEntry.endProperties = statChanges;
+                    }
+                }
 
                 return { entries: scriptEntries, endScene: endScene, statChanges: statChanges };
             }

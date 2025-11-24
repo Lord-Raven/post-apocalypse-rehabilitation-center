@@ -455,8 +455,12 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
             if (!save.timeline) {
                 save.timeline = [];
             }
-            // Apply endProperties to actors
-            const endProps = save.currentSkit.endProperties || {};
+            // Apply endProperties to actors - find from the final entry with endScene=true
+            let endProps: { [actorId: string]: { [stat: string]: number } } = {};
+            const finalEndedEntry = save.currentSkit.script.slice().reverse().find(entry => entry.endScene);
+            if (finalEndedEntry?.endProperties) {
+                endProps = finalEndedEntry.endProperties;
+            }
             for (const actorId in endProps) {
                 const actorChanges = endProps[actorId];
                 
@@ -516,8 +520,6 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
         try {
             const { entries, endScene, statChanges } = await generateSkitScript(skit, this);
             skit.script.push(...entries);
-            skit.endScene = endScene;
-            skit.endProperties = statChanges;
         } catch (err) {
             console.error('Error continuing skit script', err);
         } finally {
