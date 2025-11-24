@@ -576,13 +576,29 @@ export const SkitScreen: FC<SkitScreenProps> = ({ stage, setScreenType }) => {
                                         clearTooltip();
                                     }}
                                 /> : 
-                                `${index + 1} / ${skit.script.length}`}
+                                <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                    {index + 1 < skit.script.length && (
+                                        <span 
+                                            style={{ 
+                                                color: '#ffaa00',
+                                                fontSize: '1.1em',
+                                                fontWeight: 900
+                                            }}
+                                            title="Sending input will replace subsequent messages"
+                                        >
+                                            ⚠
+                                        </span>
+                                    )}
+                                    {`${index + 1} / ${skit.script.length}`}
+                                </span>
+                            }
                             sx={{ 
                                 minWidth: 80,
                                 fontWeight: 700, 
-                                color: '#bfffd0', 
-                                background: 'rgba(255,255,255,0.02)', 
-                                border: '1px solid rgba(255,255,255,0.03)',
+                                color: index + 1 < skit.script.length ? '#ffdd99' : '#bfffd0', 
+                                background: index + 1 < skit.script.length ? 'rgba(255,170,0,0.08)' : 'rgba(255,255,255,0.02)', 
+                                border: index + 1 < skit.script.length ? '1px solid rgba(255,170,0,0.2)' : '1px solid rgba(255,255,255,0.03)',
+                                transition: 'all 0.3s ease',
                                 '& .MuiChip-label': {
                                     display: 'flex',
                                     alignItems: 'center',
@@ -735,16 +751,16 @@ export const SkitScreen: FC<SkitScreenProps> = ({ stage, setScreenType }) => {
                         onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) => {
                             if (e.key === 'Enter') {
                                 e.preventDefault();
-                                if (index === skit.script.length - 1 && !sceneEnded) handleSubmit();
+                                if (!sceneEnded && !loading) handleSubmit();
                                 else if (sceneEnded) handleClose();
                             }
                         }}
                         placeholder={
-                            index === skit.script.length - 1 
-                                ? (sceneEnded ? 'Scene concluded' : 'Type your course of action...') 
-                                : (loading ? 'Generating...' : 'Advance to the final line...')
+                            sceneEnded 
+                                ? 'Scene concluded' 
+                                : (loading ? 'Generating...' : 'Type your course of action...')
                         }
-                        disabled={!(index === skit.script.length - 1) || sceneEnded || loading}
+                        disabled={sceneEnded || loading}
                         variant="outlined"
                         size="small"
                         sx={{
@@ -783,13 +799,13 @@ export const SkitScreen: FC<SkitScreenProps> = ({ stage, setScreenType }) => {
                     />
                     <Button
                         onClick={() => { if (sceneEnded) handleClose(); else handleSubmit(); }}
-                        disabled={!(index === skit.script.length - 1) || loading}
+                        disabled={loading}
                         variant="contained"
                         startIcon={sceneEnded ? <Close /> : <Send />}
                         sx={{
                             background: sceneEnded 
                                 ? 'linear-gradient(90deg,#ff8c66,#ff5a3b)' 
-                                : (index === skit.script.length - 1 && !sceneEnded) 
+                                : !sceneEnded 
                                     ? 'linear-gradient(90deg,#00ff88,#00b38f)' 
                                     : 'rgba(255,255,255,0.04)',
                             color: sceneEnded ? '#fff' : '#00221a',
@@ -798,7 +814,7 @@ export const SkitScreen: FC<SkitScreenProps> = ({ stage, setScreenType }) => {
                             '&:hover': {
                                 background: sceneEnded 
                                     ? 'linear-gradient(90deg,#ff7a52,#ff4621)' 
-                                    : (index === skit.script.length - 1 && !sceneEnded) 
+                                    : !sceneEnded 
                                         ? 'linear-gradient(90deg,#00e67a,#009a7b)' 
                                         : 'rgba(255,255,255,0.06)',
                             },
@@ -841,11 +857,15 @@ export const SkitScreen: FC<SkitScreenProps> = ({ stage, setScreenType }) => {
     
     // Handle submission of player's guidance (or blank submit to continue the scene autonomously)
     function handleSubmit() {
-        // Add input text to skit script as a player speaker action:
+        // Truncate the script at the current index and add input text as a player speaker action:
         const stageSkit = stage().getSave().currentSkit;
         if (!stageSkit) return;
+        
+        // Truncate script to current index (removes all messages after current position)
+        stageSkit.script = stageSkit.script.slice(0, index + 1);
+        
         if (inputText.trim()) {
-            stageSkit?.script.push({ speaker: stage().getSave().player.name.toUpperCase(), message: inputText, speechUrl: '' });
+            stageSkit.script.push({ speaker: stage().getSave().player.name.toUpperCase(), message: inputText, speechUrl: '' });
         }
         setSkit({...stageSkit as SkitData});
         setLoading(true);
