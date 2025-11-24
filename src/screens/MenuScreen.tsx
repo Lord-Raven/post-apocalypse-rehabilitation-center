@@ -220,7 +220,7 @@ export const MenuScreen: FC<MenuScreenProps> = ({ stage, setScreenType }) => {
                         fontSize: '12px',
                     }}
                 >
-                    v0.1.0 - Early Access
+                    v2025.24.11 - Beta
                 </motion.div>
             </motion.div>
             </div>

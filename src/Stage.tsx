@@ -2,6 +2,7 @@ import {ReactElement, useEffect, useState} from "react";
 import {StageBase, StageResponse, InitialData, Message} from "@chub-ai/stages-ts";
 import {LoadResponse} from "@chub-ai/stages-ts/dist/types/load";
 import Actor, { loadReserveActor, generatePrimaryActorImage, commitActorToEcho, Stat, generateAdditionalActorImages } from "./actors/Actor";
+import Faction, { loadReserveFaction } from "./actors/Faction";
 import { DEFAULT_GRID_SIZE, Layout, StationStat, createModule } from './Module';
 import { BaseScreen } from "./screens/BaseScreen";
 import {Client} from "@gradio/client";
@@ -31,6 +32,7 @@ type SaveType = {
     aide: {name: string, description: string};
     echoes: (Actor | null)[]; // actors currently in echo slots (can be null for empty slots)
     actors: {[key: string]: Actor};
+    factions: {[key: string]: Faction};
     bannedTags?: string[];
     layout: Layout;
     day: number;
@@ -46,8 +48,10 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
     private saveSlot: number = 0;
     // Flag/promise to avoid redundant concurrent requests for reserve actors
     private reserveActorsLoadPromise?: Promise<void>;
+    private reserveFactionsLoadPromise?: Promise<void>;
     private freshSave: SaveType;
     readonly RESERVE_ACTORS = 5;
+    readonly RESERVE_FACTIONS = 5;
     readonly FETCH_AT_TIME = 10;
     readonly MAX_PAGES = 100;
     readonly bannedTagsDefault = [
@@ -66,12 +70,15 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
         'real person',
         'feral'
     ];
-    // At least one of these is required.
+    // At least one of these is required for a character search; some sort of gender helps indicate that the card represents a singular person.
     readonly genderTags = ['male', 'female', 'masculine', 'feminine', 'non-binary', 'trans', 'genderqueer', 'genderfluid', 'agender', 'androgyne', 'intersex', 'futa', 'futanari', 'hermaphrodite'];
-    readonly characterSearchQuery = `https://inference.chub.ai/search?first=${this.FETCH_AT_TIME}&exclude_tags={{EXCLUSIONS}}&page={{PAGE_NUMBER}}&tags=${this.genderTags.join('%2C')}&sort=random&asc=false&include_forks=false&nsfw=true&nsfl=false` +
+    // At least one of these is required for a faction search; helps indicate that the card has a focus on setting or tone.
+    readonly factionTags = ['sci-fi', 'cyberpunk', 'post-apocalyptic', 'dystopian', 'space', 'alien', 'robot', 'setting', 'world', 'narrator', 'scenario'];
+    readonly characterSearchQuery = `https://inference.chub.ai/search?first=${this.FETCH_AT_TIME}&exclude_tags={{EXCLUSIONS}}&page={{PAGE_NUMBER}}&tags={{SEARCH_TAGS}}&sort=random&asc=false&include_forks=false&nsfw=true&nsfl=false` +
         `&nsfw_only=false&require_images=false&require_example_dialogues=false&require_alternate_greetings=false&require_custom_prompt=false&exclude_mine=false&min_tokens=200&max_tokens=5000` +
         `&require_expressions=false&require_lore=false&mine_first=false&require_lore_embedded=false&require_lore_linked=false&my_favorites=false&inclusive_or=true&recommended_verified=false&count=false&min_tags=3`;
     readonly characterDetailQuery = 'https://inference.chub.ai/api/characters/{fullPath}?full=true';
+
 
     private pageNumber = Math.floor(Math.random() * this.MAX_PAGES);
 
@@ -81,6 +88,7 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
     screenProps: any = {};
 
     reserveActors: Actor[] = [];
+    reserveFactions: Faction[] = [];
 
     emotionPipeline: any;
     imagePipeline: any;
@@ -113,7 +121,7 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
                 description: `Your holographic assistant is acutely familiar with the technical details of your Post-Apocalypse Rehabilitation Center, so you don't have to be! ` +
                 `Your StationAide™ comes pre-programmed with a friendly and non-condescending demeanor that will leave you feeling empowered and never patronized; ` +
                 `your bespoke projection comes with an industry-leading feminine form in a pleasing shade of default blue, but, as always, StationAide™ remains infinitely customizable to suit your tastes.`}, 
-            echoes: [], actors: {}, layout: layout, day: 1, phase: 0, currentSkit: undefined };
+            echoes: [], actors: {}, factions: {}, layout: layout, day: 1, phase: 0, currentSkit: undefined };
 
         // ensure at least one save exists and has a layout
         if (!this.saves.length) {
@@ -214,6 +222,10 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
         if (this.reserveActors.length < this.RESERVE_ACTORS && !this.reserveActorsLoadPromise) {
             this.reserveActorsLoadPromise = this.loadReserveActors();
         }
+
+        if (this.reserveFactions.length < this.RESERVE_FACTIONS && !this.reserveFactionsLoadPromise) {
+            this.reserveFactionsLoadPromise = this.loadReserveFactions();
+        }
         
         const save = this.getSave();
         // Initialize stationStats if missing
@@ -269,7 +281,10 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
                     // Populate reserveActors; this is loaded with data from a service, calling the characterServiceQuery URL:
                     const exclusions = (this.getSave().bannedTags || []).concat(this.bannedTagsDefault).map(tag => encodeURIComponent(tag)).join('%2C');
                     console.log('Applying exclusions:', exclusions);
-                    const response = await fetch(this.characterSearchQuery.replace('{{PAGE_NUMBER}}', this.pageNumber.toString()).replace('{{EXCLUSIONS}}', exclusions ? exclusions + '%2C' : ''));
+                    const response = await fetch(this.characterSearchQuery
+                        .replace('{{PAGE_NUMBER}}', this.pageNumber.toString())
+                        .replace('{{EXCLUSIONS}}', exclusions ? exclusions + '%2C' : '')
+                        .replace('{{SEARCH_TAGS}}', this.genderTags.concat(this.genderTags).join('%2C')));
                     const searchResults = await response.json();
                     console.log(searchResults);
                     // Need to do a secondary lookup for each character in searchResults, to get the details we actually care about:
@@ -294,6 +309,45 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
         })();
 
         return this.reserveActorsLoadPromise;
+    }
+
+    async loadReserveFactions() {
+        // If a load is already in-flight, return the existing promise to dedupe concurrent calls
+        if (this.reserveFactionsLoadPromise) return this.reserveFactionsLoadPromise;
+
+        this.reserveFactionsLoadPromise = (async () => {
+            try {
+                console.log('Loading reserve factions...');
+                while (this.reserveFactions.length < this.RESERVE_FACTIONS) {
+                    // Populate reserveFactions; this is loaded with data from a service, calling the characterSearchQuery URL:
+                    const exclusions = (this.getSave().bannedTags || []).concat(this.bannedTagsDefault).map(tag => encodeURIComponent(tag)).join('%2C');
+                    console.log('Applying exclusions:', exclusions);
+                    const response = await fetch(this.characterSearchQuery
+                        .replace('{{PAGE_NUMBER}}', this.pageNumber.toString())
+                        .replace('{{EXCLUSIONS}}', exclusions ? exclusions + '%2C' : '')
+                        .replace('{{SEARCH_TAGS}}', this.factionTags.concat(this.factionTags).join('%2C')));
+                    const searchResults = await response.json();
+                    console.log(searchResults);
+                    // Need to do a secondary lookup for each faction in searchResults, to get the details we actually care about:
+                    const basicFactionData = searchResults.data?.nodes.filter((item: string, index: number) => index < this.RESERVE_FACTIONS - this.reserveFactions.length).map((item: any) => item.fullPath) || [];
+                    this.pageNumber = (this.pageNumber % this.MAX_PAGES) + 1;
+                    console.log(basicFactionData);
+
+                    const newFactions: Faction[] = await Promise.all(basicFactionData.map(async (fullPath: string) => {
+                        return loadReserveFaction(fullPath, this);
+                    }));
+
+                    this.reserveFactions = [...this.reserveFactions, ...newFactions.filter(f => f !== null)];
+                }
+            } catch (err) {
+                console.error('Error loading reserve factions', err);
+            } finally {
+                // clear the promise so future loads can be attempted if needed
+                this.reserveFactionsLoadPromise = undefined;
+            }
+        })();
+
+        return this.reserveFactionsLoadPromise;
     }
 
     getLayout(): Layout {

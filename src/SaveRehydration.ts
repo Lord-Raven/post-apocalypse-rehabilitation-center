@@ -4,6 +4,7 @@
 
 import { Layout } from './Module';
 import Actor from './actors/Actor';
+import Faction from './actors/Faction';
 
 // Registry of classes that can be rehydrated
 type RehydratableClass = {
@@ -14,6 +15,7 @@ type RehydratableClass = {
 const CLASS_REGISTRY: Record<string, RehydratableClass> = {
     'Layout': Layout,
     'Actor': Actor,
+    'Faction': Faction,
 };
 
 /**
@@ -91,6 +93,11 @@ export function smartRehydrate(obj: any): any {
     // Try to detect Actor by structure
     if (obj.id && obj.name && obj.stats && obj.emotionPack) {
         return Actor.fromSave(obj);
+    }
+
+    // Try to detect Faction by structure
+    if (obj.id && obj.name && obj.reputation !== undefined && obj.visualStyle && obj.themeColor) {
+        return Faction.fromSave(obj);
     }
 
     // For plain objects, recursively rehydrate nested properties

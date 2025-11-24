@@ -38,7 +38,8 @@ import {
 import TypeOut from '../components/TypeOut';
 
 // Helper function to format text with dialogue, italics, and bold styling
-const formatMessage = (text: string): JSX.Element => {
+// Accepts optional speaker actor to apply custom font and drop shadow
+const formatMessage = (text: string, speakerActor?: Actor | null): JSX.Element => {
     if (!text) return <></>;
 
     // Replace directional quotes with standard quotes
@@ -52,8 +53,16 @@ const formatMessage = (text: string): JSX.Element => {
             {dialogueParts.map((part, index) => {
                 // Check if this part is dialogue (wrapped in quotes)
                 if (part.startsWith('"') && part.endsWith('"')) {
+                    // Apply custom font and drop shadow to dialogue if speaker has custom properties
+                    const dialogueStyle: React.CSSProperties = { 
+                        color: '#87CEEB',
+                        fontFamily: speakerActor?.themeFontFamily || undefined,
+                        textShadow: speakerActor?.themeColor 
+                            ? `2px 2px 4px ${speakerActor.themeColor}`
+                            : undefined
+                    };
                     return (
-                        <span key={index} style={{ color: '#87CEEB' }}>
+                        <span key={index} style={dialogueStyle}>
                             {formatInlineStyles(part)}
                         </span>
                     );
@@ -306,7 +315,7 @@ export const SkitScreen: FC<SkitScreenProps> = ({ stage, setScreenType }) => {
             
             setSpeaker(matchingActor || null);
             setDisplayName(matchingActor?.name || (isPlayerSpeaker ? playerName : ''));
-            setDisplayMessage(formatMessage(skit.script[index]?.message || ''));
+            setDisplayMessage(formatMessage(skit.script[index]?.message || '', matchingActor));
             setFinishTyping(false); // Reset typing state when message changes
             console.log('SkitScreen: Displaying message index', index, 'Speaker:', matchingActor ? matchingActor.name : (isPlayerSpeaker ? playerName : 'N/A'));
             console.log(`Skit entry: ${audioEnabled}, ${skit.script[index]?.speechUrl}`);
@@ -741,7 +750,8 @@ export const SkitScreen: FC<SkitScreenProps> = ({ stage, setScreenType }) => {
                             fontSize: '1.18rem',
                             lineHeight: 1.55,
                             fontFamily: 'Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial',
-                            color: '#e9fff7'
+                            color: '#e9fff7',
+                            textShadow: '1px 1px 2px rgba(0, 0, 0, 0.3)' // Subtle default drop shadow for all script text
                         }}
                     >
                         {skit.script && skit.script.length > 0 ? (
