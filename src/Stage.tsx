@@ -332,10 +332,14 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
                     const basicFactionData = searchResults.data?.nodes.filter((item: string, index: number) => index < this.RESERVE_FACTIONS - this.reserveFactions.length).map((item: any) => item.fullPath) || [];
                     this.pageNumber = (this.pageNumber % this.MAX_PAGES) + 1;
                     console.log(basicFactionData);
-
-                    const newFactions: Faction[] = await Promise.all(basicFactionData.map(async (fullPath: string) => {
-                        return loadReserveFaction(fullPath, this);
-                    }));
+                    // Do these in series instead of parallel to reduce load on the service:
+                    const newFactions: Faction[] = [];
+                    for (const fullPath of basicFactionData) {
+                        const faction = await loadReserveFaction(fullPath, this);
+                        if (faction !== null) {
+                            newFactions.push(faction);
+                        }
+                    }
 
                     this.reserveFactions = [...this.reserveFactions, ...newFactions.filter(f => f !== null)];
                 }
