@@ -63,7 +63,7 @@ const formatMessage = (text: string, speakerActor?: Actor | null): JSX.Element =
                         fontFamily: speakerActor?.themeFontFamily || undefined,
                         textShadow: speakerActor?.themeColor 
                             ? `3px 3px 2px ${speakerActor.themeColor}`
-                            : '3px 3px 2px rgba(135, 206, 235, 0.6)'
+                            : '3px 3px 2px rgba(135, 206, 235, 0.5)'
                     };
                     return (
                         <span key={index} style={dialogueStyle}>
