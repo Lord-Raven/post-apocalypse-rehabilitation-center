@@ -121,9 +121,20 @@ const ActorImage: FC<ActorImageProps> = ({
                         key="prev"
                         src={prevImageUrl}
                         initial={{ opacity: 1 }}
-                        animate={{ opacity: 0 }}
+                        animate={actor.remote ? {
+                            opacity: 0,
+                            filter: [
+                                'blur(2px) hue-rotate(23deg) brightness(1.1)',
+                                'blur(2.8px) hue-rotate(17deg) brightness(1.15)',
+                                'blur(2.2px) hue-rotate(20deg) brightness(1.08)',
+                                'blur(2.5px) hue-rotate(21deg) brightness(1.1)'
+                            ]
+                        } : { opacity: 0 }}
                         exit={{ opacity: 0 }}
-                        transition={{ duration: 0.5 }}
+                        transition={actor.remote ? {
+                            opacity: { duration: 0.5 },
+                            filter: { duration: 3.2, repeat: Infinity, ease: "easeInOut" }
+                        } : { duration: 0.5 }}
                         style={{
                             position: 'absolute',
                             top: 0,
@@ -144,9 +155,20 @@ const ActorImage: FC<ActorImageProps> = ({
                         key={`${actor.id}_${imageUrl}_bg`}
                         src={processedImageUrl}
                         initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
+                        animate={actor.remote ? {
+                            opacity: 0.8,
+                            filter: [
+                                'blur(2.5px) hue-rotate(23deg) brightness(1.1)',
+                                'blur(3.2px) hue-rotate(17deg) brightness(1.08)',
+                                'blur(2.8px) hue-rotate(20deg) brightness(1.12)',
+                                'blur(2.5px) hue-rotate(21deg) brightness(1.1)'
+                            ]
+                        } : { opacity: 1 }}
                         exit={{ opacity: 0 }}
-                        transition={{ duration: 0.5 }}
+                        transition={actor.remote ? {
+                            opacity: { duration: 0.5 },
+                            filter: { duration: 2.7, repeat: Infinity, ease: "easeInOut" }
+                        } : { duration: 0.5 }}
                         style={{
                             position: 'absolute',
                             top: 0,
@@ -167,10 +189,20 @@ const ActorImage: FC<ActorImageProps> = ({
                         key={`${actor.id}_${imageUrl}_main`}
                         src={processedImageUrl}
                         initial={{ opacity: 0 }}
-                        animate={{ opacity: 0.75 }}
+                        animate={actor.remote ? {
+                            opacity: 0.75,
+                            filter: [
+                                'blur(0px) hue-rotate(22deg) brightness(1.1)',
+                                'blur(0.3px) hue-rotate(18deg) brightness(1.12)',
+                                'blur(0.1px) hue-rotate(20deg) brightness(1.08)',
+                                'blur(0px) hue-rotate(21deg) brightness(1.1)'
+                            ]
+                        } : { opacity: 0.75 }}
                         exit={{ opacity: 0 }}
-                        transition={{ duration: 0.5 }}
-                        className={actor.remote ? 'remote-actor-image' : ''}
+                        transition={actor.remote ? {
+                            opacity: { duration: 0.5 },
+                            filter: { duration: 3.8, repeat: Infinity, ease: "easeInOut" }
+                        } : { duration: 0.5 }}
                         style={{
                             position: 'absolute',
                             top: 0,
@@ -187,6 +219,51 @@ const ActorImage: FC<ActorImageProps> = ({
                     />
                 )}
             </AnimatePresence>
+            {/* Rolling scanline effect for remote actors */}
+            {actor.remote && (
+                <AnimatePresence>
+                    {processedImageUrl && (
+                        <motion.img
+                            key={`${actor.id}_${imageUrl}_scanline`}
+                            src={processedImageUrl}
+                            initial={{ 
+                                opacity: 0,
+                                clipPath: 'inset(0% 0% 100% 0%)'
+                            }}
+                            animate={{ 
+                                opacity: 1,
+                                clipPath: [
+                                    'inset(0% 0% 100% 0%)',     // Start at top (slice hidden at bottom)
+                                    'inset(0% 0% 0% 0%)',       // Reveal full height
+                                    'inset(100% 0% 0% 0%)',     // End at bottom (slice hidden at top)
+                                ]
+                            }}
+                            exit={{ opacity: 0 }}
+                            transition={{ 
+                                opacity: { duration: 0.5 },
+                                clipPath: {
+                                    duration: 2.5,
+                                    ease: "linear",
+                                    repeat: Infinity,
+                                    repeatDelay: 0
+                                }
+                            }}
+                            style={{
+                                position: 'absolute',
+                                top: 0,
+                                width: '100%',
+                                height: '100%',
+                                opacity: 0.6,
+                                zIndex: 6,
+                                transform: `translate(calc(${modX}vw - 50%), ${modY}vh)`,
+                                filter: 'blur(3px) hue-rotate(20deg) brightness(1.3)',
+                                pointerEvents: 'none'
+                            }}
+                            alt={`${actor.name} (${emotion}) scanline`}
+                        />
+                    )}
+                </AnimatePresence>
+            )}
         </motion.div>
     ) : <></>;
 };
