@@ -95,7 +95,7 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType}) =>
         if (existingModules.length === 1 && Object.keys(stage().getSave().actors).length > 0) { // New module is the only one of its type
             // Grab a few random patients to pull to the new module for a skit:
             const randomPatients = Object.values(stage().getSave().actors)
-                .filter(a => a.locationId !== newModule.id)
+                .filter(a => a.locationId !== newModule.id && !a.remote)
                 .sort(() => 0.5 - Math.random()) // shuffle, then randomly grab 1-3 patients:
                 .slice(0, Math.min(Math.random() * 3 + 1, Object.keys(stage().getSave().actors).length));
             randomPatients.forEach(p => {

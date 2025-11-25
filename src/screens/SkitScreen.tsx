@@ -58,8 +58,8 @@ const formatMessage = (text: string, speakerActor?: Actor | null): JSX.Element =
                         color: '#87CEEB',
                         fontFamily: speakerActor?.themeFontFamily || undefined,
                         textShadow: speakerActor?.themeColor 
-                            ? `2px 2px 4px ${speakerActor.themeColor}`
-                            : undefined
+                            ? `3px 3px 6px ${speakerActor.themeColor}`
+                            : '3px 3px 6px rgba(135, 206, 235, 0.6)'
                     };
                     return (
                         <span key={index} style={dialogueStyle}>
@@ -751,7 +751,7 @@ export const SkitScreen: FC<SkitScreenProps> = ({ stage, setScreenType }) => {
                             lineHeight: 1.55,
                             fontFamily: 'Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial',
                             color: '#e9fff7',
-                            textShadow: '1px 1px 2px rgba(0, 0, 0, 0.3)' // Subtle default drop shadow for all script text
+                            textShadow: '2px 2px 4px rgba(0, 0, 0, 0.5)' // More pronounced drop shadow for all script text
                         }}
                     >
                         {skit.script && skit.script.length > 0 ? (

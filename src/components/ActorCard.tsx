@@ -147,7 +147,7 @@ export const ActorCard: FC<ActorCardProps> = ({
                                     })}
                                 </div>
                         } else if (section === ActorCardSection.PORTRAIT) {
-                            return <div key="portrait" style={{ 
+                            return <div key="portrait" style={{
                                 width: '100%',
                                 flex: 1,
                                 borderRadius: '6px',

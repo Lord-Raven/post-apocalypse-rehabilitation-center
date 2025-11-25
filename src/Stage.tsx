@@ -164,6 +164,10 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
             // New day logic.
             // Increment actor role count
             for (let actor of Object.values(save.actors)) {
+                if (actor.remote) {
+                    actor.locationId = '';
+                    continue;
+                }
                 // Find non-quarters module assigned to this actor and increment held role count
                 const targetModule = save.layout.getModulesWhere(m => m.ownerId === actor.id && m.type !== 'quarters')[0];
                 const roleName: string = targetModule?.getAttribute('role') || '';
@@ -227,7 +231,7 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
         if (this.reserveFactions.length < this.RESERVE_FACTIONS && !this.reserveFactionsLoadPromise) {
             this.reserveFactionsLoadPromise = this.loadReserveFactions();
         }
-        
+
         const save = this.getSave();
         // Initialize stationStats if missing
         if (!save.stationStats || Object.keys(save.stationStats).length < 5) {
@@ -242,6 +246,15 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
         if (!save.factions) {
             save.factions = {};
         }
+        
+        // Clean out remote actors that aren't supported by current factions
+        const idsToRemove: string[] = [];
+        Object.values(save.actors).filter(actor => actor.remote && (!save.factions || !Object.values(save.factions).some(faction => faction.representativeId === actor.id))).forEach(actor => {
+            idsToRemove.push(actor.id);
+        });
+        idsToRemove.forEach(id => {
+            delete save.actors[id];
+        });
 
         // If any echo actors are missing primary images, kick those off now.
         for (const echoActor of save.echoes) {
@@ -517,11 +530,6 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
             if (!save.timeline) {
                 save.timeline = [];
             }
-
-            // Move remote actors out of any modules they occupied (reset locationId)
-            Object.values(save.actors).filter(actor => actor.locationId && actor.remote).forEach(actor => {
-                actor.locationId = '';
-            });
 
             // Apply endProperties to actors - find from the final entry with endScene=true
             let endProps: { [actorId: string]: { [stat: string]: number } } = {};

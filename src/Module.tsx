@@ -110,7 +110,12 @@ export interface ModuleIntrinsic {
 const randomAction = (module: Module, stage: Stage, setScreenType: (type: ScreenType) => void) => {
             // If there are actors here, open a skit with them:
             if (Object.values(stage.getSave().actors).some(a => a.locationId === module.id)) {
+                // Maybe move the module's owner (if any) here:
+                if (module.ownerId && stage.getSave().actors[module.ownerId] && Math.random() < 0.5) {
+                    stage.getSave().actors[module.ownerId].locationId = module.id;
+                }
                 console.log("Opening skit.");
+
                 stage.setSkit({
                     type: SkitType.RANDOM_ENCOUNTER,
                     moduleId: module.id,
