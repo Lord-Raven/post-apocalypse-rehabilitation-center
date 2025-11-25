@@ -918,7 +918,7 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType}) =>
                                         {Object.values(stage().getSave().actors).length === 0 ? (
                                             <p style={{ color: '#00ff88', opacity: 0.5, fontStyle: 'italic', fontSize: '0.85rem', fontWeight: 700 }}>No patients currently on station</p>
                                         ) : (
-                                            Object.values(stage().getSave().actors).map((actor: any) => (
+                                            Object.values(stage().getSave().actors).filter(actor => !actor.remote).map((actor: any) => (
                                                 <div 
                                                     key={actor.id}
                                                     onMouseEnter={() => setHoveredActorId(actor.id)}
@@ -1008,22 +1008,22 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType}) =>
                                         flexDirection: 'column',
                                         gap: '15px',
                                     }}>
-                                        {stage().reserveFactions.length === 0 ? (
+                                        {Object.values(stage().getSave().factions).length === 0 ? (
                                             <p style={{ 
                                                 color: '#00ff88', 
                                                 opacity: 0.5, 
                                                 fontStyle: 'italic', 
                                                 fontSize: '0.85rem', 
                                                 fontWeight: 700 
-                                            }}>Loading factions...</p>
+                                            }}>No factions in contact.</p>
                                         ) : (
-                                            stage().reserveFactions.map((faction) => (
+                                            Object.values(stage().getSave().factions).map((faction) => (
                                                 <FactionCard
                                                     key={faction.id}
                                                     faction={faction}
+                                                    representative={stage().getSave().actors[faction.representativeId || '']}
                                                     onClick={() => {
                                                         console.log(`Clicked faction ${faction.name}`);
-                                                        // TODO: Add faction interaction logic
                                                     }}
                                                 />
                                             ))

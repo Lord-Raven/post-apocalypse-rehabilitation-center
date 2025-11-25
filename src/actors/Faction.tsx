@@ -13,7 +13,7 @@ class Faction {
     themeColor: string;
     themeFont: string;
     reputation: number = 1; // 1-10, starts at 1
-    representative: Actor | null = null;
+    representativeId: string | null = null;
     backgroundImageUrl: string = '';
 
     /**
@@ -210,9 +210,12 @@ export async function loadReserveFaction(fullPath: string, stage: Stage): Promis
     }
     // retry a few times if it fails (or returns null):
     for (let attempt = 0; attempt < 3; attempt++) {
-        newFaction.representative = await loadReserveActor(actorData, stage);
-        if (newFaction.representative) {
-            generatePrimaryActorImage(newFaction.representative, stage);
+        const repActor = await loadReserveActor(actorData, stage);
+        if (repActor) {
+            repActor.remote = true;
+            newFaction.representativeId = repActor.id;
+            stage.getSave().actors[repActor.id] = repActor;
+            generatePrimaryActorImage(repActor, stage);
             break;
         }
     }

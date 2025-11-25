@@ -1,4 +1,4 @@
-import React, { FC } from 'react';
+import React, { FC, useRef, useEffect, useState } from 'react';
 import { Chip, Box } from '@mui/material';
 import Actor from '../actors/Actor';
 
@@ -26,6 +26,10 @@ export const Nameplate: FC<NameplateProps> = ({
     className,
     style 
 }) => {
+    const chipRef = useRef<HTMLDivElement>(null);
+    const textRef = useRef<HTMLSpanElement>(null);
+    const [fontScale, setFontScale] = useState(1);
+
     const getSizeStyles = () => {
         switch (size) {
             case 'small':
@@ -53,37 +57,78 @@ export const Nameplate: FC<NameplateProps> = ({
     const displayName = actor?.name || name || '';
     const displayRole = role || 'Patient';
 
+    // Measure and scale font based on available container width
+    useEffect(() => {
+        const measureAndScale = () => {
+            if (!chipRef.current || !textRef.current) return;
+
+            // Get the chip's parent container width (accounting for maxWidth: 100%)
+            const parentWidth = chipRef.current.parentElement?.offsetWidth || chipRef.current.offsetWidth;
+            
+            // Account for padding (2 * 16px from px: 2)
+            const horizontalPadding = 32;
+            const availableWidth = parentWidth - horizontalPadding;
+            
+            // Reset scale to measure at full size
+            setFontScale(1);
+            
+            // Use requestAnimationFrame to ensure DOM has updated
+            requestAnimationFrame(() => {
+                if (!textRef.current) return;
+                
+                const textWidth = textRef.current.scrollWidth;
+                
+                if (textWidth > availableWidth && availableWidth > 0) {
+                    // Scale down, but not below 0.5 (50%) for readability
+                    const scale = Math.max(0.5, availableWidth / textWidth);
+                    setFontScale(scale);
+                }
+            });
+        };
+
+        measureAndScale();
+
+        // Re-measure on window resize
+        const resizeObserver = new ResizeObserver(measureAndScale);
+        if (chipRef.current?.parentElement) {
+            resizeObserver.observe(chipRef.current.parentElement);
+        }
+
+        return () => resizeObserver.disconnect();
+    }, [displayName, size]);
+
     const renderLabel = () => {
+        const nameStyle: React.CSSProperties = {
+            fontSize: `calc(${sizeStyles.fontSize} * ${fontScale})`,
+            transition: 'font-size 0.2s ease-out',
+        };
+
+        const roleStyle: React.CSSProperties = {
+            fontSize: `calc(${sizeStyles.roleFontSize} * ${fontScale})`,
+            opacity: 0.75,
+            fontWeight: 600,
+            textTransform: 'capitalize',
+            transition: 'font-size 0.2s ease-out',
+        };
+
         if (!role) {
-            return displayName;
+            return <span ref={textRef} style={nameStyle}>{displayName}</span>;
         }
 
         if (layout === 'inline') {
             return (
-                <span>
+                <span ref={textRef} style={nameStyle}>
                     {displayName}
-                    <span style={{ 
-                        fontSize: sizeStyles.roleFontSize,
-                        opacity: 0.75,
-                        marginLeft: '0.5em',
-                        fontWeight: 600,
-                        textTransform: 'capitalize',
-                    }}>
+                    <span style={{ ...roleStyle, marginLeft: '0.5em' }}>
                         ({displayRole})
                     </span>
                 </span>
             );
         } else {
             return (
-                <Box sx={{ textAlign: 'center', lineHeight: 1.2 }}>
-                    <div>{displayName}</div>
-                    <div style={{ 
-                        fontSize: sizeStyles.roleFontSize,
-                        opacity: 0.75,
-                        marginTop: '0.15em',
-                        fontWeight: 600,
-                        textTransform: 'capitalize',
-                    }}>
+                <Box ref={textRef} sx={{ textAlign: 'center', lineHeight: 1.2 }}>
+                    <div style={nameStyle}>{displayName}</div>
+                    <div style={{ ...roleStyle, marginTop: '0.15em' }}>
                         {displayRole}
                     </div>
                 </Box>
@@ -93,6 +138,7 @@ export const Nameplate: FC<NameplateProps> = ({
 
     return (
         <Chip
+            ref={chipRef}
             label={renderLabel()}
             variant="filled"
             className={className}
@@ -133,7 +179,8 @@ export const Nameplate: FC<NameplateProps> = ({
                     padding: role ? (layout === 'stacked' ? '0.2em 0' : 0) : 0,
                     fontFamily: actor?.themeFontFamily || '"Arial Black", "Helvetica Neue", Arial, sans-serif',
                     position: 'relative',
-                    zIndex: 1
+                    zIndex: 1,
+                    whiteSpace: 'nowrap',
                 },
                 ...style
             }}

@@ -7,6 +7,8 @@ export enum SkitType {
     INTRO_CHARACTER = 'INTRO CHARACTER',
     VISIT_CHARACTER = 'VISIT CHARACTER',
     ROLE_ASSIGNMENT = 'ROLE ASSIGNMENT',
+    FACTION_INTRODUCTION = 'FACTION INTRODUCTION',
+    FACTION_INTERACTION = 'FACTION INTERACTION',
     NEW_MODULE = 'NEW MODULE',
     RANDOM_ENCOUNTER = 'RANDOM ENCOUNTER'
 }
@@ -32,6 +34,8 @@ export interface SkitData {
 export function generateSkitPrompt(skit: SkitData, stage: Stage, continuing: boolean): string {
     const actor = stage.getSave().actors[skit.actorId || ''];
     const module = stage.getSave().layout.getModuleById(skit.moduleId || '');
+    const faction = stage.getSave().factions[skit.context.factionId || ''];
+    const factionRepresentative = faction ? stage.getSave().actors[faction.representativeId || ''] : null;
     switch (skit.type) {
         case SkitType.INTRO_CHARACTER:
             return !continuing ? 
@@ -57,6 +61,20 @@ export function generateSkitPrompt(skit: SkitData, stage: Stage, continuing: boo
             return !continuing ?
                 `This scene depicts an exchange between the player and some of the patients regarding the opening of a new module, the ${module?.type || 'unknown'}. ` :
                 `Continue this scene, exploring the crew's thoughts or feelings toward this latest addition to the PARC.`;
+        case SkitType.FACTION_INTRODUCTION:
+            return (!continuing ?
+                `This scene introduces a new faction that would like to do business with the PARC: ${faction?.name || 'a secret organization'}. ` +
+                `Describe their appearance, motivations, and initial interactions with the player Director and other present inhabitants.` :
+                `This is an introductory scene for ${faction?.name || 'a secret organization'}. ` +
+                `Continue this scene, exploring the faction's dynamics and their intentions for the PARC.`) +
+                (faction ? `\nDetails about their organization: ${faction.description}\nDetails about their aesthetic: ${faction.visualStyle}\nThe PARC's current reputation with this faction is ${faction.reputation}` : '') +
+                (factionRepresentative ? `\nTheir representative is ${factionRepresentative.name}, described as: ${factionRepresentative.description}` : 'They have no designated liaison for this communication; any characters introduced during this scene will be transient.');
+        case SkitType.FACTION_INTERACTION:
+            return (!continuing ?
+                `This scene depicts an interaction between the player and a faction that does business with the PARC. Explore the nature of their relationship, conflicts, or alliances.` :
+                `Continue this scene, delving deeper into the faction's role and influence within the PARC or vice versa.`) +
+                (faction ? `\nDetails about their organization: ${faction.description}\nDetails about their aesthetic: ${faction.visualStyle}\nThe PARC's current reputation with this faction is ${faction.reputation}` : '') +
+                (factionRepresentative ? `\nTheir representative is ${factionRepresentative.name}, described as: ${factionRepresentative.description}` : 'They have no designated liaison for this communication; any characters introduced during this scene will be transient.');
         default:
             return '';
     }

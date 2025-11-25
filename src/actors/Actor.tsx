@@ -37,6 +37,7 @@ class Actor {
     heldRoles: { [key: string]: number } = {}; // Roles ever held by this actor and the number of days spent in each
     decorImageUrls: {[key: string]: string} = {}; // ModuleType to decor image URL mapping
     stats: Record<Stat, number>;
+    remote: boolean = false; // Whether this actor is not present on the station.
 
     /**
      * Rehydrate an Actor from saved data

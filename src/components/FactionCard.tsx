@@ -4,9 +4,11 @@ import Faction from '../actors/Faction';
 import Nameplate from './Nameplate';
 import AuthorLink from './AuthorLink';
 import { scoreToGrade } from '../utils';
+import Actor from '../actors/Actor';
 
 interface FactionCardProps {
     faction: Faction;
+    representative?: Actor;
     /** Whether the card is expanded */
     isExpanded?: boolean;
     /** Custom hover animation properties */
@@ -26,6 +28,7 @@ interface FactionCardProps {
  */
 export const FactionCard: FC<FactionCardProps> = ({
     faction,
+    representative,
     isExpanded: controlledExpanded,
     whileHover,
     style,
@@ -35,7 +38,6 @@ export const FactionCard: FC<FactionCardProps> = ({
     const [internalExpanded, setInternalExpanded] = useState(false);
     const isExpanded = controlledExpanded !== undefined ? controlledExpanded : internalExpanded;
     
-    const representative = faction.representative;
     const reputation = faction.reputation || 1;
     const grade = scoreToGrade(reputation);
 

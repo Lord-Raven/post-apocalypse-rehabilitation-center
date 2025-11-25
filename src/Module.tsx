@@ -1,12 +1,13 @@
 import { SkitType } from './Skit';
 import { Stage } from "./Stage";
+import Faction from './actors/Faction';
 import { ScreenType } from './screens/BaseScreen';
 
-export type ModuleType = 'echo chamber' | 'generator' | 'quarters' | 'commons' | 'infirmary' | 'gym' | 'lounge' | 'armory';
+export type ModuleType = 'echo chamber' | 'communications' | 'generator' | 'quarters' | 'commons' | 'infirmary' | 'gym' | 'lounge' | 'armory' ;
     /*| 'hydroponics' | 'laboratory' | 'observatory' | 'security' | 'storage' | 'market' |
     'brig' | 'showers' | 'conservatory' |
     // Administration pack:
-    'directors suite' | 'communications' | 'office' | 'vault' | 'archives' |
+    'directors suite' | 'office' | 'vault' | 'archives' |
     // Tourism pack:
     'guest wing' | 'shuttle bay' | 'restaurant' | 'casino' | 'spa' |
     // Spirituality/arcana pack:
@@ -140,6 +141,54 @@ export const MODULE_DEFAULTS: Record<ModuleType, ModuleIntrinsic> = {
             return stage.getLayout().getModulesWhere(m => m.type === 'echo chamber').length === 0;
         }
     },
+    communications: {
+        skitPrompt: 'The communications room is the hub for all external and internal station communications. Scenes here often involve receiving important messages, coordination among the crew, or managing station-wide announcements.',
+        imagePrompt: 'A sci-fi communications room dominated by a massive screen and associated computers and equipment, as well as some seating.',
+        role: 'Liaison',
+        roleDescription: `Handle all communications for the station, liaising with external entities and managing internal announcements.`,
+        baseImageUrl: 'https://media.charhub.io/e13c7784-9f5f-4ec2-a179-5bab52973b3a/f5e69e63-88bf-4f7d-919b-41c8a2adcc6c.png',
+        defaultImageUrl: 'https://media.charhub.io/9293912a-ebf4-4a0f-bac6-b9bfc82115f1/2ce9899c-a8cb-4186-9abb-fb8192ced8bd.png',
+        action: (module: Module, stage: Stage, setScreenType: (type: ScreenType) => void) => {
+            // If there is a new faction to introduce, open an intro skit
+            if (Object.values(stage.getSave().factions).length < 5 && stage.reserveFactions.length > 0) {
+                const newFaction = stage.reserveFactions.shift() as Faction;
+                stage.getSave().factions[newFaction.id] = newFaction;
+                stage.setSkit({
+                    type: SkitType.FACTION_INTRODUCTION,
+                    moduleId: module.id,
+                    script: [],
+                    generating: true,
+                    context: {factionId: newFaction.id,}
+                });
+                setScreenType(ScreenType.SKIT);
+            } else if (Object.values(stage.getSave()).length > 0) {
+                // Otherwise, open a random faction interaction skit
+                const factions = Object.values(stage.getSave().factions).sort(() => 0.5 - Math.random())[0];
+                stage.setSkit({
+                    type: SkitType.FACTION_INTERACTION,
+                    moduleId: module.id,
+                    script: [],
+                    generating: true,
+                    context: {factionId: factions.id}
+                });
+                setScreenType(ScreenType.SKIT);
+            } else if (Object.values(stage.getSave().actors).some(a => a.locationId === module.id)) {
+                console.log("Opening skit.");
+                stage.setSkit({
+                    type: SkitType.RANDOM_ENCOUNTER,
+                    moduleId: module.id,
+                    script: [],
+                    generating: true,
+                    context: {}
+                });
+                setScreenType(ScreenType.SKIT);
+            }
+        },
+        available: (stage: Stage) => {
+            // Can have only one in stage.getSave().layout:
+            return stage.getLayout().getModulesWhere(m => m.type === 'communications').length === 0;
+        }
+    },
     generator: {
         skitPrompt: 'The generator room serves as an engineering hub of sorts, where many of the station\'s mechanical systems can be managed. Scenes here often involve the station\'s overall systems health and stability.',
         imagePrompt: 'A sci-fi chamber dominated by a large, glowing generator, filled with humming machinery, control panels, and energy conduits.',
@@ -250,7 +299,6 @@ export const MODULE_DEFAULTS: Record<ModuleType, ModuleIntrinsic> = {
 export class Module<T extends ModuleType = ModuleType> {
     public id: string;
     public type: T;
-    public connections?: string[];
     public ownerId?: string; // For quarters, this is the occupant, for other modules, it is the character assigned to the associated role
     public attributes?: Partial<ModuleIntrinsic> & { [key: string]: any };
 
@@ -261,16 +309,14 @@ export class Module<T extends ModuleType = ModuleType> {
         const type = savedModule.type === 'medbay' ? 'infirmary' : savedModule.type; // Backwards compatibility
         return createModule(type as ModuleType, {
             id: savedModule.id,
-            connections: savedModule.connections,
             attributes: savedModule.attributes,
             ownerId: savedModule.ownerId
         });
     }
 
-    constructor(type: T, opts?: { id?: string; connections?: string[]; attributes?: Partial<ModuleIntrinsic> & { [key: string]: any }; ownerId?: string }) {
+    constructor(type: T, opts?: { id?: string; attributes?: Partial<ModuleIntrinsic> & { [key: string]: any }; ownerId?: string }) {
         this.id = opts?.id ?? `${type}-${Date.now()}`;
         this.type = type;
-        this.connections = opts?.connections ?? [];
         this.ownerId = opts?.ownerId;
         this.attributes = opts?.attributes || {};
     }
@@ -303,7 +349,7 @@ export class Module<T extends ModuleType = ModuleType> {
     }
 }
 
-export function createModule(type: ModuleType, opts?: { id?: string; connections?: string[]; attributes?: Partial<ModuleIntrinsic> & { [key: string]: any }; ownerId?: string }): Module {
+export function createModule(type: ModuleType, opts?: { id?: string; attributes?: Partial<ModuleIntrinsic> & { [key: string]: any }; ownerId?: string }): Module {
     return new Module(type, opts);
 }
 
