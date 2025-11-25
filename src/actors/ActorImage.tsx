@@ -220,56 +220,87 @@ const ActorImage: FC<ActorImageProps> = ({
             {actor.remote && (
                 <AnimatePresence>
                     {processedImageUrl && (
-                        <motion.div
-                            key={`${actor.id}_${imageUrl}_scanline_wrapper`}
-                            initial={{ 
-                                opacity: 0,
-                                clipPath: 'inset(0% 0% 100% 0%)'
-                            }}
-                            animate={{ 
-                                opacity: 1,
-                                clipPath: [
-                                    'inset(0% 0% 100% 0%)',     // Start at top (slice hidden at bottom)
-                                    'inset(0% 0% 0% 0%)',       // Reveal full height
-                                    'inset(100% 0% 0% 0%)',     // End at bottom (slice hidden at top)
-                                ]
-                            }}
-                            exit={{ opacity: 0 }}
-                            transition={{ 
-                                opacity: { duration: 0.5 },
-                                clipPath: {
-                                    duration: 10,
-                                    ease: "linear",
-                                    repeat: Infinity,
-                                    repeatDelay: 0
-                                }
-                            }}
-                            style={{
-                                position: 'absolute',
-                                top: 0,
-                                width: '100%',
-                                height: '100%',
-                                opacity: 0.6,
-                                zIndex: 6,
-                                pointerEvents: 'none'
-                            }}
-                        >
-                            <img
+                        <>
+                            {/* SVG gradient mask definition */}
+                            <svg width="0" height="0" style={{ position: 'absolute' }}>
+                                <defs>
+                                    <linearGradient id={`scanlineGradient_${actor.id}`} x1="0%" y1="0%" x2="0%" y2="100%">
+                                        <motion.stop
+                                            offset="0%"
+                                            animate={{
+                                                stopOpacity: [0, 0, 0],
+                                                stopColor: ['#ffffff', '#ffffff', '#ffffff']
+                                            }}
+                                            transition={{
+                                                duration: 10,
+                                                ease: "linear",
+                                                repeat: Infinity,
+                                                repeatDelay: 0
+                                            }}
+                                        />
+                                        <motion.stop
+                                            offset="100%"
+                                            animate={{
+                                                stopOpacity: [0, 1, 1],
+                                                stopColor: ['#ffffff', '#ffffff', '#ffffff']
+                                            }}
+                                            transition={{
+                                                duration: 10,
+                                                ease: "linear",
+                                                repeat: Infinity,
+                                                repeatDelay: 0
+                                            }}
+                                        />
+                                    </linearGradient>
+                                    <mask id={`scanlineMask_${actor.id}`}>
+                                        <rect 
+                                            width="100%" 
+                                            height="100%" 
+                                            fill={`url(#scanlineGradient_${actor.id})`} 
+                                        />
+                                    </mask>
+                                </defs>
+                            </svg>
+                            <motion.img
+                                key={`${actor.id}_${imageUrl}_scanline`}
                                 src={processedImageUrl}
+                                initial={{ 
+                                    opacity: 0,
+                                    clipPath: 'inset(0% 0% 100% 0%)'
+                                }}
+                                animate={{ 
+                                    opacity: 1,
+                                    clipPath: [
+                                        'inset(0% 0% 100% 0%)',     // Start at top (slice hidden at bottom)
+                                        'inset(0% 0% 0% 0%)',       // Reveal full height
+                                        'inset(100% 0% 0% 0%)',     // End at bottom (slice hidden at top)
+                                    ]
+                                }}
+                                exit={{ opacity: 0 }}
+                                transition={{ 
+                                    opacity: { duration: 0.5 },
+                                    clipPath: {
+                                        duration: 10,
+                                        ease: "linear",
+                                        repeat: Infinity,
+                                        repeatDelay: 0
+                                    }
+                                }}
                                 style={{
                                     position: 'absolute',
                                     top: 0,
                                     width: '100%',
                                     height: '100%',
+                                    opacity: 0.6,
+                                    zIndex: 6,
                                     transform: `translate(calc(${modX}vw - 50%), ${modY}vh)`,
                                     filter: 'blur(0.5px) brightness(1.5)',
-                                    maskImage: 'linear-gradient(to bottom, transparent 0%, black 100%)',
-                                    WebkitMaskImage: 'linear-gradient(to bottom, transparent 0%, black 100%)',
-                                    pointerEvents: 'none'
+                                    pointerEvents: 'none',
+                                    mask: `url(#scanlineMask_${actor.id})`
                                 }}
                                 alt={`${actor.name} (${emotion}) scanline`}
                             />
-                        </motion.div>
+                        </>
                     )}
                 </AnimatePresence>
             )}
