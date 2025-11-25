@@ -188,14 +188,14 @@ const ActorImage: FC<ActorImageProps> = ({
                         src={processedImageUrl}
                         initial={{ opacity: 0 }}
                         animate={actor.remote ? {
-                            opacity: 1,
+                            opacity: 0.75,
                             filter: [
-                                'blur(0px) brightness(1.3)',
-                                'blur(1px) brightness(1.1)',
-                                'blur(0.5px) brightness(1.2)',
-                                'blur(0px) brightness(1.3)'
+                                'blur(1.5px) brightness(1.3)',
+                                'blur(2px) brightness(1.1)',
+                                'blur(1px) brightness(1.2)',
+                                'blur(1.5px) brightness(1.3)'
                             ]
-                        } : { opacity: 1 }}
+                        } : { opacity: 0.75 }}
                         exit={{ opacity: 0 }}
                         transition={actor.remote ? {
                             opacity: { duration: 0.5 },
@@ -253,7 +253,9 @@ const ActorImage: FC<ActorImageProps> = ({
                                 opacity: 0.6,
                                 zIndex: 6,
                                 transform: `translate(calc(${modX}vw - 50%), ${modY}vh)`,
-                                filter: 'blur(2px) brightness(1.5)',
+                                filter: 'blur(0.5px) brightness(1.5)',
+                                maskImage: 'linear-gradient(to bottom, transparent 0%, black 30%, black 100%)',
+                                WebkitMaskImage: 'linear-gradient(to bottom, transparent 0%, black 30%, black 100%)',
                                 pointerEvents: 'none'
                             }}
                             alt={`${actor.name} (${emotion}) scanline`}
