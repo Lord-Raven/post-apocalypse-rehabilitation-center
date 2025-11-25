@@ -48,6 +48,9 @@ const formatMessage = (text: string, speakerActor?: Actor | null): JSX.Element =
     // Split by dialogue (text in quotes) first
     const dialogueParts = text.split(/(\"[^"]*\")/g);
     
+    // Base text shadow for non-dialogue text
+    const baseTextShadow = '2px 2px 4px rgba(0, 0, 0, 0.5)';
+    
     return (
         <>
             {dialogueParts.map((part, index) => {
@@ -68,7 +71,7 @@ const formatMessage = (text: string, speakerActor?: Actor | null): JSX.Element =
                     );
                 } else {
                     return (
-                        <span key={index}>
+                        <span key={index} style={{ textShadow: baseTextShadow }}>
                             {formatInlineStyles(part)}
                         </span>
                     );
@@ -751,7 +754,9 @@ export const SkitScreen: FC<SkitScreenProps> = ({ stage, setScreenType }) => {
                             lineHeight: 1.55,
                             fontFamily: 'Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial',
                             color: '#e9fff7',
-                            textShadow: '2px 2px 4px rgba(0, 0, 0, 0.5)' // More pronounced drop shadow for all script text
+                            textShadow: '2px 2px 4px rgba(0, 0, 0, 0.5)', // More pronounced drop shadow for all script text
+                            WebkitFontSmoothing: 'subpixel-antialiased', // Override antialiased to allow text-shadow to show
+                            MozOsxFontSmoothing: 'auto'
                         }}
                     >
                         {skit.script && skit.script.length > 0 ? (
