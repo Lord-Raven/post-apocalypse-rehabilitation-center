@@ -681,6 +681,7 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType}) =>
                                     alignItems: 'center',
                                     gap: '4px',
                                     flex: 1,
+                                    userSelect: 'none',
                                 }}
                             >
                                 {/* Stat Name and Grade - Inline */}

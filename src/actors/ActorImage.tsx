@@ -239,7 +239,7 @@ const ActorImage: FC<ActorImageProps> = ({
                             transition={{ 
                                 opacity: { duration: 0.5 },
                                 clipPath: {
-                                    duration: 2.5,
+                                    duration: 10,
                                     ease: "linear",
                                     repeat: Infinity,
                                     repeatDelay: 0
@@ -253,7 +253,7 @@ const ActorImage: FC<ActorImageProps> = ({
                                 opacity: 0.6,
                                 zIndex: 6,
                                 transform: `translate(calc(${modX}vw - 50%), ${modY}vh)`,
-                                filter: 'blur(3px) hue-rotate(20deg) brightness(1.3)',
+                                filter: 'blur(2px) brightness(1.5)',
                                 pointerEvents: 'none'
                             }}
                             alt={`${actor.name} (${emotion}) scanline`}
