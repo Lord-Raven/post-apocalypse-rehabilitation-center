@@ -1,7 +1,7 @@
 import {ReactElement, useEffect, useState} from "react";
 import {StageBase, StageResponse, InitialData, Message} from "@chub-ai/stages-ts";
 import {LoadResponse} from "@chub-ai/stages-ts/dist/types/load";
-import Actor, { loadReserveActor, generatePrimaryActorImage, commitActorToEcho, Stat, generateAdditionalActorImages } from "./actors/Actor";
+import Actor, { loadReserveActor, generatePrimaryActorImage, commitActorToEcho, Stat, generateAdditionalActorImages, loadReserveActorFromFullPath } from "./actors/Actor";
 import Faction, { loadReserveFaction } from "./actors/Faction";
 import { DEFAULT_GRID_SIZE, Layout, StationStat, createModule } from './Module';
 import { BaseScreen } from "./screens/BaseScreen";
@@ -297,7 +297,7 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
                     console.log(basicCharacterData);
 
                     const newActors: Actor[] = await Promise.all(basicCharacterData.map(async (fullPath: string) => {
-                        return loadReserveActor(fullPath, this);
+                        return loadReserveActorFromFullPath(fullPath, this);
                     }));
 
                     this.reserveActors = [...this.reserveActors, ...newActors.filter(a => a !== null)];
