@@ -517,6 +517,12 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
             if (!save.timeline) {
                 save.timeline = [];
             }
+
+            // Move remote actors out of any modules they occupied (reset locationId)
+            Object.values(save.actors).filter(actor => actor.locationId && actor.remote).forEach(actor => {
+                actor.locationId = '';
+            });
+
             // Apply endProperties to actors - find from the final entry with endScene=true
             let endProps: { [actorId: string]: { [stat: string]: number } } = {};
             const finalEndedEntry = save.currentSkit.script.slice().reverse().find(entry => entry.endScene);

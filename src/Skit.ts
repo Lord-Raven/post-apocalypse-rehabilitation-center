@@ -64,15 +64,19 @@ export function generateSkitPrompt(skit: SkitData, stage: Stage, continuing: boo
         case SkitType.FACTION_INTRODUCTION:
             return (!continuing ?
                 `This scene introduces a new faction that would like to do business with the PARC: ${faction?.name || 'a secret organization'}. ` +
-                `Describe their appearance, motivations, and initial interactions with the player Director and other present inhabitants.` :
+                `This communication is being conducted via remote video link; no representative is physically present on the station. ` +
+                `Describe this new faction's appearance, motivations, and initial interactions with the player Director and other present inhabitants.` :
                 `This is an introductory scene for ${faction?.name || 'a secret organization'}. ` +
-                `Continue this scene, exploring the faction's dynamics and their intentions for the PARC.`) +
+                `Continue this scene, exploring the faction's dynamics and their intentions for the PARC. ` +
+                `This communication is being conducted via remote video link; no representative is physically present on the station.`) +
                 (faction ? `\nDetails about their organization: ${faction.description}\nDetails about their aesthetic: ${faction.visualStyle}\nThe PARC's current reputation with this faction is ${faction.reputation}` : '') +
                 (factionRepresentative ? `\nTheir representative is ${factionRepresentative.name}, described as: ${factionRepresentative.description}` : 'They have no designated liaison for this communication; any characters introduced during this scene will be transient.');
         case SkitType.FACTION_INTERACTION:
             return (!continuing ?
-                `This scene depicts an interaction between the player and a faction that does business with the PARC. Explore the nature of their relationship, conflicts, or alliances.` :
-                `Continue this scene, delving deeper into the faction's role and influence within the PARC or vice versa.`) +
+                `This scene depicts an interaction between the player and a faction that does business with the PARC: ${faction?.name || 'a secret organization'}. ` +
+                `Explore the nature of their relationship with and intentions for the PARC or present inhabitants. This communication is being conducted via remote video link; no representative is physically present on the station. ` :
+                `Continue this scene, delving deeper into ${faction?.name || 'a secret organization'}'s role and intentions for the PARC or present inhabitants. ` + 
+                `This communication is being conducted via remote video link; no representative is physically present on the station.`) +
                 (faction ? `\nDetails about their organization: ${faction.description}\nDetails about their aesthetic: ${faction.visualStyle}\nThe PARC's current reputation with this faction is ${faction.reputation}` : '') +
                 (factionRepresentative ? `\nTheir representative is ${factionRepresentative.name}, described as: ${factionRepresentative.description}` : 'They have no designated liaison for this communication; any characters introduced during this scene will be transient.');
         default:

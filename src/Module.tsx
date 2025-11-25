@@ -142,7 +142,8 @@ export const MODULE_DEFAULTS: Record<ModuleType, ModuleIntrinsic> = {
         }
     },
     communications: {
-        skitPrompt: 'The communications room is the hub for all external and internal station communications. Scenes here often involve receiving important messages, coordination among the crew, or managing station-wide announcements.',
+        skitPrompt: 'The communications room is the hub for all external and internal station communications. This room is critical for communicating with external factions, with whom the PARC fulfills contracts to supply patients "jobs." ' +
+            `Scenes here often involve receiving important messages, coordinating among the crew, or managing station-wide announcements.`,
         imagePrompt: 'A sci-fi communications room dominated by a massive screen and associated computers and equipment, as well as some seating.',
         role: 'Liaison',
         roleDescription: `Handle all communications for the station, liaising with external entities and managing internal announcements.`,
@@ -151,7 +152,15 @@ export const MODULE_DEFAULTS: Record<ModuleType, ModuleIntrinsic> = {
         action: (module: Module, stage: Stage, setScreenType: (type: ScreenType) => void) => {
             // If there is a new faction to introduce, open an intro skit
             if (Object.values(stage.getSave().factions).length < 5 && stage.reserveFactions.length > 0) {
+                // Move the module's owner (if any) here:
+                if (module.ownerId && stage.getSave().actors[module.ownerId]) {
+                    stage.getSave().actors[module.ownerId].locationId = module.id;
+                }
                 const newFaction = stage.reserveFactions.shift() as Faction;
+                // Move representative actor (if any) here:
+                if (newFaction.representativeId && stage.getSave().actors[newFaction.representativeId]) {
+                    stage.getSave().actors[newFaction.representativeId].locationId = module.id;
+                }
                 stage.getSave().factions[newFaction.id] = newFaction;
                 stage.setSkit({
                     type: SkitType.FACTION_INTRODUCTION,
@@ -163,13 +172,21 @@ export const MODULE_DEFAULTS: Record<ModuleType, ModuleIntrinsic> = {
                 setScreenType(ScreenType.SKIT);
             } else if (Object.values(stage.getSave()).length > 0) {
                 // Otherwise, open a random faction interaction skit
-                const factions = Object.values(stage.getSave().factions).sort(() => 0.5 - Math.random())[0];
+                // Move the module's owner (if any) here:
+                if (module.ownerId && stage.getSave().actors[module.ownerId]) {
+                    stage.getSave().actors[module.ownerId].locationId = module.id;
+                }
+                const faction = Object.values(stage.getSave().factions).sort(() => 0.5 - Math.random())[0];
+                // Move representative actor (if any) here:
+                if (faction.representativeId && stage.getSave().actors[faction.representativeId]) {
+                    stage.getSave().actors[faction.representativeId].locationId = module.id;
+                }
                 stage.setSkit({
                     type: SkitType.FACTION_INTERACTION,
                     moduleId: module.id,
                     script: [],
                     generating: true,
-                    context: {factionId: factions.id}
+                    context: {factionId: faction.id}
                 });
                 setScreenType(ScreenType.SKIT);
             } else if (Object.values(stage.getSave().actors).some(a => a.locationId === module.id)) {
