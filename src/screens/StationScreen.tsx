@@ -999,15 +999,8 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType}) =>
                                     </div>
                                 )}
                                 {itemKey === 'factions' && (
-                                    <div style={{ 
-                                        padding: '15px', 
-                                        flex: '1 1 auto', 
-                                        overflowY: 'auto', 
-                                        minHeight: 0,
-                                        display: 'flex',
-                                        flexDirection: 'column',
-                                        gap: '15px',
-                                    }}>
+                                    
+                                    <div style={{ padding: '15px', flex: '1 1 auto', overflowY: 'auto', minHeight: 0 }}>
                                         {Object.values(stage().getSave().factions).length === 0 ? (
                                             <p style={{ 
                                                 color: '#00ff88', 
