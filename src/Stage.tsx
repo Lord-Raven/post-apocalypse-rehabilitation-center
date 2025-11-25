@@ -276,7 +276,7 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
             } else if (!actor.remote && (!actor.emotionPack || Object.values(Emotion).some(emotion => emotion !== Emotion.neutral && (
                     !actor.emotionPack[emotion] || 
                     actor.emotionPack[emotion] == actor.avatarImageUrl || 
-                    actor.emotionPack[emotion] == actor.emotionPack[Emotion.neutral]))) {
+                    actor.emotionPack[emotion] == actor.emotionPack[Emotion.neutral])))) {
                 generateAdditionalActorImages(actor, this).then(() => {
                     this.saveGame();
                 });
