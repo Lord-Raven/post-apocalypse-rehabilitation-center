@@ -165,11 +165,7 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
             save.day += 1;
             // New day logic.
             // Increment actor role count
-            for (let actor of Object.values(save.actors)) {
-                if (actor.remote) {
-                    actor.locationId = '';
-                    continue;
-                }
+            for (let actor of Object.values(save.actors).filter(a => !a.remote)) {
                 // Find non-quarters module assigned to this actor and increment held role count
                 const targetModule = save.layout.getModulesWhere(m => m.ownerId === actor.id && m.type !== 'quarters')[0];
                 const roleName: string = targetModule?.getAttribute('role') || '';
@@ -182,7 +178,7 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
         // When incrementing phase, maybe move some actors around in the layout.
         for (const actorId in save.actors) {
             const actor = save.actors[actorId];
-            actor.locationId = save.layout.getModulesWhere(m => m.type !== 'quarters' || m.ownerId == actorId).sort(() => Math.random() - 0.5)[0]?.id || '';
+            actor.locationId = actor.remote ? '' : (save.layout.getModulesWhere(m => m.type !== 'quarters' || m.ownerId == actorId).sort(() => Math.random() - 0.5)[0]?.id || '');
             console.log(`Moved actor ${actor.name} to location ${actor.locationId}`);
         }
         this.saves[this.saveSlot] = {...save}; // Update the current save slot with the modified save, ensuring a new object reference.
