@@ -374,7 +374,7 @@ export async function generatePrimaryActorImage(actor: Actor, stage: Stage): Pro
             console.log(`Generating new image for actor ${actor.name} from description`);
             // Use stage.makeImage to create a neutral expression based on the description
             imageUrl = await stage.makeImage({
-                prompt: `A professional upper-body portrait of an anime character with the following description: ${actor.description}\nThe character should have a neutral expression.`,
+                prompt: `A professional upper-body portrait of an anime character with the following description: ${actor.description}\nThe character should have a neutral expression Maintain a margin of negative space over their head/hair.`,
                 aspect_ratio: AspectRatio.PHOTO_VERTICAL
             }, '');
             actor.avatarImageUrl = imageUrl || '';
