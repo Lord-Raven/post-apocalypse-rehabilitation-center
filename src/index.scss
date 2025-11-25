@@ -292,10 +292,11 @@ html, body, #root {
   }
 }
 
-.remote-actor-wrapper {
-  position: relative;
+.remote-actor-image {
+  animation: hologramFlicker 4s ease-in-out infinite, hologramGlitch 8s ease-in-out infinite;
+  filter: hue-rotate(20deg) brightness(1.1);
   
-  /* Scanline overlay - moves with the wrapper */
+  /* Scanline overlay - moves with the image */
   &::before {
     content: '';
     position: absolute;
@@ -308,10 +309,10 @@ html, body, #root {
       transparent 2px
     );
     pointer-events: none;
-    z-index: 100;
+    z-index: 1;
   }
   
-  /* Moving scanline effect - moves with the wrapper */
+  /* Moving scanline effect - moves with the image */
   &::after {
     content: '';
     position: absolute;
@@ -324,14 +325,9 @@ html, body, #root {
     );
     animation: hologramScanlines 3s linear infinite;
     pointer-events: none;
-    z-index: 101;
+    z-index: 2;
     transform: translateY(-100%);
   }
-}
-
-.remote-actor-image {
-  animation: hologramFlicker 4s ease-in-out infinite, hologramGlitch 8s ease-in-out infinite;
-  filter: hue-rotate(20deg) brightness(1.1);
 }
 
 .remove-actor-btn {

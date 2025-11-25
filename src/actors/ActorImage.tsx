@@ -114,83 +114,79 @@ const ActorImage: FC<ActorImageProps> = ({
             exit='absent'
             animate={speaker ? 'talking' : 'idle'}
             style={{position: 'absolute', width: 'auto', aspectRatio, overflow: 'visible', zIndex: speaker ? 100 : zIndex}}>
-            <div className={actor.remote ? 'remote-actor-wrapper' : ''} style={{position: 'relative', width: '100%', height: '100%'}}>
-                {/* Blurred background layer */}
-                <AnimatePresence>
-                    {prevImageUrl && prevImageUrl !== processedImageUrl && (
-                        <motion.img
-                            key="prev"
-                            src={prevImageUrl}
-                            initial={{ opacity: 1 }}
-                            animate={{ opacity: 0 }}
-                            exit={{ opacity: 0 }}
-                            transition={{ duration: 0.5 }}
-                            className={actor.remote ? 'remote-actor-image' : ''}
-                            style={{
-                                position: 'absolute',
-                                top: 0,
-                                width: '100%',
-                                height: '100%',
-                                filter: actor.remote ? 'blur(2.5px) hue-rotate(20deg) brightness(1.1)' : 'blur(2.5px)',
-                                zIndex: 4,
-                                transform: `translate(calc(${modX}vw - 50%), ${modY}vh)`,
-                                pointerEvents: 'none'
-                            }}
-                            alt={`${actor.name} (${emotion}) previous`}
-                        />
-                    )}
-                </AnimatePresence>
-                <AnimatePresence>
-                    {processedImageUrl && (
-                        <motion.img
-                            key={`${actor.id}_${imageUrl}_bg`}
-                            src={processedImageUrl}
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            exit={{ opacity: 0 }}
-                            transition={{ duration: 0.5 }}
-                            className={actor.remote ? 'remote-actor-image' : ''}
-                            style={{
-                                position: 'absolute',
-                                top: 0,
-                                width: '100%',
-                                height: '100%',
-                                filter: actor.remote ? 'blur(2.5px) hue-rotate(20deg) brightness(1.1)' : 'blur(2.5px)',
-                                zIndex: 4,
-                                transform: `translate(calc(${modX}vw - 50%), ${modY}vh)`,
-                                pointerEvents: 'none'
-                            }}
-                            alt={`${actor.name} (${emotion}) background`}
-                        />
-                    )}
-                </AnimatePresence>
-                <AnimatePresence>
-                    {processedImageUrl && (
-                        <motion.img
-                            key={`${actor.id}_${imageUrl}_main`}
-                            src={processedImageUrl}
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 0.75 }}
-                            exit={{ opacity: 0 }}
-                            transition={{ duration: 0.5 }}
-                            className={actor.remote ? 'remote-actor-image' : ''}
-                            style={{
-                                position: 'absolute',
-                                top: 0,
-                                width: '100%',
-                                height: '100%',
-                                opacity: 0.75,
-                                zIndex: 5,
-                                transform: `translate(calc(${modX}vw - 50%), ${modY}vh)`,
-                                filter: actor.remote ? 'hue-rotate(20deg) brightness(1.1)' : undefined,
-                            }}
-                            onMouseEnter={onMouseEnter}
-                            onMouseLeave={onMouseLeave}
-                            alt={`${actor.name} (${emotion})`}
-                        />
-                    )}
-                </AnimatePresence>
-            </div>
+            {/* Blurred background layer */}
+            <AnimatePresence>
+                {prevImageUrl && prevImageUrl !== processedImageUrl && (
+                    <motion.img
+                        key="prev"
+                        src={prevImageUrl}
+                        initial={{ opacity: 1 }}
+                        animate={{ opacity: 0 }}
+                        exit={{ opacity: 0 }}
+                        transition={{ duration: 0.5 }}
+                        style={{
+                            position: 'absolute',
+                            top: 0,
+                            width: '100%',
+                            height: '100%',
+                            filter: actor.remote ? 'blur(2.5px) hue-rotate(20deg) brightness(1.1)' : 'blur(2.5px)',
+                            zIndex: 4,
+                            transform: `translate(calc(${modX}vw - 50%), ${modY}vh)`,
+                            pointerEvents: 'none'
+                        }}
+                        alt={`${actor.name} (${emotion}) previous`}
+                    />
+                )}
+            </AnimatePresence>
+            <AnimatePresence>
+                {processedImageUrl && (
+                    <motion.img
+                        key={`${actor.id}_${imageUrl}_bg`}
+                        src={processedImageUrl}
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        transition={{ duration: 0.5 }}
+                        style={{
+                            position: 'absolute',
+                            top: 0,
+                            width: '100%',
+                            height: '100%',
+                            filter: actor.remote ? 'blur(2.5px) hue-rotate(20deg) brightness(1.1)' : 'blur(2.5px)',
+                            zIndex: 4,
+                            transform: `translate(calc(${modX}vw - 50%), ${modY}vh)`,
+                            pointerEvents: 'none'
+                        }}
+                        alt={`${actor.name} (${emotion}) background`}
+                    />
+                )}
+            </AnimatePresence>
+            <AnimatePresence>
+                {processedImageUrl && (
+                    <motion.img
+                        key={`${actor.id}_${imageUrl}_main`}
+                        src={processedImageUrl}
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 0.75 }}
+                        exit={{ opacity: 0 }}
+                        transition={{ duration: 0.5 }}
+                        className={actor.remote ? 'remote-actor-image' : ''}
+                        style={{
+                            position: 'absolute',
+                            top: 0,
+                            width: '100%',
+                            height: '100%',
+                            opacity: 0.75,
+                            zIndex: 5,
+                            transform: `translate(calc(${modX}vw - 50%), ${modY}vh)`,
+                            filter: actor.remote ? 'hue-rotate(20deg) brightness(1.1)' : undefined,
+                        }}
+                        onMouseEnter={onMouseEnter}
+                        onMouseLeave={onMouseLeave}
+                        alt={`${actor.name} (${emotion})`}
+                    />
+                )}
+            </AnimatePresence>
         </motion.div>
     ) : <></>;
 };
