@@ -70,7 +70,7 @@ export function generateSkitPrompt(skit: SkitData, stage: Stage, continuing: boo
                 `Continue this scene, exploring the faction's dynamics and their intentions for the PARC. ` +
                 `This communication is being conducted via remote video link; no representative is physically present on the station.`) +
                 (faction ? `\nDetails about their organization: ${faction.description}\nDetails about their aesthetic: ${faction.visualStyle}\nThe PARC's current reputation with this faction is ${faction.reputation}` : '') +
-                (factionRepresentative ? `\nTheir representative is ${factionRepresentative.name}, described as: ${factionRepresentative.description}` : 'They have no designated liaison for this communication; any characters introduced during this scene will be transient.');
+                (factionRepresentative ? `\nTheir representative, ${factionRepresentative.name}, appears on-screen. Their description: ${factionRepresentative.description}` : 'They have no designated liaison for this communication; any characters introduced during this scene will be transient.');
         case SkitType.FACTION_INTERACTION:
             return (!continuing ?
                 `This scene depicts an interaction between the player and a faction that does business with the PARC: ${faction?.name || 'a secret organization'}. ` +
@@ -78,7 +78,7 @@ export function generateSkitPrompt(skit: SkitData, stage: Stage, continuing: boo
                 `Continue this scene, delving deeper into ${faction?.name || 'a secret organization'}'s role and intentions for the PARC or present inhabitants. ` + 
                 `This communication is being conducted via remote video link; no representative is physically present on the station.`) +
                 (faction ? `\nDetails about their organization: ${faction.description}\nDetails about their aesthetic: ${faction.visualStyle}\nThe PARC's current reputation with this faction is ${faction.reputation}` : '') +
-                (factionRepresentative ? `\nTheir representative is ${factionRepresentative.name}, described as: ${factionRepresentative.description}` : 'They have no designated liaison for this communication; any characters introduced during this scene will be transient.');
+                (factionRepresentative ? `\nTheir representative, ${factionRepresentative.name}, appears on-screen. Their description: ${factionRepresentative.description}` : 'They have no designated liaison for this communication; any characters introduced during this scene will be transient.');
         default:
             return '';
     }
@@ -102,8 +102,8 @@ export async function generateSkitScript(skit: SkitData, stage: Stage): Promise<
     // Use script length + random(1, 10) > 12 for gentle or > 24 for firm.
     const scriptLengthFactor = skit.script.length + Math.floor(Math.random() * 10) + 1;
     const wrapupPrompt = scriptLengthFactor > 24 ? wrapUpPhrases[1] : (scriptLengthFactor > 12 ? wrapUpPhrases[0] : '');
-    const presentActors = Object.values(stage.getSave().actors).filter(a => a.locationId === (skit.moduleId || ''));
-    const absentActors = Object.values(stage.getSave().actors).filter(a => a.locationId !== (skit.moduleId || ''));
+    const presentActors = Object.values(stage.getSave().actors).filter(a => a.locationId === (skit.moduleId || '') && !a.remote);
+    const absentActors = Object.values(stage.getSave().actors).filter(a => a.locationId !== (skit.moduleId || '') && !a.remote);
 
     // Update participation counts if this is the start of the skit
     if (skit.script.length === 0) {
