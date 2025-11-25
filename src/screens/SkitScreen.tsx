@@ -49,7 +49,7 @@ const formatMessage = (text: string, speakerActor?: Actor | null): JSX.Element =
     const dialogueParts = text.split(/(\"[^"]*\")/g);
     
     // Base text shadow for non-dialogue text
-    const baseTextShadow = '2px 2px 4px rgba(0, 0, 0, 0.5)';
+    const baseTextShadow = '3px 3px 2px rgba(0, 0, 0, 0.8)';
     
     return (
         <>
@@ -61,8 +61,8 @@ const formatMessage = (text: string, speakerActor?: Actor | null): JSX.Element =
                         color: '#87CEEB',
                         fontFamily: speakerActor?.themeFontFamily || undefined,
                         textShadow: speakerActor?.themeColor 
-                            ? `3px 3px 6px ${speakerActor.themeColor}`
-                            : '3px 3px 6px rgba(135, 206, 235, 0.6)'
+                            ? `3px 3px 2px ${speakerActor.themeColor}`
+                            : '3px 3px 2px rgba(135, 206, 235, 0.6)'
                     };
                     return (
                         <span key={index} style={dialogueStyle}>
@@ -754,9 +754,7 @@ export const SkitScreen: FC<SkitScreenProps> = ({ stage, setScreenType }) => {
                             lineHeight: 1.55,
                             fontFamily: 'Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial',
                             color: '#e9fff7',
-                            textShadow: '2px 2px 4px rgba(0, 0, 0, 0.5)', // More pronounced drop shadow for all script text
-                            WebkitFontSmoothing: 'subpixel-antialiased', // Override antialiased to allow text-shadow to show
-                            MozOsxFontSmoothing: 'auto'
+                            textShadow: '3px 3px 2px rgba(0, 0, 0, 0.8)' // More pronounced drop shadow for all script text
                         }}
                     >
                         {skit.script && skit.script.length > 0 ? (

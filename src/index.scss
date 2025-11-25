@@ -237,6 +237,111 @@ html, body, #root {
   pointer-events: none;
 }
 
+/* Hologram effect for remote actors */
+@keyframes hologramFlicker {
+  0%, 100% {
+    opacity: 1;
+  }
+  5% {
+    opacity: 0.8;
+  }
+  10% {
+    opacity: 1;
+  }
+  15% {
+    opacity: 0.85;
+  }
+  20% {
+    opacity: 1;
+  }
+  88% {
+    opacity: 1;
+  }
+  92% {
+    opacity: 0.75;
+  }
+  96% {
+    opacity: 1;
+  }
+}
+
+@keyframes hologramScanlines {
+  0% {
+    transform: translateY(0);
+  }
+  100% {
+    transform: translateY(100%);
+  }
+}
+
+@keyframes hologramGlitch {
+  0%, 90%, 100% {
+    transform: translateX(0) skewX(0deg);
+  }
+  92% {
+    transform: translateX(-2px) skewX(-2deg);
+  }
+  94% {
+    transform: translateX(2px) skewX(2deg);
+  }
+  96% {
+    transform: translateX(-1px) skewX(-1deg);
+  }
+  98% {
+    transform: translateX(1px) skewX(1deg);
+  }
+}
+
+.remote-actor-hologram {
+  position: relative;
+  animation: hologramFlicker 4s ease-in-out infinite;
+  
+  /* Add cyan tint to indicate holographic projection */
+  filter: hue-rotate(20deg) brightness(1.1);
+  
+  /* Scanline overlay */
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: repeating-linear-gradient(
+      0deg,
+      rgba(0, 255, 255, 0.03) 0px,
+      rgba(0, 255, 255, 0.03) 1px,
+      transparent 1px,
+      transparent 2px
+    );
+    pointer-events: none;
+    z-index: 10;
+  }
+  
+  /* Moving scanline effect */
+  &::after {
+    content: '';
+    position: absolute;
+    top: -100%;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(
+      180deg,
+      transparent 0%,
+      rgba(0, 255, 255, 0.1) 50%,
+      transparent 100%
+    );
+    animation: hologramScanlines 3s linear infinite;
+    pointer-events: none;
+    z-index: 11;
+  }
+}
+
+.remote-actor-glitch {
+  animation: hologramGlitch 8s ease-in-out infinite;
+}
+
 .remove-actor-btn {
   position: absolute;
   top: -8px;

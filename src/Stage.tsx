@@ -71,7 +71,7 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
         'feral'
     ];
     // At least one of these is required for a character search; some sort of gender helps indicate that the card represents a singular person.
-    readonly genderTags = ['male', 'female', 'masculine', 'feminine', 'non-binary', 'trans', 'genderqueer', 'genderfluid', 'agender', 'androgyne', 'intersex', 'futa', 'futanari', 'hermaphrodite'];
+    readonly actorTags = ['male', 'female', 'masculine', 'feminine', 'non-binary', 'trans', 'genderqueer', 'genderfluid', 'agender', 'androgyne', 'intersex', 'futa', 'futanari', 'hermaphrodite'];
     // At least one of these is required for a faction search; helps indicate that the card has a focus on setting or tone.
     readonly factionTags = ['sci-fi', 'cyberpunk', 'post-apocalyptic', 'dystopian', 'space', 'alien', 'robot', 'setting', 'world', 'narrator', 'scenario'];
     readonly characterSearchQuery = `https://inference.chub.ai/search?first=${this.FETCH_AT_TIME}&exclude_tags={{EXCLUSIONS}}&page={{PAGE_NUMBER}}&tags={{SEARCH_TAGS}}&sort=random&asc=false&include_forks=false&nsfw=true&nsfl=false` +
@@ -80,7 +80,8 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
     readonly characterDetailQuery = 'https://inference.chub.ai/api/characters/{fullPath}?full=true';
 
 
-    private pageNumber = Math.floor(Math.random() * this.MAX_PAGES);
+    private actorPageNumber = Math.floor(Math.random() * this.MAX_PAGES);
+    private factionPageNumber = Math.floor(Math.random() * this.MAX_PAGES);
 
     // Expose a simple grid size (can be tuned)
     public gridSize = DEFAULT_GRID_SIZE;
@@ -299,14 +300,14 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
                     const exclusions = (this.getSave().bannedTags || []).concat(this.bannedTagsDefault).map(tag => encodeURIComponent(tag)).join('%2C');
                     console.log('Applying exclusions:', exclusions);
                     const response = await fetch(this.characterSearchQuery
-                        .replace('{{PAGE_NUMBER}}', this.pageNumber.toString())
+                        .replace('{{PAGE_NUMBER}}', this.actorPageNumber.toString())
                         .replace('{{EXCLUSIONS}}', exclusions ? exclusions + '%2C' : '')
-                        .replace('{{SEARCH_TAGS}}', this.genderTags.concat(this.genderTags).join('%2C')));
+                        .replace('{{SEARCH_TAGS}}', this.actorTags.concat(this.actorTags).join('%2C')));
                     const searchResults = await response.json();
                     console.log(searchResults);
                     // Need to do a secondary lookup for each character in searchResults, to get the details we actually care about:
                     const basicCharacterData = searchResults.data?.nodes.filter((item: string, index: number) => index < this.RESERVE_ACTORS - this.reserveActors.length).map((item: any) => item.fullPath) || [];
-                    this.pageNumber = (this.pageNumber % this.MAX_PAGES) + 1;
+                    this.actorPageNumber = (this.actorPageNumber % this.MAX_PAGES) + 1;
                     console.log(basicCharacterData);
 
                     const newActors: Actor[] = await Promise.all(basicCharacterData.map(async (fullPath: string) => {
@@ -340,14 +341,14 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
                     const exclusions = (this.getSave().bannedTags || []).concat(this.bannedTagsDefault).map(tag => encodeURIComponent(tag)).join('%2C');
                     console.log('Applying exclusions:', exclusions);
                     const response = await fetch(this.characterSearchQuery
-                        .replace('{{PAGE_NUMBER}}', this.pageNumber.toString())
+                        .replace('{{PAGE_NUMBER}}', this.factionPageNumber.toString())
                         .replace('{{EXCLUSIONS}}', exclusions ? exclusions + '%2C' : '')
                         .replace('{{SEARCH_TAGS}}', this.factionTags.concat(this.factionTags).join('%2C')));
                     const searchResults = await response.json();
                     console.log(searchResults);
                     // Need to do a secondary lookup for each faction in searchResults, to get the details we actually care about:
                     const basicFactionData = searchResults.data?.nodes.filter((item: string, index: number) => index < this.RESERVE_FACTIONS - this.reserveFactions.length).map((item: any) => item.fullPath) || [];
-                    this.pageNumber = (this.pageNumber % this.MAX_PAGES) + 1;
+                    this.factionPageNumber = (this.factionPageNumber % this.MAX_PAGES) + 1;
                     console.log(basicFactionData);
                     // Do these in series instead of parallel to reduce load on the service:
                     const newFactions: Faction[] = [];

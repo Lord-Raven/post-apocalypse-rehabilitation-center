@@ -113,6 +113,7 @@ const ActorImage: FC<ActorImageProps> = ({
             initial={'absent'}
             exit='absent'
             animate={speaker ? 'talking' : 'idle'}
+            className={actor.remote ? 'remote-actor-hologram' : ''}
             style={{position: 'absolute', width: 'auto', aspectRatio, overflow: 'visible', zIndex: speaker ? 100 : zIndex}}>
             {/* Blurred background layer */}
             <AnimatePresence>
@@ -170,6 +171,7 @@ const ActorImage: FC<ActorImageProps> = ({
                         animate={{ opacity: 0.75 }}
                         exit={{ opacity: 0 }}
                         transition={{ duration: 0.5 }}
+                        className={actor.remote ? 'remote-actor-glitch' : ''}
                         style={{
                             position: 'absolute',
                             top: 0,
