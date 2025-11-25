@@ -377,6 +377,7 @@ export async function generatePrimaryActorImage(actor: Actor, stage: Stage): Pro
                 prompt: `A professional upper-body portrait of an anime character with the following description: ${actor.description}\nThe character should have a neutral expression.`,
                 aspect_ratio: AspectRatio.PHOTO_VERTICAL
             }, '');
+            actor.avatarImageUrl = imageUrl || '';
         }
 
         // Use stage.makeImageFromImage to create a base image.

@@ -276,37 +276,28 @@ html, body, #root {
 
 @keyframes hologramGlitch {
   0%, 90%, 100% {
-    transform: translateX(0) skewX(0deg);
+    filter: hue-rotate(20deg) brightness(1.1);
   }
   92% {
-    transform: translateX(-2px) skewX(-2deg);
+    filter: hue-rotate(20deg) brightness(1.1) drop-shadow(2px 0 0 rgba(0, 255, 255, 0.5)) drop-shadow(-2px 0 0 rgba(255, 0, 255, 0.5));
   }
   94% {
-    transform: translateX(2px) skewX(2deg);
+    filter: hue-rotate(20deg) brightness(1.1) drop-shadow(-2px 0 0 rgba(0, 255, 255, 0.5)) drop-shadow(2px 0 0 rgba(255, 0, 255, 0.5));
   }
   96% {
-    transform: translateX(-1px) skewX(-1deg);
+    filter: hue-rotate(20deg) brightness(1.1) drop-shadow(1px 0 0 rgba(0, 255, 255, 0.3)) drop-shadow(-1px 0 0 rgba(255, 0, 255, 0.3));
   }
   98% {
-    transform: translateX(1px) skewX(1deg);
+    filter: hue-rotate(20deg) brightness(1.1);
   }
 }
 
 .remote-actor-hologram {
-  position: relative;
-  animation: hologramFlicker 4s ease-in-out infinite;
-  
-  /* Add cyan tint to indicate holographic projection */
-  filter: hue-rotate(20deg) brightness(1.1);
-  
-  /* Scanline overlay */
+  /* Scanline overlay - non-interfering absolute positioning */
   &::before {
     content: '';
     position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
+    inset: 0;
     background: repeating-linear-gradient(
       0deg,
       rgba(0, 255, 255, 0.03) 0px,
@@ -315,17 +306,14 @@ html, body, #root {
       transparent 2px
     );
     pointer-events: none;
-    z-index: 10;
+    z-index: 100;
   }
   
   /* Moving scanline effect */
   &::after {
     content: '';
     position: absolute;
-    top: -100%;
-    left: 0;
-    width: 100%;
-    height: 100%;
+    inset: 0;
     background: linear-gradient(
       180deg,
       transparent 0%,
@@ -334,12 +322,14 @@ html, body, #root {
     );
     animation: hologramScanlines 3s linear infinite;
     pointer-events: none;
-    z-index: 11;
+    z-index: 101;
+    transform: translateY(-100%);
   }
 }
 
-.remote-actor-glitch {
-  animation: hologramGlitch 8s ease-in-out infinite;
+.remote-actor-image {
+  animation: hologramFlicker 4s ease-in-out infinite, hologramGlitch 8s ease-in-out infinite;
+  filter: hue-rotate(20deg) brightness(1.1);
 }
 
 .remove-actor-btn {

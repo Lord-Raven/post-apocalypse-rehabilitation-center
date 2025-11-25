@@ -125,12 +125,13 @@ const ActorImage: FC<ActorImageProps> = ({
                         animate={{ opacity: 0 }}
                         exit={{ opacity: 0 }}
                         transition={{ duration: 0.5 }}
+                        className={actor.remote ? 'remote-actor-image' : ''}
                         style={{
                             position: 'absolute',
                             top: 0,
                             width: '100%',
                             height: '100%',
-                            filter: 'blur(2.5px)',
+                            filter: actor.remote ? 'blur(2.5px) hue-rotate(20deg) brightness(1.1)' : 'blur(2.5px)',
                             zIndex: 4,
                             transform: `translate(calc(${modX}vw - 50%), ${modY}vh)`,
                             pointerEvents: 'none'
@@ -148,12 +149,13 @@ const ActorImage: FC<ActorImageProps> = ({
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
                         transition={{ duration: 0.5 }}
+                        className={actor.remote ? 'remote-actor-image' : ''}
                         style={{
                             position: 'absolute',
                             top: 0,
                             width: '100%',
                             height: '100%',
-                            filter: 'blur(2.5px)',
+                            filter: actor.remote ? 'blur(2.5px) hue-rotate(20deg) brightness(1.1)' : 'blur(2.5px)',
                             zIndex: 4,
                             transform: `translate(calc(${modX}vw - 50%), ${modY}vh)`,
                             pointerEvents: 'none'
@@ -171,7 +173,7 @@ const ActorImage: FC<ActorImageProps> = ({
                         animate={{ opacity: 0.75 }}
                         exit={{ opacity: 0 }}
                         transition={{ duration: 0.5 }}
-                        className={actor.remote ? 'remote-actor-glitch' : ''}
+                        className={actor.remote ? 'remote-actor-image' : ''}
                         style={{
                             position: 'absolute',
                             top: 0,
@@ -180,6 +182,7 @@ const ActorImage: FC<ActorImageProps> = ({
                             opacity: 0.75,
                             zIndex: 5,
                             transform: `translate(calc(${modX}vw - 50%), ${modY}vh)`,
+                            filter: actor.remote ? 'hue-rotate(20deg) brightness(1.1)' : undefined,
                         }}
                         onMouseEnter={onMouseEnter}
                         onMouseLeave={onMouseLeave}
