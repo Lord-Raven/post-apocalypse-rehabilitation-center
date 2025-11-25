@@ -55,7 +55,7 @@ const ActorImage: FC<ActorImageProps> = ({
                 if (img.naturalWidth && img.naturalHeight) {
                     setAspectRatio(`${img.naturalWidth} / ${img.naturalHeight}`);
                 }
-            const result = multiplyImageByColor(img, highlightColor);
+            const result = multiplyImageByColor(img, actor.remote ? "#ccccff" : highlightColor);
             if (result) {
                 setProcessedImageUrl(result);
             }
@@ -113,7 +113,6 @@ const ActorImage: FC<ActorImageProps> = ({
             initial={'absent'}
             exit='absent'
             animate={speaker ? 'talking' : 'idle'}
-            className={actor.remote ? 'remote-actor-hologram' : ''}
             style={{position: 'absolute', width: 'auto', aspectRatio, overflow: 'visible', zIndex: speaker ? 100 : zIndex}}>
             {/* Blurred background layer */}
             <AnimatePresence>

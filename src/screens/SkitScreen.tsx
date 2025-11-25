@@ -37,7 +37,10 @@ import {
 } from '@mui/icons-material';
 import TypeOut from '../components/TypeOut';
 
-// Helper function to format text with dialogue, italics, and bold styling
+// Base text shadow for non-dialogue text
+const baseTextShadow = '4px 4px 2px rgba(0, 0, 0, 0.8)';
+
+    // Helper function to format text with dialogue, italics, and bold styling
 // Accepts optional speaker actor to apply custom font and drop shadow
 const formatMessage = (text: string, speakerActor?: Actor | null): JSX.Element => {
     if (!text) return <></>;
@@ -48,8 +51,6 @@ const formatMessage = (text: string, speakerActor?: Actor | null): JSX.Element =
     // Split by dialogue (text in quotes) first
     const dialogueParts = text.split(/(\"[^"]*\")/g);
     
-    // Base text shadow for non-dialogue text
-    const baseTextShadow = '3px 3px 2px rgba(0, 0, 0, 0.8)';
     
     return (
         <>
@@ -61,8 +62,8 @@ const formatMessage = (text: string, speakerActor?: Actor | null): JSX.Element =
                         color: '#87CEEB',
                         fontFamily: speakerActor?.themeFontFamily || undefined,
                         textShadow: speakerActor?.themeColor 
-                            ? `3px 3px 2px ${speakerActor.themeColor}`
-                            : '3px 3px 2px rgba(135, 206, 235, 0.6)'
+                            ? `4px 4px 2px ${speakerActor.themeColor}`
+                            : '4px 4px 2px rgba(135, 206, 235, 0.6)'
                     };
                     return (
                         <span key={index} style={dialogueStyle}>
@@ -98,7 +99,7 @@ const formatInlineStyles = (text: string): JSX.Element => {
                         const italicText = italicPart.slice(1, -1); // Remove * or _
                         return <em key={italicIndex}>{italicText}</em>;
                     } else {
-                        return <span key={italicIndex}>{italicPart}</span>;
+                        return italicPart;
                     }
                 })}
             </>
@@ -119,11 +120,7 @@ const formatInlineStyles = (text: string): JSX.Element => {
                             </strong>
                         );
                     } else {
-                        return (
-                            <span key={boldIndex}>
-                                {formatItalics(boldPart)}
-                            </span>
-                        );
+                        return formatItalics(boldPart);
                     }
                 })}
             </>
@@ -144,11 +141,7 @@ const formatInlineStyles = (text: string): JSX.Element => {
                             </s>
                         );
                     } else {
-                        return (
-                            <span key={strikeIndex}>
-                                {formatBold(strikePart)}
-                            </span>
-                        );
+                        return formatBold(strikePart);
                     }
                 })}
             </>
@@ -169,11 +162,7 @@ const formatInlineStyles = (text: string): JSX.Element => {
                             </u>
                         );
                     } else {
-                        return (
-                            <span key={underlineIndex}>
-                                {formatStrikethrough(underlinePart)}
-                            </span>
-                        );
+                        return formatStrikethrough(underlinePart);
                     }
                 })}
             </>
@@ -194,11 +183,7 @@ const formatInlineStyles = (text: string): JSX.Element => {
                             </sub>
                         );
                     } else {
-                        return (
-                            <span key={subIndex}>
-                                {formatUnderline(subPart)}
-                            </span>
-                        );
+                        return formatUnderline(subPart);
                     }
                 })}
             </>
@@ -231,11 +216,7 @@ const formatInlineStyles = (text: string): JSX.Element => {
                                 return <span key={headerIndex}>{formatSubscript(headerText)}</span>;
                         }
                     } else {
-                        return (
-                            <span key={headerIndex}>
-                                {formatSubscript(headerPart)}
-                            </span>
-                        );
+                        return formatSubscript(headerPart);
                     }
                 })}
             </>
@@ -754,7 +735,7 @@ export const SkitScreen: FC<SkitScreenProps> = ({ stage, setScreenType }) => {
                             lineHeight: 1.55,
                             fontFamily: 'Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial',
                             color: '#e9fff7',
-                            textShadow: '3px 3px 2px rgba(0, 0, 0, 0.8)' // More pronounced drop shadow for all script text
+                            textShadow: baseTextShadow,
                         }}
                     >
                         {skit.script && skit.script.length > 0 ? (

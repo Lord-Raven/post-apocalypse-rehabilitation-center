@@ -292,41 +292,6 @@ html, body, #root {
   }
 }
 
-.remote-actor-hologram {
-  /* Scanline overlay - non-interfering absolute positioning */
-  &::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background: repeating-linear-gradient(
-      0deg,
-      rgba(0, 255, 255, 0.03) 0px,
-      rgba(0, 255, 255, 0.03) 1px,
-      transparent 1px,
-      transparent 2px
-    );
-    pointer-events: none;
-    z-index: 100;
-  }
-  
-  /* Moving scanline effect */
-  &::after {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(
-      180deg,
-      transparent 0%,
-      rgba(0, 255, 255, 0.1) 50%,
-      transparent 100%
-    );
-    animation: hologramScanlines 3s linear infinite;
-    pointer-events: none;
-    z-index: 101;
-    transform: translateY(-100%);
-  }
-}
-
 .remote-actor-image {
   animation: hologramFlicker 4s ease-in-out infinite, hologramGlitch 8s ease-in-out infinite;
   filter: hue-rotate(20deg) brightness(1.1);
