@@ -222,13 +222,9 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
         this.initialized = true;
         // Called when a game is loaded or a new game is started
         console.log('Starting game...');
-        if (this.reserveActors.length < this.RESERVE_ACTORS && !this.reserveActorsLoadPromise) {
-            this.reserveActorsLoadPromise = this.loadReserveActors();
-        }
 
-        if (this.reserveFactions.length < this.RESERVE_FACTIONS && !this.reserveFactionsLoadPromise) {
-            this.reserveFactionsLoadPromise = this.loadReserveFactions();
-        }
+        this.loadReserveActors();
+        this.loadReserveFactions();
 
         const save = this.getSave();
         // Initialize stationStats if missing
@@ -333,7 +329,7 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
         this.reserveFactionsLoadPromise = (async () => {
             try {
                 console.log('Loading reserve factions...');
-                while (this.reserveFactions.length < this.RESERVE_FACTIONS) {
+                while (this.reserveFactions.length < this.RESERVE_FACTIONS - Object.values(this.getSave().factions).length) {
                     // Populate reserveFactions; this is loaded with data from a service, calling the characterSearchQuery URL:
                     const exclusions = (this.getSave().bannedTags || []).concat(this.bannedTagsDefault).map(tag => encodeURIComponent(tag)).join('%2C');
                     console.log('Applying exclusions:', exclusions);
