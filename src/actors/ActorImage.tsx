@@ -124,10 +124,10 @@ const ActorImage: FC<ActorImageProps> = ({
                         animate={actor.remote ? {
                             opacity: 0,
                             filter: [
-                                'blur(2px) brightness(1.3)',
+                                'blur(2.5px) brightness(1.3)',
                                 'blur(2.8px) brightness(1.1)',
                                 'blur(2.2px) brightness(1.2)',
-                                'blur(2.5px) brightness(1.15)'
+                                'blur(2.5px) brightness(1.3)'
                             ]
                         } : { opacity: 0, filter: 'blur(2.5px)' }}
                         exit={{ opacity: 0 }}
@@ -160,7 +160,7 @@ const ActorImage: FC<ActorImageProps> = ({
                                 'blur(2.5px) brightness(1.3)',
                                 'blur(3.2px) brightness(1.1)',
                                 'blur(2.8px) brightness(1.2)',
-                                'blur(2.5px) brightness(1.15)'
+                                'blur(2.5px) brightness(1.3)'
                             ]
                         } : { opacity: 1, filter: 'blur(2.5px)' }}
                         exit={{ opacity: 0 }}
@@ -191,9 +191,9 @@ const ActorImage: FC<ActorImageProps> = ({
                             opacity: 1,
                             filter: [
                                 'blur(0px) brightness(1.3)',
-                                'blur(0.3px) brightness(1.1)',
-                                'blur(0.1px) brightness(1.2)',
-                                'blur(0px) brightness(1.15)'
+                                'blur(1px) brightness(1.1)',
+                                'blur(0.5px) brightness(1.2)',
+                                'blur(0px) brightness(1.3)'
                             ]
                         } : { opacity: 1 }}
                         exit={{ opacity: 0 }}
