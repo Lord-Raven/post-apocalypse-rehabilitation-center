@@ -4,7 +4,7 @@
 
 import { Layout } from './Module';
 import Actor from './actors/Actor';
-import Faction from './actors/Faction';
+import Faction from './factions/Faction';
 
 // Registry of classes that can be rehydrated
 type RehydratableClass = {

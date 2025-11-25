@@ -1,6 +1,6 @@
 import { Stage } from "../Stage";
 import { v4 as generateUuid } from 'uuid';
-import Actor, { generatePrimaryActorImage, loadReserveActor } from "./Actor";
+import Actor, { generatePrimaryActorImage, loadReserveActor } from "../actors/Actor";
 import { AspectRatio } from "@chub-ai/stages-ts";
 
 class Faction {

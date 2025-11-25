@@ -408,6 +408,15 @@ export async function generateSkitScript(skit: SkitData, stage: Stage): Promise<
                     }
                 });
                 
+                // Run an experimental tooling prompt here to see if any tools are invoked in the script entries
+                const toolTest = await stage.generator.textGen({
+                    prompt: `{{messages}}Analyze the following skit script for any tool invocations (e.g. stat changes).\n\nSkit Script:\n${scriptEntries.map(e => `${e.speaker}: ${e.message}`).join('\n')}\n\n`,
+                    min_tokens: 50,
+                    max_tokens: 500,
+                    include_history: true,
+                })
+                console.log('Tool analysis response:', toolTest?.result);
+                
                 // Wait for all TTS generation to complete
                 await Promise.all(ttsPromises);
 
@@ -419,7 +428,6 @@ export async function generateSkitScript(skit: SkitData, stage: Stage): Promise<
                         finalEntry.endProperties = statChanges;
                     }
                 }
-
                 return { entries: scriptEntries, endScene: endScene, statChanges: statChanges };
             }
         } catch (error) {

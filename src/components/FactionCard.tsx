@@ -1,6 +1,6 @@
 import React, { FC, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import Faction from '../actors/Faction';
+import Faction from '../factions/Faction';
 import Nameplate from './Nameplate';
 import AuthorLink from './AuthorLink';
 import { scoreToGrade } from '../utils';

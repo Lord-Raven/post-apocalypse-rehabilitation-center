@@ -1,6 +1,6 @@
 import { SkitType } from './Skit';
 import { Stage } from "./Stage";
-import Faction from './actors/Faction';
+import Faction from './factions/Faction';
 import { ScreenType } from './screens/BaseScreen';
 
 export type ModuleType = 'echo chamber' | 'comms' | 'generator' | 'quarters' | 'commons' | 'infirmary' | 'gym' | 'lounge' | 'armory' ;
