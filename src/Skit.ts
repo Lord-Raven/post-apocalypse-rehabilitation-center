@@ -408,14 +408,47 @@ export async function generateSkitScript(skit: SkitData, stage: Stage): Promise<
                     }
                 });
                 
-                // Run an experimental tooling prompt here to see if any tools are invoked in the script entries
+                // Run an experimental tooling prompt here to see if any tools are invoked in the script entries. Doesn't look like tooling information is passed to stage-originated textGen requests at this time.
+                /*stage.mcp.
                 const toolTest = await stage.generator.textGen({
                     prompt: `{{messages}}Analyze the following skit script for any tool invocations (e.g. stat changes).\n\nSkit Script:\n${scriptEntries.map(e => `${e.speaker}: ${e.message}`).join('\n')}\n\n`,
                     min_tokens: 50,
                     max_tokens: 500,
                     include_history: true,
+
                 })
-                console.log('Tool analysis response:', toolTest?.result);
+                console.log('Tool analysis response:', toolTest?.result);*/
+
+                // Run a testing textGen request that will analyze the script for potential requests by factions or other entities, and output results in following the format laid out in Request.tsx
+                const requestAnalysis = await stage.generator.textGen({
+                    prompt: `{{messages}}Analyze the following skit script for any requests made by factions or other entities toward the player or station. ` +
+                            `\n\nSkit Script:\n${scriptEntries.map(e => `${e.speaker}: ${e.message}`).join('\n')}` +
+                            `\n\nInstruction:\nIdentify any requests made by factions toward the player or station in the skit script above. ` +
+                            `For each request identified, output a line in the following format:\n` +
+                            `"[REQUEST: <factionName> | <description> | <requirement> -> <reward>]"` +
+                            `Where <factionName> is the name of the faction making the request, <description> is a brief summary of the request, ` +
+                            `<requirement> is what the player must do to fulfill the request, and <reward> is what the player will receive upon completion.\n` +
+                            `Valid <requirement> formats:\n` +
+                            `"  ACTOR <stat><op><value>[, <stat><op><value>]" // Actor with one or more stat constraints\n` +
+                            `   - op can be: >= (min), <= (max)\n` +
+                            `   - Example: ACTOR brawn>=7, charm>=5, lust<=3\n` +
+                            `"  ACTOR-NAME <actorName>" // Specific actor by name\n` +
+                            `   - Example: ACTOR-NAME Jane Doe\n` +
+                            `"  STATION <stat>-<value>[, <stat>-<value>]" // Station stats to be reduced\n` +
+                            `   - Stats will be reduced by the specified amounts\n` +
+                            `   - Example: STATION Security-2, Harmony-1\n` +
+                            `Valid <reward> formats:\n` +
+                            `"  <stat>+<value>[, <stat>+<value>]" // Station stat bonuses\n` +
+                            `   - Example: Systems+2, Comfort+1, Security+3\n` +
+                            `Full Examples:\n` +
+                            `"[REQUEST: Stellar Concord | We need a strong laborer | ACTOR brawn>=7, charm>=6 -> Systems+2, Comfort+1]"\n` +
+                            `"[REQUEST: Shadow Syndicate | Return our missing operative | ACTOR-NAME Jane Doe -> Harmony+3]"\n` +
+                            `"[REQUEST: Defense Coalition | Help us bolster our defenses | STATION Security-2, Harmony-1 -> Systems+2, Provision+2]"\n\n`,
+                    min_tokens: 5,
+                    max_tokens: 150,
+                    include_history: true,
+                });
+                console.log('Request analysis response:', requestAnalysis?.result);
                 
                 // Wait for all TTS generation to complete
                 await Promise.all(ttsPromises);

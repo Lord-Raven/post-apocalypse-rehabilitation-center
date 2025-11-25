@@ -1,4 +1,4 @@
-import { Stat } from "../actors/Actor";
+import { namesMatch, Stat } from "../actors/Actor";
 import { StationStat } from "../Module";
 import { Stage } from "../Stage";
 import { v4 as generateUuid } from 'uuid';
@@ -21,15 +21,15 @@ export interface ActorWithStatsRequirement {
 }
 
 /**
- * Request for a specific actor by their ID
+ * Request for a specific actor by their name
  */
 export interface SpecificActorRequirement {
     type: 'specific-actor';
-    actorId: string;
+    actorName: string;
 }
 
 /**
- * Request for station stats with specific amounts
+ * Request for station stats to be reduced by specific amounts
  */
 export interface StationStatsRequirement {
     type: 'station-stats';
@@ -55,20 +55,20 @@ export interface StationStatsReward {
  */
 export class Request {
     id: string;
-    factionId: string;
+    factionName: string;
     description: string;
     requirement: RequestRequirement;
     reward: RequestReward;
 
     constructor(
         id: string,
-        factionId: string,
+        factionName: string,
         briefDescription: string,
         requirement: RequestRequirement,
         reward: RequestReward
     ) {
         this.id = id;
-        this.factionId = factionId;
+        this.factionName = factionName;
         this.description = briefDescription;
         this.requirement = requirement;
         this.reward = reward;
@@ -147,19 +147,24 @@ export class Request {
 
     /**
      * Check if the specific actor exists and is available
+     * Note: This checks by name, which should be resolved to an actor elsewhere
      */
     private canFulfillSpecificActor(stage: Stage): boolean {
         const requirement = this.requirement as SpecificActorRequirement;
         const save = stage.getSave();
 
-        const actor = save.actors[requirement.actorId];
+        // Find actor by name (case-insensitive match)
+        const actor = Object.values(save.actors).find(
+            a => namesMatch(a.name.toLowerCase(), requirement.actorName.toLowerCase())
+        );
         
         // Actor must exist and not be remote
         return actor !== undefined && !actor.remote;
     }
 
     /**
-     * Check if the station has enough of the required stats
+     * Check if the station has enough of the required stats to fulfill the reduction
+     * Stats cannot be reduced to 0, so current value must be at least deduction + 1
      */
     private canFulfillStationStats(stage: Stage): boolean {
         const requirement = this.requirement as StationStatsRequirement;
@@ -170,12 +175,12 @@ export class Request {
             return false;
         }
 
-        // Check each required stat
-        for (const [stat, requiredAmount] of Object.entries(requirement.stats)) {
+        // Check each stat deduction
+        for (const [stat, deductionAmount] of Object.entries(requirement.stats)) {
             const currentAmount = save.stationStats[stat as StationStat] || 0;
             
-            // Station must have at least the required amount
-            if (currentAmount < requiredAmount) {
+            // Station must have at least deduction + 1 (cannot reduce to 0)
+            if (currentAmount <= deductionAmount) {
                 return false;
             }
         }
@@ -186,26 +191,26 @@ export class Request {
     /**
      * Parse a REQUEST tag into a Request object
      * 
-     * Format: [REQUEST: <factionId> | <description> | <requirement> -> <reward>]
+     * Format: [REQUEST: <factionName> | <description> | <requirement> -> <reward>]
      * 
      * Requirements:
      * - ACTOR <stat><op><value>[, <stat><op><value>]* - Actor with stat constraints
      *   - op can be: >= (min), <= (max)
      *   - Example: ACTOR brawn>=7, charm>=5, lust<=3
-     * - ACTOR-ID <actorId> - Specific actor by ID
-     *   - Example: ACTOR-ID abc-123-def-456
-     * - STATION <stat><op><value>[, <stat><op><value>]* - Station stats required
-     *   - op is >= for minimum required
-     *   - Example: STATION Security>=8, Harmony>=6
+     * - ACTOR-NAME <actorName> - Specific actor by name
+     *   - Example: ACTOR-NAME Jane Doe
+     * - STATION <stat>-<value>[, <stat>-<value>]* - Station stats to be reduced
+     *   - Stats will be reduced by the specified amounts (cannot reduce to 0)
+     *   - Example: STATION Security-2, Harmony-1
      * 
      * Rewards:
      * - <stat>+<value>[, <stat>+<value>]* - Station stat bonuses
      *   - Example: Systems+2, Comfort+1, Security+3
      * 
      * Full Examples:
-     * - [REQUEST: faction-123 | We need a strong laborer | ACTOR brawn>=7, charm>=6 -> Systems+2, Comfort+1]
-     * - [REQUEST: faction-456 | Return our missing operative | ACTOR-ID abc-123 -> Harmony+3]
-     * - [REQUEST: faction-789 | Help us bolster our defenses | STATION Security>=8 -> Systems+1, Provision+2]
+     * - [REQUEST: Stellar Concord | We need a strong laborer | ACTOR brawn>=7, charm>=6 -> Systems+2, Comfort+1]
+     * - [REQUEST: Shadow Syndicate | Return our missing operative | ACTOR-NAME Jane Doe -> Harmony+3]
+     * - [REQUEST: Defense Coalition | Trade resources for upgrades | STATION Provision-2, Comfort-1 -> Systems+3, Security+2]
      * 
      * @param tag The request tag string to parse
      * @returns A Request object, or null if parsing fails
@@ -221,17 +226,17 @@ export class Request {
 
             const content = match[1];
             
-            // Split by | to separate factionId, description, and requirement->reward
+            // Split by | to separate factionName, description, and requirement->reward
             const pipeParts = content.split('|').map(p => p.trim());
             if (pipeParts.length !== 3) {
-                console.warn(`REQUEST tag must have format: factionId | description | requirement -> reward: ${tag}`);
+                console.warn(`REQUEST tag must have format: factionName | description | requirement -> reward: ${tag}`);
                 return null;
             }
 
-            const [factionId, description, requirementRewardStr] = pipeParts;
+            const [factionName, description, requirementRewardStr] = pipeParts;
 
-            if (!factionId || !description) {
-                console.warn(`REQUEST tag must have non-empty factionId and description: ${tag}`);
+            if (!factionName || !description) {
+                console.warn(`REQUEST tag must have non-empty factionName and description: ${tag}`);
                 return null;
             }
             
@@ -260,7 +265,7 @@ export class Request {
 
             return new Request(
                 generateUuid(),
-                factionId,
+                factionName,
                 description,
                 requirement,
                 reward
@@ -277,15 +282,15 @@ export class Request {
     private static parseRequirement(requirementStr: string): RequestRequirement | null {
         const trimmed = requirementStr.trim();
 
-        // Check for ACTOR-ID format
-        if (trimmed.startsWith('ACTOR-ID')) {
-            const actorId = trimmed.substring('ACTOR-ID'.length).trim();
-            if (!actorId) {
+        // Check for ACTOR-NAME format
+        if (trimmed.startsWith('ACTOR-NAME')) {
+            const actorName = trimmed.substring('ACTOR-NAME'.length).trim();
+            if (!actorName) {
                 return null;
             }
             return {
                 type: 'specific-actor',
-                actorId
+                actorName
             };
         }
 
@@ -352,7 +357,8 @@ export class Request {
     }
 
     /**
-     * Parse station stat requirements (e.g., "Security>=8, Harmony>=6")
+     * Parse station stat requirements (e.g., "Security-2, Harmony-1")
+     * Stats represent the amount to be deducted from the station
      */
     private static parseStationStatsRequirement(statsStr: string): StationStatsRequirement | null {
         const stats: Partial<Record<StationStat, number>> = {};
@@ -361,12 +367,12 @@ export class Request {
             return null;
         }
 
-        // Split by comma and process each constraint
+        // Split by comma and process each deduction
         const constraints = statsStr.split(',').map(s => s.trim());
         
         for (const constraint of constraints) {
-            // Match pattern: <stat>>=<value>
-            const match = constraint.match(/^(\w+)\s*>=\s*(\d+)$/);
+            // Match pattern: <stat>-<value>
+            const match = constraint.match(/^(\w+)\s*-\s*(\d+)$/);
             if (!match) {
                 console.warn(`Invalid station stat constraint: ${constraint}`);
                 return null;
