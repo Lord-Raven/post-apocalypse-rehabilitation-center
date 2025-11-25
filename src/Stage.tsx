@@ -49,6 +49,7 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
     // Flag/promise to avoid redundant concurrent requests for reserve actors
     private reserveActorsLoadPromise?: Promise<void>;
     private reserveFactionsLoadPromise?: Promise<void>;
+    public imageGenerationPromises: {[key: string]: Promise<string>} = {};
     private freshSave: SaveType;
     readonly RESERVE_ACTORS = 5;
     readonly RESERVE_FACTIONS = 3;

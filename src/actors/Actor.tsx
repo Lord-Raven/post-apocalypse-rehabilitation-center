@@ -371,7 +371,7 @@ export async function generatePrimaryActorImage(actor: Actor, stage: Stage): Pro
         console.log(`Generating neutral emotion image for actor ${actor.name}`);
         let imageUrl = '';
         if (!actor.avatarImageUrl) {
-            console.log(`Generating neutral emotion image for actor ${actor.name} from description`);
+            console.log(`Generating new image for actor ${actor.name} from description`);
             // Use stage.makeImage to create a neutral expression based on the description
             imageUrl = await stage.makeImage({
                 prompt: `A professional upper-body portrait of an anime character with the following description: ${actor.description}\nThe character should have a neutral expression.`,
@@ -393,14 +393,7 @@ export async function generatePrimaryActorImage(actor: Actor, stage: Stage): Pro
         actor.emotionPack['base'] = imageUrl || '';
 
         // Now create the neutral expression from the base image
-        const neutralImageUrl = await stage.makeImageFromImage({
-            image: actor.emotionPack['base'],
-            prompt: `Give this character a neutral expression and pose. Maintain the original style.`,
-            remove_background: true,
-            transfer_type: 'edit'
-        }, `actors/${actor.id}/neutral.png`, '');
-        console.log(`Generated neutral emotion image for actor ${actor.name}: ${neutralImageUrl || ''}`);
-        actor.emotionPack['neutral'] = neutralImageUrl || '';
+        await generateEmotionImage(actor, Emotion.neutral, stage);
     }
 }
 
@@ -419,16 +412,21 @@ export async function generateAdditionalActorImages(actor: Actor, stage: Stage):
 }
 
 async function generateEmotionImage(actor: Actor, emotion: Emotion, stage: Stage): Promise<string> {
-    console.log(`Generating ${emotion} emotion image for actor ${actor.name}`);
-    const imageUrl = await stage.makeImageFromImage({
-        image: actor.emotionPack['neutral'] || '',
-        prompt: `Give this character a ${EMOTION_PROMPTS[emotion]}, gesture, or pose.`,
-        remove_background: true,
-        transfer_type: 'edit'
-    }, `actors/${actor.id}/${emotion}.png`, '');
-    console.log(`Generated ${emotion} emotion image for actor ${actor.name}: ${imageUrl || ''}`);
-    actor.emotionPack[emotion] = imageUrl || '';
-    return imageUrl || '';
+    if (actor.emotionPack['base'] && !stage.imageGenerationPromises[`actor/${actor.id}`]) {
+        console.log(`Generating ${emotion} emotion image for actor ${actor.name}`);
+        stage.imageGenerationPromises[`actor/${actor.id}`] = stage.makeImageFromImage({
+            image: actor.emotionPack['base'] || '',
+            prompt: `Give this character a ${EMOTION_PROMPTS[emotion]}, gesture, or pose.`,
+            remove_background: true,
+            transfer_type: 'edit'
+        }, `actors/${actor.id}/${emotion}.png`, '');
+        const imageUrl = await stage.imageGenerationPromises[`actor/${actor.id}`];
+        delete stage.imageGenerationPromises[`actor/${actor.id}`];
+        console.log(`Generated ${emotion} emotion image for actor ${actor.name}: ${imageUrl || ''}`);
+        actor.emotionPack[emotion] = imageUrl || '';
+        return imageUrl || '';
+    }
+    return '';
 }
 
 export async function generateActorDecor(actor: Actor, module: Module, stage: Stage): Promise<string> {

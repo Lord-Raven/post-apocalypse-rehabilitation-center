@@ -55,7 +55,7 @@ const ActorImage: FC<ActorImageProps> = ({
                 if (img.naturalWidth && img.naturalHeight) {
                     setAspectRatio(`${img.naturalWidth} / ${img.naturalHeight}`);
                 }
-            const result = multiplyImageByColor(img, actor.remote ? "#ccccff" : highlightColor);
+            const result = multiplyImageByColor(img, actor.remote ? "#ddffff" : highlightColor);
             if (result) {
                 setProcessedImageUrl(result);
             }
