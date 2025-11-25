@@ -55,7 +55,7 @@ const ActorImage: FC<ActorImageProps> = ({
                 if (img.naturalWidth && img.naturalHeight) {
                     setAspectRatio(`${img.naturalWidth} / ${img.naturalHeight}`);
                 }
-            const result = multiplyImageByColor(img, actor.remote ? "#ccffff" : highlightColor);
+            const result = multiplyImageByColor(img, actor.remote ? "#99ccff" : highlightColor);
             if (result) {
                 setProcessedImageUrl(result);
             }
@@ -124,12 +124,12 @@ const ActorImage: FC<ActorImageProps> = ({
                         animate={actor.remote ? {
                             opacity: 0,
                             filter: [
-                                'blur(2px) hue-rotate(23deg) brightness(1.1)',
-                                'blur(2.8px) hue-rotate(17deg) brightness(1.15)',
-                                'blur(2.2px) hue-rotate(20deg) brightness(1.08)',
-                                'blur(2.5px) hue-rotate(21deg) brightness(1.1)'
+                                'blur(2px) brightness(1.3)',
+                                'blur(2.8px) brightness(1.1)',
+                                'blur(2.2px) brightness(1.2)',
+                                'blur(2.5px) brightness(1.15)'
                             ]
-                        } : { opacity: 0 }}
+                        } : { opacity: 0, filter: 'blur(2.5px)' }}
                         exit={{ opacity: 0 }}
                         transition={actor.remote ? {
                             opacity: { duration: 0.5 },
@@ -140,7 +140,6 @@ const ActorImage: FC<ActorImageProps> = ({
                             top: 0,
                             width: '100%',
                             height: '100%',
-                            filter: actor.remote ? 'blur(2.5px) hue-rotate(20deg) brightness(1.1)' : 'blur(2.5px)',
                             zIndex: 4,
                             transform: `translate(calc(${modX}vw - 50%), ${modY}vh)`,
                             pointerEvents: 'none'
@@ -158,12 +157,12 @@ const ActorImage: FC<ActorImageProps> = ({
                         animate={actor.remote ? {
                             opacity: 0.8,
                             filter: [
-                                'blur(2.5px) hue-rotate(23deg) brightness(1.1)',
-                                'blur(3.2px) hue-rotate(17deg) brightness(1.08)',
-                                'blur(2.8px) hue-rotate(20deg) brightness(1.12)',
-                                'blur(2.5px) hue-rotate(21deg) brightness(1.1)'
+                                'blur(2.5px) brightness(1.3)',
+                                'blur(3.2px) brightness(1.1)',
+                                'blur(2.8px) brightness(1.2)',
+                                'blur(2.5px) brightness(1.15)'
                             ]
-                        } : { opacity: 1 }}
+                        } : { opacity: 1, filter: 'blur(2.5px)' }}
                         exit={{ opacity: 0 }}
                         transition={actor.remote ? {
                             opacity: { duration: 0.5 },
@@ -174,7 +173,6 @@ const ActorImage: FC<ActorImageProps> = ({
                             top: 0,
                             width: '100%',
                             height: '100%',
-                            filter: actor.remote ? 'blur(2.5px) hue-rotate(20deg) brightness(1.1)' : 'blur(2.5px)',
                             zIndex: 4,
                             transform: `translate(calc(${modX}vw - 50%), ${modY}vh)`,
                             pointerEvents: 'none'
@@ -190,14 +188,14 @@ const ActorImage: FC<ActorImageProps> = ({
                         src={processedImageUrl}
                         initial={{ opacity: 0 }}
                         animate={actor.remote ? {
-                            opacity: 0.75,
+                            opacity: 1,
                             filter: [
-                                'blur(0px) hue-rotate(22deg) brightness(1.1)',
-                                'blur(0.3px) hue-rotate(18deg) brightness(1.12)',
-                                'blur(0.1px) hue-rotate(20deg) brightness(1.08)',
-                                'blur(0px) hue-rotate(21deg) brightness(1.1)'
+                                'blur(0px) brightness(1.3)',
+                                'blur(0.3px) brightness(1.1)',
+                                'blur(0.1px) brightness(1.2)',
+                                'blur(0px) brightness(1.15)'
                             ]
-                        } : { opacity: 0.75 }}
+                        } : { opacity: 1 }}
                         exit={{ opacity: 0 }}
                         transition={actor.remote ? {
                             opacity: { duration: 0.5 },
@@ -211,7 +209,6 @@ const ActorImage: FC<ActorImageProps> = ({
                             opacity: 0.75,
                             zIndex: 5,
                             transform: `translate(calc(${modX}vw - 50%), ${modY}vh)`,
-                            filter: actor.remote ? 'hue-rotate(20deg) brightness(1.1)' : undefined,
                         }}
                         onMouseEnter={onMouseEnter}
                         onMouseLeave={onMouseLeave}
