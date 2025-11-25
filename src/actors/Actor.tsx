@@ -4,6 +4,7 @@ import { Stage } from "../Stage";
 import { v4 as generateUuid } from 'uuid';
 import { VoiceChatOutlined } from "@mui/icons-material";
 import { scoreToGrade } from "../utils";
+import { AspectRatio } from "@chub-ai/stages-ts";
 
 // Core character stats as an enum so other parts of the app can reference them safely
 // Using single-syllable words, each starting with a different letter
@@ -373,7 +374,8 @@ export async function generatePrimaryActorImage(actor: Actor, stage: Stage): Pro
             console.log(`Generating neutral emotion image for actor ${actor.name} from description`);
             // Use stage.makeImage to create a neutral expression based on the description
             imageUrl = await stage.makeImage({
-                prompt: `A professional upper-body portrait of an anime character with the following description: ${actor.description}\nThe character should have a neutral expression.`
+                prompt: `A professional upper-body portrait of an anime character with the following description: ${actor.description}\nThe character should have a neutral expression.`,
+                aspect_ratio: AspectRatio.WIDESCREEN_VERTICAL
             }, '');
         }
 

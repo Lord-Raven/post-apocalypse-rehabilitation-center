@@ -246,7 +246,7 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
         if (!save.factions) {
             save.factions = {};
         }
-        
+
         // Clean out remote actors that aren't supported by current factions
         const idsToRemove: string[] = [];
         Object.values(save.actors).filter(actor => actor.remote && (!save.factions || !Object.values(save.factions).some(faction => faction.representativeId === actor.id))).forEach(actor => {
@@ -273,7 +273,7 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
                     this.saveGame();
                 });
                 break; // only do one at a time
-            } else if (!actor.emotionPack || Object.values(Emotion).some(emotion => emotion !== Emotion.neutral && (
+            } else if (!actor.remote && (!actor.emotionPack || Object.values(Emotion).some(emotion => emotion !== Emotion.neutral && (
                     !actor.emotionPack[emotion] || 
                     actor.emotionPack[emotion] == actor.avatarImageUrl || 
                     actor.emotionPack[emotion] == actor.emotionPack[Emotion.neutral]))) {
