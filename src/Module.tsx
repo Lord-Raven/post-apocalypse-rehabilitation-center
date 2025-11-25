@@ -3,7 +3,7 @@ import { Stage } from "./Stage";
 import Faction from './actors/Faction';
 import { ScreenType } from './screens/BaseScreen';
 
-export type ModuleType = 'echo chamber' | 'communications' | 'generator' | 'quarters' | 'commons' | 'infirmary' | 'gym' | 'lounge' | 'armory' ;
+export type ModuleType = 'echo chamber' | 'comms' | 'generator' | 'quarters' | 'commons' | 'infirmary' | 'gym' | 'lounge' | 'armory' ;
     /*| 'hydroponics' | 'laboratory' | 'observatory' | 'security' | 'storage' | 'market' |
     'brig' | 'showers' | 'conservatory' |
     // Administration pack:
@@ -146,8 +146,8 @@ export const MODULE_DEFAULTS: Record<ModuleType, ModuleIntrinsic> = {
             return stage.getLayout().getModulesWhere(m => m.type === 'echo chamber').length === 0;
         }
     },
-    communications: {
-        skitPrompt: 'The communications room is the hub for all external and internal station communications. This room is critical for communicating with external factions, with whom the PARC fulfills contracts to supply patients "jobs." ' +
+    comms: {
+        skitPrompt: 'The comms room is the hub for all external and internal station communications. This room is critical for communicating with external factions, with whom the PARC fulfills contracts to supply patients "jobs." ' +
             `Scenes here often involve receiving important messages, coordinating among the crew, or managing station-wide announcements.`,
         imagePrompt: 'A sci-fi communications room dominated by a massive screen and associated computers and equipment, as well as some seating.',
         role: 'Liaison',
@@ -208,7 +208,7 @@ export const MODULE_DEFAULTS: Record<ModuleType, ModuleIntrinsic> = {
         },
         available: (stage: Stage) => {
             // Can have only one in stage.getSave().layout:
-            return stage.getLayout().getModulesWhere(m => m.type === 'communications').length === 0;
+            return stage.getLayout().getModulesWhere(m => m.type === 'comms').length === 0;
         }
     },
     generator: {
@@ -328,7 +328,8 @@ export class Module<T extends ModuleType = ModuleType> {
      * Rehydrate a Module from saved data
      */
     static fromSave(savedModule: any): Module {
-        const type = savedModule.type === 'medbay' ? 'infirmary' : savedModule.type; // Backwards compatibility
+        let type = savedModule.type === 'medbay' ? 'infirmary' : savedModule.type; // Backwards compatibility
+        type = type === 'communications' ? 'comms' : type; // Backwards compatibility
         return createModule(type as ModuleType, {
             id: savedModule.id,
             attributes: savedModule.attributes,
