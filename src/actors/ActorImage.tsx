@@ -220,9 +220,8 @@ const ActorImage: FC<ActorImageProps> = ({
             {actor.remote && (
                 <AnimatePresence>
                     {processedImageUrl && (
-                        <motion.img
-                            key={`${actor.id}_${imageUrl}_scanline`}
-                            src={processedImageUrl}
+                        <motion.div
+                            key={`${actor.id}_${imageUrl}_scanline_wrapper`}
                             initial={{ 
                                 opacity: 0,
                                 clipPath: 'inset(0% 0% 100% 0%)'
@@ -252,14 +251,25 @@ const ActorImage: FC<ActorImageProps> = ({
                                 height: '100%',
                                 opacity: 0.6,
                                 zIndex: 6,
-                                transform: `translate(calc(${modX}vw - 50%), ${modY}vh)`,
-                                filter: 'blur(0.5px) brightness(1.5)',
-                                maskImage: 'linear-gradient(to bottom, transparent 0%, black 30%, black 100%)',
-                                WebkitMaskImage: 'linear-gradient(to bottom, transparent 0%, black 30%, black 100%)',
                                 pointerEvents: 'none'
                             }}
-                            alt={`${actor.name} (${emotion}) scanline`}
-                        />
+                        >
+                            <img
+                                src={processedImageUrl}
+                                style={{
+                                    position: 'absolute',
+                                    top: 0,
+                                    width: '100%',
+                                    height: '100%',
+                                    transform: `translate(calc(${modX}vw - 50%), ${modY}vh)`,
+                                    filter: 'blur(0.5px) brightness(1.5)',
+                                    maskImage: 'linear-gradient(to bottom, transparent 0%, black 100%)',
+                                    WebkitMaskImage: 'linear-gradient(to bottom, transparent 0%, black 100%)',
+                                    pointerEvents: 'none'
+                                }}
+                                alt={`${actor.name} (${emotion}) scanline`}
+                            />
+                        </motion.div>
                     )}
                 </AnimatePresence>
             )}
