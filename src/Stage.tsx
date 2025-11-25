@@ -239,6 +239,9 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
                 'Harmony': 3
             };
         }
+        if (!save.factions) {
+            save.factions = {};
+        }
 
         // If any echo actors are missing primary images, kick those off now.
         for (const echoActor of save.echoes) {
