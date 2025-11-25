@@ -38,7 +38,7 @@ import {
 import TypeOut from '../components/TypeOut';
 
 // Base text shadow for non-dialogue text
-const baseTextShadow = '4px 4px 2px rgba(0, 0, 0, 0.8)';
+const baseTextShadow = '3px 3px 2px rgba(0, 0, 0, 0.8)';
 
     // Helper function to format text with dialogue, italics, and bold styling
 // Accepts optional speaker actor to apply custom font and drop shadow
@@ -62,8 +62,8 @@ const formatMessage = (text: string, speakerActor?: Actor | null): JSX.Element =
                         color: '#87CEEB',
                         fontFamily: speakerActor?.themeFontFamily || undefined,
                         textShadow: speakerActor?.themeColor 
-                            ? `4px 4px 2px ${speakerActor.themeColor}`
-                            : '4px 4px 2px rgba(135, 206, 235, 0.6)'
+                            ? `3px 3px 2px ${speakerActor.themeColor}`
+                            : '3px 3px 2px rgba(135, 206, 235, 0.6)'
                     };
                     return (
                         <span key={index} style={dialogueStyle}>
@@ -531,7 +531,12 @@ export const SkitScreen: FC<SkitScreenProps> = ({ stage, setScreenType }) => {
                             const roleModules = stage().getSave().layout.getModulesWhere((m: any) => 
                                 m && m.type !== 'quarters' && m.ownerId === hoveredActor.id
                             );
-                            return roleModules.length > 0 ? roleModules[0].getAttribute('role') : undefined;
+                            if (roleModules.length > 0) {
+                                return roleModules[0].getAttribute('role');
+                            } else {
+                                const factionName = Object.values(stage().getSave().factions).find(faction => faction.representativeId === hoveredActor.id)?.name;
+                                return factionName ? `${factionName}` : undefined;
+                            }
                         })()}
                         collapsedSections={[ActorCardSection.STATS]}
                     />
