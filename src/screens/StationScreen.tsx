@@ -845,7 +845,7 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType}) =>
                             }}
                             animate={{ x: isHeaderHovered ? 10 : 0 }}
                             transition={{ 
-                                layout: { duration: 0.3, ease: 'easeInOut' },
+                                layout: { duration: 0.4, ease: [0.4, 0, 0.2, 1] },
                                 x: { duration: 0.2, ease: 'easeOut' }
                             }}
                         >
@@ -890,9 +890,9 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType}) =>
                                     opacity: isExpanded ? 1 : 0
                                 }}
                                 transition={{ 
-                                    height: { duration: 0.3, ease: 'easeInOut' },
-                                    opacity: { duration: 0.2, ease: 'easeInOut' },
-                                    layout: { duration: 0.3, ease: 'easeInOut' }
+                                    height: { duration: 0.4, ease: [0.4, 0, 0.2, 1] },
+                                    opacity: { duration: isExpanded ? 0.3 : 0.2, delay: isExpanded ? 0.1 : 0, ease: 'easeInOut' },
+                                    layout: { duration: 0.4, ease: [0.4, 0, 0.2, 1] }
                                 }}
                                 style={{ 
                                     overflow: isExpanded ? 'visible' : 'hidden',
