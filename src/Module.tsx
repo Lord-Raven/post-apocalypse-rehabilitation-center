@@ -175,7 +175,7 @@ export const MODULE_DEFAULTS: Record<ModuleType, ModuleIntrinsic> = {
                     context: {factionId: newFaction.id,}
                 });
                 setScreenType(ScreenType.SKIT);
-            } else if (Object.values(stage.getSave()).length > 0) {
+            } else if (Object.values(stage.getSave().factions).length > 0) {
                 // Otherwise, open a random faction interaction skit
                 // Move the module's owner (if any) here:
                 if (module.ownerId && stage.getSave().actors[module.ownerId]) {
