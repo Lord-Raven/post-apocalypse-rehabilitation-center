@@ -188,13 +188,15 @@ export async function generateSkitScript(skit: SkitData, stage: Stage): Promise<
         'System: CHARACTER NAME: [CHARACTER NAME EXPRESSES OPTIMISM] Action in prose. "Dialogue in quotation marks."\nNARRATOR: Conclusive ending to the scene in prose.' +
         `\n[END SCENE]` +
         `\n\nCurrent Scene Script Log to Continue:\nSystem: ${buildScriptLog(skit)}` +
-        `\n\nInstruction:\nAt the "System:" prompt, generate a short scene script based upon this scenario and the specified Scene Prompt, involving the Present Characters (Absent Characters are listed for reference only). ` +
+        `\n\nInstruction:\nAt the "System:" prompt, ${skit.script.length == 0 ? 'generate a short scene script' : 'extend or wrap-up the current scene script'} based upon the Premise and the specified Scene Prompt, ` +
+        `involving the Present Characters (Absent Characters are listed for reference only). ` +
         `The script should consider characters' stats, their relationships, past events, and the station's stats and their potential impact upon this scene. ` +
         `\nFollow the structure of the strict Example Script formatting above: ` +
         `actions are depicted in prose and character dialogue in quotation marks. Emotion tags (e.g. "[CHARACTER NAME EXPRESSES JOY]") should be used to indicate significant emotional shifts—` +
         `these cues will be utilized by the game engine to visually display appropriate character emotions.\n` +
-        `This response should end when it makes sense to give ${playerName} a chance to respond or contribute, ` +
-        `or, if the scene feels concluded, the response should end with a "[END SCENE]" tag.${wrapupPrompt}`
+        `This scene is a brief narrative moment within the context of a game; the scene should avoid major developments which would fundamentally change the mechanics or nature of the game. ` +
+        `Generally, focus upon interpersonal dynamics, character growth, faction relationships, and the state of the Station and its inhabitants. ` +
+        `When the scene has run its course, this response must end with a special "[END SCENE]" tag, so the game can continue.${wrapupPrompt}`
     );
 
     // Retry logic if response is null or response.result is empty
@@ -504,7 +506,7 @@ export async function generateSkitScript(skit: SkitData, stage: Stage): Promise<
 
                 skit.endProperties = statChanges;
                 skit.requests = requests;
-                
+
                 return { entries: scriptEntries, endScene: endScene, statChanges: statChanges, requests: requests };
             }
         } catch (error) {

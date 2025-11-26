@@ -121,20 +121,9 @@ const ActorImage: FC<ActorImageProps> = ({
                         key="prev"
                         src={prevImageUrl}
                         initial={{ opacity: 1 }}
-                        animate={actor.remote ? {
-                            opacity: 0,
-                            filter: [
-                                'blur(2.5px) brightness(1.3)',
-                                'blur(2.8px) brightness(1.1)',
-                                'blur(2.2px) brightness(1.2)',
-                                'blur(2.5px) brightness(1.3)'
-                            ]
-                        } : { opacity: 0, filter: 'blur(2.5px)' }}
+                        animate={{ opacity: 0 }}
                         exit={{ opacity: 0 }}
-                        transition={actor.remote ? {
-                            opacity: { duration: 0.5, ease: "easeInOut" },
-                            filter: { duration: 3.2, repeat: Infinity, ease: "easeInOut" }
-                        } : { duration: 0.5 }}
+                        transition={{ duration: 0.5 }}
                         style={{
                             position: 'absolute',
                             top: 0,
@@ -142,7 +131,8 @@ const ActorImage: FC<ActorImageProps> = ({
                             height: '100%',
                             zIndex: 4,
                             transform: `translate(calc(${modX}vw - 50%), ${modY}vh)`,
-                            pointerEvents: 'none'
+                            pointerEvents: 'none',
+                            filter: 'blur(2.5px)'
                         }}
                         alt={`${actor.name} (${emotion}) previous`}
                     />
