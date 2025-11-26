@@ -173,8 +173,8 @@ export async function generateSkitScript(skit: SkitData, stage: Stage): Promise<
     
     // There are two optional phrases for gently/more firmly prodding the model toward wrapping up the scene, and then we calculate one to show based on the skit.script.length and some randomness:
     const wrapUpPhrases = [
-        ` Consider whether the scene has reached or can reach a natural stopping point in this response; if so, conclude the response with a "[SUMMARY]" tag.`, // Gently prod toward and ending.
-        ` This scene is getting long; craft a satisfactory conclusion and output an "[SUMMARY]" tag.` // Firmer prod
+        ` Consider whether the scene has reached or can reach a natural stopping point in this response; if not, work toward a conclusion and include the "[SUMMARY]" tag.`, // Gently prod toward and ending.
+        ` This scene is getting long; craft a conclusion and output the "[SUMMARY]" tag.` // Firmer prod
     ];
 
     // Use script length + random(1, 10) > 12 for gentle or > 24 for firm.
@@ -190,15 +190,16 @@ export async function generateSkitScript(skit: SkitData, stage: Stage): Promise<
         `\n\nCurrent Scene Script Log to Continue:\nSystem: ${buildScriptLog(skit)}` +
         `\n\nPrimary Instruction:\nAt the "System:" prompt, ${skit.script.length == 0 ? 'generate a short scene script' : 'extend or conclude the current scene script'} based upon the Premise and the specified Scene Prompt, ` +
         `involving the Present Characters (Absent Characters are listed for reference only). ` +
-        `The script should consider characters' stats, their relationships, past events, and the station's stats—among other factors—to craft a compelling scene. ` +
+        `The script should consider characters' stats, relationships, past events, and the station's stats—among other factors—to craft a compelling scene. ` +
         `\nFollow the structure of the strict Example Script formatting above: ` +
         `actions are depicted in prose and character dialogue in quotation marks. Emotion tags (e.g. "[CHARACTER NAME EXPRESSES JOY]") should be used to indicate significant emotional shifts—` +
         `these cues will be utilized by the game engine to visually display appropriate character emotions. ` +
-        `An end tag (e.g., "[SUMMARY: Brief summary of the scenes events.]") should be placed at the end of the scene. ` +
+        `An end tag (e.g., "[SUMMARY: Brief summary of the scenes events.]") should be employed when the scene reaches an explicit or implicit stopping point or suspendable juncture. ` +
         `\nThis scene is a brief narrative moment within the context of a game; the scene should avoid major developments which would fundamentally change the mechanics or nature of the game, ` +
         `instead developing content within the existing framework. ` +
-        `Generally, focus upon interpersonal dynamics, character growth, faction relationships, and the state of the Station and its inhabitants. ` +
-        `\nWhen the scene encounters a reasonable stopping point or implicit closure—or if it is already there—, output the critical "[SUMMARY: A brief synopsis]" tag, containing a brief description of the scene's events.${wrapupPrompt}`
+        `Generally, focus upon interpersonal dynamics, character growth, faction relationships, and the state of the Station and its inhabitants.` +
+        `\nWhen the scene encounters a sensible moment or implicit closure—or if the current script is already there—, output the critical "[SUMMARY: A brief synopsis]" tag. ` +
+        `It should provide a brief description of the scene's events and allow the game to proceed.${wrapupPrompt}`
     );
 
     // Retry logic if response is null or response.result is empty

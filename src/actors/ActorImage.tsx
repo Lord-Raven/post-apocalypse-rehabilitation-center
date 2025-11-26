@@ -130,7 +130,7 @@ const ActorImage: FC<ActorImageProps> = ({
                             width: '100%',
                             height: '100%',
                             filter: 'blur(2.5px)',
-                            zIndex: 4,
+                            zIndex: 3,
                             transform: `translate(calc(${modX}vw - 50%), ${modY}vh)`,
                             pointerEvents: 'none'
                         }}
