@@ -142,7 +142,7 @@ const ActorImage: FC<ActorImageProps> = ({
                 {/* Backing image layer - solid but blurry. */}
                 {processedImageUrl && (
                     <motion.img
-                        key={`${actor.id}_${processedImageUrl}_bg`}
+                        key={`${actor.id}_${imageUrl}_bg`}
                         src={processedImageUrl}
                         initial={{ opacity: 0 }}
                         animate={actor.remote ? {
@@ -176,7 +176,7 @@ const ActorImage: FC<ActorImageProps> = ({
                 {/* Main image layer - semi transparent, but crisp. */}
                 {processedImageUrl && (
                     <motion.img
-                        key={`${actor.id}_${processedImageUrl}_main`}
+                        key={`${actor.id}_${imageUrl}_main`}
                         src={processedImageUrl}
                         initial={{ opacity: 0 }}
                         animate={actor.remote ? {
@@ -212,7 +212,7 @@ const ActorImage: FC<ActorImageProps> = ({
                 <AnimatePresence mode="wait">
                     {processedImageUrl && (
                         <motion.img
-                            key={`${actor.id}_${processedImageUrl}_scanline`}
+                            key={`${actor.id}_${imageUrl}_scanline`}
                             src={processedImageUrl}
                             initial={{ 
                                 opacity: 0,
@@ -239,7 +239,7 @@ const ActorImage: FC<ActorImageProps> = ({
                                 WebkitMaskSize: '100% 200%',
                                 maskPosition: '0% -100%',
                                 WebkitMaskPosition: '0% -100%',
-                                animation: 'scanlineMove 6s linear infinite',
+                                animation: 'scanlineMove 5s linear infinite',
                                 pointerEvents: 'none'
                             }}
                             alt={`${actor.name} (${emotion}) scanline`}

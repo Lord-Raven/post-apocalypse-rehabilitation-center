@@ -196,7 +196,7 @@ export async function generateSkitScript(skit: SkitData, stage: Stage): Promise<
         `these cues will be utilized by the game engine to visually display appropriate character emotions.\n` +
         `This scene is a brief narrative moment within the context of a game; the scene should avoid major developments which would fundamentally change the mechanics or nature of the game. ` +
         `Generally, focus upon interpersonal dynamics, character growth, faction relationships, and the state of the Station and its inhabitants. ` +
-        `When the scene reaches a stopping point, this response should output an "[END]" tag, so the game can continue.${wrapupPrompt}`
+        `When the scene reaches a stopping point or implicit closure, this response should output a special tag: "[END: Optional scene summary]", containing a brief description of the scene's events.${wrapupPrompt}`
     );
 
     // Retry logic if response is null or response.result is empty
@@ -223,6 +223,14 @@ export async function generateSkitScript(skit: SkitData, stage: Stage): Promise<
                 for (const line of lines) {
                     // Skip empty lines
                     let trimmed = line.trim();
+
+                    // First, look for an ending tag.
+                    if (trimmed.startsWith('[END')) {
+                        console.log("Detected end scene tag.");
+                        endScene = true;
+                        continue;
+                    }
+
                     // If a line doesn't end with ], ., !, ?, or ", then it's likely incomplete and we should drop it.
                     if (!trimmed || ![']', '*', '_', ')', '.', '!', '?', '"', '\''].some(end => trimmed.endsWith(end))) continue;
 
@@ -231,22 +239,13 @@ export async function generateSkitScript(skit: SkitData, stage: Stage): Promise<
                     // Prepare list of present actors (based on module/location)
                     const presentActors: Actor[] = Object.values(stage.getSave().actors).filter(a => a.locationId === (skit.moduleId || ''));
                     
-                    // Process tags in the line:
-                    // Detect [END SCENE] or [END] to determine whether the scene ends here
+                    // Process tags in the line (just expresses at the moment):
                     // [Character Name EXPRESSES Emotion]
                     for (const tag of trimmed.match(/\[[^\]]+\]/g) || []) {
                         const raw = tag.slice(1, -1).trim();
                         if (!raw) continue;
 
                         console.log(`Processing tag: ${raw}`);
-                        
-                        const endSceneRegex = /(END|END SCENE|DONE)/i;
-                        if (endSceneRegex.test(raw)) {
-                            console.log("Detected end scene tag.");
-                            endScene = true;
-                            continue;
-                        }
-
                         // Look for expresses tags:
                         const emotionTagRegex = /([^[\]]+)\s+EXPRESSES\s+([^[\]]+)/gi;
                         let emotionMatch = emotionTagRegex.exec(raw);
