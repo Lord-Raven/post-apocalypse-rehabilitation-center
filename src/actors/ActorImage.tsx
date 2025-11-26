@@ -114,7 +114,7 @@ const ActorImage: FC<ActorImageProps> = ({
             exit='absent'
             animate={speaker ? 'talking' : 'idle'}
             style={{position: 'absolute', width: 'auto', aspectRatio, overflow: 'visible', zIndex: speaker ? 100 : zIndex}}>
-            <AnimatePresence mode="wait">
+            <AnimatePresence>
                 {/* Previous image layer for crossfade */}
                 {prevImageUrl && prevImageUrl !== processedImageUrl && (
                     <motion.img
@@ -138,7 +138,7 @@ const ActorImage: FC<ActorImageProps> = ({
                     />
                 )}
             </AnimatePresence>
-            <AnimatePresence mode="wait">
+            <AnimatePresence>
                 {/* Backing image layer - solid but blurry. */}
                 {processedImageUrl && (
                     <motion.img
@@ -172,7 +172,7 @@ const ActorImage: FC<ActorImageProps> = ({
                     />
                 )}
             </AnimatePresence>
-            <AnimatePresence mode="wait">
+            <AnimatePresence>
                 {/* Main image layer - semi transparent, but crisp. */}
                 {processedImageUrl && (
                     <motion.img
@@ -209,7 +209,7 @@ const ActorImage: FC<ActorImageProps> = ({
             </AnimatePresence>
             {/* Rolling scanline effect for remote actors */}
             {actor.remote && (
-                <AnimatePresence mode="wait">
+                <AnimatePresence>
                     {processedImageUrl && (
                         <motion.img
                             key={`${actor.id}_${imageUrl}_scanline`}

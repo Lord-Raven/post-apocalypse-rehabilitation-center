@@ -188,15 +188,17 @@ export async function generateSkitScript(skit: SkitData, stage: Stage): Promise<
         'System: CHARACTER NAME: [CHARACTER NAME EXPRESSES OPTIMISM] Action in prose. "Dialogue in quotation marks."\nNARRATOR: Conclusive ending to the scene in prose.' +
         `\n[END]` +
         `\n\nCurrent Scene Script Log to Continue:\nSystem: ${buildScriptLog(skit)}` +
-        `\n\nInstruction:\nAt the "System:" prompt, ${skit.script.length == 0 ? 'generate a short scene script' : 'extend or wrap-up the current scene script'} based upon the Premise and the specified Scene Prompt, ` +
+        `\n\nPrimary Instruction:\nAt the "System:" prompt, ${skit.script.length == 0 ? 'generate a short scene script' : 'extend or conclude the current scene script'} based upon the Premise and the specified Scene Prompt, ` +
         `involving the Present Characters (Absent Characters are listed for reference only). ` +
-        `The script should consider characters' stats, their relationships, past events, and the station's stats and their potential impact upon this scene. ` +
+        `The script should consider characters' stats, their relationships, past events, and the station's stats—among other factors—to craft a compelling scene. ` +
         `\nFollow the structure of the strict Example Script formatting above: ` +
         `actions are depicted in prose and character dialogue in quotation marks. Emotion tags (e.g. "[CHARACTER NAME EXPRESSES JOY]") should be used to indicate significant emotional shifts—` +
-        `these cues will be utilized by the game engine to visually display appropriate character emotions.\n` +
-        `This scene is a brief narrative moment within the context of a game; the scene should avoid major developments which would fundamentally change the mechanics or nature of the game. ` +
+        `these cues will be utilized by the game engine to visually display appropriate character emotions. ` +
+        `An end tag (e.g., "[END: Optional scene summary]") should be placed at the end of the scene. ` +
+        `\nThis scene is a brief narrative moment within the context of a game; the scene should avoid major developments which would fundamentally change the mechanics or nature of the game, ` +
+        `instead developing content within the existing framework. ` +
         `Generally, focus upon interpersonal dynamics, character growth, faction relationships, and the state of the Station and its inhabitants. ` +
-        `When the scene reaches a stopping point or implicit closure, this response should output a special tag: "[END: Optional scene summary]", containing a brief description of the scene's events.${wrapupPrompt}`
+        `\nWhen the scene encounters a reasonable stopping point or implicit closure—or if it is already there—, output the critical "[END: scene summary]" tag, containing a brief description of the scene's events.${wrapupPrompt}`
     );
 
     // Retry logic if response is null or response.result is empty
@@ -376,7 +378,7 @@ export async function generateSkitScript(skit: SkitData, stage: Stage): Promise<
                     ttsPromises.push((async () => {
                         const analysisPrompt = generateSkitPrompt(skit, stage, true,
                             `Scene Script:\nSystem: ${buildScriptLog(skit)}` +
-                            `\n\nInstruction:\nAnalyze the preceding scene script and output formatted tags in brackets, identifying the following categorical changes to be inorporated into the game. ` +
+                            `\n\nPrimary Instruction:\nAnalyze the preceding scene script and output formatted tags in brackets, identifying the following categorical changes to be inorporated into the game. ` +
                             `\n\nCharacter Stat Changes:\nIdentify any changes to character stats implied by the scene. For each change, output a line in the following format:\n` +
                             `"[CHARACTER NAME: <stat> +<value>(, ...)]"` +
                             `Where <stat> is the name of the stat to be changed, and <value> is the amount to increase or decrease the stat by (positive or negative). ` +
