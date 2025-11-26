@@ -386,7 +386,7 @@ export async function generatePrimaryActorImage(actor: Actor, stage: Stage): Pro
             prompt: `Create a waist-up portrait of this character (${actor.description}) with a neutral expression and pose. Maintain a margin of negative space over their head/hair.`,
             remove_background: true,
             transfer_type: 'edit'
-        }, `actors/${actor.id}/base.png`, '');
+        }, '');
         
         console.log(`Generated base emotion image for actor ${actor.name} from avatar image: ${imageUrl || ''}`);
         
@@ -419,7 +419,7 @@ async function generateEmotionImage(actor: Actor, emotion: Emotion, stage: Stage
             prompt: `Give this character a ${EMOTION_PROMPTS[emotion]}, gesture, or pose.`,
             remove_background: true,
             transfer_type: 'edit'
-        }, `actors/${actor.id}/${emotion}.png`, '');
+        }, '');
         const imageUrl = await stage.imageGenerationPromises[`actor/${actor.id}`];
         delete stage.imageGenerationPromises[`actor/${actor.id}`];
         console.log(`Generated ${emotion} emotion image for actor ${actor.name}: ${imageUrl || ''}`);
@@ -441,7 +441,7 @@ export async function generateActorDecor(actor: Actor, module: Module, stage: St
                 `redecorating the space with furnishings or details to suit this style: ${actor.style}`,
         remove_background: false,
         transfer_type: 'edit'
-    }, `actors/${actor.id}/${module.type}/decor.png`, module.getAttribute('baseImageUrl') || '');
+    }, module.getAttribute('baseImageUrl') || '');
     console.log(`Generated decor image for actor ${actor.name} and ${module.type}: ${decorImageUrl || ''}`);
     actor.decorImageUrls[module.type] = decorImageUrl || '';
     return decorImageUrl || '';

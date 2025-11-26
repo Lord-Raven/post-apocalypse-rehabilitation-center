@@ -94,7 +94,6 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
     reserveActors: Actor[] = [];
     reserveFactions: Faction[] = [];
 
-    imagePipeline: any;
     initialized: boolean = false;
 
     constructor(data: InitialData<InitStateType, ChatStateType, MessageStateType, ConfigType>) {
@@ -136,8 +135,6 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
             // Rehydrate saves with proper class instances
             this.saves = this.saves.map(save => this.rehydrateSave(save));
         }
-
-        this.imagePipeline = null;
 
         this.mcp.registerTool('stationStatChange',
             {
@@ -195,12 +192,6 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
     }
 
     async load(): Promise<Partial<LoadResponse<InitStateType, ChatStateType, MessageStateType>>> {
-
-        try {
-            this.imagePipeline = await Client.connect("ravenok/Depth-Anything-V2");
-        } catch (exception: any) {
-            console.error(`Error loading HuggingFace pipelines, error: ${exception}`);
-        }
 
         return {
             success: true,
@@ -453,19 +444,12 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
         return (await this.generator.makeImage(imageRequest))?.url ?? defaultUrl;
     }
 
-    async makeImageFromImage(imageToImageRequest: any, storageName: string, defaultUrl: string): Promise<string> {
+    async makeImageFromImage(imageToImageRequest: any, defaultUrl: string): Promise<string> {
 
         const imageUrl = (await this.generator.imageToImage(imageToImageRequest))?.url ?? defaultUrl;
-        if (imageToImageRequest.remove_background && imageUrl != defaultUrl && this.imagePipeline) {
+        if (imageToImageRequest.remove_background && imageUrl != defaultUrl) {
             try {
-                this.generator.removeBackground({
-                    image: imageUrl,
-                }).then((response) => {
-                    console.log(`Asynchronously removed background from image ${imageUrl} to get ${response?.url}`);
-                }).catch((error) => {
-                    console.error(`Error asynchronously removing background from image ${imageUrl}`, error);
-                });
-                return this.removeBackground(imageUrl, true, storageName);
+                return this.removeBackground(imageUrl);
             } catch (exception: any) {
                 console.error(`Error removing background from image, error`, exception);
                 return imageUrl;
@@ -474,24 +458,13 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
         return imageUrl;
     }
 
-    async removeBackground(imageUrl: string, soften: boolean, storageName: string) {
-        if (!imageUrl || !this.imagePipeline) return imageUrl;
-        console.log(`removeBackground(${imageUrl}, ${storageName})`);
+    async removeBackground(imageUrl: string) {
+        if (!imageUrl) return imageUrl;
         try {
-            const response = await fetch(imageUrl);
-            const backgroundlessResponse = await this.imagePipeline.predict("/remove_background", {image: await response.blob()});
-            // Depth URL is the HF URL; back it up to Chub by creating a File from the image data:
-            // If soften is true, we can apply a slight blur to reduce noise and accumulated artifacts.
-            
-            let finalBlob = await (await fetch(backgroundlessResponse.data[1].url)).blob();
-            
-            if (soften) {
-                finalBlob = await this.softenImage(finalBlob);
-            }
-            
-            return await this.uploadBlob(storageName, finalBlob, {type: 'image/png'});
+            const response = await this.generator.removeBackground({image: imageUrl});
+            return response?.url ?? imageUrl;
         } catch (error) {
-            console.error(`Error removing background or storing result`, error);
+            console.error(`Error removing background`, error);
             return imageUrl;
         }
     }
