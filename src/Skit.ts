@@ -114,7 +114,7 @@ export function generateSkitPrompt(skit: SkitData, stage: Stage, includeHistory:
     }
 
     let pastSkits = stage.getSave().timeline?.filter(event => event.skit).map(event => event.skit as SkitData) || []
-    pastSkits = pastSkits.filter((v, index) => index > (pastSkits.length || 0) - 5);
+    pastSkits = pastSkits.filter((v, index) => index > (pastSkits.length || 0) - 3);
     const module = stage.getSave().layout.getModuleById(skit.moduleId || '');
     const moduleOwner = module?.ownerId ? stage.getSave().actors[module.ownerId] : null;
 
