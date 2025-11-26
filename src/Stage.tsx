@@ -94,7 +94,6 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
     reserveActors: Actor[] = [];
     reserveFactions: Faction[] = [];
 
-    emotionPipeline: any;
     imagePipeline: any;
     initialized: boolean = false;
 
@@ -138,7 +137,6 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
             this.saves = this.saves.map(save => this.rehydrateSave(save));
         }
 
-        this.emotionPipeline = null;
         this.imagePipeline = null;
 
         this.mcp.registerTool('stationStatChange',
@@ -199,7 +197,6 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
     async load(): Promise<Partial<LoadResponse<InitStateType, ChatStateType, MessageStateType>>> {
 
         try {
-            this.emotionPipeline = await Client.connect("ravenok/emotions");
             this.imagePipeline = await Client.connect("ravenok/Depth-Anything-V2");
         } catch (exception: any) {
             console.error(`Error loading HuggingFace pipelines, error: ${exception}`);
@@ -461,6 +458,13 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
         const imageUrl = (await this.generator.imageToImage(imageToImageRequest))?.url ?? defaultUrl;
         if (imageToImageRequest.remove_background && imageUrl != defaultUrl && this.imagePipeline) {
             try {
+                this.generator.removeBackground({
+                    image: imageUrl,
+                }).then((response) => {
+                    console.log(`Asynchronously removed background from image ${imageUrl} to get ${response?.url}`);
+                }).catch((error) => {
+                    console.error(`Error asynchronously removing background from image ${imageUrl}`, error);
+                });
                 return this.removeBackground(imageUrl, true, storageName);
             } catch (exception: any) {
                 console.error(`Error removing background from image, error`, exception);
