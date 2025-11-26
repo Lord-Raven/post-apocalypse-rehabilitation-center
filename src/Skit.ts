@@ -501,6 +501,10 @@ export async function generateSkitScript(skit: SkitData, stage: Stage): Promise<
                     const finalEntry = scriptEntries[scriptEntries.length - 1];
                     finalEntry.endScene = true;
                 }
+
+                skit.endProperties = statChanges;
+                skit.requests = requests;
+                
                 return { entries: scriptEntries, endScene: endScene, statChanges: statChanges, requests: requests };
             }
         } catch (error) {
