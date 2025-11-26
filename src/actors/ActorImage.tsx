@@ -132,7 +132,7 @@ const ActorImage: FC<ActorImageProps> = ({
                         } : { opacity: 0, filter: 'blur(2.5px)' }}
                         exit={{ opacity: 0 }}
                         transition={actor.remote ? {
-                            opacity: { duration: 2.5, repeat: Infinity, ease: "easeInOut" },
+                            opacity: { duration: 0.5, ease: "easeInOut" },
                             filter: { duration: 3.2, repeat: Infinity, ease: "easeInOut" }
                         } : { duration: 0.5 }}
                         style={{
@@ -249,7 +249,7 @@ const ActorImage: FC<ActorImageProps> = ({
                                 WebkitMaskSize: '100% 200%',
                                 maskPosition: '0% -100%',
                                 WebkitMaskPosition: '0% -100%',
-                                animation: 'scanlineMove 10s linear infinite',
+                                animation: 'scanlineMove 6s linear infinite',
                                 pointerEvents: 'none'
                             }}
                             alt={`${actor.name} (${emotion}) scanline`}

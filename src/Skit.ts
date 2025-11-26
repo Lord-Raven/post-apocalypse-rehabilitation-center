@@ -174,7 +174,7 @@ export async function generateSkitScript(skit: SkitData, stage: Stage): Promise<
     // There are two optional phrases for gently/more firmly prodding the model toward wrapping up the scene, and then we calculate one to show based on the skit.script.length and some randomness:
     const wrapUpPhrases = [
         ` Consider whether the scene can reach a natural stopping point in this response, but don't force it; if more development feels needed, allow the scene to continue.`, // Gently prod toward and ending.
-        ` The scene is getting long and this response should try to aim for a satisfactory conclusion, potentially ending with stat boosts ([CHARACTER NAME: RELEVANT STAT + 1]) and/or an [END SCENE] tag.` // Firmer prod
+        ` The scene is getting long and this response should attempt to craft a satisfactory conclusion, ending with an "[END SCENE]" tag.` // Firmer prod
     ];
 
     // Use script length + random(1, 10) > 12 for gentle or > 24 for firm.
@@ -190,11 +190,11 @@ export async function generateSkitScript(skit: SkitData, stage: Stage): Promise<
         `\n\nCurrent Scene Script Log to Continue:\nSystem: ${buildScriptLog(skit)}` +
         `\n\nInstruction:\nAt the "System:" prompt, generate a short scene script based upon this scenario and the specified Scene Prompt, involving the Present Characters (Absent Characters are listed for reference only). ` +
         `The script should consider characters' stats, their relationships, past events, and the station's stats and their potential impact upon this scene. ` +
-        `\nFollow the structure of the strict Example Script formatting above. ` +
-        `Actions are depicted in prose and character dialogue in quotation marks. Emotion tags (e.g. [CHARACTER NAME EXPRESSES JOY]) should be used to indicate significant emotional shifts—` +
+        `\nFollow the structure of the strict Example Script formatting above: ` +
+        `actions are depicted in prose and character dialogue in quotation marks. Emotion tags (e.g. "[CHARACTER NAME EXPRESSES JOY]") should be used to indicate significant emotional shifts—` +
         `these cues will be utilized by the game engine to visually display appropriate character emotions.\n` +
         `This response should end when it makes sense to give ${playerName} a chance to respond or contribute, ` +
-        `or, if the scene feels satisfactorily complete, the entire scene can be concluded with an "[END SCENE]".${wrapupPrompt}`
+        `or, if the scene feels concluded, the response should end with a "[END SCENE]" tag.${wrapupPrompt}`
     );
 
     // Retry logic if response is null or response.result is empty
