@@ -135,7 +135,7 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
             // Rehydrate saves with proper class instances
             this.saves = this.saves.map(save => this.rehydrateSave(save));
         }
-
+/*
         this.mcp.registerTool('stationStatChange',
             {
                 title: 'Modify a Station Stat',
@@ -188,7 +188,7 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
                 console.log(`Tool called: createRequest(${requestDescription})`);
                 return { content: [{type: 'text', text: `Request created: ${requestDescription}` }] };
             }
-        )
+        )*/
     }
 
     async load(): Promise<Partial<LoadResponse<InitStateType, ChatStateType, MessageStateType>>> {
