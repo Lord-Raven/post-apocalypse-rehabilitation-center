@@ -150,8 +150,8 @@ export function generateSkitPrompt(skit: SkitData, stage: Stage, includeHistory:
         (faction ? `\nThis skit may explore the nature of this faction's relationship with and intentions for the Director, the PARC, or other characters present in the Comms module (if any). ` +
             `However, this and other factions generally contact the PARC to express interest or make offers: ` +
             `\n1) Most commonly, these are 'job' openings with certain character qualities (or limitations) in mind.` +
-            `\n2) Sometimes, these 'job' offers target a specific patient.` +
-            `\n3) Finally, some offers are for other Station resources or exchanges; these may be based on the PARCs core stats, but presented in an abstract fashion.` +
+            `\n2) Sometimes, these 'job' offers target a specific patient of the PARC.` +
+            `\n3) Finally, some offers are for other Station resources or exchanges; these are informed by the PARC's core stats, but typically presented in a narrative or abstract fashion.` +
             `\nAll requests come with some offer of compensation. Remember that a 'job' in this context may be something the Director can compel a patient into—not necessarily gainful employment. ` +
             `Although deals and offers are discussed in this skit, they can only be finalized through a separate game mechanic, so the skit should leave the offer open without confirming anything.` : '') +
         (module ? (`\n\nModule Details:\n  This scene is set in ` +
@@ -162,7 +162,7 @@ export function generateSkitPrompt(skit: SkitData, stage: Stage, includeHistory:
             // Include last 5 skit scripts for context and style reference
             '\n\nRecent Scene Scripts for additional context:' + pastSkits.map((v, index) => 
                 `\n\n  Scene in ${stage.getSave().layout.getModuleById(v.moduleId || '')?.type || 'Unknown'} (${stage.getSave().day - v.context.day}) days ago:\n` +
-                `System: ${buildScriptLog(v)}[END SCENE]`).join('') :
+                `System: ${buildScriptLog(v)}\n[END]`).join('') :
             '') +
         `\n\n${instruction}`;
     return fullPrompt;
@@ -173,8 +173,8 @@ export async function generateSkitScript(skit: SkitData, stage: Stage): Promise<
     
     // There are two optional phrases for gently/more firmly prodding the model toward wrapping up the scene, and then we calculate one to show based on the skit.script.length and some randomness:
     const wrapUpPhrases = [
-        ` Consider whether the scene can reach a natural stopping point in this response, but don't force it; if more development feels needed, allow the scene to continue.`, // Gently prod toward and ending.
-        ` The scene is getting long and this response should attempt to craft a satisfactory conclusion, ending with an "[END SCENE]" tag.` // Firmer prod
+        ` Consider whether the scene can reach a natural stopping point in this response, but don't force it, if more development feels warranted or compelling.`, // Gently prod toward and ending.
+        ` This scene is getting long; craft a satisfactory conclusion and output an "[END]" tag.` // Firmer prod
     ];
 
     // Use script length + random(1, 10) > 12 for gentle or > 24 for firm.
@@ -186,7 +186,7 @@ export async function generateSkitScript(skit: SkitData, stage: Stage): Promise<
         'System: CHARACTER NAME: They do actions in prose. "Their dialogue is in quotation marks."\nANOTHER CHARACTER NAME: [ANOTHER CHARACTER EXPRESSES JOY][CHARACTER NAME EXPRESSES SURPRISE] "Dialogue in quotation marks."\nNARRATOR: [CHARACTER NAME EXPRESSES RELIEF] Descriptive content that is not attributed to a character.' +
         `\n\nExample Ending Script Format:\n` +
         'System: CHARACTER NAME: [CHARACTER NAME EXPRESSES OPTIMISM] Action in prose. "Dialogue in quotation marks."\nNARRATOR: Conclusive ending to the scene in prose.' +
-        `\n[END SCENE]` +
+        `\n[END]` +
         `\n\nCurrent Scene Script Log to Continue:\nSystem: ${buildScriptLog(skit)}` +
         `\n\nInstruction:\nAt the "System:" prompt, ${skit.script.length == 0 ? 'generate a short scene script' : 'extend or wrap-up the current scene script'} based upon the Premise and the specified Scene Prompt, ` +
         `involving the Present Characters (Absent Characters are listed for reference only). ` +
@@ -196,7 +196,7 @@ export async function generateSkitScript(skit: SkitData, stage: Stage): Promise<
         `these cues will be utilized by the game engine to visually display appropriate character emotions.\n` +
         `This scene is a brief narrative moment within the context of a game; the scene should avoid major developments which would fundamentally change the mechanics or nature of the game. ` +
         `Generally, focus upon interpersonal dynamics, character growth, faction relationships, and the state of the Station and its inhabitants. ` +
-        `If the scene has run its course, this response should end with a special "[END SCENE]" tag, so the game can continue.${wrapupPrompt}`
+        `When the scene reaches a stopping point, this response should output an "[END]" tag, so the game can continue.${wrapupPrompt}`
     );
 
     // Retry logic if response is null or response.result is empty

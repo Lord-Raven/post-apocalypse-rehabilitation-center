@@ -118,7 +118,7 @@ const ActorImage: FC<ActorImageProps> = ({
                 {/* Previous image layer for crossfade */}
                 {prevImageUrl && prevImageUrl !== processedImageUrl && (
                     <motion.img
-                        key="prev"
+                        key={`${actor.id}_${prevImageUrl}_prev`}
                         src={prevImageUrl}
                         initial={{ opacity: 1 }}
                         animate={{ opacity: 0 }}
@@ -129,10 +129,10 @@ const ActorImage: FC<ActorImageProps> = ({
                             top: 0,
                             width: '100%',
                             height: '100%',
+                            filter: 'blur(2.5px)',
                             zIndex: 4,
                             transform: `translate(calc(${modX}vw - 50%), ${modY}vh)`,
-                            pointerEvents: 'none',
-                            filter: 'blur(2.5px)'
+                            pointerEvents: 'none'
                         }}
                         alt={`${actor.name} (${emotion}) previous`}
                     />

@@ -41,7 +41,7 @@ import TypeOut from '../components/TypeOut';
 const baseTextShadow = '2px 2px 2px rgba(0, 0, 0, 0.8)';
 
 // Helper function to brighten a color for better visibility
-const brightenColor = (color: string, amount: number = 0.6): string => {
+const adjustColor = (color: string, amount: number = 0.6): string => {
     // Parse hex color
     const hex = color.replace('#', '');
     const r = parseInt(hex.substring(0, 2), 16);
@@ -75,14 +75,14 @@ const formatMessage = (text: string, speakerActor?: Actor | null): JSX.Element =
                 if (part.startsWith('"') && part.endsWith('"')) {
                     // Apply custom font and drop shadow to dialogue if speaker has custom properties
                     const brightenedColor = speakerActor?.themeColor 
-                        ? brightenColor(speakerActor.themeColor, 0.8)
+                        ? adjustColor(speakerActor.themeColor, 0.7)
                         : '#87CEEB';
                     
                     const dialogueStyle: React.CSSProperties = { 
                         color: brightenedColor,
                         fontFamily: speakerActor?.themeFontFamily || undefined,
                         textShadow: speakerActor?.themeColor 
-                            ? `2px 2px 2px ${speakerActor.themeColor}`
+                            ? `2px 2px 2px ${adjustColor(speakerActor.themeColor, -0.25)}`
                             : '2px 2px 2px rgba(135, 206, 235, 0.5)'
                     };
                     return (
