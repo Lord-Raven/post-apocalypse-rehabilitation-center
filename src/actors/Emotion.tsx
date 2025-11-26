@@ -137,6 +137,7 @@ export const EMOTION_SYNONYMS: {[key: string]: Emotion} = {
     relief: Emotion.wonder,
     hope: Emotion.wonder,
     humor: Emotion.joy,
+    challenge: Emotion.pride,
 }
 
 export const EMOTION_PROMPTS: {[emotion in Emotion]?: string} = {

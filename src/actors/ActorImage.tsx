@@ -114,7 +114,7 @@ const ActorImage: FC<ActorImageProps> = ({
             exit='absent'
             animate={speaker ? 'talking' : 'idle'}
             style={{position: 'absolute', width: 'auto', aspectRatio, overflow: 'visible', zIndex: speaker ? 100 : zIndex}}>
-            <AnimatePresence>
+            <AnimatePresence mode="wait">
                 {/* Previous image layer for crossfade */}
                 {prevImageUrl && prevImageUrl !== processedImageUrl && (
                     <motion.img
@@ -138,11 +138,11 @@ const ActorImage: FC<ActorImageProps> = ({
                     />
                 )}
             </AnimatePresence>
-            <AnimatePresence>
+            <AnimatePresence mode="wait">
                 {/* Backing image layer - solid but blurry. */}
                 {processedImageUrl && (
                     <motion.img
-                        key={`${actor.id}_${imageUrl}_bg`}
+                        key={`${actor.id}_${processedImageUrl}_bg`}
                         src={processedImageUrl}
                         initial={{ opacity: 0 }}
                         animate={actor.remote ? {
@@ -156,8 +156,8 @@ const ActorImage: FC<ActorImageProps> = ({
                         } : { opacity: 1, filter: 'blur(2.5px)' }}
                         exit={{ opacity: 0 }}
                         transition={actor.remote ? {
-                            opacity: { duration: 2.5, repeat: Infinity, ease: "easeInOut" },
-                            filter: { duration: 2.7, repeat: Infinity, ease: "easeInOut" }
+                            opacity: { duration: 2.5, repeat: Infinity, ease: "easeInOut", repeatType: "loop" },
+                            filter: { duration: 2.7, repeat: Infinity, ease: "easeInOut", repeatType: "loop" }
                         } : { duration: 0.5 }}
                         style={{
                             position: 'absolute',
@@ -172,11 +172,11 @@ const ActorImage: FC<ActorImageProps> = ({
                     />
                 )}
             </AnimatePresence>
-            <AnimatePresence>
+            <AnimatePresence mode="wait">
                 {/* Main image layer - semi transparent, but crisp. */}
                 {processedImageUrl && (
                     <motion.img
-                        key={`${actor.id}_${imageUrl}_main`}
+                        key={`${actor.id}_${processedImageUrl}_main`}
                         src={processedImageUrl}
                         initial={{ opacity: 0 }}
                         animate={actor.remote ? {
@@ -190,8 +190,8 @@ const ActorImage: FC<ActorImageProps> = ({
                         } : { opacity: 0.75 }}
                         exit={{ opacity: 0 }}
                         transition={actor.remote ? {
-                            opacity: { duration: 2.5, repeat: Infinity, ease: "easeInOut" },
-                            filter: { duration: 3.8, repeat: Infinity, ease: "easeInOut" }
+                            opacity: { duration: 2.5, repeat: Infinity, ease: "easeInOut", repeatType: "loop" },
+                            filter: { duration: 3.8, repeat: Infinity, ease: "easeInOut", repeatType: "loop" }
                         } : { duration: 0.5 }}
                         style={{
                             position: 'absolute',
@@ -209,10 +209,10 @@ const ActorImage: FC<ActorImageProps> = ({
             </AnimatePresence>
             {/* Rolling scanline effect for remote actors */}
             {actor.remote && (
-                <AnimatePresence>
+                <AnimatePresence mode="wait">
                     {processedImageUrl && (
                         <motion.img
-                            key={`${actor.id}_${imageUrl}_scanline`}
+                            key={`${actor.id}_${processedImageUrl}_scanline`}
                             src={processedImageUrl}
                             initial={{ 
                                 opacity: 0,

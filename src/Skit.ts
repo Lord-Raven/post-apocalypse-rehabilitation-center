@@ -84,7 +84,7 @@ export function generateSkitTypePrompt(skit: SkitData, stage: Stage, continuing:
 
 function buildScriptLog(skit: SkitData): string {
         return skit.script && skit.script.length > 0 ?
-        skit.script.map(e => `${e.speaker}:${Object.keys(e.actorEmotions || {}).map(emotion => ` [${e.speaker} EXPRESSES ${emotion.toUpperCase()}]`).join('')} ${e.message}`).join('\n')
+        skit.script.map(e => `${e.speaker}:${e.message}${Object.keys(e.actorEmotions || {}).filter(feeler => namesMatch(feeler, e.speaker)).map(feeler => ` [${feeler} EXPRESSES ${e.actorEmotions?.[feeler]}]`).join('\n')} `).join('\n')
         : '(None so far)';
 }
 
@@ -173,7 +173,7 @@ export async function generateSkitScript(skit: SkitData, stage: Stage): Promise<
     
     // There are two optional phrases for gently/more firmly prodding the model toward wrapping up the scene, and then we calculate one to show based on the skit.script.length and some randomness:
     const wrapUpPhrases = [
-        ` Consider whether the scene can reach a natural stopping point in this response, but don't force it, if more development feels warranted or compelling.`, // Gently prod toward and ending.
+        ` Consider whether the scene has reached or can reach a natural stopping point in this response; if so, conclude the response with an "[END]" tag.`, // Gently prod toward and ending.
         ` This scene is getting long; craft a satisfactory conclusion and output an "[END]" tag.` // Firmer prod
     ];
 
