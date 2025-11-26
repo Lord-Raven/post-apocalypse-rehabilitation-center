@@ -206,7 +206,6 @@ const ActorImage: FC<ActorImageProps> = ({
                             top: 0,
                             width: '100%',
                             height: '100%',
-                            opacity: 0.75,
                             zIndex: 5,
                             transform: `translate(calc(${modX}vw - 50%), ${modY}vh)`,
                         }}
