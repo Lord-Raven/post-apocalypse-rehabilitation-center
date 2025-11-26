@@ -151,9 +151,9 @@ export function generateSkitPrompt(skit: SkitData, stage: Stage, includeHistory:
             `However, this and other factions generally contact the PARC to express interest or make offers: ` +
             `\n1) Most commonly, these are 'job' openings with certain character qualities (or limitations) in mind.` +
             `\n2) Sometimes, these 'job' offers target a specific patient.` +
-            `\n3) Finally, some offers are for other Station resources or exchanges.` +
+            `\n3) Finally, some offers are for other Station resources or exchanges; these may be based on the PARCs core stats, but presented in an abstract fashion.` +
             `\nAll requests come with some offer of compensation. Remember that a 'job' in this context may be something the Director can compel a patient into—not necessarily gainful employment. ` +
-            `Although deals and offers are discussed in this skit, they can only be completed through a separate game mechanic, so the skit should end without finalizing anything.` : '') +
+            `Although deals and offers are discussed in this skit, they can only be finalized through a separate game mechanic, so the skit should leave the offer open without confirming anything.` : '') +
         (module ? (`\n\nModule Details:\n  This scene is set in ` +
             `${module.type === 'quarters' ? `${moduleOwner ? `${moduleOwner.name}'s` : 'a vacant'} quarters` : 
             `the ${module.type || 'Unknown'}`}. ${module.getAttribute('skitPrompt') || 'No description available.'}\n`) : '') +
@@ -375,7 +375,8 @@ export async function generateSkitScript(skit: SkitData, stage: Stage): Promise<
                     console.log('Scene end predicted; preparing to analyze for requests and stat changes.');
 
                     ttsPromises.push((async () => {
-                        const analysisPrompt = generateSkitPrompt(skit, stage, false,
+                        const analysisPrompt = generateSkitPrompt(skit, stage, true,
+                            `Scene Script:\nSystem: ${buildScriptLog(skit)}` +
                             `\n\nInstruction:\nAnalyze the preceding scene script and output formatted tags in brackets, identifying the following categorical changes to be inorporated into the game. ` +
                             `\n\nCharacter Stat Changes:\nIdentify any changes to character stats implied by the scene. For each change, output a line in the following format:\n` +
                             `"[CHARACTER NAME: <stat> +<value>(, ...)]"` +
