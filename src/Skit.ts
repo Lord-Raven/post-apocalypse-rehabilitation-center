@@ -162,7 +162,7 @@ export function generateSkitPrompt(skit: SkitData, stage: Stage, includeHistory:
             // Include last 5 skit scripts for context and style reference
             '\n\nRecent Scene Scripts for additional context:' + pastSkits.map((v, index) => 
                 `\n\n  Scene in ${stage.getSave().layout.getModuleById(v.moduleId || '')?.type || 'Unknown'} (${stage.getSave().day - v.context.day}) days ago:\n` +
-                `System: ${buildScriptLog(v)}\n[END]`).join('') :
+                `System: ${buildScriptLog(v)}\n[SUMMARY: Scene in ${stage.getSave().layout.getModuleById(v.moduleId || '')?.type || 'Unknown'}]`).join('') :
             '') +
         `\n\n${instruction}`;
     return fullPrompt;
@@ -173,8 +173,8 @@ export async function generateSkitScript(skit: SkitData, stage: Stage): Promise<
     
     // There are two optional phrases for gently/more firmly prodding the model toward wrapping up the scene, and then we calculate one to show based on the skit.script.length and some randomness:
     const wrapUpPhrases = [
-        ` Consider whether the scene has reached or can reach a natural stopping point in this response; if so, conclude the response with an "[END]" tag.`, // Gently prod toward and ending.
-        ` This scene is getting long; craft a satisfactory conclusion and output an "[END]" tag.` // Firmer prod
+        ` Consider whether the scene has reached or can reach a natural stopping point in this response; if so, conclude the response with a "[SUMMARY]" tag.`, // Gently prod toward and ending.
+        ` This scene is getting long; craft a satisfactory conclusion and output an "[SUMMARY]" tag.` // Firmer prod
     ];
 
     // Use script length + random(1, 10) > 12 for gentle or > 24 for firm.
@@ -185,8 +185,8 @@ export async function generateSkitScript(skit: SkitData, stage: Stage): Promise<
         `Example Script Format:\n` +
         'System: CHARACTER NAME: They do actions in prose. "Their dialogue is in quotation marks."\nANOTHER CHARACTER NAME: [ANOTHER CHARACTER EXPRESSES JOY][CHARACTER NAME EXPRESSES SURPRISE] "Dialogue in quotation marks."\nNARRATOR: [CHARACTER NAME EXPRESSES RELIEF] Descriptive content that is not attributed to a character.' +
         `\n\nExample Ending Script Format:\n` +
-        'System: CHARACTER NAME: [CHARACTER NAME EXPRESSES OPTIMISM] Action in prose. "Dialogue in quotation marks."\nNARRATOR: Conclusive ending to the scene in prose.' +
-        `\n[END]` +
+        'System: CHARACTER NAME: [CHARACTER NAME EXPRESSES OPTIMISM] Action in prose. "Dialogue in quotation marks."\nNARRATOR: Implicit ending to the scene in prose.' +
+        `\n[SUMMARY: Two characters interacted as a demonstration.]` +
         `\n\nCurrent Scene Script Log to Continue:\nSystem: ${buildScriptLog(skit)}` +
         `\n\nPrimary Instruction:\nAt the "System:" prompt, ${skit.script.length == 0 ? 'generate a short scene script' : 'extend or conclude the current scene script'} based upon the Premise and the specified Scene Prompt, ` +
         `involving the Present Characters (Absent Characters are listed for reference only). ` +
@@ -194,11 +194,11 @@ export async function generateSkitScript(skit: SkitData, stage: Stage): Promise<
         `\nFollow the structure of the strict Example Script formatting above: ` +
         `actions are depicted in prose and character dialogue in quotation marks. Emotion tags (e.g. "[CHARACTER NAME EXPRESSES JOY]") should be used to indicate significant emotional shifts—` +
         `these cues will be utilized by the game engine to visually display appropriate character emotions. ` +
-        `An end tag (e.g., "[END: Optional scene summary]") should be placed at the end of the scene. ` +
+        `An end tag (e.g., "[SUMMARY: Brief summary of the scenes events.]") should be placed at the end of the scene. ` +
         `\nThis scene is a brief narrative moment within the context of a game; the scene should avoid major developments which would fundamentally change the mechanics or nature of the game, ` +
         `instead developing content within the existing framework. ` +
         `Generally, focus upon interpersonal dynamics, character growth, faction relationships, and the state of the Station and its inhabitants. ` +
-        `\nWhen the scene encounters a reasonable stopping point or implicit closure—or if it is already there—, output the critical "[END: scene summary]" tag, containing a brief description of the scene's events.${wrapupPrompt}`
+        `\nWhen the scene encounters a reasonable stopping point or implicit closure—or if it is already there—, output the critical "[SUMMARY: A brief synopsis]" tag, containing a brief description of the scene's events.${wrapupPrompt}`
     );
 
     // Retry logic if response is null or response.result is empty
@@ -227,7 +227,7 @@ export async function generateSkitScript(skit: SkitData, stage: Stage): Promise<
                     let trimmed = line.trim();
 
                     // First, look for an ending tag.
-                    if (trimmed.startsWith('[END')) {
+                    if (trimmed.startsWith('[SUMMARY')) {
                         console.log("Detected end scene tag.");
                         endScene = true;
                         continue;
