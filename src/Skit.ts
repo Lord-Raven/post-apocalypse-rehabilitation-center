@@ -196,7 +196,7 @@ export async function generateSkitScript(skit: SkitData, stage: Stage): Promise<
         `these cues will be utilized by the game engine to visually display appropriate character emotions.\n` +
         `This scene is a brief narrative moment within the context of a game; the scene should avoid major developments which would fundamentally change the mechanics or nature of the game. ` +
         `Generally, focus upon interpersonal dynamics, character growth, faction relationships, and the state of the Station and its inhabitants. ` +
-        `When the scene has run its course, this response must end with a special "[END SCENE]" tag, so the game can continue.${wrapupPrompt}`
+        `If the scene has run its course, this response should end with a special "[END SCENE]" tag, so the game can continue.${wrapupPrompt}`
     );
 
     // Retry logic if response is null or response.result is empty
@@ -207,8 +207,7 @@ export async function generateSkitScript(skit: SkitData, stage: Stage): Promise<
                 prompt: fullPrompt,
                 min_tokens: 100,
                 max_tokens: 500,
-                include_history: true,
-                stop: ['[END SCENE]']
+                include_history: true
             });
             if (response && response.result && response.result.trim().length > 0) {
                 // First, detect and parse any END tags and stat changes that may be embedded in the response.
