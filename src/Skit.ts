@@ -2,6 +2,7 @@ import Actor, { getStatDescription, namesMatch, Stat } from "./actors/Actor";
 import { Emotion, EMOTION_SYNONYMS } from "./actors/Emotion";
 import { getStatRating, STATION_STAT_PROMPTS, StationStat } from "./Module";
 import { Stage } from "./Stage";
+import { Request } from "./factions/Request";
 
 export enum SkitType {
     INTRO_CHARACTER = 'INTRO CHARACTER',
@@ -19,7 +20,6 @@ export interface ScriptEntry {
     speechUrl: string; // URL of TTS audio
     actorEmotions?: {[key: string]: Emotion}; // actor name -> emotion string
     endScene?: boolean; // Whether this entry marks the end of the scene
-    endProperties?: { [actorId: string]: { [stat: string]: number } }; // Stat changes to apply when scene ends
 }
 
 export interface SkitData {
@@ -29,6 +29,8 @@ export interface SkitData {
     script: ScriptEntry[];
     generating?: boolean;
     context: any;
+    requests?: Request[];
+    endProperties?: { [actorId: string]: { [stat: string]: number } }; // Stat changes to apply when scene ends
 }
 
 export function generateSkitTypePrompt(skit: SkitData, stage: Stage, continuing: boolean): string {
@@ -114,7 +116,7 @@ export function generateSkitPrompt(skit: SkitData, stage: Stage, includeHistory:
     }
 
     let pastSkits = stage.getSave().timeline?.filter(event => event.skit).map(event => event.skit as SkitData) || []
-    pastSkits = pastSkits.filter((v, index) => index > (pastSkits.length || 0) - 3);
+    pastSkits = pastSkits.filter((v, index) => index > (pastSkits.length || 0) - 4);
     const module = stage.getSave().layout.getModuleById(skit.moduleId || '');
     const moduleOwner = module?.ownerId ? stage.getSave().actors[module.ownerId] : null;
 
@@ -164,7 +166,7 @@ export function generateSkitPrompt(skit: SkitData, stage: Stage, includeHistory:
     return fullPrompt;
 }
 
-export async function generateSkitScript(skit: SkitData, stage: Stage): Promise<{ entries: ScriptEntry[]; endScene: boolean; statChanges: { [actorId: string]: { [stat: string]: number } } }> {
+export async function generateSkitScript(skit: SkitData, stage: Stage): Promise<{ entries: ScriptEntry[]; endScene: boolean; statChanges: { [actorId: string]: { [stat: string]: number } }; requests: Request[] }> {
     const playerName = stage.getSave().player.name;
     
     // There are two optional phrases for gently/more firmly prodding the model toward wrapping up the scene, and then we calculate one to show based on the skit.script.length and some randomness:
@@ -182,8 +184,6 @@ export async function generateSkitScript(skit: SkitData, stage: Stage): Promise<
         'System: CHARACTER NAME: They do actions in prose. "Their dialogue is in quotation marks."\nANOTHER CHARACTER NAME: [ANOTHER CHARACTER EXPRESSES JOY][CHARACTER NAME EXPRESSES SURPRISE] "Dialogue in quotation marks."\nNARRATOR: [CHARACTER NAME EXPRESSES RELIEF] Descriptive content that is not attributed to a character.' +
         `\n\nExample Ending Script Format:\n` +
         'System: CHARACTER NAME: [CHARACTER NAME EXPRESSES OPTIMISM] Action in prose. "Dialogue in quotation marks."\nNARRATOR: Conclusive ending to the scene in prose.' +
-        `\n[CHARACTER NAME: RELEVANT STAT + 1]` +
-        `\n[STATION: RELEVANT STAT + 1]` +
         `\n[END SCENE]` +
         `\n\nCurrent Scene Script Log to Continue:\nSystem: ${buildScriptLog(skit)}` +
         `\n\nInstruction:\nAt the "System:" prompt, generate a short scene script based upon this scenario and the specified Scene Prompt, involving the Present Characters (Absent Characters are listed for reference only). ` +
@@ -192,12 +192,7 @@ export async function generateSkitScript(skit: SkitData, stage: Stage): Promise<
         `Actions are depicted in prose and character dialogue in quotation marks. Emotion tags (e.g. [CHARACTER NAME EXPRESSES JOY]) should be used to indicate significant emotional shifts—` +
         `these cues will be utilized by the game engine to visually display appropriate character emotions.\n` +
         `This response should end when it makes sense to give ${playerName} a chance to respond or contribute, ` +
-        `or, if the scene feels satisfactorily complete, the entire scene can be concluded with an "[END SCENE]" or ` +
-        `"[CHARACTER NAME: RELEVANT STAT + x]" tag(s)—which can be used to apply stat changes to the specified Present Character(s)—` +
-        `or "[STATION: RELEVANT STAT + x]" tag(s)—which can be used to apply stat changes to the station as a whole (the station has five different stats). ` +
-        `Multiple stat change tags can be included, but they always end the scene, so be certain that the narrative moment feels complete before including them. ` +
-        `These changes should reflect an overt or implied outcome of the scene; ` +
-        `they should be incremental, typically (but not exclusively) positive, and applied only when the scene is ended.${wrapupPrompt}`
+        `or, if the scene feels satisfactorily complete, the entire scene can be concluded with an "[END SCENE]".${wrapupPrompt}`
     );
 
     // Retry logic if response is null or response.result is empty
@@ -207,15 +202,14 @@ export async function generateSkitScript(skit: SkitData, stage: Stage): Promise<
             const response = await stage.generator.textGen({
                 prompt: fullPrompt,
                 min_tokens: 100,
-                max_tokens: 600,
-                include_history: true
+                max_tokens: 500,
+                include_history: true,
+                stop: ['[END SCENE]']
             });
             if (response && response.result && response.result.trim().length > 0) {
                 // First, detect and parse any END tags and stat changes that may be embedded in the response.
                 let text = response.result;
                 let endScene = false;
-                // Map actorId -> { statName: delta }
-                const statChanges: { [actorId: string]: { [stat: string]: number } } = {};
 
                 // Parse response based on format "NAME: content"; content could be multi-line. We want to ensure that lines that don't start with a name are appended to the previous line.
                 const lines = text.split('\n');
@@ -224,22 +218,18 @@ export async function generateSkitScript(skit: SkitData, stage: Stage): Promise<
                 let currentLine = '';
                 let currentEmotionTags: {[key: string]: Emotion} = {};
                 for (const line of lines) {
-                    // Skip any explicit END tags that might have survived splitting
+                    // Skip empty lines
                     let trimmed = line.trim();
-                    if (!trimmed) continue;
+                    // If a line doesn't end with ], ., !, ?, or ", then it's likely incomplete and we should drop it.
+                    if (!trimmed || ![']', '*', '_', ')', '.', '!', '?', '"', '\''].some(end => trimmed.endsWith(end))) continue;
 
                     const newEmotionTags: {[key: string]: Emotion} = {};
-
 
                     // Prepare list of present actors (based on module/location)
                     const presentActors: Actor[] = Object.values(stage.getSave().actors).filter(a => a.locationId === (skit.moduleId || ''));
                     
                     // Process tags in the line:
                     // Detect [END SCENE] or [END] to determine whether the scene ends here
-                    // Detect separate stat-change tags of the form:
-                    // [Character Name: Stat +1]
-                    // or [STATION: Stat +1]
-                    // Also look for expression tags:
                     // [Character Name EXPRESSES Emotion]
                     for (const tag of trimmed.match(/\[[^\]]+\]/g) || []) {
                         const raw = tag.slice(1, -1).trim();
@@ -252,61 +242,6 @@ export async function generateSkitScript(skit: SkitData, stage: Stage): Promise<
                             console.log("Detected end scene tag.");
                             endScene = true;
                             continue;
-                        }
-
-                        // Attempt to split into "name" and "stat +/-1" by first ':'
-                        const split = raw.split(":");
-                        if (split.length >= 2) {
-                            console.log(`Processing stat change tag: ${raw}`);
-                            const candidateName = split[0].trim();
-                            const payload = raw.substring(raw.indexOf(split[1])).trim();
-
-                            // Find matching present actor using namesMatch
-                            const matched = presentActors.find(a => namesMatch(a.name.toLowerCase(), candidateName.toLowerCase()));
-                            if (!matched) {
-                                // Check for STATION tag
-                                if (candidateName.toUpperCase() === 'STATION') {
-                                    // Process station stat changes
-                                    // payload may contain multiple stat adjustments separated by '|' or ','
-                                    const adjustments = payload.split('|').flatMap(p => p.split(',')).map(p => p.trim()).filter(Boolean);
-                                    for (const adj of adjustments) {
-                                        // Capture stat name and signed number e.g. "Trust + 2"
-                                        const m = adj.match(/([A-Za-z\s]+)\s*([+-]\s*\d+)/i);
-                                        if (!m) continue;
-                                        const statNameRaw = m[1].trim();
-                                        const num = parseInt(m[2].replace(/\s+/g, ''), 10) || 0;
-
-                                        // Normalize stat name to possible Stat enum value if possible
-                                        let statKey = statNameRaw.toLowerCase().trim();
-                                        const enumMatch = Object.values(Stat).find(s => s.toLowerCase() === statKey || s.toLowerCase().includes(statKey) || statKey.includes(s.toLowerCase()));
-                                        if (enumMatch) statKey = enumMatch;
-
-                                        if (!statChanges['STATION']) statChanges['STATION'] = {};
-                                        statChanges['STATION'][statKey] = (statChanges['STATION'][statKey] || 0) + num;
-                                    }
-                                    endScene = true;
-                                }
-                                continue;
-                            } else {
-                                // payload may contain multiple stat adjustments separated by '|' or ','
-                                const adjustments = payload.split('|').flatMap(p => p.split(',')).map(p => p.trim()).filter(Boolean);
-                                for (const adj of adjustments) {
-                                    // Capture stat name and signed number e.g. "Trust + 2"
-                                    const m = adj.match(/([A-Za-z\s]+)\s*([+-]\s*\d+)/i);
-                                    if (!m) continue;
-                                    const statNameRaw = m[1].trim();
-                                    const num = parseInt(m[2].replace(/\s+/g, ''), 10) || 0;
-
-                                    // Normalize stat name to possible Stat enum value if possible
-                                    let statKey = statNameRaw.toLowerCase().trim();
-                                    const enumMatch = Object.values(Stat).find(s => s.toLowerCase() === statKey || s.toLowerCase().includes(statKey) || statKey.includes(s.toLowerCase()));
-                                    if (enumMatch) statKey = enumMatch;
-
-                                    if (!statChanges[matched.id]) statChanges[matched.id] = {};
-                                    statChanges[matched.id][statKey] = (statChanges[matched.id][statKey] || 0) + num;
-                                }
-                                endScene = true;
-                            }
                         }
 
                         // Look for expresses tags:
@@ -430,54 +365,131 @@ export async function generateSkitScript(skit: SkitData, stage: Stage): Promise<
                 })
                 console.log('Tool analysis response:', toolTest?.result);*/
 
-                // Run a testing textGen request that will analyze the script for potential requests by factions or other entities, and output results in following the format laid out in Request.tsx
-                const analysisPrompt = generateSkitPrompt(skit, stage, false,
-                    `Analyze the following skit script for any requests made by factions or other entities toward the player or station. ` +
-                    `\n\nInstruction:\nAnalyze the preceding scene script and output formatted tags in brackets, identifying the following changes to be inorporated into the game. ` +
-                    `\n\nCharacter Stat Changes:\nIdentify any changes to character stats implied by the scene. For each change, output a line in the following format:\n` +
-                    `"[CHARACTER NAME: <stat> +<value>(, ...)]"` +
-                    `Where <stat> is the name of the stat to be changed, and <value> is the amount to increase or decrease the stat by (positive or negative). ` +
-                    `Multiple stat changes can be included in a single tag, separated by commas. Similarly, multiple character tags can be provided in the output.\n\n` +
-                    `Station Stat Changes:\nIdentify any changes to station stats implied by the scene. For each change, output a line in the following format:\n` +
-                    `"[STATION: <stat> +<value>(, ...)]"` +
-                    `Where <stat> is the name of the station stat to be changed, and <value> is the amount to increase or decrease the stat by (positive or negative). ` +
-                    `Multiple stat changes can be included in a single tag, separated by commas.\n\n` +
-                    `Faction Requests:\n` +
-                    `Identify any requests made by factions or faction representatives toward the player or station. ` +
-                    `For each request identified, output a line in the following format:\n` +
-                    `"[REQUEST: <factionName> | <description> | <requirement> -> <reward>]"` +
-                    `Where <factionName> is the name of the faction making the request, <description> is a brief summary of the request, ` +
-                    `<requirement> is what the player must do to fulfill the request, and <reward> is what the player will receive upon completion.\n` +
-                    `Valid <requirement> formats:\n` +
-                    `"  ACTOR <stat><op><value>[, <stat><op><value>]" // Actor with one or more stat constraints\n` +
-                    `   - op can be: >= (min), <= (max)\n` +
-                    `   - Example: ACTOR brawn>=7, charm>=5, lust<=3\n` +
-                    `"  ACTOR-NAME <actorName>" // Specific actor by name\n` +
-                    `   - Example: ACTOR-NAME Jane Doe\n` +
-                    `"  STATION <stat>-<value>[, <stat>-<value>]" // Station stats to be reduced\n` +
-                    `   - Stats will be reduced by the specified amounts\n` +
-                    `   - Example: STATION Security-2, Harmony-1\n` +
-                    `Valid <reward> formats:\n` +
-                    `"  <stat>+<value>[, <stat>+<value>]" // Station stat bonuses\n` +
-                    `   - Example: Systems+2, Comfort+1, Security+3\n` +
-                    `Full Examples:\n` +
-                    `"[REQUEST: Stellar Concord | We need a strong laborer | ACTOR brawn>=7, charm>=6 -> Systems+2, Comfort+1]"\n` +
-                    `"[REQUEST: Shadow Syndicate | Return our missing operative | ACTOR-NAME Jane Doe -> Harmony+3]"\n` +
-                    `"[REQUEST: Defense Coalition | Help us bolster our defenses | STATION Security-2, Harmony-1 -> Systems+2, Provision+2]"\n\n` +
-                    `All relevant tags should be output in this response. Stat changes should be a fair reflection of the scene's direct or implied events. ` +
-                    `Bear in mind the somewhat abstract meaning of character and station stats when determining reasonable changes and goals. ` +
-                    `All stats (station and character) exist on a scale of 1-10, with 1 being the lowest and 10 being the highest possible value; ` +
-                    `typically, these changes should be incremental (+/- 1 or 2) at a time, unless something incredibly dramatic occurs. ` +
-                    `If there is little or no change, the response may be ended early with [END]. \n\n`
-                );
-                const requestAnalysis = await stage.generator.textGen({
-                    prompt: analysisPrompt,
-                    min_tokens: 5,
-                    max_tokens: 250,
-                    include_history: true,
-                    stop: ['[END]']
-                });
-                console.log('Request analysis response:', requestAnalysis?.result);
+                const statChanges: { [actorId: string]: { [stat: string]: number } } = {};
+                const requests: Request[] = [];
+                // If this response contains an endScene, we will analyze the script for requests, stat changes, or other game mechanics to be applied. Add this to the ttsPromises to run in parallel.
+                if (endScene) {
+                    console.log('Scene end predicted; preparing to analyze for requests and stat changes.');
+
+                    ttsPromises.push((async () => {
+                        const analysisPrompt = generateSkitPrompt(skit, stage, false,
+                            `\n\nInstruction:\nAnalyze the preceding scene script and output formatted tags in brackets, identifying the following categorical changes to be inorporated into the game. ` +
+                            `\n\nCharacter Stat Changes:\nIdentify any changes to character stats implied by the scene. For each change, output a line in the following format:\n` +
+                            `"[CHARACTER NAME: <stat> +<value>(, ...)]"` +
+                            `Where <stat> is the name of the stat to be changed, and <value> is the amount to increase or decrease the stat by (positive or negative). ` +
+                            `Multiple stat changes can be included in a single tag, separated by commas. Similarly, multiple character tags can be provided in the output.\n\n` +
+                            `Station Stat Changes:\nIdentify any changes to station stats implied by the scene. For each change, output a line in the following format:\n` +
+                            `"[STATION: <stat> +<value>(, ...)]"` +
+                            `Where <stat> is the name of the station stat to be changed, and <value> is the amount to increase or decrease the stat by (positive or negative). ` +
+                            `Multiple stat changes can be included in a single tag, separated by commas.\n\n` +
+                            `Faction Requests:\n` +
+                            `Identify any requests made by factions or faction representatives toward the player or station. ` +
+                            `For each request identified, output a line in the following format:\n` +
+                            `"[REQUEST: <factionName> | <description> | <requirement> -> <reward>]"` +
+                            `Where <factionName> is the name of the faction making the request, <description> is a brief summary of the request, ` +
+                            `<requirement> is what the player must do to fulfill the request, and <reward> is what the player will receive upon completion.\n` +
+                            `Valid <requirement> formats:\n` +
+                            `"  ACTOR <stat><op><value>[, <stat><op><value>]" // Actor with one or more stat constraints\n` +
+                            `   - op can be: >= (min), <= (max)\n` +
+                            `   - Example: ACTOR brawn>=7, charm>=5, lust<=3\n` +
+                            `"  ACTOR-NAME <actorName>" // Specific actor by name\n` +
+                            `   - Example: ACTOR-NAME Jane Doe\n` +
+                            `"  STATION <stat>-<value>[, <stat>-<value>]" // Station stats to be reduced\n` +
+                            `   - Stats will be reduced by the specified amounts\n` +
+                            `   - Example: STATION Security-2, Harmony-1\n` +
+                            `Valid <reward> formats:\n` +
+                            `"  <stat>+<value>[, <stat>+<value>]" // Station stat bonuses\n` +
+                            `   - Example: Systems+2, Comfort+1, Security+3\n` +
+                            `Full Examples:\n` +
+                            `"[REQUEST: Stellar Concord | We need a strong laborer | ACTOR brawn>=7, charm>=6 -> Systems+2, Comfort+1]"\n` +
+                            `"[REQUEST: Shadow Syndicate | Return our missing operative | ACTOR-NAME Jane Doe -> Harmony+3]"\n` +
+                            `"[REQUEST: Defense Coalition | Help us bolster our defenses | STATION Security-2, Harmony-1 -> Systems+2, Provision+2]"\n\n` +
+                            `All relevant tags should be output in this response. Stat changes should be a fair reflection of the scene's direct or implied events. ` +
+                            `Bear in mind the somewhat abstract meaning of character and station stats when determining reasonable changes and goals. ` +
+                            `All stats (station and character) exist on a scale of 1-10, with 1 being the lowest and 10 being the highest possible value; ` +
+                            `typically, these changes should be incremental (+/- 1 or 2) at a time, unless something incredibly dramatic occurs. ` +
+                            `If there is little or no change, the response may be ended early with [END]. \n\n`
+                        );
+                        const requestAnalysis = await stage.generator.textGen({
+                            prompt: analysisPrompt,
+                            min_tokens: 5,
+                            max_tokens: 250,
+                            include_history: true,
+                            stop: ['[END]']
+                        });
+                        console.log('Request analysis response:', requestAnalysis?.result);
+                        if (requestAnalysis && requestAnalysis.result) {
+                            const analysisText = requestAnalysis.result;
+
+                            // Process analysisText for stat changes and requests
+                            const lines = analysisText.split('\n');
+                            for (const line of lines) {
+                                const trimmed = line.trim();
+                                if (!trimmed || !trimmed.startsWith('[')) continue;
+
+                                // If it's a request tag (starts with REQUEST:), call Request.createFromTag and add to stage.requests
+                                if (trimmed.toUpperCase().startsWith('[REQUEST:')) {
+                                    console.log('Processing request tag:', trimmed);
+                                    const request = Request.parseFromTag(trimmed, stage);
+                                    if (request) {
+                                        console.log('Added new request from tag:', request);
+                                        requests.push(request);
+                                    }
+                                    continue;
+                                }
+
+                                // Process stat change tags
+                                const statChangeRegex = /\[(.+?):\s*([^\]]+)\]/i;
+                                const match = statChangeRegex.exec(trimmed);
+                                if (match) {
+                                    const target = match[1].trim();
+                                    const payload = match[2].trim();
+
+                                    if (target.toUpperCase() === 'STATION') {
+                                        // Station stat changes
+                                        const adjustments = payload.split(',').map(p => p.trim());
+                                        for (const adj of adjustments) {
+                                            const m = adj.match(/([A-Za-z\s]+)\s*([+-]\s*\d+)/i);
+                                            if (!m) continue;
+                                            const statNameRaw = m[1].trim();
+                                            const num = parseInt(m[2].replace(/\s+/g, ''), 10) || 0;
+
+                                            // Normalize stat name to possible Stat enum value if possible
+                                            let statKey = statNameRaw.toLowerCase().trim();
+                                            const enumMatch = Object.values(Stat).find(s => s.toLowerCase() === statKey || s.toLowerCase().includes(statKey) || statKey.includes(s.toLowerCase()));
+                                            if (enumMatch) statKey = enumMatch;
+
+                                            if (!statChanges['STATION']) statChanges['STATION'] = {};
+                                            statChanges['STATION'][statKey] = (statChanges['STATION'][statKey] || 0) + num;
+                                        }
+                                    } else {
+                                        // Character stat changes
+                                        // Find matching present actor using namesMatch
+                                        const presentActors: Actor[] = Object.values(stage.getSave().actors).filter(a => a.locationId === (skit.moduleId || ''));
+                                        const matched = presentActors.find(a => namesMatch(a.name.toLowerCase(), target.toLowerCase()));
+                                        if (!matched) continue;
+
+                                        const adjustments = payload.split(',').map(p => p.trim());
+                                        for (const adj of adjustments) {
+                                            const m = adj.match(/([A-Za-z\s]+)\s*([+-]\s*\d+)/i);
+                                            if (!m) continue;
+                                            const statNameRaw = m[1].trim();
+                                            const num = parseInt(m[2].replace(/\s+/g, ''), 10) || 0;
+
+                                            // Normalize stat name to possible Stat enum value if possible
+                                            let statKey = statNameRaw.toLowerCase().trim();
+                                            const enumMatch = Object.values(Stat).find(s => s.toLowerCase() === statKey || s.toLowerCase().includes(statKey) || statKey.includes(s.toLowerCase()));
+                                            if (enumMatch) statKey = enumMatch;
+
+                                            if (!statChanges[matched.id]) statChanges[matched.id] = {};
+                                            statChanges[matched.id][statKey] = (statChanges[matched.id][statKey] || 0) + num;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    })());
+                }
                 
                 // Wait for all TTS generation to complete
                 await Promise.all(ttsPromises);
@@ -486,18 +498,15 @@ export async function generateSkitScript(skit: SkitData, stage: Stage): Promise<
                 if (endScene && scriptEntries.length > 0) {
                     const finalEntry = scriptEntries[scriptEntries.length - 1];
                     finalEntry.endScene = true;
-                    if (Object.keys(statChanges).length > 0) {
-                        finalEntry.endProperties = statChanges;
-                    }
                 }
-                return { entries: scriptEntries, endScene: endScene, statChanges: statChanges };
+                return { entries: scriptEntries, endScene: endScene, statChanges: statChanges, requests: requests };
             }
         } catch (error) {
             console.error('Error generating skit script:', error);
         }
         retries--;
     }
-    return { entries: [], endScene: false, statChanges: {} };
+    return { entries: [], endScene: false, statChanges: {}, requests: [] };
 }
 
 

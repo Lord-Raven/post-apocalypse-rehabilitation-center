@@ -8,9 +8,10 @@ import { Stage } from '../Stage';
 import ActorCard from '../components/ActorCard';
 import ModuleCard from '../components/ModuleCard';
 import FactionCard from '../components/FactionCard';
+import RequestCard from '../components/RequestCard';
 import { PhaseIndicator as SharedPhaseIndicator } from '../components/UIComponents';
 import { useTooltip } from '../contexts/TooltipContext';
-import { SwapHoriz, Home, Work, Menu, Build, Hotel, Restaurant, Security, Favorite } from '@mui/icons-material';
+import { SwapHoriz, Home, Work, Menu, Build, Hotel, Restaurant, Security, Favorite, AttachMoney } from '@mui/icons-material';
 import { SkitType } from '../Skit';
 import { generateActorDecor } from '../actors/Actor';
 import { scoreToGrade } from '../utils';
@@ -657,7 +658,7 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType}) =>
                         zIndex: 90,
                     }}
                 >
-                    {(['Systems', 'Comfort', 'Provision', 'Security', 'Harmony'] as StationStat[]).map((statName) => {
+                    {(['Systems', 'Comfort', 'Provision', 'Security', 'Harmony', 'Wealth'] as StationStat[]).map((statName) => {
                         const statValue = stage().getSave().stationStats?.[statName] || 5;
                         const grade = scoreToGrade(statValue);
                         // Map stat names to appropriate icons
@@ -666,7 +667,8 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType}) =>
                             'Comfort': Hotel,
                             'Provision': Restaurant,
                             'Security': Security,
-                            'Harmony': Favorite
+                            'Harmony': Favorite,
+                            'Wealth': AttachMoney,
                         };
                         const StatIcon = statIcons[statName];
                         return (
@@ -1025,8 +1027,42 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType}) =>
                                     </div>
                                 )}
                                 {itemKey === 'requests' && (
-                                    <div style={{ padding: '15px', color: '#00ff88', opacity: 0.5, fontSize: '0.85rem', fontWeight: 700, fontStyle: 'italic' }}>
-                                        Request management coming soon...
+                                    <div style={{ 
+                                        padding: '15px', 
+                                        flex: '1 1 auto', 
+                                        overflowY: 'auto', 
+                                        minHeight: 0,
+                                        display: 'flex',
+                                        flexDirection: 'column',
+                                        gap: '10px',
+                                    }}>
+                                        {(() => {
+                                            // Gather all requests
+                                            const allRequests = Object.values(stage().getSave().requests);
+                                            
+                                            if (allRequests.length === 0) {
+                                                return (
+                                                    <p style={{ 
+                                                        color: '#00ff88', 
+                                                        opacity: 0.5, 
+                                                        fontStyle: 'italic', 
+                                                        fontSize: '0.85rem', 
+                                                        fontWeight: 700 
+                                                    }}>No active requests.</p>
+                                                );
+                                            }
+                                            
+                                            return allRequests.map((request) => (
+                                                <RequestCard
+                                                    key={request.id}
+                                                    request={request}
+                                                    stage={stage()}
+                                                    onClick={() => {
+                                                        console.log(`Clicked request ${request.id}`);
+                                                    }}
+                                                />
+                                            ));
+                                        })()}
                                     </div>
                                 )}
                             </motion.div>

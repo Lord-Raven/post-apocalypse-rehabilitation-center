@@ -21,11 +21,11 @@ export interface ActorWithStatsRequirement {
 }
 
 /**
- * Request for a specific actor by their name
+ * Request for a specific actor by their ID
  */
 export interface SpecificActorRequirement {
     type: 'specific-actor';
-    actorName: string;
+    actorId: string;
 }
 
 /**
@@ -55,20 +55,20 @@ export interface StationStatsReward {
  */
 export class Request {
     id: string;
-    factionName: string;
+    factionId: string;
     description: string;
     requirement: RequestRequirement;
     reward: RequestReward;
 
     constructor(
         id: string,
-        factionName: string,
+        factionId: string,
         briefDescription: string,
         requirement: RequestRequirement,
         reward: RequestReward
     ) {
         this.id = id;
-        this.factionName = factionName;
+        this.factionId = factionId;
         this.description = briefDescription;
         this.requirement = requirement;
         this.reward = reward;
@@ -81,6 +81,97 @@ export class Request {
         const request = Object.create(Request.prototype);
         Object.assign(request, savedRequest);
         return request;
+    }
+
+    /**
+     * Check if this request matches the criteria of another request
+     * Two requests match if they have similar criterion types, even if amounts differ
+     * @param other The other request to compare against
+     * @returns true if the requests have matching criteria types
+     */
+    matchesCriteria(other: Request): boolean {
+        // Must be same requirement type
+        if (this.requirement.type !== other.requirement.type) {
+            return false;
+        }
+
+        switch (this.requirement.type) {
+            case 'actor-with-stats':
+                return this.matchesActorWithStatsCriteria(other.requirement as ActorWithStatsRequirement);
+
+            case 'specific-actor':
+                return this.matchesSpecificActorCriteria(other.requirement as SpecificActorRequirement);
+
+            case 'station-stats':
+                return this.matchesStationStatsCriteria(other.requirement as StationStatsRequirement);
+
+            default:
+                return false;
+        }
+    }
+
+    /**
+     * Check if actor-with-stats requirements target the same stats
+     */
+    private matchesActorWithStatsCriteria(otherRequirement: ActorWithStatsRequirement): boolean {
+        const thisReq = this.requirement as ActorWithStatsRequirement;
+        
+        // Get all stats mentioned in min/max for both requests
+        const thisStats = new Set([
+            ...Object.keys(thisReq.minStats || {}),
+            ...Object.keys(thisReq.maxStats || {})
+        ]);
+        
+        const otherStats = new Set([
+            ...Object.keys(otherRequirement.minStats || {}),
+            ...Object.keys(otherRequirement.maxStats || {})
+        ]);
+
+        // Must have at least one stat in common, or both be empty
+        if (thisStats.size === 0 && otherStats.size === 0) {
+            return true;
+        }
+
+        // Check for any overlapping stats
+        for (const stat of thisStats) {
+            if (otherStats.has(stat)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Check if specific-actor requirements target the same actor
+     */
+    private matchesSpecificActorCriteria(otherRequirement: SpecificActorRequirement): boolean {
+        const thisReq = this.requirement as SpecificActorRequirement;
+        return thisReq.actorId === otherRequirement.actorId;
+    }
+
+    /**
+     * Check if station-stats requirements target the same stats
+     */
+    private matchesStationStatsCriteria(otherRequirement: StationStatsRequirement): boolean {
+        const thisReq = this.requirement as StationStatsRequirement;
+        
+        const thisStats = new Set(Object.keys(thisReq.stats || {}));
+        const otherStats = new Set(Object.keys(otherRequirement.stats || {}));
+
+        // Must have at least one stat in common
+        if (thisStats.size === 0 && otherStats.size === 0) {
+            return true;
+        }
+
+        // Check for any overlapping stats
+        for (const stat of thisStats) {
+            if (otherStats.has(stat)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**
@@ -147,16 +238,13 @@ export class Request {
 
     /**
      * Check if the specific actor exists and is available
-     * Note: This checks by name, which should be resolved to an actor elsewhere
      */
     private canFulfillSpecificActor(stage: Stage): boolean {
         const requirement = this.requirement as SpecificActorRequirement;
         const save = stage.getSave();
 
-        // Find actor by name (case-insensitive match)
-        const actor = Object.values(save.actors).find(
-            a => namesMatch(a.name.toLowerCase(), requirement.actorName.toLowerCase())
-        );
+        // Find actor by ID
+        const actor = save.actors[requirement.actorId];
         
         // Actor must exist and not be remote
         return actor !== undefined && !actor.remote;
@@ -213,9 +301,10 @@ export class Request {
      * - [REQUEST: Defense Coalition | Trade resources for upgrades | STATION Provision-2, Comfort-1 -> Systems+3, Security+2]
      * 
      * @param tag The request tag string to parse
+     * @param stage The game stage to resolve faction and actor names to IDs
      * @returns A Request object, or null if parsing fails
      */
-    static parseFromTag(tag: string): Request | null {
+    static parseFromTag(tag: string, stage: Stage): Request | null {
         try {
             // Extract content between [REQUEST: and ]
             const match = tag.match(/\[REQUEST:\s*(.+?)\s*\]/i);
@@ -239,6 +328,17 @@ export class Request {
                 console.warn(`REQUEST tag must have non-empty factionName and description: ${tag}`);
                 return null;
             }
+
+            // Resolve faction name to faction ID using namesMatch
+            const save = stage.getSave();
+            const faction = Object.values(save.factions).find(f => 
+                namesMatch(f.name.toLowerCase(), factionName.toLowerCase())
+            );
+            
+            if (!faction) {
+                console.warn(`Failed to find faction matching name: ${factionName}`);
+                return null;
+            }
             
             // Split by -> to separate requirement from reward
             const parts = requirementRewardStr.split('->').map(p => p.trim());
@@ -250,7 +350,7 @@ export class Request {
             const [requirementStr, rewardStr] = parts;
 
             // Parse requirement
-            const requirement = this.parseRequirement(requirementStr);
+            const requirement = this.parseRequirement(requirementStr, stage);
             if (!requirement) {
                 console.warn(`Failed to parse requirement: ${requirementStr}`);
                 return null;
@@ -265,7 +365,7 @@ export class Request {
 
             return new Request(
                 generateUuid(),
-                factionName,
+                faction.id,
                 description,
                 requirement,
                 reward
@@ -279,7 +379,7 @@ export class Request {
     /**
      * Parse the requirement portion of a REQUEST tag
      */
-    private static parseRequirement(requirementStr: string): RequestRequirement | null {
+    private static parseRequirement(requirementStr: string, stage: Stage): RequestRequirement | null {
         const trimmed = requirementStr.trim();
 
         // Check for ACTOR-NAME format
@@ -288,9 +388,21 @@ export class Request {
             if (!actorName) {
                 return null;
             }
+            
+            // Resolve actor name to actor ID using namesMatch
+            const save = stage.getSave();
+            const actor = Object.values(save.actors).find(a => 
+                namesMatch(a.name.toLowerCase(), actorName.toLowerCase())
+            );
+            
+            if (!actor) {
+                console.warn(`Failed to find actor matching name: ${actorName}`);
+                return null;
+            }
+            
             return {
                 type: 'specific-actor',
-                actorName
+                actorId: actor.id
             };
         }
 

@@ -22,7 +22,8 @@ export enum StationStat {
     COMFORT = 'Comfort',
     PROVISION = 'Provision',
     SECURITY = 'Security',
-    HARMONY = 'Harmony'
+    HARMONY = 'Harmony',
+    WEALTH = 'Wealth'
 }
 
 export const STATION_STAT_DESCRIPTIONS: Record<StationStat, string> = {
@@ -30,7 +31,8 @@ export const STATION_STAT_DESCRIPTIONS: Record<StationStat, string> = {
     'Comfort': 'Overall comfort and livability for inhabitants',
     'Provision': 'Availability of food, water, and essential supplies',
     'Security': 'Safety and defense against external and internal threats',
-    'Harmony': 'Social cohesion and morale among inhabitants'
+    'Harmony': 'Social cohesion and morale among inhabitants',
+    'Wealth': 'Financial resources of the station and its Director'
 };
 
 export function getStatRating(score: number): StatRating {
@@ -91,6 +93,13 @@ export const STATION_STAT_PROMPTS: Record<StationStat, Record<StatRating, string
         [StatRating.AVERAGE]: 'The social environment is stable, with decent morale and generally peaceful coexistence.',
         [StatRating.GOOD]: 'A strong sense of community and high morale prevails, fostering good vibes and positive relationships among inhabitants.',
         [StatRating.EXCELLENT]: 'Inhabitants enjoy a harmonious and supportive social environment, thriving together in unity.'
+    },
+    'Wealth': { // Wealther is financial resources of the station and its Director and does not necessarily reflect the personal wealth of inhabitants nor the station's overall provision levels
+        [StatRating.POOR]: 'Financial resources are critically low, potentially leading to severe budget cuts and creditor threats.',
+        [StatRating.BELOW_AVERAGE]: 'Wealth levels are low, leading to budget constraints and creditor complaints.',
+        [StatRating.AVERAGE]: 'The Director maintains a stable financial footing, covering operational costs and bills.',
+        [StatRating.GOOD]: 'The Director is financially healthy, with ample resources in reserve.',
+        [StatRating.EXCELLENT]: 'The Director enjoys significant wealth, capable of lavish spending.'
     }
 };
 
@@ -121,7 +130,7 @@ const randomAction = (module: Module, stage: Stage, setScreenType: (type: Screen
                     moduleId: module.id,
                     script: [],
                     generating: true,
-                    context: {}
+                    context: {},
                 });
                 setScreenType(ScreenType.SKIT);
             }

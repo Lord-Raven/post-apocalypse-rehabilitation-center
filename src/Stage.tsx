@@ -5,12 +5,10 @@ import Actor, { loadReserveActor, generatePrimaryActorImage, commitActorToEcho, 
 import Faction, { loadReserveFaction } from "./factions/Faction";
 import { DEFAULT_GRID_SIZE, Layout, StationStat, createModule } from './Module';
 import { BaseScreen } from "./screens/BaseScreen";
-import {Client} from "@gradio/client";
 import { generateSkitScript, SkitData } from "./Skit";
 import { smartRehydrate } from "./SaveRehydration";
 import { Emotion } from "./actors/Emotion";
-import { z } from "zod";
-import { CallToolResult } from '@modelcontextprotocol/sdk/types';
+import { Request } from "./factions/Request";
 
 type MessageStateType = any;
 type ConfigType = any;
@@ -35,6 +33,7 @@ type SaveType = {
     echoes: (Actor | null)[]; // actors currently in echo slots (can be null for empty slots)
     actors: {[key: string]: Actor};
     factions: {[key: string]: Faction};
+    requests: {[key: string]: Request};
     bannedTags?: string[];
     layout: Layout;
     day: number;
@@ -64,7 +63,6 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
         'narrator',
         'underage',
         'multi-character',
-        'multiple character',
         'multiple characters',
         'nonenglish',
         'non-english',
@@ -124,7 +122,7 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
                 description: `Your holographic assistant is acutely familiar with the technical details of your Post-Apocalypse Rehabilitation Center, so you don't have to be! ` +
                 `Your StationAide™ comes pre-programmed with a friendly and non-condescending demeanor that will leave you feeling empowered and never patronized; ` +
                 `your bespoke projection comes with an industry-leading feminine form in a pleasing shade of default blue, but, as always, StationAide™ remains infinitely customizable to suit your tastes.`}, 
-            echoes: [], actors: {}, factions: {}, layout: layout, day: 1, phase: 0, currentSkit: undefined };
+            echoes: [], actors: {}, factions: {}, requests: {}, layout: layout, day: 1, phase: 0, currentSkit: undefined };
 
         // ensure at least one save exists and has a layout
         if (!this.saves.length) {
@@ -278,11 +276,16 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
                 'Comfort': 3,
                 'Provision': 3,
                 'Security': 3,
-                'Harmony': 3
+                'Harmony': 3,
+                'Wealth': 3
             };
         }
         if (!save.factions) {
             save.factions = {};
+        }
+
+        if (!save.requests) {
+            save.requests = {};
         }
 
         // Clean out remote actors that aren't supported by current factions
@@ -559,11 +562,8 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
             }
 
             // Apply endProperties to actors - find from the final entry with endScene=true
-            let endProps: { [actorId: string]: { [stat: string]: number } } = {};
-            const finalEndedEntry = save.currentSkit.script.slice().reverse().find(entry => entry.endScene);
-            if (finalEndedEntry?.endProperties) {
-                endProps = finalEndedEntry.endProperties;
-            }
+            let endProps: { [actorId: string]: { [stat: string]: number } } = save.currentSkit.endProperties || {};
+
             for (const actorId in endProps) {
                 const actorChanges = endProps[actorId];
                 
@@ -575,7 +575,8 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
                             Comfort: 3,
                             Provision: 3,
                             Security: 3,
-                            Harmony: 3
+                            Harmony: 3,
+                            Wealth: 3
                         };
                     }
                     // Apply to save.stationStats; actorChanges is a map of stat name to change amount
@@ -604,6 +605,35 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
                 }
             }
 
+            // Process requests from skit
+            if (save.currentSkit.requests) {
+                // Look through existing requests and remove any with the same description or initial criteria:
+                for (const existingRequest of Object.values(save.requests)) {
+                    if (existingRequest && save.currentSkit.requests.some(request => request.description === existingRequest.description || request.matchesCriteria(existingRequest))) {
+                        // Remove the existing request
+                        delete save.requests[existingRequest.id];
+                    }
+                }
+
+                for (const request of save.currentSkit.requests) {
+                    let factionRequestIds: string[] = [];
+                    for (const existingRequest of Object.values(save.requests)) {
+                        if (existingRequest && existingRequest.factionId === request.factionId) {
+                            factionRequestIds.push(existingRequest.id);
+                        }
+                    }
+                    // If there are already three requests from this faction, skip adding this one
+                    if (factionRequestIds.length >= 3) {
+                        // delete a random request 
+                        const randomIndex = Math.floor(Math.random() * factionRequestIds.length);
+                        delete save.requests[factionRequestIds[randomIndex]];
+                    }
+                    // Add new request
+                    save.requests[request.id] = request;
+                }
+            }
+
+            // Save skit to timeline
             save.currentSkit.context = {...save.currentSkit.context, day: this.getSave().day};
             save.timeline.push({
                 day: save.day,

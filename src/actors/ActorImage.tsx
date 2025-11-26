@@ -114,8 +114,8 @@ const ActorImage: FC<ActorImageProps> = ({
             exit='absent'
             animate={speaker ? 'talking' : 'idle'}
             style={{position: 'absolute', width: 'auto', aspectRatio, overflow: 'visible', zIndex: speaker ? 100 : zIndex}}>
-            {/* Blurred background layer */}
             <AnimatePresence>
+                {/* Previous image layer for crossfade */}
                 {prevImageUrl && prevImageUrl !== processedImageUrl && (
                     <motion.img
                         key="prev"
@@ -132,7 +132,7 @@ const ActorImage: FC<ActorImageProps> = ({
                         } : { opacity: 0, filter: 'blur(2.5px)' }}
                         exit={{ opacity: 0 }}
                         transition={actor.remote ? {
-                            opacity: { duration: 0.5 },
+                            opacity: { duration: 2.5, repeat: Infinity, ease: "easeInOut" },
                             filter: { duration: 3.2, repeat: Infinity, ease: "easeInOut" }
                         } : { duration: 0.5 }}
                         style={{
@@ -149,6 +149,7 @@ const ActorImage: FC<ActorImageProps> = ({
                 )}
             </AnimatePresence>
             <AnimatePresence>
+                {/* Backing image layer - solid but blurry. */}
                 {processedImageUrl && (
                     <motion.img
                         key={`${actor.id}_${imageUrl}_bg`}
@@ -165,7 +166,7 @@ const ActorImage: FC<ActorImageProps> = ({
                         } : { opacity: 1, filter: 'blur(2.5px)' }}
                         exit={{ opacity: 0 }}
                         transition={actor.remote ? {
-                            opacity: { duration: 0.5 },
+                            opacity: { duration: 2.5, repeat: Infinity, ease: "easeInOut" },
                             filter: { duration: 2.7, repeat: Infinity, ease: "easeInOut" }
                         } : { duration: 0.5 }}
                         style={{
@@ -182,6 +183,7 @@ const ActorImage: FC<ActorImageProps> = ({
                 )}
             </AnimatePresence>
             <AnimatePresence>
+                {/* Main image layer - semi transparent, but crisp. */}
                 {processedImageUrl && (
                     <motion.img
                         key={`${actor.id}_${imageUrl}_main`}
@@ -198,7 +200,7 @@ const ActorImage: FC<ActorImageProps> = ({
                         } : { opacity: 0.75 }}
                         exit={{ opacity: 0 }}
                         transition={actor.remote ? {
-                            opacity: { duration: 0.5 },
+                            opacity: { duration: 2.5, repeat: Infinity, ease: "easeInOut" },
                             filter: { duration: 3.8, repeat: Infinity, ease: "easeInOut" }
                         } : { duration: 0.5 }}
                         style={{

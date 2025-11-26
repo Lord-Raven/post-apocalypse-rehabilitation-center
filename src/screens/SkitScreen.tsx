@@ -294,11 +294,8 @@ export const SkitScreen: FC<SkitScreenProps> = ({ stage, setScreenType }) => {
                 setSceneEnded(ended);
                 
                 // Process stat changes when scene ends
-                if (ended) {
-                    const finalEntry = skitData?.script[skitData.script.length - 1];
-                    if (finalEntry?.endProperties) {
-                        processStatChanges(finalEntry.endProperties);
-                    }
+                if (ended && skitData?.endProperties) {
+                    processStatChanges(skitData.endProperties);
                 }
             });
         }
@@ -346,8 +343,8 @@ export const SkitScreen: FC<SkitScreenProps> = ({ stage, setScreenType }) => {
         // Update sceneEnded based on current index
         if (skit.script[index]?.endScene) {
             setSceneEnded(true);
-            if (skit.script[index]?.endProperties) {
-                processStatChanges(skit.script[index].endProperties!);
+            if (skit.endProperties) {
+                processStatChanges(skit.endProperties);
             }
         } else {
             setSceneEnded(false);
@@ -882,8 +879,8 @@ export const SkitScreen: FC<SkitScreenProps> = ({ stage, setScreenType }) => {
             setSceneEnded(ended);
             
             // Process stat changes when scene ends
-            if (ended && skitData?.script[newIndex]?.endProperties) {
-                processStatChanges(skitData.script[newIndex].endProperties!);
+            if (ended && skitData?.endProperties) {
+                processStatChanges(skitData.endProperties);
             }
         });
     }
@@ -917,19 +914,14 @@ export const SkitScreen: FC<SkitScreenProps> = ({ stage, setScreenType }) => {
             setSceneEnded(ended);
             
             // Process stat changes when scene ends
-            if (ended && skitData?.script[newIndex]?.endProperties) {
-                processStatChanges(skitData.script[newIndex].endProperties!);
+            if (ended && skitData?.endProperties) {
+                processStatChanges(skitData.endProperties);
             }
         });
     }
 
     function handleClose() {
-        // When the scene is concluded, switch back to the Station screen
-        // Output stat change for now:
-        const finalEntry = skit.script.find(entry => entry.endScene);
-        console.log('Skit concluded with stat changes:', finalEntry?.endProperties || {});
         stage().endSkit();
-        
         setScreenType(ScreenType.STATION);
     }
 }
