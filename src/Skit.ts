@@ -119,6 +119,10 @@ export function generateSkitPrompt(skit: SkitData, stage: Stage, includeHistory:
             `\n\nThe PARC's current stats and impacts:\n` +
             Object.values(StationStat).map(stat => `  ${stat.toUpperCase()} (${stage.getSave().stationStats?.[stat] || 3}): ${STATION_STAT_PROMPTS[stat][getStatRating(stage.getSave().stationStats?.[stat] || 3)]}`).join('\n')
         ) : '') +
+        (Object.values(stage.getSave().requests).length > 0 ? (
+            `\n\nActive Requests:\n` +
+            Object.values(stage.getSave().requests).map(request => `-${stage.getSave().factions[request.factionId]?.name || 'Unknown Faction'}: ${request.description} \n  Requirement: ${request.getRequirementText()} \n  Reward: ${request.getRewardText()}`).join('\n')
+        ) : '') +
         `\n\n${playerName}'s profile: ${stage.getSave().player.description}` +
         // List characters who are here, along with full stat details:
         `\n\nPresent Characters:\n${presentActors.map(actor => {

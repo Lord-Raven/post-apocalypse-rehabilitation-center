@@ -277,6 +277,66 @@ export class Request {
     }
 
     /**
+     * Get a human-readable text description of the requirement
+     * @returns A text description of what is required to fulfill this request
+     */
+    getRequirementText(): string {
+        switch (this.requirement.type) {
+            case 'actor-with-stats': {
+                const req = this.requirement as ActorWithStatsRequirement;
+                const parts: string[] = [];
+                
+                if (req.minStats) {
+                    const minParts = Object.entries(req.minStats)
+                        .map(([stat, value]) => `${stat} ≥ ${value}`);
+                    parts.push(...minParts);
+                }
+                
+                if (req.maxStats) {
+                    const maxParts = Object.entries(req.maxStats)
+                        .map(([stat, value]) => `${stat} ≤ ${value}`);
+                    parts.push(...maxParts);
+                }
+                
+                return `Actor with ${parts.join(', ')}`;
+            }
+            
+            case 'specific-actor': {
+                const req = this.requirement as SpecificActorRequirement;
+                return `Specific actor (ID: ${req.actorId})`;
+            }
+            
+            case 'station-stats': {
+                const req = this.requirement as StationStatsRequirement;
+                const parts = Object.entries(req.stats)
+                    .map(([stat, value]) => `${stat} -${value}`);
+                return parts.join(', ');
+            }
+            
+            default:
+                return 'Unknown requirement';
+        }
+    }
+
+    /**
+     * Get a human-readable text description of the reward
+     * @returns A text description of what will be rewarded for fulfilling this request
+     */
+    getRewardText(): string {
+        switch (this.reward.type) {
+            case 'station-stats': {
+                const rew = this.reward as StationStatsReward;
+                const parts = Object.entries(rew.stats)
+                    .map(([stat, value]) => `${stat} +${value}`);
+                return parts.join(', ');
+            }
+            
+            default:
+                return 'Unknown reward';
+        }
+    }
+
+    /**
      * Parse a REQUEST tag into a Request object
      * 
      * Format: [REQUEST: <factionName> | <description> | <requirement> -> <reward>]
