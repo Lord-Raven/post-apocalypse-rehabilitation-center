@@ -159,7 +159,7 @@ export function generateSkitPrompt(skit: SkitData, stage: Stage, includeHistory:
             `the ${module.type || 'Unknown'}`}. ${module.getAttribute('skitPrompt') || 'No description available.'}\n`) : '') +
 
         ((includeHistory && pastSkits.length) ? 
-            // Include last 5 skit scripts for context and style reference
+            // Include last few skit scripts for context and style reference
             '\n\nRecent Scene Scripts for additional context:' + pastSkits.map((v, index) => 
                 `\n\n  Scene in ${stage.getSave().layout.getModuleById(v.moduleId || '')?.type || 'Unknown'} (${stage.getSave().day - v.context.day}) days ago:\n` +
                 `System: ${buildScriptLog(v)}\n[SUMMARY: Scene in ${stage.getSave().layout.getModuleById(v.moduleId || '')?.type || 'Unknown'}]`).join('') :
@@ -185,7 +185,7 @@ export async function generateSkitScript(skit: SkitData, stage: Stage): Promise<
         `Example Script Format:\n` +
         'System: CHARACTER NAME: They do actions in prose. "Their dialogue is in quotation marks."\nANOTHER CHARACTER NAME: [ANOTHER CHARACTER EXPRESSES JOY][CHARACTER NAME EXPRESSES SURPRISE] "Dialogue in quotation marks."\nNARRATOR: [CHARACTER NAME EXPRESSES RELIEF] Descriptive content that is not attributed to a character.' +
         `\n\nExample Ending Script Format:\n` +
-        'System: CHARACTER NAME: [CHARACTER NAME EXPRESSES OPTIMISM] Action in prose. "Dialogue in quotation marks."\nNARRATOR: Implicit ending to the scene in prose.' +
+        'System: CHARACTER NAME: [CHARACTER NAME EXPRESSES OPTIMISM] Action in prose. "Dialogue in quotation marks."\nNARRATOR: A moment of prose describing events.' +
         `\n[SUMMARY: Two characters interacted as a demonstration.]` +
         `\n\nCurrent Scene Script Log to Continue:\nSystem: ${buildScriptLog(skit)}` +
         `\n\nPrimary Instruction:\nAt the "System:" prompt, ${skit.script.length == 0 ? 'generate a short scene script' : 'extend or conclude the current scene script'} based upon the Premise and the specified Scene Prompt, ` +
@@ -194,12 +194,13 @@ export async function generateSkitScript(skit: SkitData, stage: Stage): Promise<
         `\nFollow the structure of the strict Example Script formatting above: ` +
         `actions are depicted in prose and character dialogue in quotation marks. Emotion tags (e.g. "[CHARACTER NAME EXPRESSES JOY]") should be used to indicate significant emotional shifts—` +
         `these cues will be utilized by the game engine to visually display appropriate character emotions. ` +
-        `An end tag (e.g., "[SUMMARY: Brief summary of the scenes events.]") should be employed when the scene reaches an explicit or implicit stopping point or suspendable juncture. ` +
+        `An end tag (e.g., "[SUMMARY: Brief summary of the scenes events.]") should be employed when the scene reaches an explicit or _implicit_ stopping point or suspendable moment. ` +
         `\nThis scene is a brief narrative moment within the context of a game; the scene should avoid major developments which would fundamentally change the mechanics or nature of the game, ` +
         `instead developing content within the existing framework. ` +
         `Generally, focus upon interpersonal dynamics, character growth, faction relationships, and the state of the Station and its inhabitants.` +
-        `\nWhen the scene encounters a sensible moment or implicit closure—or if the current script is already there—, output the critical "[SUMMARY: A brief synopsis]" tag. ` +
-        `It should provide a brief description of the scene's events and allow the game to proceed.${wrapupPrompt}`
+        `\nWhen the scene encounters a sensible moment or implicit closure—or if the current script already feels complete—, output the critical "[SUMMARY: A brief synopsis]" tag. ` +
+        `It should provide a brief description of the scene's events and allow the game to proceed. Scripts favor implied endings that get the player back to the game without belaboring the narrative beat; ` +
+        `a suspended ending is enough to prompt a "[SUMMARY]" tag.${wrapupPrompt}`
     );
 
     // Retry logic if response is null or response.result is empty
