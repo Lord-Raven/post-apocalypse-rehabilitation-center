@@ -40,6 +40,22 @@ import TypeOut from '../components/TypeOut';
 // Base text shadow for non-dialogue text
 const baseTextShadow = '3px 3px 2px rgba(0, 0, 0, 0.8)';
 
+// Helper function to brighten a color for better visibility
+const brightenColor = (color: string, amount: number = 0.6): string => {
+    // Parse hex color
+    const hex = color.replace('#', '');
+    const r = parseInt(hex.substring(0, 2), 16);
+    const g = parseInt(hex.substring(2, 4), 16);
+    const b = parseInt(hex.substring(4, 6), 16);
+    
+    // Brighten by mixing with white
+    const newR = Math.min(255, Math.round(r + (255 - r) * amount));
+    const newG = Math.min(255, Math.round(g + (255 - g) * amount));
+    const newB = Math.min(255, Math.round(b + (255 - b) * amount));
+    
+    return `#${newR.toString(16).padStart(2, '0')}${newG.toString(16).padStart(2, '0')}${newB.toString(16).padStart(2, '0')}`;
+};
+
     // Helper function to format text with dialogue, italics, and bold styling
 // Accepts optional speaker actor to apply custom font and drop shadow
 const formatMessage = (text: string, speakerActor?: Actor | null): JSX.Element => {
@@ -58,8 +74,12 @@ const formatMessage = (text: string, speakerActor?: Actor | null): JSX.Element =
                 // Check if this part is dialogue (wrapped in quotes)
                 if (part.startsWith('"') && part.endsWith('"')) {
                     // Apply custom font and drop shadow to dialogue if speaker has custom properties
+                    const brightenedColor = speakerActor?.themeColor 
+                        ? brightenColor(speakerActor.themeColor, 0.65)
+                        : '#87CEEB';
+                    
                     const dialogueStyle: React.CSSProperties = { 
-                        color: '#87CEEB',
+                        color: brightenedColor,
                         fontFamily: speakerActor?.themeFontFamily || undefined,
                         textShadow: speakerActor?.themeColor 
                             ? `3px 3px 2px ${speakerActor.themeColor}`
