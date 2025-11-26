@@ -38,6 +38,7 @@ export function generateSkitTypePrompt(skit: SkitData, stage: Stage, continuing:
     const module = stage.getSave().layout.getModuleById(skit.moduleId || '');
     const faction = stage.getSave().factions[skit.context.factionId || ''];
     const factionRepresentative = faction ? stage.getSave().actors[faction.representativeId || ''] : null;
+    const notHereText = 'This communication is being conducted via remote video link; no representative is physically present on the station. ';
     switch (skit.type) {
         case SkitType.INTRO_CHARACTER:
             return !continuing ? 
@@ -66,30 +67,16 @@ export function generateSkitTypePrompt(skit: SkitData, stage: Stage, continuing:
         case SkitType.FACTION_INTRODUCTION:
             return (!continuing ?
                 `This scene introduces a new faction that would like to do business with the Director and PARC: ${faction?.name || 'a secret organization'}. ` +
-                `This communication is being conducted via remote video link; no representative is physically present on the station. ` +
-                `Describe this new faction's appearance, motivations, and initial interactions with the player Director and other characters present in the Comms module (if any). ` +
-                `Factions generally contact the PARC to discuss the possibility of future jobs for rehabilitated PARC patients. ` :
-                `Deals are discussed rather than made during these conversations; completing deals is handled through a separate UI element elsewhere. ` +
+                notHereText +
+                `Describe this new faction's appearance, motivations, and initial interactions with the player Director and other characters present in the Comms module (if any). ` :
                 `This is an introductory scene for ${faction?.name || 'a secret organization'}. ` +
-                `Continue this scene, exploring the faction's dynamics and their intentions for the Director, the PARC, or other characters present in the Comms module (if any). ` +
-                `Factions generally contact the PARC to discuss the possibility of future jobs for rehabilitated PARC patients. ` +
-                `Deals are discussed rather than made during these conversations; completing deals is handled through a separate UI element elsewhere. ` +
-                `This communication is being conducted via remote video link; no representative is physically present on the station.`) +
-                (faction ? `\nDetails about their organization: ${faction.description}\nDetails about their aesthetic: ${faction.visualStyle}\nThe PARC's current reputation with this faction is ${faction.reputation}` : '') +
-                (factionRepresentative ? `\nTheir representative, ${factionRepresentative.name}, appears on-screen. Their description: ${factionRepresentative.description}` : 'They have no designated liaison for this communication; any characters introduced during this scene will be transient.');
+                notHereText);
         case SkitType.FACTION_INTERACTION:
             return (!continuing ?
-                `This scene depicts an interaction between the player and a faction that does business with the Director and PARC: ${faction?.name || 'a secret organization'}. ` +
-                `Explore the nature of their relationship with and intentions for the Director, the PARC, or other characters present in the Comms module (if any). ` +
-                `Factions generally contact the PARC to discuss the possibility of future jobs for rehabilitated PARC patients. ` +
-                `Deals are discussed rather than made during these conversations; completing deals is handled through a separate UI element elsewhere. ` +
-                `This communication is being conducted via remote video link; no representative is physically present on the station. ` :
-                `Continue this scene, delving deeper into ${faction?.name || 'a secret organization'}'s role and intentions for the Director, the PARC, or other characters present in the Comms module (if any). ` + 
-                `Factions generally contact the PARC to discuss the possibility of future jobs for rehabilitated PARC patients. ` +
-                `Deals are discussed rather than made during these conversations; completing deals is handled through a separate UI element elsewhere. ` +
-                `This communication is being conducted via remote video link; no representative is physically present on the station.`) +
-                (faction ? `\nDetails about their organization: ${faction.description}\nDetails about their aesthetic: ${faction.visualStyle}\nThe PARC's current reputation with this faction is ${faction.reputation}` : '') +
-                (factionRepresentative ? `\nTheir representative, ${factionRepresentative.name}, appears on-screen. Their description: ${factionRepresentative.description}` : 'They have no designated liaison for this communication; any characters introduced during this scene will be transient.');
+                `This scene depicts an interaction between the Director and a faction that does business with the PARC: ${faction?.name || 'a secret organization'}. ` +
+                notHereText :
+                `Continue this scene between the Director and a representative for ${faction?.name || 'a secret organization'}'s. ` + 
+                notHereText);
         default:
             return '';
     }
@@ -119,6 +106,8 @@ export function generateSkitPrompt(skit: SkitData, stage: Stage, includeHistory:
     pastSkits = pastSkits.filter((v, index) => index > (pastSkits.length || 0) - 4);
     const module = stage.getSave().layout.getModuleById(skit.moduleId || '');
     const moduleOwner = module?.ownerId ? stage.getSave().actors[module.ownerId] : null;
+    const faction = skit.context.factionId ? stage.getSave().factions[skit.context.factionId] : null;
+    const factionRepresentative = faction ? stage.getSave().actors[faction.representativeId || ''] : null;
 
     let fullPrompt = `{{messages}}\nPremise:\nThis is a sci-fi visual novel game set on a space station that resurrects and rehabilitates patients who died in a multiverse-wide apocalypse: ` +
         `the Post-Apocalypse Rehabilitation Center. ` +
@@ -152,6 +141,15 @@ export function generateSkitPrompt(skit: SkitData, stage: Stage, includeHistory:
         `\n\nStats:\n${Object.values(Stat).map(stat => `${stat.toUpperCase()}: ${getStatDescription(stat)}`).join('\n')}` +
         `\n\nEmotions:\n${Object.values(Emotion).map(emotion => `${emotion.toUpperCase()}`).join(', ')}` +
         `\n\nScene Prompt:\n${generateSkitTypePrompt(skit, stage, skit.script.length > 0)}` +
+        (faction ? `\n\n${faction.name} Details: ${faction.description}\n${faction.name} Aesthetic: ${faction.visualStyle}\nThe PARC's current reputation with this faction is ${faction.reputation} / 10.` : '') +
+        (factionRepresentative ? `\n${faction?.name || 'The faction'}'s representative, ${factionRepresentative.name}, appears on-screen. Their description: ${factionRepresentative.description}` : 'They have no designated liaison for this communication; any characters introduced during this scene will be transient.');
+        (faction ? `\nThis skit may explore the nature of this faction's relationship with and intentions for the Director, the PARC, or other characters present in the Comms module (if any). ` +
+            `However, this and other factions generally contact the PARC to express interest or make offers: ` +
+            `\n1) Most commonly, these are 'job' openings with certain character qualities (or limitations) in mind.` +
+            `\n2) Sometimes, these 'job' offers target a specific patient.` +
+            `\n3) Finally, some offers are for other Station resources or exchanges.` +
+            `\nAll requests come with some offer of compensation. Remember that a 'job' in this context may be something the Director can compel a patient into—not necessarily gainful employment. ` +
+            `Although deals and offers are discussed in this skit, they can only be completed through a separate game mechanic, so the skit should end without finalizing anything.` : '') +
         (module ? (`\n\nModule Details:\n  This scene is set in ` +
             `${module.type === 'quarters' ? `${moduleOwner ? `${moduleOwner.name}'s` : 'a vacant'} quarters` : 
             `the ${module.type || 'Unknown'}`}. ${module.getAttribute('skitPrompt') || 'No description available.'}\n`) : '') +
@@ -160,7 +158,7 @@ export function generateSkitPrompt(skit: SkitData, stage: Stage, includeHistory:
             // Include last 5 skit scripts for context and style reference
             '\n\nRecent Scene Scripts for additional context:' + pastSkits.map((v, index) => 
                 `\n\n  Scene in ${stage.getSave().layout.getModuleById(v.moduleId || '')?.type || 'Unknown'} (${stage.getSave().day - v.context.day}) days ago:\n` +
-                `System: ${buildScriptLog(v)}`).join('') :
+                `System: ${buildScriptLog(v)}[END SCENE]`).join('') :
             '') +
         `\n\n${instruction}`;
     return fullPrompt;

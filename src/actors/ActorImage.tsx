@@ -122,7 +122,7 @@ const ActorImage: FC<ActorImageProps> = ({
                         src={prevImageUrl}
                         initial={{ opacity: 1 }}
                         animate={actor.remote ? {
-                            opacity: [0.5, 0.3, 0.4, 0.5],
+                            opacity: 0,
                             filter: [
                                 'blur(2.5px) brightness(1.3)',
                                 'blur(2.8px) brightness(1.1)',
