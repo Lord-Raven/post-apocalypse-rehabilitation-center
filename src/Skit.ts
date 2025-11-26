@@ -31,7 +31,7 @@ export interface SkitData {
     context: any;
 }
 
-export function generateSkitPrompt(skit: SkitData, stage: Stage, continuing: boolean): string {
+export function generateSkitTypePrompt(skit: SkitData, stage: Stage, continuing: boolean): string {
     const actor = stage.getSave().actors[skit.actorId || ''];
     const module = stage.getSave().layout.getModuleById(skit.moduleId || '');
     const faction = stage.getSave().factions[skit.context.factionId || ''];
@@ -93,24 +93,15 @@ export function generateSkitPrompt(skit: SkitData, stage: Stage, continuing: boo
     }
 }
 
-export async function generateSkitScript(skit: SkitData, stage: Stage): Promise<{ entries: ScriptEntry[]; endScene: boolean; statChanges: { [actorId: string]: { [stat: string]: number } } }> {
-    // Build a scene log when continuing so the generator can see prior script entries
-    // Insert [Character EXPRESSES Emotion] tags as needed
-    const buildScriptLog = (skit: SkitData) => (skit.script && skit.script.length > 0 ?
+function buildScriptLog(skit: SkitData): string {
+        return skit.script && skit.script.length > 0 ?
         skit.script.map(e => `${e.speaker}:${Object.keys(e.actorEmotions || {}).map(emotion => ` [${e.speaker} EXPRESSES ${emotion.toUpperCase()}]`).join('')} ${e.message}`).join('\n')
-        : '(None so far)');
+        : '(None so far)';
+}
 
+export function generateSkitPrompt(skit: SkitData, stage: Stage, includeHistory: boolean, instruction: string): string {
     const playerName = stage.getSave().player.name;
 
-    // There are two optional phrases for gently/more firmly prodding the model toward wrapping up the scene, and then we calculate one to show based on the skit.script.length and some randomness:
-    const wrapUpPhrases = [
-        ` Consider whether the scene can reach a natural stopping point in this response, but don't force it; if more development feels needed, allow the scene to continue.`, // Gently prod toward and ending.
-        ` The scene is getting long and this response should try to aim for a satisfactory conclusion, potentially ending with stat boosts ([CHARACTER NAME: RELEVANT STAT + 1]) and/or an [END SCENE] tag.` // Firmer prod
-    ];
-
-    // Use script length + random(1, 10) > 12 for gentle or > 24 for firm.
-    const scriptLengthFactor = skit.script.length + Math.floor(Math.random() * 10) + 1;
-    const wrapupPrompt = scriptLengthFactor > 24 ? wrapUpPhrases[1] : (scriptLengthFactor > 12 ? wrapUpPhrases[0] : '');
     const presentActors = Object.values(stage.getSave().actors).filter(a => a.locationId === (skit.moduleId || '') && !a.remote);
     const absentActors = Object.values(stage.getSave().actors).filter(a => a.locationId !== (skit.moduleId || '') && !a.remote);
 
@@ -158,23 +149,42 @@ export async function generateSkitScript(skit: SkitData, stage: Stage): Promise<
         // List stat meanings, for reference:
         `\n\nStats:\n${Object.values(Stat).map(stat => `${stat.toUpperCase()}: ${getStatDescription(stat)}`).join('\n')}` +
         `\n\nEmotions:\n${Object.values(Emotion).map(emotion => `${emotion.toUpperCase()}`).join(', ')}` +
-        `\n\nScene Prompt:\n${generateSkitPrompt(skit, stage, skit.script.length > 0)}` +
+        `\n\nScene Prompt:\n${generateSkitTypePrompt(skit, stage, skit.script.length > 0)}` +
         (module ? (`\n\nModule Details:\n  This scene is set in ` +
             `${module.type === 'quarters' ? `${moduleOwner ? `${moduleOwner.name}'s` : 'a vacant'} quarters` : 
             `the ${module.type || 'Unknown'}`}. ${module.getAttribute('skitPrompt') || 'No description available.'}\n`) : '') +
-        `\n\nExample Script Format:\n` +
+
+        ((includeHistory && pastSkits.length) ? 
+            // Include last 5 skit scripts for context and style reference
+            '\n\nRecent Scene Scripts for additional context:' + pastSkits.map((v, index) => 
+                `\n\n  Scene in ${stage.getSave().layout.getModuleById(v.moduleId || '')?.type || 'Unknown'} (${stage.getSave().day - v.context.day}) days ago:\n` +
+                `System: ${buildScriptLog(v)}`).join('') :
+            '') +
+        `\n\n${instruction}`;
+    return fullPrompt;
+}
+
+export async function generateSkitScript(skit: SkitData, stage: Stage): Promise<{ entries: ScriptEntry[]; endScene: boolean; statChanges: { [actorId: string]: { [stat: string]: number } } }> {
+    const playerName = stage.getSave().player.name;
+    
+    // There are two optional phrases for gently/more firmly prodding the model toward wrapping up the scene, and then we calculate one to show based on the skit.script.length and some randomness:
+    const wrapUpPhrases = [
+        ` Consider whether the scene can reach a natural stopping point in this response, but don't force it; if more development feels needed, allow the scene to continue.`, // Gently prod toward and ending.
+        ` The scene is getting long and this response should try to aim for a satisfactory conclusion, potentially ending with stat boosts ([CHARACTER NAME: RELEVANT STAT + 1]) and/or an [END SCENE] tag.` // Firmer prod
+    ];
+
+    // Use script length + random(1, 10) > 12 for gentle or > 24 for firm.
+    const scriptLengthFactor = skit.script.length + Math.floor(Math.random() * 10) + 1;
+    const wrapupPrompt = scriptLengthFactor > 24 ? wrapUpPhrases[1] : (scriptLengthFactor > 12 ? wrapUpPhrases[0] : '');
+
+    const fullPrompt = generateSkitPrompt(skit, stage, true, 
+        `Example Script Format:\n` +
         'System: CHARACTER NAME: They do actions in prose. "Their dialogue is in quotation marks."\nANOTHER CHARACTER NAME: [ANOTHER CHARACTER EXPRESSES JOY][CHARACTER NAME EXPRESSES SURPRISE] "Dialogue in quotation marks."\nNARRATOR: [CHARACTER NAME EXPRESSES RELIEF] Descriptive content that is not attributed to a character.' +
         `\n\nExample Ending Script Format:\n` +
         'System: CHARACTER NAME: [CHARACTER NAME EXPRESSES OPTIMISM] Action in prose. "Dialogue in quotation marks."\nNARRATOR: Conclusive ending to the scene in prose.' +
         `\n[CHARACTER NAME: RELEVANT STAT + 1]` +
         `\n[STATION: RELEVANT STAT + 1]` +
         `\n[END SCENE]` +
-        (pastSkits.length || 0 > 0 ? 
-            // Include last 5 skit scripts for context and style reference
-            '\n\nRecent Scene Scripts for additional context:' + pastSkits.map((v, index) => 
-                `\n\n  Scene in ${stage.getSave().layout.getModuleById(v.moduleId || '')?.type || 'Unknown'} (${stage.getSave().day - v.context.day}) days ago:\n` +
-                `System: ${buildScriptLog(v)}`).join('') :
-            '') +
         `\n\nCurrent Scene Script Log to Continue:\nSystem: ${buildScriptLog(skit)}` +
         `\n\nInstruction:\nAt the "System:" prompt, generate a short scene script based upon this scenario and the specified Scene Prompt, involving the Present Characters (Absent Characters are listed for reference only). ` +
         `The script should consider characters' stats, their relationships, past events, and the station's stats and their potential impact upon this scene. ` +
@@ -187,7 +197,8 @@ export async function generateSkitScript(skit: SkitData, stage: Stage): Promise<
         `or "[STATION: RELEVANT STAT + x]" tag(s)—which can be used to apply stat changes to the station as a whole (the station has five different stats). ` +
         `Multiple stat change tags can be included, but they always end the scene, so be certain that the narrative moment feels complete before including them. ` +
         `These changes should reflect an overt or implied outcome of the scene; ` +
-        `they should be incremental, typically (but not exclusively) positive, and applied only when the scene is ended.${wrapupPrompt}`;
+        `they should be incremental, typically (but not exclusively) positive, and applied only when the scene is ended.${wrapupPrompt}`
+    );
 
     // Retry logic if response is null or response.result is empty
     let retries = 3;
@@ -420,33 +431,51 @@ export async function generateSkitScript(skit: SkitData, stage: Stage): Promise<
                 console.log('Tool analysis response:', toolTest?.result);*/
 
                 // Run a testing textGen request that will analyze the script for potential requests by factions or other entities, and output results in following the format laid out in Request.tsx
+                const analysisPrompt = generateSkitPrompt(skit, stage, false,
+                    `Analyze the following skit script for any requests made by factions or other entities toward the player or station. ` +
+                    `\n\nInstruction:\nAnalyze the preceding scene script and output formatted tags in brackets, identifying the following changes to be inorporated into the game. ` +
+                    `\n\nCharacter Stat Changes:\nIdentify any changes to character stats implied by the scene. For each change, output a line in the following format:\n` +
+                    `"[CHARACTER NAME: <stat> +<value>(, ...)]"` +
+                    `Where <stat> is the name of the stat to be changed, and <value> is the amount to increase or decrease the stat by (positive or negative). ` +
+                    `Multiple stat changes can be included in a single tag, separated by commas. Similarly, multiple character tags can be provided in the output.\n\n` +
+                    `Station Stat Changes:\nIdentify any changes to station stats implied by the scene. For each change, output a line in the following format:\n` +
+                    `"[STATION: <stat> +<value>(, ...)]"` +
+                    `Where <stat> is the name of the station stat to be changed, and <value> is the amount to increase or decrease the stat by (positive or negative). ` +
+                    `Multiple stat changes can be included in a single tag, separated by commas.\n\n` +
+                    `Faction Requests:\n` +
+                    `Identify any requests made by factions or faction representatives toward the player or station. ` +
+                    `For each request identified, output a line in the following format:\n` +
+                    `"[REQUEST: <factionName> | <description> | <requirement> -> <reward>]"` +
+                    `Where <factionName> is the name of the faction making the request, <description> is a brief summary of the request, ` +
+                    `<requirement> is what the player must do to fulfill the request, and <reward> is what the player will receive upon completion.\n` +
+                    `Valid <requirement> formats:\n` +
+                    `"  ACTOR <stat><op><value>[, <stat><op><value>]" // Actor with one or more stat constraints\n` +
+                    `   - op can be: >= (min), <= (max)\n` +
+                    `   - Example: ACTOR brawn>=7, charm>=5, lust<=3\n` +
+                    `"  ACTOR-NAME <actorName>" // Specific actor by name\n` +
+                    `   - Example: ACTOR-NAME Jane Doe\n` +
+                    `"  STATION <stat>-<value>[, <stat>-<value>]" // Station stats to be reduced\n` +
+                    `   - Stats will be reduced by the specified amounts\n` +
+                    `   - Example: STATION Security-2, Harmony-1\n` +
+                    `Valid <reward> formats:\n` +
+                    `"  <stat>+<value>[, <stat>+<value>]" // Station stat bonuses\n` +
+                    `   - Example: Systems+2, Comfort+1, Security+3\n` +
+                    `Full Examples:\n` +
+                    `"[REQUEST: Stellar Concord | We need a strong laborer | ACTOR brawn>=7, charm>=6 -> Systems+2, Comfort+1]"\n` +
+                    `"[REQUEST: Shadow Syndicate | Return our missing operative | ACTOR-NAME Jane Doe -> Harmony+3]"\n` +
+                    `"[REQUEST: Defense Coalition | Help us bolster our defenses | STATION Security-2, Harmony-1 -> Systems+2, Provision+2]"\n\n` +
+                    `All relevant tags should be output in this response. Stat changes should be a fair reflection of the scene's direct or implied events. ` +
+                    `Bear in mind the somewhat abstract meaning of character and station stats when determining reasonable changes and goals. ` +
+                    `All stats (station and character) exist on a scale of 1-10, with 1 being the lowest and 10 being the highest possible value; ` +
+                    `typically, these changes should be incremental (+/- 1 or 2) at a time, unless something incredibly dramatic occurs. ` +
+                    `If there is little or no change, the response may be ended early with [END]. \n\n`
+                );
                 const requestAnalysis = await stage.generator.textGen({
-                    prompt: `{{messages}}Analyze the following skit script for any requests made by factions or other entities toward the player or station. ` +
-                            `\n\nSkit Script:\n${scriptEntries.map(e => `${e.speaker}: ${e.message}`).join('\n')}` +
-                            `\n\nInstruction:\nIdentify any requests made by factions toward the player or station in the skit script above. ` +
-                            `For each request identified, output a line in the following format:\n` +
-                            `"[REQUEST: <factionName> | <description> | <requirement> -> <reward>]"` +
-                            `Where <factionName> is the name of the faction making the request, <description> is a brief summary of the request, ` +
-                            `<requirement> is what the player must do to fulfill the request, and <reward> is what the player will receive upon completion.\n` +
-                            `Valid <requirement> formats:\n` +
-                            `"  ACTOR <stat><op><value>[, <stat><op><value>]" // Actor with one or more stat constraints\n` +
-                            `   - op can be: >= (min), <= (max)\n` +
-                            `   - Example: ACTOR brawn>=7, charm>=5, lust<=3\n` +
-                            `"  ACTOR-NAME <actorName>" // Specific actor by name\n` +
-                            `   - Example: ACTOR-NAME Jane Doe\n` +
-                            `"  STATION <stat>-<value>[, <stat>-<value>]" // Station stats to be reduced\n` +
-                            `   - Stats will be reduced by the specified amounts\n` +
-                            `   - Example: STATION Security-2, Harmony-1\n` +
-                            `Valid <reward> formats:\n` +
-                            `"  <stat>+<value>[, <stat>+<value>]" // Station stat bonuses\n` +
-                            `   - Example: Systems+2, Comfort+1, Security+3\n` +
-                            `Full Examples:\n` +
-                            `"[REQUEST: Stellar Concord | We need a strong laborer | ACTOR brawn>=7, charm>=6 -> Systems+2, Comfort+1]"\n` +
-                            `"[REQUEST: Shadow Syndicate | Return our missing operative | ACTOR-NAME Jane Doe -> Harmony+3]"\n` +
-                            `"[REQUEST: Defense Coalition | Help us bolster our defenses | STATION Security-2, Harmony-1 -> Systems+2, Provision+2]"\n\n`,
+                    prompt: analysisPrompt,
                     min_tokens: 5,
-                    max_tokens: 150,
+                    max_tokens: 250,
                     include_history: true,
+                    stop: ['[END]']
                 });
                 console.log('Request analysis response:', requestAnalysis?.result);
                 

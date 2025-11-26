@@ -10,7 +10,7 @@ import { generateSkitScript, SkitData } from "./Skit";
 import { smartRehydrate } from "./SaveRehydration";
 import { Emotion } from "./actors/Emotion";
 import { z } from "zod";
-import { CallToolResult, GetPromptResult, isInitializeRequest, PrimitiveSchemaDefinition, ReadResourceResult, ResourceLink } from '@modelcontextprotocol/sdk/types';
+import { CallToolResult } from '@modelcontextprotocol/sdk/types';
 
 type MessageStateType = any;
 type ConfigType = any;
