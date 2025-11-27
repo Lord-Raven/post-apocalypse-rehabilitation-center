@@ -349,8 +349,8 @@ export const SkitScreen: FC<SkitScreenProps> = ({ stage, setScreenType }) => {
 
     const renderActors = (module: Module | null, actors: Actor[], currentSpeaker?: string) => {
         // There are two expanding ranges to display actors within on screen: one centered around 25vw and one around 75vw. Actors alternate between these two ranges.
-        const leftRange = Math.min(40, 20 + Math.ceil((actors.length - 2) / 2) * 10); // Adjust used screen space by number of present actors.
-        const rightRange = Math.min(40, 20 + Math.floor((actors.length - 2) / 2) * 10);
+        const leftRange = Math.min(40, Math.ceil((actors.length - 2) / 2) * 20); // Adjust used screen space by number of present actors.
+        const rightRange = Math.min(40, Math.floor((actors.length - 2) / 2) * 20);
 
         // Display actors centered across the scene bottom. Use emotion from current script entry or neutral as fallback
         return actors.map((actor, i) => {

@@ -189,7 +189,7 @@ export async function generateSkitScript(skit: SkitData, stage: Stage): Promise<
     // There are two optional phrases for gently/more firmly prodding the model toward wrapping up the scene, and then we calculate one to show based on the skit.script.length and some randomness:
     const wrapUpPhrases = [
         `\n\nPriority Instruction: Consider whether the scene has reached or can reach a natural stopping point in this response; if not, work toward a conclusion and include the "[SUMMARY]" tag.`, // Gently prod toward and ending.
-        `\n\nPriority Instruction: This scene is getting long; finish this narrative beat and output the "[SUMMARY]" tag.` // Firmer prod
+        `\n\nCritical Instruction: This scene is running long; finish this narrative beat and immediately print out the "[SUMMARY]" tag.` // Firmer prod
     ];
 
     // Use script length + random(1, 10) > 12 for gentle or > 24 for firm.
@@ -215,13 +215,15 @@ export async function generateSkitScript(skit: SkitData, stage: Stage): Promise<
                 `\nFollow the structure of the strict Example Script formatting above: ` +
                 `actions are depicted in prose and character dialogue in quotation marks. Emotion tags (e.g. "[CHARACTER NAME EXPRESSES JOY]") should be used to indicate significant emotional shifts—` +
                 `these cues will be utilized by the game engine to visually display appropriate character emotions. ` +
-                `An ending "[SUMMARY]" tag (e.g., "[SUMMARY: Brief summary of the scene's events.]") should be employed when the scene reaches an explicit or _implicit_ stopping point or suspendable moment. ` +
+                `An ending "[SUMMARY]" tag (e.g., "[SUMMARY: Brief summary of the scene's events.]") should be included when the scene reaches an explicit or _implicit_ stopping point or suspendable moment. ` +
                 `\nThis scene is a brief visual novel skit within a video game; as such, the scene should avoid major developments which would fundamentally change the mechanics or nature of the game, ` +
-                `instead developing content within the existing framework. ` +
+                `instead developing content within the existing mechanics. ` +
                 `Generally, focus upon interpersonal dynamics, character growth, faction relationships, and the state of the Station and its inhabitants.` +
-                `\nWhen the scene encounters a sensible moment or implicit closure—or if the current script has already done so—, output the critical "[SUMMARY: A brief synopsis]" tag. ` +
-                `Provide a brief description of the scene's events and allow the game to proceed. Much like a movie, scene scripts favor implied endings that move the plot along without belaboring the narrative beat. ` +
-                `Even a suspended moment is enough to prompt a "[SUMMARY]" tag.${wrapupPrompt}`
+                `\nWhen the script completes a story beat, indicates a scene change, or includes an implied closure or suspended moment—or if the current script has already done so—, ` +
+                `use the critical "[SUMMARY: A brief synopsis]" tag to signal the conclusion to the scene. ` +
+                `This tag includes a brief description of the scene's events, enabling the game to proceed. ` +
+                `Much like a movie, these scene scripts favor implied endings that move the plot along without belaboring the narrative beat; ` +
+                `even a suspended moment is enough to prompt a "[SUMMARY]" tag and end the current scene.${wrapupPrompt}`
             );
 
 
