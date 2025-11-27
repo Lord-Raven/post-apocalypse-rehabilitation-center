@@ -358,6 +358,11 @@ export class Request {
             if (liaison) {
                 liaison.locationId = module.id;
             }
+            // Get faction representative to move to comms
+            const factionRep = faction ? stage.getSave().actors[faction.representativeId || ''] : null;
+            if (factionRep) {
+                factionRep.locationId = module.id;
+            }
             stage.setSkit({
                 type: SkitType.REQUEST_FILL_ACTOR,
                 moduleId: module.id,
@@ -375,6 +380,11 @@ export class Request {
             // Kick off a request completion skit.
             // Get liaison to move to comms
             const liaison = stage.getSave().actors[stage.getSave().layout.getModulesWhere(m => m.type === 'comms')[0].ownerId || ''];
+            // Get faction representative to move to comms
+            const factionRep = faction ? stage.getSave().actors[faction.representativeId || ''] : null;
+            if (factionRep) {
+                factionRep.locationId = module.id;
+            }
             if (liaison) {
                 liaison.locationId = module.id;
             }
