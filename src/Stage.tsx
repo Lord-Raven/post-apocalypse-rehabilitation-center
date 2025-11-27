@@ -5,7 +5,7 @@ import Actor, { loadReserveActor, generatePrimaryActorImage, commitActorToEcho, 
 import Faction, { loadReserveFaction } from "./factions/Faction";
 import { DEFAULT_GRID_SIZE, Layout, StationStat, createModule } from './Module';
 import { BaseScreen } from "./screens/BaseScreen";
-import { generateSkitScript, SkitData } from "./Skit";
+import { generateSkitScript, SkitData, SkitType } from "./Skit";
 import { smartRehydrate } from "./SaveRehydration";
 import { Emotion } from "./actors/Emotion";
 import { Request } from "./factions/Request";
@@ -630,6 +630,19 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
                     }
                     // Add new request
                     save.requests[request.id] = request;
+                }
+            }
+
+            // If skit was an actor request fulfillment, remove the actor from the station (mark remote for now):
+            if (save.currentSkit.type === SkitType.REQUEST_FILL_ACTOR && save.currentSkit.actorId) {
+                const actor = save.actors[save.currentSkit.actorId];
+                if (actor) {
+                    actor.remote = true;
+                    actor.locationId = '';
+                    // Remove from quarters or other modules
+                    save.layout.getModulesWhere(m => m.ownerId === actor.id).forEach(module => {
+                        module.ownerId = '';
+                    });
                 }
             }
 

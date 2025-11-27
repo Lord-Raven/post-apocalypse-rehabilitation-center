@@ -472,7 +472,7 @@ export const RequestCard: FC<RequestCardProps> = ({
                                                 e.stopPropagation();
                                                 onFulfill(actor.id);
                                             }}
-                                            onMouseEnter={() => setTooltip(`Trade ${actor.name}`, SwapCalls)}
+                                            onMouseEnter={() => setTooltip(`Trade ${actor.name} to ${faction.name}`, SwapCalls)}
                                             onMouseLeave={clearTooltip}
                                             whileHover={{ scale: 1.05, backgroundColor: 'rgba(0, 255, 136, 0.3)' }}
                                             whileTap={{ scale: 0.95 }}
@@ -530,7 +530,7 @@ export const RequestCard: FC<RequestCardProps> = ({
                                 }}
                                 whileHover={{ scale: 1.02, backgroundColor: 'rgba(0, 255, 136, 0.3)' }}
                                 whileTap={{ scale: 0.98 }}
-                                onMouseEnter={() => setTooltip(request.requirement.type === 'specific-actor' ? `Trade ${stage.getSave().actors[request.requirement.actorId || ''].name}` : 'Accept Request', SwapCalls)}
+                                onMouseEnter={() => setTooltip(request.requirement.type === 'specific-actor' ? `Trade ${stage.getSave().actors[request.requirement.actorId || ''].name} to ${faction.name}` : `Accept ${faction.name}'s request`, SwapCalls)}
                                 onMouseLeave={clearTooltip}
                                 style={{
                                     width: '100%',
