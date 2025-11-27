@@ -81,15 +81,16 @@ export function generateSkitTypePrompt(skit: SkitData, stage: Stage, continuing:
         case SkitType.REQUEST_FILL_ACTOR:
             return !continuing ?
                 `This scene depicts an exchange between the player and ${faction?.name || 'a faction'} regarding the fulfillment of their request for a patient: ${actor?.name || 'a patient'}. ` +
-                `${actor?.name || 'The patient'} is departing the PARC, for perhaps the last time. ${faction?.name || 'The faction'} will keep its word and honor the agreement.` :
+                `${actor?.name || 'The patient'} is departing the PARC, for perhaps the last time. ${faction?.name || 'The faction'} will keep its word and honor the agreement. ` +
+                `The PARC will be required to do the same.` :
                 `Continue this scene, exploring ${actor?.name || 'a patient'}'s feelings on their departure from the PARC—likely forever. ` +
-                `${faction?.name || 'The faction'} will keep its word and honor the agreement.`;
+                `${faction?.name || 'The faction'} will keep its word and honor the agreement. The PARC will be required to do the same.`;
         case SkitType.REQUEST_FILL_STATION:
             return !continuing ?
                 `This scene depicts an exchange between the player and ${faction?.name || 'a faction'} regarding the fulfillment of a request. ` +
-                `${faction?.name || 'The faction'} will keep its word and honor the agreement.` :
+                `${faction?.name || 'The faction'} will keep its word and honor the agreement. The PARC will be required to do the same.` :
                 `Continue this scene describing the outcome of this request. ` +
-                `${faction?.name || 'The faction'} will keep its word and honor the agreement.`;
+                `${faction?.name || 'The faction'} will keep its word and honor the agreement. The PARC will be required to do the same.`;
         default:
             return '';
     }
