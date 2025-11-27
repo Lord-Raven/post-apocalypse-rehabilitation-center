@@ -102,7 +102,7 @@ function buildScriptLog(skit: SkitData): string {
         : '(None so far)';
 }
 
-export function generateSkitPrompt(skit: SkitData, stage: Stage, includeHistory: boolean, instruction: string): string {
+export function generateSkitPrompt(skit: SkitData, stage: Stage, includeHistory: boolean, historyLength: number, instruction: string): string {
     const playerName = stage.getSave().player.name;
 
     const presentActors = Object.values(stage.getSave().actors).filter(a => a.locationId === (skit.moduleId || '') && !a.remote);
@@ -117,7 +117,7 @@ export function generateSkitPrompt(skit: SkitData, stage: Stage, includeHistory:
     }
 
     let pastSkits = stage.getSave().timeline?.filter(event => event.skit).map(event => event.skit as SkitData) || []
-    pastSkits = pastSkits.filter((v, index) => index > (pastSkits.length || 0) - 4);
+    pastSkits = pastSkits.filter((v, index) => index > (pastSkits.length || 0) - historyLength);
     const module = stage.getSave().layout.getModuleById(skit.moduleId || '');
     const moduleOwner = module?.ownerId ? stage.getSave().actors[module.ownerId] : null;
     const faction = skit.context.factionId ? stage.getSave().factions[skit.context.factionId] : null;
@@ -196,32 +196,35 @@ export async function generateSkitScript(skit: SkitData, stage: Stage): Promise<
     const scriptLengthFactor = skit.script.length + Math.floor(Math.random() * 10) + 1;
     const wrapupPrompt = scriptLengthFactor > 24 ? wrapUpPhrases[1] : (scriptLengthFactor > 12 ? wrapUpPhrases[0] : '');
 
-    const fullPrompt = generateSkitPrompt(skit, stage, true, 
-        `Example Script Format:\n` +
-        'System: CHARACTER NAME: They do actions in prose. "Their dialogue is in quotation marks."\nANOTHER CHARACTER NAME: [ANOTHER CHARACTER NAME EXPRESSES JOY][CHARACTER NAME EXPRESSES SURPRISE] "Dialogue in quotation marks."\nNARRATOR: [CHARACTER NAME EXPRESSES RELIEF] Descriptive content that is not attributed to a character.' +
-        `\n\nExample Ending Script Format:\n` +
-        'System: CHARACTER NAME: [CHARACTER NAME EXPRESSES OPTIMISM] Action in prose. "Dialogue in quotation marks."\nNARRATOR: A moment of prose describing events.' +
-        `\n[SUMMARY: CHARACTER NAME is is hopeful about this demonstration.]` +
-        `\n\nCurrent Scene Script Log to Continue:\nSystem: ${buildScriptLog(skit)}` +
-        `\n\nPrimary Instruction:\nAt the "System:" prompt, ${skit.script.length == 0 ? 'generate a short scene script' : 'extend or conclude the current scene script'} based upon the Premise and the specified Scene Prompt, ` +
-        `involving the Present Characters (Absent Characters are listed for reference only). ` +
-        `The script should consider characters' stats, relationships, past events, and the station's stats—among other factors—to craft a compelling scene. ` +
-        `\nFollow the structure of the strict Example Script formatting above: ` +
-        `actions are depicted in prose and character dialogue in quotation marks. Emotion tags (e.g. "[CHARACTER NAME EXPRESSES JOY]") should be used to indicate significant emotional shifts—` +
-        `these cues will be utilized by the game engine to visually display appropriate character emotions. ` +
-        `An ending "[SUMMARY]" tag (e.g., "[SUMMARY: Brief summary of the scene's events.]") should be employed when the scene reaches an explicit or _implicit_ stopping point or suspendable moment. ` +
-        `\nThis scene is a brief visual novel skit within a video game; as such, the scene should avoid major developments which would fundamentally change the mechanics or nature of the game, ` +
-        `instead developing content within the existing framework. ` +
-        `Generally, focus upon interpersonal dynamics, character growth, faction relationships, and the state of the Station and its inhabitants.` +
-        `\nWhen the scene encounters a sensible moment or implicit closure—or if the current script has already done so—, output the critical "[SUMMARY: A brief synopsis]" tag. ` +
-        `Provide a brief description of the scene's events and allow the game to proceed. Much like a movie, scene scripts favor implied endings that move the plot along without belaboring the narrative beat. ` +
-        `Even a suspended moment is enough to prompt a "[SUMMARY]" tag.${wrapupPrompt}`
-    );
 
     // Retry logic if response is null or response.result is empty
     let retries = 3;
     while (retries > 0) {
         try {
+
+            const fullPrompt = generateSkitPrompt(skit, stage, true, 2 + retries,
+                `Example Script Format:\n` +
+                'System: CHARACTER NAME: They do actions in prose. "Their dialogue is in quotation marks."\nANOTHER CHARACTER NAME: [ANOTHER CHARACTER NAME EXPRESSES JOY][CHARACTER NAME EXPRESSES SURPRISE] "Dialogue in quotation marks."\nNARRATOR: [CHARACTER NAME EXPRESSES RELIEF] Descriptive content that is not attributed to a character.' +
+                `\n\nExample Ending Script Format:\n` +
+                'System: CHARACTER NAME: [CHARACTER NAME EXPRESSES OPTIMISM] Action in prose. "Dialogue in quotation marks."\nNARRATOR: A moment of prose describing events.' +
+                `\n[SUMMARY: CHARACTER NAME is is hopeful about this demonstration.]` +
+                `\n\nCurrent Scene Script Log to Continue:\nSystem: ${buildScriptLog(skit)}` +
+                `\n\nPrimary Instruction:\nAt the "System:" prompt, ${skit.script.length == 0 ? 'generate a short scene script' : 'extend or conclude the current scene script'} based upon the Premise and the specified Scene Prompt, ` +
+                `involving the Present Characters (Absent Characters are listed for reference only). ` +
+                `The script should consider characters' stats, relationships, past events, and the station's stats—among other factors—to craft a compelling scene. ` +
+                `\nFollow the structure of the strict Example Script formatting above: ` +
+                `actions are depicted in prose and character dialogue in quotation marks. Emotion tags (e.g. "[CHARACTER NAME EXPRESSES JOY]") should be used to indicate significant emotional shifts—` +
+                `these cues will be utilized by the game engine to visually display appropriate character emotions. ` +
+                `An ending "[SUMMARY]" tag (e.g., "[SUMMARY: Brief summary of the scene's events.]") should be employed when the scene reaches an explicit or _implicit_ stopping point or suspendable moment. ` +
+                `\nThis scene is a brief visual novel skit within a video game; as such, the scene should avoid major developments which would fundamentally change the mechanics or nature of the game, ` +
+                `instead developing content within the existing framework. ` +
+                `Generally, focus upon interpersonal dynamics, character growth, faction relationships, and the state of the Station and its inhabitants.` +
+                `\nWhen the scene encounters a sensible moment or implicit closure—or if the current script has already done so—, output the critical "[SUMMARY: A brief synopsis]" tag. ` +
+                `Provide a brief description of the scene's events and allow the game to proceed. Much like a movie, scene scripts favor implied endings that move the plot along without belaboring the narrative beat. ` +
+                `Even a suspended moment is enough to prompt a "[SUMMARY]" tag.${wrapupPrompt}`
+            );
+
+
             const response = await stage.generator.textGen({
                 prompt: fullPrompt,
                 min_tokens: 10,
