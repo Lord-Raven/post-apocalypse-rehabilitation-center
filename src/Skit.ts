@@ -10,6 +10,8 @@ export enum SkitType {
     ROLE_ASSIGNMENT = 'ROLE ASSIGNMENT',
     FACTION_INTRODUCTION = 'FACTION INTRODUCTION',
     FACTION_INTERACTION = 'FACTION INTERACTION',
+    REQUEST_FILL_ACTOR = 'REQUEST FILL ACTOR',
+    REQUEST_FILL_STATION = 'REQUEST FILL STATION',
     NEW_MODULE = 'NEW MODULE',
     RANDOM_ENCOUNTER = 'RANDOM ENCOUNTER'
 }
@@ -37,7 +39,6 @@ export function generateSkitTypePrompt(skit: SkitData, stage: Stage, continuing:
     const actor = stage.getSave().actors[skit.actorId || ''];
     const module = stage.getSave().layout.getModuleById(skit.moduleId || '');
     const faction = stage.getSave().factions[skit.context.factionId || ''];
-    const factionRepresentative = faction ? stage.getSave().actors[faction.representativeId || ''] : null;
     const notHereText = 'This communication is being conducted via remote video link; no representative is physically present on the station. ';
     switch (skit.type) {
         case SkitType.INTRO_CHARACTER:
@@ -77,6 +78,15 @@ export function generateSkitTypePrompt(skit: SkitData, stage: Stage, continuing:
                 notHereText :
                 `Continue this scene between the Director and a representative for ${faction?.name || 'a secret organization'}'s. ` + 
                 notHereText);
+        case SkitType.REQUEST_FILL_ACTOR:
+            return !continuing ?
+                `This scene depicts an exchange between the player and ${faction?.name || 'a faction'} regarding the fulfillment of their request for a patient: ${actor?.name || 'a patient'}. ` +
+                `${actor?.name || 'The patient'} is departing the PARC, for perhaps the last time. ` :
+                `Continue this scene, exploring ${actor?.name || 'a patient'}'s feelings on their departure from the PARC—likely forever.`;
+        case SkitType.REQUEST_FILL_STATION:
+            return !continuing ?
+                `This scene depicts an exchange between the player and ${faction?.name || 'a faction'} regarding the fulfillment of a request. ` :
+                `Continue this scene describing the outcome of this request.`;
         default:
             return '';
     }
@@ -108,6 +118,7 @@ export function generateSkitPrompt(skit: SkitData, stage: Stage, includeHistory:
     const moduleOwner = module?.ownerId ? stage.getSave().actors[module.ownerId] : null;
     const faction = skit.context.factionId ? stage.getSave().factions[skit.context.factionId] : null;
     const factionRepresentative = faction ? stage.getSave().actors[faction.representativeId || ''] : null;
+    const request = skit.context.requestId ? stage.getSave().requests[skit.context.requestId] : null;
 
     let fullPrompt = `{{messages}}\nPremise:\nThis is a sci-fi visual novel game set on a space station that resurrects and rehabilitates patients who died in a multiverse-wide apocalypse: ` +
         `the Post-Apocalypse Rehabilitation Center. ` +
@@ -145,6 +156,7 @@ export function generateSkitPrompt(skit: SkitData, stage: Stage, includeHistory:
         `\n\nStats:\n${Object.values(Stat).map(stat => `${stat.toUpperCase()}: ${getStatDescription(stat)}`).join('\n')}` +
         `\n\nEmotions:\n${Object.values(Emotion).map(emotion => `${emotion.toUpperCase()}`).join(', ')}` +
         `\n\nScene Prompt:\n${generateSkitTypePrompt(skit, stage, skit.script.length > 0)}` +
+        (request ? `\n\nRequest Details:\n  Description: ${request.description}\n  Requirement: ${request.getRequirementText()}\n  Reward: ${request.getRewardText()}\n` : '') +
         (faction ? `\n\n${faction.name} Details: ${faction.description}\n${faction.name} Aesthetic: ${faction.visualStyle}\nThe PARC's current reputation with this faction is ${faction.reputation} / 10.` : '') +
         (factionRepresentative ? `\n${faction?.name || 'The faction'}'s representative, ${factionRepresentative.name}, appears on-screen. Their description: ${factionRepresentative.description}` : 'They have no designated liaison for this communication; any characters introduced during this scene will be transient.') +
         (faction ? `\nThis skit may explore the nature of this faction's relationship with and intentions for the Director, the PARC, or other characters present in the Comms module (if any). ` +
@@ -169,8 +181,7 @@ export function generateSkitPrompt(skit: SkitData, stage: Stage, includeHistory:
 }
 
 export async function generateSkitScript(skit: SkitData, stage: Stage): Promise<{ entries: ScriptEntry[]; endScene: boolean; statChanges: { [actorId: string]: { [stat: string]: number } }; requests: Request[] }> {
-    const playerName = stage.getSave().player.name;
-    
+
     // There are two optional phrases for gently/more firmly prodding the model toward wrapping up the scene, and then we calculate one to show based on the skit.script.length and some randomness:
     const wrapUpPhrases = [
         ` Consider whether the scene has reached or can reach a natural stopping point in this response; if not, work toward a conclusion and include the "[SUMMARY]" tag.`, // Gently prod toward and ending.

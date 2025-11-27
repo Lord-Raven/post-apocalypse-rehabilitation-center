@@ -1,5 +1,6 @@
 import { namesMatch, Stat } from "../actors/Actor";
 import { StationStat } from "../Module";
+import { SkitType } from "../Skit";
 import { Stage } from "../Stage";
 import { v4 as generateUuid } from 'uuid';
 
@@ -290,6 +291,7 @@ export class Request {
         }
 
         const save = stage.getSave();
+        const faction = save.factions[this.factionId];
 
         // TODO: Implement requirement processing
         switch (this.requirement.type) {
@@ -323,16 +325,54 @@ export class Request {
         }
 
         // TODO: Apply rewards
-        if (this.reward.type === 'station-stats') {
+        if (this.reward.type === 'station-stats' && save.stationStats) {
             const rew = this.reward as StationStatsReward;
             console.log(`Applying station-stats rewards:`, rew.stats);
-            // TODO: Add station stats
+            // Apply station stats rewards
+            for (const [stat, value] of Object.entries(rew.stats)) {
+                save.stationStats[stat as StationStat] = Math.max(1, Math.min(10, (save.stationStats[stat as StationStat] || 0) + value));
+            }
         }
 
         // TODO: Remove request from active requests
+        // delete save.requests[this.id];
+
         // TODO: Increase faction reputation
+        if (faction) {
+            faction.reputation = Math.max(1, Math.min(10, faction.reputation + 1));
+        }
 
         console.log(`Request ${this.id} fulfilled successfully`);
+
+        if (this.requirement.type === 'actor-with-stats' || this.requirement.type === 'specific-actor') {
+            const module = stage.getSave().layout.getModulesWhere(m => m.type === 'comms')[0];
+            // Kick off a farewell skit.
+            stage.setSkit({
+                type: SkitType.REQUEST_FILL_ACTOR,
+                moduleId: module.id,
+                script: [],
+                generating: true,
+                context: {
+                    factionId: this.factionId,
+                    requestId: this.id
+                },
+                actorId: actorId || ''
+            });
+        } else if (this.requirement.type === 'station-stats') {
+            const module = stage.getSave().layout.getModulesWhere(m => m.type === 'comms')[0];
+            // Kick off a request completion skit.
+            stage.setSkit({
+                type: SkitType.REQUEST_FILL_STATION,
+                moduleId: module.id,
+                script: [],
+                generating: true,
+                context: {
+                    factionId: this.factionId,
+                    requestId: this.id
+                }
+            });
+        }
+
         return true;
     }
 

@@ -1051,6 +1051,7 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType}) =>
                                                     onClick={() => {
                                                         console.log(`Clicked request ${request.id}`);
                                                     }}
+                                                    onFulfill={() => request.fulfill(stage())}
                                                 />
                                             ));
                                         })()}
