@@ -348,6 +348,16 @@ export class Request {
         if (this.requirement.type === 'actor-with-stats' || this.requirement.type === 'specific-actor') {
             const module = stage.getSave().layout.getModulesWhere(m => m.type === 'comms')[0];
             // Kick off a farewell skit.
+            // Move transferred actor to comms
+            const actor = stage.getSave().actors[actorId || ''];
+            if (actor) {
+                actor.locationId = module.id;
+            }
+            // Get liaison to move to comms
+            const liaison = stage.getSave().actors[stage.getSave().layout.getModulesWhere(m => m.type === 'comms')[0].ownerId || ''];
+            if (liaison) {
+                liaison.locationId = module.id;
+            }
             stage.setSkit({
                 type: SkitType.REQUEST_FILL_ACTOR,
                 moduleId: module.id,
@@ -363,6 +373,11 @@ export class Request {
         } else if (this.requirement.type === 'station-stats') {
             const module = stage.getSave().layout.getModulesWhere(m => m.type === 'comms')[0];
             // Kick off a request completion skit.
+            // Get liaison to move to comms
+            const liaison = stage.getSave().actors[stage.getSave().layout.getModulesWhere(m => m.type === 'comms')[0].ownerId || ''];
+            if (liaison) {
+                liaison.locationId = module.id;
+            }
             stage.setSkit({
                 type: SkitType.REQUEST_FILL_STATION,
                 moduleId: module.id,
