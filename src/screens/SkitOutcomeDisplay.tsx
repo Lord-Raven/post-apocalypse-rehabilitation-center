@@ -1,0 +1,571 @@
+import React, { FC } from 'react';
+import { motion } from 'framer-motion';
+import { Paper, Typography, Box } from '@mui/material';
+import { TrendingUp, Handshake } from '@mui/icons-material';
+import Actor, { Stat, ACTOR_STAT_ICONS } from '../actors/Actor';
+import { StationStat, STATION_STAT_ICONS } from '../Module';
+import Nameplate from '../components/Nameplate';
+import { scoreToGrade } from '../utils';
+import { SkitData } from '../Skit';
+import { Stage } from '../Stage';
+import Request from '../factions/Request';
+
+interface StatChange {
+    statName: string;
+    oldValue: number;
+    newValue: number;
+}
+
+interface CharacterStatChanges {
+    actor: Actor | undefined;
+    statChanges: StatChange[];
+}
+
+interface SkitOutcomeDisplayProps {
+    skitData: SkitData;
+    stage: Stage;
+    layout?: any;
+}
+
+const SkitOutcomeDisplay: FC<SkitOutcomeDisplayProps> = ({ skitData, stage, layout }) => {
+    // Process stat changes from skitData.endProperties
+    const processStatChanges = (): CharacterStatChanges[] => {
+        if (!skitData.endProperties) return [];
+
+        const changes: CharacterStatChanges[] = [];
+
+        Object.entries(skitData.endProperties).forEach(([actorId, statChanges]) => {
+            // Handle special "STATION" id for station stat changes
+            if (actorId === 'STATION') {
+                const stationChanges: StatChange[] = [];
+
+                Object.entries(statChanges).forEach(([statName, change]) => {
+                    // Match stat name to StationStat (case-insensitive)
+                    const stationStats = stage.getSave().stationStats || {};
+                    let matchedStat: string | undefined;
+                    let currentValue = 5; // default
+
+                    // Try to find matching station stat
+                    for (const [key, value] of Object.entries(stationStats)) {
+                        if (key.toLowerCase() === statName.toLowerCase() ||
+                            key.toLowerCase().includes(statName.toLowerCase()) ||
+                            statName.toLowerCase().includes(key.toLowerCase())) {
+                            matchedStat = key;
+                            currentValue = value as number;
+                            break;
+                        }
+                    }
+
+                    if (matchedStat) {
+                        const newValue = Math.max(1, Math.min(10, currentValue + change));
+                        if (newValue === currentValue) return; // No change
+                        stationChanges.push({
+                            statName: matchedStat,
+                            oldValue: currentValue,
+                            newValue: newValue
+                        });
+                    }
+                });
+
+                if (stationChanges.length > 0) {
+                    changes.push({
+                        actor: undefined,
+                        statChanges: stationChanges
+                    });
+                }
+                return;
+            }
+
+            const actor = stage.getSave().actors[actorId];
+            if (!actor) return;
+
+            const actorChanges: StatChange[] = [];
+
+            Object.entries(statChanges).forEach(([statName, change]) => {
+                // Find the current stat value
+                const normalizedStatName = statName.toLowerCase();
+                let currentValue = 0;
+                let foundStat = false;
+
+                // Try to match the stat name to the actor's stats
+                Object.entries(actor.stats).forEach(([actorStat, value]) => {
+                    if (actorStat.toLowerCase() === normalizedStatName || 
+                        actorStat.toLowerCase().includes(normalizedStatName) ||
+                        normalizedStatName.includes(actorStat.toLowerCase())) {
+                        currentValue = value;
+                        foundStat = true;
+                    }
+                });
+
+                if (foundStat) {
+                    const newValue = Math.max(1, Math.min(10, currentValue + change));
+                    if (newValue === currentValue) return; // No change
+                    actorChanges.push({
+                        statName: statName,
+                        oldValue: currentValue,
+                        newValue: newValue
+                    });
+                }
+            });
+
+            if (actorChanges.length > 0) {
+                changes.push({
+                    actor: actor,
+                    statChanges: actorChanges
+                });
+            }
+        });
+
+        return changes;
+    };
+
+    const characterChanges = processStatChanges();
+    const requests = skitData.requests || [];
+
+    // Don't render if there's nothing to display
+    if (characterChanges.length === 0 && requests.length === 0) {
+        return null;
+    }
+
+    return (
+        <motion.div
+            initial={{ opacity: 0, y: -50 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.3 }}
+            style={{
+                position: 'absolute',
+                top: '3%',
+                right: '3%',
+                width: '400px',
+                maxHeight: '85vh',
+                zIndex: 3,
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '20px',
+                overflow: 'auto',
+                padding: '0 20px'
+            }}
+        >
+            {/* Header */}
+            <Paper
+                elevation={8}
+                sx={{
+                    background: 'linear-gradient(135deg, rgba(0,255,136,0.25) 0%, rgba(0,180,100,0.35) 50%, rgba(0,120,80,0.25) 100%)',
+                    border: '2px solid rgba(0,255,136,0.4)',
+                    borderRadius: 2,
+                    p: 2,
+                    backdropFilter: 'blur(12px)',
+                    textAlign: 'center'
+                }}
+            >
+                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1 }}>
+                    <TrendingUp sx={{ color: '#00ff88', fontSize: '1.5rem' }} />
+                    <Typography
+                        variant="h6"
+                        sx={{
+                            fontWeight: 800,
+                            color: '#fff',
+                            textTransform: 'uppercase',
+                            letterSpacing: '1px',
+                            textShadow: '0 2px 4px rgba(0,0,0,0.8)'
+                        }}
+                    >
+                        Outcome
+                    </Typography>
+                </Box>
+            </Paper>
+
+            {/* Character stat changes */}
+            {characterChanges.map((charChange, charIndex) => (
+                <motion.div
+                    key={charChange.actor ? `stat_${charChange.actor.id}` : `stat_PARC`}
+                    initial={{ opacity: 0, y: 30 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.4, delay: 0.5 + charIndex * 0.2 }}
+                >
+                    <Paper
+                        elevation={6}
+                        sx={{
+                            background: 'rgba(10,20,30,0.95)',
+                            border: '2px solid rgba(0,255,136,0.15)',
+                            borderRadius: 3,
+                            p: 3,
+                            backdropFilter: 'blur(8px)',
+                            textAlign: 'center'
+                        }}
+                    >
+                        {/* Large Character Portrait */}
+                        <motion.div
+                            initial={{ scale: 0.8, opacity: 0 }}
+                            animate={{ scale: 1, opacity: 1 }}
+                            transition={{ duration: 0.5, delay: 0.6 + charIndex * 0.2 }}
+                            style={{ marginBottom: '16px' }}
+                        >
+                            <Box
+                                sx={{
+                                    width: '100%',
+                                    height: '200px',
+                                    borderRadius: '12px',
+                                    overflow: 'hidden',
+                                    border: '3px solid rgba(0,255,136,0.4)',
+                                    backgroundImage: `url(${charChange.actor === undefined ? "https://media.charhub.io/41b7b65d-839b-4d31-8c11-64ee50e817df/0fc1e223-ad07-41c4-bdae-c9545d5c5e34.png" : 
+                                        charChange.actor.getEmotionImage(charChange.actor.getDefaultEmotion())})`,
+                                    backgroundSize: 'cover',
+                                    backgroundPosition: 'top center',
+                                    backgroundRepeat: 'no-repeat',
+                                    filter: 'brightness(1.1)',
+                                    boxShadow: '0 8px 24px rgba(0,0,0,0.6)',
+                                    '&:hover': {
+                                        transform: 'scale(1.02)',
+                                        transition: 'transform 0.2s ease-in-out'
+                                    }
+                                }}
+                            />
+                        </motion.div>
+
+                        {/* Character Nameplate */}
+                        <motion.div
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ duration: 0.4, delay: 0.7 + charIndex * 0.2 }}
+                            style={{ marginBottom: '20px' }}
+                        >
+                            {!charChange.actor ? (
+                                <Nameplate 
+                                    name="PARC"
+                                    size="large"
+                                    layout="inline"
+                                />
+                            ) : (
+                                <Nameplate 
+                                    actor={charChange.actor} 
+                                    size="large"
+                                    role={layout ? (() => {
+                                        const roleModules = layout.getModulesWhere((m: any) => 
+                                            m && m.type !== 'quarters' && m.ownerId === charChange.actor?.id
+                                        );
+                                        return roleModules.length > 0 ? roleModules[0].getAttribute('role') : undefined;
+                                    })() : undefined}
+                                    layout="inline"
+                                />
+                            )}
+                        </motion.div>
+
+                        {/* Stat changes */}
+                        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
+                            {charChange.statChanges.map((statChange, statIndex) => {
+                                const isIncrease = statChange.newValue > statChange.oldValue;
+                                const isDecrease = statChange.newValue < statChange.oldValue;
+                                
+                                return (
+                                <motion.div
+                                    key={`${charChange.actor ? charChange.actor.id : 'PARC'}-${statChange.statName}`}
+                                    initial={{ opacity: 0, x: -20 }}
+                                    animate={{ opacity: 1, x: 0 }}
+                                    transition={{ duration: 0.3, delay: 0.8 + charIndex * 0.2 + statIndex * 0.1 }}
+                                    style={{
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'space-between',
+                                        padding: '12px 4px',
+                                        background: isDecrease 
+                                            ? 'rgba(255,80,80,0.08)' 
+                                            : isIncrease 
+                                                ? 'rgba(0,255,136,0.08)' 
+                                                : 'rgba(255,255,255,0.05)',
+                                        borderRadius: '8px',
+                                        border: isDecrease 
+                                            ? '1px solid rgba(255,80,80,0.3)' 
+                                            : isIncrease 
+                                                ? '1px solid rgba(0,255,136,0.3)' 
+                                                : '1px solid rgba(255,255,255,0.1)'
+                                    }}
+                                >
+                                    {/* Stat name with icon */}
+                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                        {(() => {
+                                            // Determine if this is an actor stat or station stat
+                                            const isActorStat = charChange.actor !== undefined;
+                                            const statIcon = isActorStat 
+                                                ? ACTOR_STAT_ICONS[statChange.statName as Stat]
+                                                : STATION_STAT_ICONS[statChange.statName as StationStat];
+                                            const StatIconComponent = statIcon;
+                                            
+                                            return StatIconComponent ? (
+                                                <StatIconComponent 
+                                                    sx={{ 
+                                                        fontSize: '1.2rem', 
+                                                        color: isIncrease ? '#00ff88' : isDecrease ? '#ff6b6b' : '#ffffff',
+                                                        opacity: 0.9 
+                                                    }} 
+                                                />
+                                            ) : null;
+                                        })()}
+                                        <Typography
+                                            variant="body1"
+                                            className="stat-label"
+                                            sx={{
+                                                fontSize: '0.9rem'
+                                            }}
+                                        >
+                                            {statChange.statName}
+                                        </Typography>
+                                    </Box>
+
+                                    {/* Grade transition */}
+                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                                        {/* Old grade */}
+                                        <span
+                                            className="stat-grade"
+                                            data-grade={scoreToGrade(statChange.oldValue)}
+                                            style={{
+                                                fontSize: '2rem',
+                                                opacity: 0.6,
+                                                filter: 'grayscale(0.5)'
+                                            }}
+                                        >
+                                            {scoreToGrade(statChange.oldValue)}
+                                        </span>
+
+                                        {/* Arrow */}
+                                        <Typography
+                                            sx={{
+                                                color: isDecrease 
+                                                    ? '#ff5050' 
+                                                    : isIncrease 
+                                                        ? '#00ff88' 
+                                                        : '#ffffff',
+                                                fontWeight: 900,
+                                                fontSize: '1.4rem',
+                                                mx: 0.5,
+                                                textShadow: isDecrease 
+                                                    ? '0 2px 4px rgba(255,0,0,0.6)' 
+                                                    : isIncrease 
+                                                        ? '0 2px 4px rgba(0,255,0,0.6)' 
+                                                        : '0 2px 4px rgba(0,0,0,0.6)'
+                                            }}
+                                        >
+                                            {isDecrease ? '↓' : isIncrease ? '↑' : '→'}
+                                        </Typography>
+
+                                        {/* New grade */}
+                                        <motion.span
+                                            className="stat-grade"
+                                            data-grade={scoreToGrade(statChange.newValue)}
+                                            style={{
+                                                fontSize: '2rem'
+                                            }}
+                                            initial={{ scale: 0.8, opacity: 0 }}
+                                            animate={{ scale: 1, opacity: 1 }}
+                                            transition={{ duration: 0.5, delay: 0.9 + charIndex * 0.2 + statIndex * 0.1 }}
+                                        >
+                                            {scoreToGrade(statChange.newValue)}
+                                        </motion.span>
+                                    </Box>
+                                </motion.div>
+                                );
+                            })}
+                        </Box>
+                    </Paper>
+                </motion.div>
+            ))}
+
+            {/* New Requests Section */}
+            {requests.length > 0 && (
+                <motion.div
+                    initial={{ opacity: 0, y: 30 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.4, delay: 0.5 + characterChanges.length * 0.2 }}
+                >
+                    <Paper
+                        elevation={8}
+                        sx={{
+                            background: 'linear-gradient(135deg, rgba(100,149,237,0.25) 0%, rgba(65,105,225,0.35) 50%, rgba(30,60,140,0.25) 100%)',
+                            border: '2px solid rgba(100,149,237,0.4)',
+                            borderRadius: 2,
+                            p: 2,
+                            backdropFilter: 'blur(12px)',
+                            textAlign: 'center',
+                            mb: 2
+                        }}
+                    >
+                        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1 }}>
+                            <Handshake sx={{ color: '#6495ed', fontSize: '1.5rem' }} />
+                            <Typography
+                                variant="h6"
+                                sx={{
+                                    fontWeight: 800,
+                                    color: '#fff',
+                                    textTransform: 'uppercase',
+                                    letterSpacing: '1px',
+                                    textShadow: '0 2px 4px rgba(0,0,0,0.8)'
+                                }}
+                            >
+                                New Requests
+                            </Typography>
+                        </Box>
+                    </Paper>
+
+                    {/* Request Cards */}
+                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                        {requests.map((request, requestIndex) => {
+                            const faction = stage.getSave().factions[request.factionId];
+                            
+                            return (
+                                <motion.div
+                                    key={request.id}
+                                    initial={{ opacity: 0, x: 20 }}
+                                    animate={{ opacity: 1, x: 0 }}
+                                    transition={{ duration: 0.3, delay: 0.6 + characterChanges.length * 0.2 + requestIndex * 0.15 }}
+                                >
+                                    <Paper
+                                        elevation={6}
+                                        sx={{
+                                            position: 'relative',
+                                            background: 'rgba(10,20,30,0.95)',
+                                            border: '2px solid rgba(100,149,237,0.3)',
+                                            borderRadius: 3,
+                                            p: 3,
+                                            backdropFilter: 'blur(8px)',
+                                            overflow: 'hidden'
+                                        }}
+                                    >
+                                        {/* Background Image */}
+                                        {faction?.backgroundImageUrl && (
+                                            <Box
+                                                sx={{
+                                                    position: 'absolute',
+                                                    top: 0,
+                                                    left: 0,
+                                                    right: 0,
+                                                    bottom: 0,
+                                                    backgroundImage: `url(${faction.backgroundImageUrl})`,
+                                                    backgroundSize: 'cover',
+                                                    backgroundPosition: 'center',
+                                                    opacity: 0.15,
+                                                    zIndex: 0
+                                                }}
+                                            />
+                                        )}
+
+                                        {/* Dark overlay for readability */}
+                                        <Box
+                                            sx={{
+                                                position: 'absolute',
+                                                top: 0,
+                                                left: 0,
+                                                right: 0,
+                                                bottom: 0,
+                                                background: 'rgba(0, 10, 20, 0.7)',
+                                                zIndex: 0
+                                            }}
+                                        />
+
+                                        {/* Content */}
+                                        <Box sx={{ position: 'relative', zIndex: 1 }}>
+                                            {/* Faction Nameplate */}
+                                            {faction && (
+                                                <Box sx={{ display: 'flex', justifyContent: 'center', mb: 2 }}>
+                                                    <Nameplate
+                                                        name={faction.name}
+                                                        size="medium"
+                                                        style={{
+                                                            background: faction.themeColor || '#4a5568',
+                                                            border: faction.themeColor ? `2px solid ${faction.themeColor}CC` : '2px solid #718096',
+                                                            fontFamily: faction.themeFont || 'Arial, sans-serif',
+                                                        }}
+                                                    />
+                                                </Box>
+                                            )}
+
+                                            {/* Description */}
+                                            <Typography
+                                                sx={{
+                                                    color: '#6495ed',
+                                                    fontSize: '0.95rem',
+                                                    lineHeight: 1.5,
+                                                    fontWeight: 600,
+                                                    mb: 2,
+                                                    textAlign: 'center',
+                                                    textShadow: '0 1px 2px rgba(0,0,0,0.8)'
+                                                }}
+                                            >
+                                                {request.description}
+                                            </Typography>
+
+                                            {/* Requirements */}
+                                            <Box
+                                                sx={{
+                                                    p: 2,
+                                                    background: 'rgba(0, 0, 0, 0.5)',
+                                                    borderRadius: 2,
+                                                    mb: 2
+                                                }}
+                                            >
+                                                <Typography
+                                                    sx={{
+                                                        fontSize: '0.75rem',
+                                                        color: '#888',
+                                                        textTransform: 'uppercase',
+                                                        letterSpacing: '0.5px',
+                                                        mb: 1
+                                                    }}
+                                                >
+                                                    Requirements
+                                                </Typography>
+                                                <Typography
+                                                    sx={{
+                                                        fontSize: '0.9rem',
+                                                        color: '#fff',
+                                                        fontWeight: 600,
+                                                        textShadow: '0 1px 0 rgba(0,0,0,0.6)'
+                                                    }}
+                                                >
+                                                    {request.getRequirementText()}
+                                                </Typography>
+                                            </Box>
+
+                                            {/* Rewards */}
+                                            <Box
+                                                sx={{
+                                                    p: 2,
+                                                    background: 'rgba(0, 255, 136, 0.1)',
+                                                    borderRadius: 2,
+                                                    border: '1px solid rgba(0, 255, 136, 0.3)'
+                                                }}
+                                            >
+                                                <Typography
+                                                    sx={{
+                                                        fontSize: '0.75rem',
+                                                        color: '#888',
+                                                        textTransform: 'uppercase',
+                                                        letterSpacing: '0.5px',
+                                                        mb: 1
+                                                    }}
+                                                >
+                                                    Rewards
+                                                </Typography>
+                                                <Typography
+                                                    sx={{
+                                                        fontSize: '0.9rem',
+                                                        color: '#00ff88',
+                                                        fontWeight: 700,
+                                                        textShadow: '0 1px 0 rgba(0,0,0,0.6)'
+                                                    }}
+                                                >
+                                                    {request.getRewardText()}
+                                                </Typography>
+                                            </Box>
+                                        </Box>
+                                    </Paper>
+                                </motion.div>
+                            );
+                        })}
+                    </Box>
+                </motion.div>
+            )}
+        </motion.div>
+    );
+};
+
+export default SkitOutcomeDisplay;

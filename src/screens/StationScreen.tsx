@@ -557,6 +557,7 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType}) =>
                                                                 height: `calc(0.6 * ${cellSize})`,
                                                                 userSelect: 'none',
                                                                 pointerEvents: 'none',
+                                                                filter: actor.remote ? 'sepia(100%) hue-rotate(180deg) saturate(200%) brightness(1.2)' : undefined,
                                                             }}
                                                         />
                                                     ))}

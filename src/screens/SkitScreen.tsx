@@ -9,7 +9,7 @@ import { Stage } from '../Stage';
 import { SkitData } from '../Skit';
 import ActorImage from '../actors/ActorImage';
 import { Emotion } from '../actors/Emotion';
-import StatChangeDisplay from './StatChangeDisplay';
+import SkitOutcomeDisplay from './SkitOutcomeDisplay';
 import Nameplate from '../components/Nameplate';
 import { BlurredBackground } from '../components/BlurredBackground';
 import { useTooltip } from '../contexts/TooltipContext';
@@ -262,14 +262,6 @@ export const SkitScreen: FC<SkitScreenProps> = ({ stage, setScreenType }) => {
     const [displayName, setDisplayName] = React.useState<string>('');
     const [displayMessage, setDisplayMessage] = React.useState<JSX.Element>(<></>);
     const [finishTyping, setFinishTyping] = React.useState<boolean>(false);
-    const [characterStatChanges, setCharacterStatChanges] = React.useState<Array<{
-        actor: Actor | undefined;
-        statChanges: Array<{
-            statName: string;
-            oldValue: number;
-            newValue: number;
-        }>;
-    }>>([]);
     const [hoveredActor, setHoveredActor] = React.useState<Actor | null>(null);
     const [audioEnabled, setAudioEnabled] = React.useState<boolean>(true);
     const currentAudioRef = React.useRef<HTMLAudioElement | null>(null);
@@ -292,11 +284,6 @@ export const SkitScreen: FC<SkitScreenProps> = ({ stage, setScreenType }) => {
                 // Check if the final entry has endScene
                 const ended = skitData?.script[skitData.script.length - 1]?.endScene || false;
                 setSceneEnded(ended);
-                
-                // Process stat changes when scene ends
-                if (ended && skitData?.endProperties) {
-                    processStatChanges(skitData.endProperties);
-                }
             });
         }
     }, [skit]);
@@ -342,9 +329,6 @@ export const SkitScreen: FC<SkitScreenProps> = ({ stage, setScreenType }) => {
         // Update sceneEnded based on current index
         if (skit.script[index]?.endScene) {
             setSceneEnded(true);
-            if (skit.endProperties) {
-                processStatChanges(skit.endProperties);
-            }
         } else {
             setSceneEnded(false);
         }
@@ -407,109 +391,7 @@ export const SkitScreen: FC<SkitScreenProps> = ({ stage, setScreenType }) => {
         });
     }
 
-    // Process stat changes and prepare data for StatChangeDisplay (display only, does not apply changes); there may be a special actorId: "STATION" which uses StationStats
-    const processStatChanges = (endProperties: { [actorId: string]: { [stat: string]: number } }) => {
-        const changes: Array<{
-            actor: Actor|undefined;
-            statChanges: Array<{
-                statName: string;
-                oldValue: number;
-                newValue: number;
-            }>;
-        }> = [];
 
-        Object.entries(endProperties).forEach(([actorId, statChanges]) => {
-            // Handle special "STATION" id for station stat changes
-            if (actorId === 'STATION') {
-                const stationChanges: Array<{
-                    statName: string;
-                    oldValue: number;
-                    newValue: number;
-                }> = [];
-
-                Object.entries(statChanges).forEach(([statName, change]) => {
-                    // Match stat name to StationStat (case-insensitive)
-                    const stationStats = stage().getSave().stationStats || {};
-                    let matchedStat: string | undefined;
-                    let currentValue = 5; // default
-
-                    // Try to find matching station stat
-                    for (const [key, value] of Object.entries(stationStats)) {
-                        if (key.toLowerCase() === statName.toLowerCase() ||
-                            key.toLowerCase().includes(statName.toLowerCase()) ||
-                            statName.toLowerCase().includes(key.toLowerCase())) {
-                            matchedStat = key;
-                            currentValue = value as number;
-                            break;
-                        }
-                    }
-
-                    if (matchedStat) {
-                        const newValue = Math.max(1, Math.min(10, currentValue + change));
-                        if (newValue == currentValue) return; // No change
-                        stationChanges.push({
-                            statName: matchedStat,
-                            oldValue: currentValue,
-                            newValue: newValue
-                        });
-                    }
-                });
-
-                if (stationChanges.length > 0) {
-                    changes.push({
-                        actor: undefined,
-                        statChanges: stationChanges
-                    });
-                }
-                return;
-            }
-
-            const actor = stage().getSave().actors[actorId];
-            if (!actor) return;
-
-            const actorChanges: Array<{
-                statName: string;
-                oldValue: number;
-                newValue: number;
-            }> = [];
-
-            Object.entries(statChanges).forEach(([statName, change]) => {
-                // Find the current stat value
-                const normalizedStatName = statName.toLowerCase();
-                let currentValue = 0;
-                let foundStat = false;
-
-                // Try to match the stat name to the actor's stats
-                Object.entries(actor.stats).forEach(([actorStat, value]) => {
-                    if (actorStat.toLowerCase() === normalizedStatName || 
-                        actorStat.toLowerCase().includes(normalizedStatName) ||
-                        normalizedStatName.includes(actorStat.toLowerCase())) {
-                        currentValue = value;
-                        foundStat = true;
-                    }
-                });
-
-                if (foundStat) {
-                    const newValue = Math.max(1, Math.min(10, currentValue + change));
-                    if (newValue == currentValue) return; // No change
-                    actorChanges.push({
-                        statName: statName,
-                        oldValue: currentValue,
-                        newValue: newValue
-                    });
-                }
-            });
-
-            if (actorChanges.length > 0) {
-                changes.push({
-                    actor: actor,
-                    statChanges: actorChanges
-                });
-            }
-        });
-
-        setCharacterStatChanges(changes);
-    };
 
     const module = stage().getSave().layout.getModuleById(skit.moduleId || '');
     const decorImageUrl = module ? stage().getSave().actors[module.ownerId || '']?.decorImageUrls[module.type] || module.getAttribute('defaultImageUrl') : '';
@@ -525,13 +407,13 @@ export const SkitScreen: FC<SkitScreenProps> = ({ stage, setScreenType }) => {
                 {renderActors(stage().getSave().layout.getModuleById(skit.moduleId || ''), Object.values(stage().getSave().actors).filter(actor => actor.locationId === (skit.moduleId || '')) || [], skit.script && skit.script.length > 0 ? skit.script[index]?.speaker : undefined)}
             </div>
 
-            {/* Stat Change Display - shown when scene ends with stat changes */}
-            {sceneEnded && characterStatChanges.length > 0 && index === skit.script.length - 1 && (
-                <StatChangeDisplay characterChanges={characterStatChanges} layout={stage().getSave().layout} />
+            {/* Skit Outcome Display - shown when scene ends */}
+            {sceneEnded && index === skit.script.length - 1 && (
+                <SkitOutcomeDisplay skitData={skit} stage={stage()} layout={stage().getSave().layout} />
             )}
 
-            {/* Actor Card - shown when hovering over an actor, only if no stat changes are displayed */}
-            {hoveredActor && !(sceneEnded && characterStatChanges.length > 0 && index === skit.script.length - 1) && (
+            {/* Actor Card - shown when hovering over an actor, only if no outcome is displayed */}
+            {hoveredActor && !(sceneEnded && index === skit.script.length - 1) && (
                 <div style={{
                     position: 'absolute',
                     top: '5%',
@@ -876,11 +758,6 @@ export const SkitScreen: FC<SkitScreenProps> = ({ stage, setScreenType }) => {
             // Check if the entry at new index has endScene
             const ended = skitData?.script[newIndex]?.endScene || false;
             setSceneEnded(ended);
-            
-            // Process stat changes when scene ends
-            if (ended && skitData?.endProperties) {
-                processStatChanges(skitData.endProperties);
-            }
         });
     }
     
@@ -911,11 +788,6 @@ export const SkitScreen: FC<SkitScreenProps> = ({ stage, setScreenType }) => {
             // Check if the entry at new index has endScene
             const ended = skitData?.script[newIndex]?.endScene || false;
             setSceneEnded(ended);
-            
-            // Process stat changes when scene ends
-            if (ended && skitData?.endProperties) {
-                processStatChanges(skitData.endProperties);
-            }
         });
     }
 

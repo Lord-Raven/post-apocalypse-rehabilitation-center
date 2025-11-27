@@ -175,8 +175,20 @@ export const MODULE_DEFAULTS: Record<ModuleType, ModuleIntrinsic> = {
         baseImageUrl: 'https://media.charhub.io/e13c7784-9f5f-4ec2-a179-5bab52973b3a/f5e69e63-88bf-4f7d-919b-41c8a2adcc6c.png',
         defaultImageUrl: 'https://media.charhub.io/9293912a-ebf4-4a0f-bac6-b9bfc82115f1/2ce9899c-a8cb-4186-9abb-fb8192ced8bd.png',
         action: (module: Module, stage: Stage, setScreenType: (type: ScreenType) => void) => {
-            // If there is a new faction to introduce, open an intro skit
-            if (Object.values(stage.getSave().factions).length < 5 && stage.reserveFactions.length > 0) {
+            // If there is a rep from a faction here, open a faction interaction skit
+            if (Object.values(stage.getSave().factions).some(a => a.representativeId && stage.getSave().actors[a.representativeId]?.locationId === module.id)) {
+                const faction = Object.values(stage.getSave().factions).find(a => a.representativeId && stage.getSave().actors[a.representativeId]?.locationId === module.id);
+                if (faction) {
+                    stage.setSkit({
+                        type: SkitType.FACTION_INTERACTION,
+                        moduleId: module.id,
+                        script: [],
+                        generating: true,
+                        context: {factionId: faction.id}
+                    });
+                    setScreenType(ScreenType.SKIT);
+                }
+            } else if (Object.values(stage.getSave().factions).length < stage.MAX_FACTIONS && stage.reserveFactions.length > 0) {
                 // Move the module's owner (if any) here:
                 if (module.ownerId && stage.getSave().actors[module.ownerId]) {
                     stage.getSave().actors[module.ownerId].locationId = module.id;
@@ -193,25 +205,6 @@ export const MODULE_DEFAULTS: Record<ModuleType, ModuleIntrinsic> = {
                     script: [],
                     generating: true,
                     context: {factionId: newFaction.id,}
-                });
-                setScreenType(ScreenType.SKIT);
-            } else if (Object.values(stage.getSave().factions).length > 0) {
-                // Otherwise, open a random faction interaction skit
-                // Move the module's owner (if any) here:
-                if (module.ownerId && stage.getSave().actors[module.ownerId]) {
-                    stage.getSave().actors[module.ownerId].locationId = module.id;
-                }
-                const faction = Object.values(stage.getSave().factions).sort(() => 0.5 - Math.random())[0];
-                // Move representative actor (if any) here:
-                if (faction.representativeId && stage.getSave().actors[faction.representativeId]) {
-                    stage.getSave().actors[faction.representativeId].locationId = module.id;
-                }
-                stage.setSkit({
-                    type: SkitType.FACTION_INTERACTION,
-                    moduleId: module.id,
-                    script: [],
-                    generating: true,
-                    context: {factionId: faction.id}
                 });
                 setScreenType(ScreenType.SKIT);
             } else if (Object.values(stage.getSave().actors).some(a => a.locationId === module.id)) {
