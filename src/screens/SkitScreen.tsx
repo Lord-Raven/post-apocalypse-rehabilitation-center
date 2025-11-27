@@ -348,9 +348,12 @@ export const SkitScreen: FC<SkitScreenProps> = ({ stage, setScreenType }) => {
     };
 
     const renderActors = (module: Module | null, actors: Actor[], currentSpeaker?: string) => {
+        // There are two expanding ranges to display actors within on screen: one centered around 25vw and one around 75vw. Actors alternate between these two ranges.
+        const leftRange = Math.min(40, 20 + Math.ceil((actors.length - 2) / 2) * 10); // Adjust used screen space by number of present actors.
+        const rightRange = Math.min(40, 20 + Math.floor((actors.length - 2) / 2) * 10);
+
         // Display actors centered across the scene bottom. Use emotion from current script entry or neutral as fallback
         return actors.map((actor, i) => {
-            const range = Math.min(90, 30 + actors.length * 10); // Adjust used screen space by number of present actors.
             
             // Get emotion for this actor from current script entry
             let emotion = Emotion.neutral;
@@ -366,8 +369,13 @@ export const SkitScreen: FC<SkitScreenProps> = ({ stage, setScreenType }) => {
                 }
             }
             
-            const increment = actors.length > 1 ? (i / (actors.length - 1)) : 0.5;
-            const xPosition = Math.round(increment * range) + (100 - range) / 2;
+            const leftSide = (i % 2) === 0;
+            const indexOnSide = leftSide ? Math.floor(i / 2) : Math.floor((i - 1) / 2);
+            const actorsOnSide = leftSide ? Math.ceil(actors.length / 2) : Math.floor(actors.length / 2);
+            const range = leftSide ? leftRange : rightRange;
+            const increment = actorsOnSide > 1 ? (indexOnSide / (actorsOnSide - 1)) : 0.5;
+            const center = leftSide ? 25 : 75;
+            const xPosition = actors.length == 1 ? 50 : Math.round(increment * range) + (center - Math.floor(range / 2));
             const isSpeaking = actor === speaker;
             const isHovered = hoveredActor === actor;
             

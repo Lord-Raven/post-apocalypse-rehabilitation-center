@@ -102,7 +102,7 @@ function buildScriptLog(skit: SkitData): string {
         : '(None so far)';
 }
 
-export function generateSkitPrompt(skit: SkitData, stage: Stage, includeHistory: boolean, historyLength: number, instruction: string): string {
+export function generateSkitPrompt(skit: SkitData, stage: Stage, historyLength: number, instruction: string): string {
     const playerName = stage.getSave().player.name;
 
     const presentActors = Object.values(stage.getSave().actors).filter(a => a.locationId === (skit.moduleId || '') && !a.remote);
@@ -174,7 +174,7 @@ export function generateSkitPrompt(skit: SkitData, stage: Stage, includeHistory:
             `${module.type === 'quarters' ? `${moduleOwner ? `${moduleOwner.name}'s` : 'a vacant'} quarters` : 
             `the ${module.type || 'Unknown'}`}. ${module.getAttribute('skitPrompt') || 'No description available.'}\n`) : '') +
 
-        ((includeHistory && pastSkits.length) ? 
+        ((historyLength > 0 && pastSkits.length) ? 
             // Include last few skit scripts for context and style reference
             '\n\nRecent Scene Scripts for additional context:' + pastSkits.map((v, index) => 
                 `\n\n  Scene in ${stage.getSave().layout.getModuleById(v.moduleId || '')?.type || 'Unknown'} (${stage.getSave().day - v.context.day}) days ago:\n` +
@@ -202,7 +202,7 @@ export async function generateSkitScript(skit: SkitData, stage: Stage): Promise<
     while (retries > 0) {
         try {
 
-            const fullPrompt = generateSkitPrompt(skit, stage, true, 2 + retries,
+            const fullPrompt = generateSkitPrompt(skit, stage, 2 + retries,
                 `Example Script Format:\n` +
                 'System: CHARACTER NAME: They do actions in prose. "Their dialogue is in quotation marks."\nANOTHER CHARACTER NAME: [ANOTHER CHARACTER NAME EXPRESSES JOY][CHARACTER NAME EXPRESSES SURPRISE] "Dialogue in quotation marks."\nNARRATOR: [CHARACTER NAME EXPRESSES RELIEF] Descriptive content that is not attributed to a character.' +
                 `\n\nExample Ending Script Format:\n` +
@@ -396,7 +396,7 @@ export async function generateSkitScript(skit: SkitData, stage: Stage): Promise<
                     console.log('Scene end predicted; preparing to analyze for requests and stat changes.');
 
                     ttsPromises.push((async () => {
-                        const analysisPrompt = generateSkitPrompt(skit, stage, true,
+                        const analysisPrompt = generateSkitPrompt(skit, stage, 0,
                             `Scene Script:\nSystem: ${buildScriptLog(skit)}` +
                             `\n\nPrimary Instruction:\nAnalyze the preceding scene script and output formatted tags in brackets, identifying the following categorical changes to be inorporated into the game. ` +
                             `\n\nCharacter Stat Changes:\nIdentify any changes to character stats implied by the scene. For each change, output a line in the following format:\n` +
