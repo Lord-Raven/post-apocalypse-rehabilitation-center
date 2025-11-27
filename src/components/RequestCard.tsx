@@ -6,7 +6,7 @@ import { StationStat, STATION_STAT_ICONS } from '../Module';
 import { Stage } from '../Stage';
 import { Nameplate } from './Nameplate';
 import { useTooltip } from '../contexts/TooltipContext';
-import { SwapCalls } from '@mui/icons-material';
+import { SwapHoriz } from '@mui/icons-material';
 
 interface RequestCardProps {
     request: Request;
@@ -472,7 +472,7 @@ export const RequestCard: FC<RequestCardProps> = ({
                                                 e.stopPropagation();
                                                 onFulfill(actor.id);
                                             }}
-                                            onMouseEnter={() => setTooltip(`Trade ${actor.name} to ${faction.name}`, SwapCalls)}
+                                            onMouseEnter={() => setTooltip(`Trade ${actor.name} to ${faction.name}`, SwapHoriz)}
                                             onMouseLeave={clearTooltip}
                                             whileHover={{ scale: 1.05, backgroundColor: 'rgba(0, 255, 136, 0.3)' }}
                                             whileTap={{ scale: 0.95 }}
@@ -530,7 +530,7 @@ export const RequestCard: FC<RequestCardProps> = ({
                                 }}
                                 whileHover={{ scale: 1.02, backgroundColor: 'rgba(0, 255, 136, 0.3)' }}
                                 whileTap={{ scale: 0.98 }}
-                                onMouseEnter={() => setTooltip(request.requirement.type === 'specific-actor' ? `Trade ${stage.getSave().actors[request.requirement.actorId || ''].name} to ${faction.name}` : `Accept ${faction.name}'s request`, SwapCalls)}
+                                onMouseEnter={() => setTooltip(request.requirement.type === 'specific-actor' ? `Trade ${stage.getSave().actors[request.requirement.actorId || ''].name} to ${faction.name}` : `Accept ${faction.name}'s request`, SwapHoriz)}
                                 onMouseLeave={clearTooltip}
                                 style={{
                                     width: '100%',
