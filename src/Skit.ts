@@ -81,12 +81,15 @@ export function generateSkitTypePrompt(skit: SkitData, stage: Stage, continuing:
         case SkitType.REQUEST_FILL_ACTOR:
             return !continuing ?
                 `This scene depicts an exchange between the player and ${faction?.name || 'a faction'} regarding the fulfillment of their request for a patient: ${actor?.name || 'a patient'}. ` +
-                `${actor?.name || 'The patient'} is departing the PARC, for perhaps the last time. ` :
-                `Continue this scene, exploring ${actor?.name || 'a patient'}'s feelings on their departure from the PARC—likely forever.`;
+                `${actor?.name || 'The patient'} is departing the PARC, for perhaps the last time. ${faction?.name || 'The faction'} will keep its word and honor the agreement.` :
+                `Continue this scene, exploring ${actor?.name || 'a patient'}'s feelings on their departure from the PARC—likely forever. ` +
+                `${faction?.name || 'The faction'} will keep its word and honor the agreement.`;
         case SkitType.REQUEST_FILL_STATION:
             return !continuing ?
-                `This scene depicts an exchange between the player and ${faction?.name || 'a faction'} regarding the fulfillment of a request. ` :
-                `Continue this scene describing the outcome of this request.`;
+                `This scene depicts an exchange between the player and ${faction?.name || 'a faction'} regarding the fulfillment of a request. ` +
+                `${faction?.name || 'The faction'} will keep its word and honor the agreement.` :
+                `Continue this scene describing the outcome of this request. ` +
+                `${faction?.name || 'The faction'} will keep its word and honor the agreement.`;
         default:
             return '';
     }

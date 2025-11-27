@@ -1,5 +1,6 @@
 import { namesMatch, Stat } from "../actors/Actor";
 import { StationStat } from "../Module";
+import { ScreenType } from "../screens/BaseScreen";
 import { SkitType } from "../Skit";
 import { Stage } from "../Stage";
 import { v4 as generateUuid } from 'uuid';
@@ -283,7 +284,7 @@ export class Request {
      * @param actorId Optional actor ID for actor-based requirements
      * @returns true if the request was successfully fulfilled, false otherwise
      */
-    fulfill(stage: Stage, actorId?: string): boolean {
+    fulfill(stage: Stage, setScreenType: (type: ScreenType) => void, actorId?: string): boolean {
         // Verify the request can be fulfilled
         if (!this.canFulfill(stage)) {
             console.warn('Cannot fulfill request - requirements not met');
@@ -358,6 +359,7 @@ export class Request {
                 },
                 actorId: actorId || ''
             });
+            setScreenType(ScreenType.SKIT);
         } else if (this.requirement.type === 'station-stats') {
             const module = stage.getSave().layout.getModulesWhere(m => m.type === 'comms')[0];
             // Kick off a request completion skit.
@@ -371,6 +373,7 @@ export class Request {
                     requestId: this.id
                 }
             });
+            setScreenType(ScreenType.SKIT);
         }
 
         return true;
