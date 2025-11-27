@@ -319,13 +319,12 @@ export const SkitScreen: FC<SkitScreenProps> = ({ stage, setScreenType }) => {
             setDisplayMessage(formatMessage(skit.script[index]?.message || '', matchingActor));
             setFinishTyping(false); // Reset typing state when message changes
             console.log('SkitScreen: Displaying message index', index, 'Speaker:', matchingActor ? matchingActor.name : (isPlayerSpeaker ? playerName : 'N/A'));
-            if (audioEnabled && skit.script[index]?.speechUrl) {
+            if (currentAudioRef.current) {
                 // Stop any currently playing audio
-                if (currentAudioRef.current) {
-                    currentAudioRef.current.pause();
-                    currentAudioRef.current.currentTime = 0;
-                }
-                
+                currentAudioRef.current.pause();
+                currentAudioRef.current.currentTime = 0;
+            }
+            if (audioEnabled && skit.script[index]?.speechUrl) {
                 const audio = new Audio(skit.script[index].speechUrl);
                 currentAudioRef.current = audio;
                 audio.play().catch(err => {

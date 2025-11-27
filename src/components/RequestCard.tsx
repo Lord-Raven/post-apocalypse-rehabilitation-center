@@ -1,9 +1,10 @@
 import React, { FC, useState } from 'react';
 import { motion } from 'framer-motion';
 import Request, { ActorWithStatsRequirement, SpecificActorRequirement, StationStatsRequirement } from '../factions/Request';
-import { Stat } from '../actors/Actor';
-import { StationStat } from '../Module';
+import { Stat, ACTOR_STAT_ICONS } from '../actors/Actor';
+import { StationStat, STATION_STAT_ICONS } from '../Module';
 import { Stage } from '../Stage';
+import { Nameplate } from './Nameplate';
 
 interface RequestCardProps {
     request: Request;
@@ -54,57 +55,125 @@ export const RequestCard: FC<RequestCardProps> = ({
         borderColor: canFulfill ? 'rgba(0, 255, 136, 0.5)' : 'rgba(255, 107, 107, 0.5)',
     };
 
-    // Format requirement text
-    const getRequirementText = (): string => {
+    // Get requirement content (text + optional image/icons)
+    const getRequirementContent = () => {
         switch (request.requirement.type) {
             case 'actor-with-stats': {
                 const req = request.requirement as ActorWithStatsRequirement;
+                const statIcons: JSX.Element[] = [];
                 const constraints: string[] = [];
                 
                 if (req.minStats) {
                     Object.entries(req.minStats).forEach(([stat, value]) => {
+                        const StatIcon = ACTOR_STAT_ICONS[stat as Stat];
+                        if (StatIcon) {
+                            statIcons.push(
+                                <StatIcon 
+                                    key={`min-${stat}`} 
+                                    style={{ fontSize: '1.2rem', color: '#00ff88' }} 
+                                />
+                            );
+                        }
                         constraints.push(`${stat} ≥ ${value}`);
                     });
                 }
                 
                 if (req.maxStats) {
                     Object.entries(req.maxStats).forEach(([stat, value]) => {
+                        const StatIcon = ACTOR_STAT_ICONS[stat as Stat];
+                        if (StatIcon) {
+                            statIcons.push(
+                                <StatIcon 
+                                    key={`max-${stat}`} 
+                                    style={{ fontSize: '1.2rem', color: '#ff6b6b' }} 
+                                />
+                            );
+                        }
                         constraints.push(`${stat} ≤ ${value}`);
                     });
                 }
                 
-                return `Actor: ${constraints.join(', ')}`;
+                return {
+                    text: `Actor: ${constraints.join(', ')}`,
+                    icons: statIcons,
+                    image: null
+                };
             }
             
             case 'specific-actor': {
                 const req = request.requirement as SpecificActorRequirement;
                 const actor = stage.getSave().actors[req.actorId];
-                return `Specific Actor: ${actor?.name || 'Unknown'}`;
+                return {
+                    text: `Specific Actor: ${actor?.name || 'Unknown'}`,
+                    icons: [],
+                    image: actor?.avatarImageUrl || null
+                };
             }
             
             case 'station-stats': {
                 const req = request.requirement as StationStatsRequirement;
+                const statIcons: JSX.Element[] = [];
                 const stats = Object.entries(req.stats)
-                    .map(([stat, value]) => `${stat} -${value}`)
+                    .map(([stat, value]) => {
+                        const StatIcon = STATION_STAT_ICONS[stat as StationStat];
+                        if (StatIcon) {
+                            statIcons.push(
+                                <StatIcon 
+                                    key={stat} 
+                                    style={{ fontSize: '1.2rem', color: '#ff6b6b' }} 
+                                />
+                            );
+                        }
+                        return `${stat} -${value}`;
+                    })
                     .join(', ');
-                return `Station: ${stats}`;
+                return {
+                    text: `Station: ${stats}`,
+                    icons: statIcons,
+                    image: null
+                };
             }
             
             default:
-                return 'Unknown requirement';
+                return {
+                    text: 'Unknown requirement',
+                    icons: [],
+                    image: null
+                };
         }
     };
 
-    // Format reward text
-    const getRewardText = (): string => {
+    // Get reward content (text + icons)
+    const getRewardContent = () => {
         if (request.reward.type === 'station-stats') {
+            const statIcons: JSX.Element[] = [];
             const stats = Object.entries(request.reward.stats)
-                .map(([stat, value]) => `${stat} +${value}`)
+                .map(([stat, value]) => {
+                    const StatIcon = STATION_STAT_ICONS[stat as StationStat];
+                    if (StatIcon) {
+                        statIcons.push(
+                            <StatIcon 
+                                key={stat} 
+                                style={{ fontSize: '1.2rem', color: '#00ff88' }} 
+                            />
+                        );
+                    }
+                    return `${stat} +${value}`;
+                })
                 .join(', ');
-            return stats;
+            return {
+                text: stats,
+                icons: statIcons
+            };
         }
-        return 'Unknown reward';
+        return {
+            text: 'Unknown reward',
+            icons: []
+        };
     };
+
+    const requirementContent = getRequirementContent();
+    const rewardContent = getRewardContent();
 
     return (
         <motion.div
@@ -112,7 +181,10 @@ export const RequestCard: FC<RequestCardProps> = ({
             whileHover={whileHover || defaultWhileHover}
             whileTap={{ scale: 0.98 }}
             transition={{ duration: 0.2 }}
-            animate={{ height: isExpanded ? 'auto' : '120px' }}
+            animate={{ 
+                height: isExpanded ? 'auto' : 'fit-content',
+                minHeight: isExpanded ? 'auto' : '200px'
+            }}
             style={{
                 border: `3px solid ${canFulfill ? '#00ff88' : '#ff6b6b'}`,
                 borderRadius: '8px',
@@ -126,43 +198,24 @@ export const RequestCard: FC<RequestCardProps> = ({
             }}
             className={className}
         >
-            {/* Can fulfill indicator */}
-            <div style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '8px',
-                marginBottom: '8px',
-            }}>
+            {/* Faction Nameplate */}
+            {faction && (
                 <div style={{
-                    width: '12px',
-                    height: '12px',
-                    borderRadius: '50%',
-                    background: canFulfill ? '#00ff88' : '#ff6b6b',
-                    boxShadow: canFulfill 
-                        ? '0 0 8px #00ff88'
-                        : '0 0 8px #ff6b6b',
-                    flexShrink: 0,
-                }} />
-                <span style={{
-                    fontSize: '0.85rem',
-                    color: canFulfill ? '#00ff88' : '#ff6b6b',
-                    fontWeight: 700,
-                    textShadow: '0 1px 0 rgba(0,0,0,0.6)',
+                    display: 'flex',
+                    justifyContent: 'center',
+                    marginBottom: '12px',
                 }}>
-                    {canFulfill ? 'Available' : 'Unavailable'}
-                </span>
-                {faction && (
-                    <span style={{
-                        fontSize: '0.75rem',
-                        color: faction.themeColor || '#00ff88',
-                        marginLeft: 'auto',
-                        fontFamily: faction.themeFont || 'Arial, sans-serif',
-                        textShadow: '0 1px 0 rgba(0,0,0,0.6)',
-                    }}>
-                        {faction.name}
-                    </span>
-                )}
-            </div>
+                    <Nameplate
+                        name={faction.name}
+                        size="small"
+                        style={{
+                            background: faction.themeColor || '#4a5568',
+                            border: faction.themeColor ? `2px solid ${faction.themeColor}CC` : '2px solid #718096',
+                            fontFamily: faction.themeFont || 'Arial, sans-serif',
+                        }}
+                    />
+                </div>
+            )}
 
             {/* Description (shown when expanded) */}
             {isExpanded && (
@@ -187,23 +240,80 @@ export const RequestCard: FC<RequestCardProps> = ({
                 background: 'rgba(0, 0, 0, 0.6)',
                 borderRadius: '4px',
                 marginBottom: '8px',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '8px',
             }}>
                 <div style={{
                     fontSize: '0.75rem',
                     color: '#888',
-                    marginBottom: '4px',
                     textTransform: 'uppercase',
                     letterSpacing: '0.5px',
                 }}>
                     Requires
                 </div>
+                
+                {/* Character image for specific-actor requirement */}
+                {requirementContent.image && (
+                    <div style={{
+                        display: 'flex',
+                        justifyContent: 'center',
+                        marginBottom: '4px',
+                    }}>
+                        <img 
+                            src={requirementContent.image}
+                            alt="Required character"
+                            style={{
+                                width: '60px',
+                                height: '60px',
+                                objectFit: 'cover',
+                                objectPosition: 'top center',
+                                borderRadius: '8px',
+                                border: '2px solid #00ff88',
+                            }}
+                        />
+                    </div>
+                )}
+                
                 <div style={{
-                    fontSize: '0.85rem',
-                    color: '#ffffff',
-                    fontWeight: 600,
-                    textShadow: '0 1px 0 rgba(0,0,0,0.6)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                    flexWrap: 'wrap',
                 }}>
-                    {getRequirementText()}
+                    <span style={{
+                        fontSize: '1.2rem',
+                        color: canFulfill ? '#00ff88' : '#ff6b6b',
+                        fontWeight: 700,
+                        lineHeight: 1,
+                        textShadow: canFulfill 
+                            ? '0 0 8px #00ff88'
+                            : '0 0 8px #ff6b6b',
+                        flexShrink: 0,
+                    }}>
+                        {canFulfill ? '✓' : '✗'}
+                    </span>
+                    
+                    {/* Stat icons */}
+                    {requirementContent.icons.length > 0 && (
+                        <div style={{
+                            display: 'flex',
+                            gap: '4px',
+                            flexShrink: 0,
+                        }}>
+                            {requirementContent.icons}
+                        </div>
+                    )}
+                    
+                    <div style={{
+                        fontSize: '0.85rem',
+                        color: '#ffffff',
+                        fontWeight: 600,
+                        textShadow: '0 1px 0 rgba(0,0,0,0.6)',
+                        flex: 1,
+                    }}>
+                        {requirementContent.text}
+                    </div>
                 </div>
             </div>
 
@@ -223,12 +333,30 @@ export const RequestCard: FC<RequestCardProps> = ({
                     Rewards
                 </div>
                 <div style={{
-                    fontSize: '0.85rem',
-                    color: '#00ff88',
-                    fontWeight: 700,
-                    textShadow: '0 1px 0 rgba(0,0,0,0.6)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                    flexWrap: 'wrap',
                 }}>
-                    {getRewardText()}
+                    {/* Stat icons */}
+                    {rewardContent.icons.length > 0 && (
+                        <div style={{
+                            display: 'flex',
+                            gap: '4px',
+                            flexShrink: 0,
+                        }}>
+                            {rewardContent.icons}
+                        </div>
+                    )}
+                    
+                    <div style={{
+                        fontSize: '0.85rem',
+                        color: '#00ff88',
+                        fontWeight: 700,
+                        textShadow: '0 1px 0 rgba(0,0,0,0.6)',
+                    }}>
+                        {rewardContent.text}
+                    </div>
                 </div>
             </div>
         </motion.div>

@@ -2,7 +2,8 @@ import React, { FC } from 'react';
 import { motion } from 'framer-motion';
 import { Paper, Typography, Box, Avatar } from '@mui/material';
 import { TrendingUp } from '@mui/icons-material';
-import Actor from '../actors/Actor';
+import Actor, { Stat, ACTOR_STAT_ICONS } from '../actors/Actor';
+import { StationStat, STATION_STAT_ICONS } from '../Module';
 import Nameplate from '../components/Nameplate';
 import { scoreToGrade } from '../utils';
 
@@ -34,8 +35,8 @@ const StatChangeDisplay: FC<StatChangeDisplayProps> = ({ characterChanges, layou
             transition={{ duration: 0.6, delay: 0.3 }}
             style={{
                 position: 'absolute',
-                top: '5%',
-                right: '5%',
+                top: '3%',
+                right: '3%',
                 width: '400px',
                 maxHeight: '85vh',
                 zIndex: 3,
@@ -167,7 +168,7 @@ const StatChangeDisplay: FC<StatChangeDisplayProps> = ({ characterChanges, layou
                                         display: 'flex',
                                         alignItems: 'center',
                                         justifyContent: 'space-between',
-                                        padding: '12px 16px',
+                                        padding: '12px 4px',
                                         background: isDecrease 
                                             ? 'rgba(255,80,80,0.08)' 
                                             : isIncrease 
@@ -181,16 +182,36 @@ const StatChangeDisplay: FC<StatChangeDisplayProps> = ({ characterChanges, layou
                                                 : '1px solid rgba(255,255,255,0.1)'
                                     }}
                                 >
-                                    {/* Stat name */}
-                                    <Typography
-                                        variant="body1"
-                                        className="stat-label"
-                                        sx={{
-                                            fontSize: '0.9rem'
-                                        }}
-                                    >
-                                        {statChange.statName}
-                                    </Typography>
+                                    {/* Stat name with icon */}
+                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                        {(() => {
+                                            // Determine if this is an actor stat or station stat
+                                            const isActorStat = charChange.actor !== undefined;
+                                            const statIcon = isActorStat 
+                                                ? ACTOR_STAT_ICONS[statChange.statName as Stat]
+                                                : STATION_STAT_ICONS[statChange.statName as StationStat];
+                                            const StatIconComponent = statIcon;
+                                            
+                                            return StatIconComponent ? (
+                                                <StatIconComponent 
+                                                    sx={{ 
+                                                        fontSize: '1.2rem', 
+                                                        color: isIncrease ? '#00ff88' : isDecrease ? '#ff6b6b' : '#ffffff',
+                                                        opacity: 0.9 
+                                                    }} 
+                                                />
+                                            ) : null;
+                                        })()}
+                                        <Typography
+                                            variant="body1"
+                                            className="stat-label"
+                                            sx={{
+                                                fontSize: '0.9rem'
+                                            }}
+                                        >
+                                            {statChange.statName}
+                                        </Typography>
+                                    </Box>
 
                                     {/* Grade transition */}
                                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>

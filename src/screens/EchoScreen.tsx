@@ -7,7 +7,7 @@ import { ScreenType } from './BaseScreen';
 import { Stage } from '../Stage';
 import { SkitType } from '../Skit';
 import Nameplate from '../components/Nameplate';
-import Actor, { generateActorDecor, Stat } from '../actors/Actor';
+import Actor, { generateActorDecor, Stat, ACTOR_STAT_ICONS } from '../actors/Actor';
 import ActorCard, { ActorCardSection } from '../components/ActorCard';
 import { scoreToGrade } from '../utils';
 import { BlurredBackground } from '../components/BlurredBackground';
@@ -367,8 +367,10 @@ export const EchoScreen: FC<EchoScreenProps> = ({stage, setScreenType}) => {
 									<div className="stat-list" style={{ padding: '8px 12px', background: 'rgba(0,0,0,0.8)', flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'space-evenly' }}>
 										{Object.values(Stat).map((stat) => {
 											const grade = scoreToGrade(actor.stats[stat]);
+											const StatIcon = ACTOR_STAT_ICONS[stat];
 											return (
-												<div className="stat-row" key={`${actor.id}_${stat}`}>
+												<div className="stat-row" key={`${actor.id}_${stat}`} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+													{StatIcon && <StatIcon style={{ fontSize: '1.1rem', opacity: 0.8, flexShrink: 0 }} />}
 													<span className="stat-label">{stat}</span>
 													<span className="stat-grade" data-grade={grade}>{grade}</span>
 												</div>

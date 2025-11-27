@@ -5,6 +5,10 @@ import { v4 as generateUuid } from 'uuid';
 import { VoiceChatOutlined } from "@mui/icons-material";
 import { scoreToGrade } from "../utils";
 import { AspectRatio } from "@chub-ai/stages-ts";
+import { 
+    FitnessCenter, Construction, Psychology, Lightbulb, 
+    EmojiPeople, Favorite, SentimentSatisfied, Handshake 
+} from '@mui/icons-material';
 
 // Core character stats as an enum so other parts of the app can reference them safely
 // Using single-syllable words, each starting with a different letter
@@ -18,6 +22,18 @@ export enum Stat {
     Joy = 'joy', // Happiness and positivity
     Trust = 'trust' // Compliance and faith in the player
 }
+
+// Icon mapping for actor stats
+export const ACTOR_STAT_ICONS: Record<Stat, any> = {
+    [Stat.Brawn]: FitnessCenter,
+    [Stat.Skill]: Construction,
+    [Stat.Nerve]: Psychology,
+    [Stat.Wits]: Lightbulb,
+    [Stat.Charm]: EmojiPeople,
+    [Stat.Lust]: Favorite,
+    [Stat.Joy]: SentimentSatisfied,
+    [Stat.Trust]: Handshake,
+};
 
 class Actor {
     id: string;

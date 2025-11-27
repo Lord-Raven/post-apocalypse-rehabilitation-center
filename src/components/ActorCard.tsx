@@ -1,6 +1,6 @@
 import React, { FC } from 'react';
 import { motion } from 'framer-motion';
-import Actor, { Stat } from '../actors/Actor';
+import Actor, { Stat, ACTOR_STAT_ICONS } from '../actors/Actor';
 import Nameplate from './Nameplate';
 import AuthorLink from './AuthorLink';
 import { scoreToGrade } from '../utils';
@@ -124,14 +124,23 @@ export const ActorCard: FC<ActorCardProps> = ({
                                     {/* Stats with letter grades. Each row here should be 1/8th of the container height. */}
                                     {Object.values(Stat).map((stat) => {
                                         const grade = scoreToGrade(actor.stats[stat]);
+                                        const StatIcon = ACTOR_STAT_ICONS[stat];
                                         return (
                                             <div className="stat-row" key={`${actor.id}_${stat}`} style={{
                                                 height: '12.5%',
                                                 maxHeight: '12.5%',
                                                 display: 'flex',
                                                 alignItems: 'center',
-                                                justifyContent: 'space-between'
+                                                justifyContent: 'space-between',
+                                                gap: '4px'
                                             }}>
+                                                {StatIcon && (
+                                                    <StatIcon style={{
+                                                        fontSize: '1rem',
+                                                        opacity: 0.8,
+                                                        flexShrink: 0
+                                                    }} />
+                                                )}
                                                 <span className="stat-label" style={{
                                                     fontSize: '80%',
                                                     textShadow: '2px 2px 0 rgba(0,0,0,0.88)',

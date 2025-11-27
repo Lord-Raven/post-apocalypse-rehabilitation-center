@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Typography, Card, CardContent } from '@mui/material';
 import { styled } from '@mui/material/styles';
 import { ScreenType } from './BaseScreen';
-import { Layout, Module, createModule, ModuleType, MODULE_DEFAULTS, StationStat, STATION_STAT_DESCRIPTIONS } from '../Module';
+import { Layout, Module, createModule, ModuleType, MODULE_DEFAULTS, StationStat, STATION_STAT_DESCRIPTIONS, STATION_STAT_ICONS } from '../Module';
 import { Stage } from '../Stage';
 import ActorCard from '../components/ActorCard';
 import ModuleCard from '../components/ModuleCard';
@@ -11,7 +11,7 @@ import FactionCard from '../components/FactionCard';
 import RequestCard from '../components/RequestCard';
 import { PhaseIndicator as SharedPhaseIndicator } from '../components/UIComponents';
 import { useTooltip } from '../contexts/TooltipContext';
-import { SwapHoriz, Home, Work, Menu, Build, Hotel, Restaurant, Security, Favorite, AttachMoney } from '@mui/icons-material';
+import { SwapHoriz, Home, Work, Menu } from '@mui/icons-material';
 import { SkitType } from '../Skit';
 import { generateActorDecor } from '../actors/Actor';
 import { scoreToGrade } from '../utils';
@@ -661,16 +661,7 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType}) =>
                     {(['Systems', 'Comfort', 'Provision', 'Security', 'Harmony', 'Wealth'] as StationStat[]).map((statName) => {
                         const statValue = stage().getSave().stationStats?.[statName] || 5;
                         const grade = scoreToGrade(statValue);
-                        // Map stat names to appropriate icons
-                        const statIcons: Record<StationStat, any> = {
-                            'Systems': Build,
-                            'Comfort': Hotel,
-                            'Provision': Restaurant,
-                            'Security': Security,
-                            'Harmony': Favorite,
-                            'Wealth': AttachMoney,
-                        };
-                        const StatIcon = statIcons[statName];
+                        const StatIcon = STATION_STAT_ICONS[statName];
                         return (
                             <motion.div
                                 key={statName}

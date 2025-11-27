@@ -2,6 +2,7 @@ import { SkitType } from './Skit';
 import { Stage } from "./Stage";
 import Faction from './factions/Faction';
 import { ScreenType } from './screens/BaseScreen';
+import { Build, Hotel, Restaurant, Security, Favorite, AttachMoney } from '@mui/icons-material';
 
 export type ModuleType = 'echo chamber' | 'comms' | 'generator' | 'quarters' | 'commons' | 'infirmary' | 'gym' | 'lounge' | 'armory' ;
     /*| 'hydroponics' | 'laboratory' | 'observatory' | 'security' | 'storage' | 'market' |
@@ -25,6 +26,16 @@ export enum StationStat {
     HARMONY = 'Harmony',
     WEALTH = 'Wealth'
 }
+
+// Icon mapping for station stats
+export const STATION_STAT_ICONS: Record<StationStat, any> = {
+    [StationStat.SYSTEMS]: Build,
+    [StationStat.COMFORT]: Hotel,
+    [StationStat.PROVISION]: Restaurant,
+    [StationStat.SECURITY]: Security,
+    [StationStat.HARMONY]: Favorite,
+    [StationStat.WEALTH]: AttachMoney,
+};
 
 export const STATION_STAT_DESCRIPTIONS: Record<StationStat, string> = {
     'Systems': 'Mechanical and structural health of the station',
