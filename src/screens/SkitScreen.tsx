@@ -660,7 +660,14 @@ export const SkitScreen: FC<SkitScreenProps> = ({ stage, setScreenType }) => {
                         onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) => {
                             if (e.key === 'Enter') {
                                 e.preventDefault();
-                                if (!sceneEnded && !loading) handleSubmit();
+                                if (!sceneEnded && !loading) {
+                                    // If input is blank, progress the script; otherwise submit input
+                                    if (inputText.trim() === '' && index < skit.script.length) {
+                                        next();
+                                    } else {
+                                        handleSubmit();
+                                    }
+                                }
                                 else if (sceneEnded) handleClose();
                             }
                         }}
