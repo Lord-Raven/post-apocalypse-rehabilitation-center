@@ -108,7 +108,7 @@ export async function loadReserveFaction(fullPath: string, stage: Stage): Promis
             `with the goal of placing these characters into a new role in this universe. These new roles are offered by external factions, generally in exchange for a finder's fee or reputation boost. ` +
             `Some roles are above board, while others may involve morally ambiguous or covert activities; many may even be illicit, sexual, or compulsory (essentially human trafficking). ` +
             `The player's motives and ethics are open-ended; they may be benevolent or self-serving, and the characters they interact with may respond accordingly. ` +
-            (stage.reserveFactions.length + Object.values(stage.getSave().factions).length > 0 ? `\n\nEstablished Factions:\n${[...stage.reserveFactions, ...Object.values(stage.getSave().factions)].map(faction => `- ${faction.name}: ${faction.description}`).join('\n')}` : '') +
+            (stage.reserveFactions.length + Object.values(stage.getSave().factions).length > 0 ? `\n\nEstablished Factions:\n${[...stage.reserveFactions, ...Object.values(stage.getSave().factions)].map(faction => `- ${faction.name}: ${faction.description}. Representative: ${stage.getSave().actors[faction.representativeId || '']}`).join('\n')}` : '') +
             `\n\nThe Original Details below describe a character, faction, organization, or setting (${data.name}) from another universe. ` +
             `This request and response must digest and distill these details into a new faction that suits the game's narrative scenario, ` +
             `crafting a complex and intriguing organization that fits seamlessly into the game's expansive, flavorful, and varied sci-fi setting. ` +
