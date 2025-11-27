@@ -369,9 +369,11 @@ export const EchoScreen: FC<EchoScreenProps> = ({stage, setScreenType}) => {
 											const grade = scoreToGrade(actor.stats[stat]);
 											const StatIcon = ACTOR_STAT_ICONS[stat];
 											return (
-												<div className="stat-row" key={`${actor.id}_${stat}`} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-													{StatIcon && <StatIcon style={{ fontSize: '1.1rem', opacity: 0.8, flexShrink: 0 }} />}
-													<span className="stat-label">{stat}</span>
+												<div className="stat-row" key={`${actor.id}_${stat}`} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+													<div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+														{StatIcon && <StatIcon style={{ fontSize: '1.1rem', opacity: 0.8, flexShrink: 0 }} />}
+														<span className="stat-label">{stat}</span>
+													</div>
 													<span className="stat-grade" data-grade={grade}>{grade}</span>
 												</div>
 											);

@@ -270,7 +270,7 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
 
         const save = this.getSave();
         // Initialize stationStats if missing
-        if (!save.stationStats || Object.keys(save.stationStats).length < 5) {
+        if (!save.stationStats || Object.keys(save.stationStats).length < 6) {
             save.stationStats = {
                 'Systems': 3,
                 'Comfort': 3,

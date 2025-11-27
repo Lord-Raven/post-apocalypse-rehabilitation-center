@@ -2,7 +2,7 @@ import { SkitType } from './Skit';
 import { Stage } from "./Stage";
 import Faction from './factions/Faction';
 import { ScreenType } from './screens/BaseScreen';
-import { Build, Hotel, Restaurant, Security, Favorite, AttachMoney } from '@mui/icons-material';
+import { Build, Hotel, Restaurant, Security, AttachMoney, Favorite } from '@mui/icons-material';
 
 export type ModuleType = 'echo chamber' | 'comms' | 'generator' | 'quarters' | 'commons' | 'infirmary' | 'gym' | 'lounge' | 'armory' ;
     /*| 'hydroponics' | 'laboratory' | 'observatory' | 'security' | 'storage' | 'market' |

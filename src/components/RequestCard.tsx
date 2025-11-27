@@ -1,10 +1,11 @@
 import React, { FC, useState } from 'react';
 import { motion } from 'framer-motion';
 import Request, { ActorWithStatsRequirement, SpecificActorRequirement, StationStatsRequirement } from '../factions/Request';
-import { Stat, ACTOR_STAT_ICONS } from '../actors/Actor';
+import Actor, { Stat, ACTOR_STAT_ICONS } from '../actors/Actor';
 import { StationStat, STATION_STAT_ICONS } from '../Module';
 import { Stage } from '../Stage';
 import { Nameplate } from './Nameplate';
+import { useTooltip } from '../contexts/TooltipContext';
 
 interface RequestCardProps {
     request: Request;
@@ -19,6 +20,8 @@ interface RequestCardProps {
     className?: string;
     /** onClick handler */
     onClick?: () => void;
+    /** Callback when request is fulfilled */
+    onFulfill?: (actorId?: string) => void;
 }
 
 /**
@@ -33,13 +36,65 @@ export const RequestCard: FC<RequestCardProps> = ({
     whileHover,
     style,
     className,
-    onClick
+    onClick,
+    onFulfill
 }) => {
     const [internalExpanded, setInternalExpanded] = useState(false);
     const isExpanded = controlledExpanded !== undefined ? controlledExpanded : internalExpanded;
+    const { setTooltip, clearTooltip } = useTooltip();
     
     const canFulfill = request.canFulfill(stage);
     const faction = stage.getSave().factions[request.factionId];
+
+    // Get qualified actors for specific-actor requirements (for background display)
+    const getQualifiedActorsForBackground = () => {
+        if (request.requirement.type === 'specific-actor') {
+            const req = request.requirement as SpecificActorRequirement;
+            const actor = stage.getSave().actors[req.actorId];
+            return actor && !actor.remote ? [actor] : [];
+        }
+        return [];
+    };
+    const qualifiedActorsForBackground = getQualifiedActorsForBackground();
+
+    // Get qualified actors for actor-with-stats requirements (for button display)
+    const getQualifiedActorsForStats = (): Actor[] => {
+        if (request.requirement.type !== 'actor-with-stats') {
+            return [];
+        }
+
+        const requirement = request.requirement as ActorWithStatsRequirement;
+        const save = stage.getSave();
+        const allActors = Object.values(save.actors);
+
+        return allActors.filter(actor => {
+            // Skip remote actors (not physically present on the station)
+            if (actor.remote) {
+                return false;
+            }
+
+            // Check minimum stats
+            if (requirement.minStats) {
+                for (const [stat, minValue] of Object.entries(requirement.minStats)) {
+                    if (actor.stats[stat as Stat] < minValue) {
+                        return false;
+                    }
+                }
+            }
+
+            // Check maximum stats
+            if (requirement.maxStats) {
+                for (const [stat, maxValue] of Object.entries(requirement.maxStats)) {
+                    if (actor.stats[stat as Stat] > maxValue) {
+                        return false;
+                    }
+                }
+            }
+
+            return true;
+        });
+    };
+    const qualifiedActorsForStats = getQualifiedActorsForStats();
 
     const handleClick = () => {
         if (controlledExpanded === undefined) {
@@ -60,42 +115,35 @@ export const RequestCard: FC<RequestCardProps> = ({
         switch (request.requirement.type) {
             case 'actor-with-stats': {
                 const req = request.requirement as ActorWithStatsRequirement;
-                const statIcons: JSX.Element[] = [];
-                const constraints: string[] = [];
+                const statElements: JSX.Element[] = [];
                 
                 if (req.minStats) {
                     Object.entries(req.minStats).forEach(([stat, value]) => {
                         const StatIcon = ACTOR_STAT_ICONS[stat as Stat];
-                        if (StatIcon) {
-                            statIcons.push(
-                                <StatIcon 
-                                    key={`min-${stat}`} 
-                                    style={{ fontSize: '1.2rem', color: '#00ff88' }} 
-                                />
-                            );
-                        }
-                        constraints.push(`${stat} ≥ ${value}`);
+                        statElements.push(
+                            <React.Fragment key={`min-${stat}`}>
+                                {StatIcon && <StatIcon style={{ fontSize: '1.2rem', color: '#00ff88', marginRight: '4px' }} />}
+                                <span>{stat} ≥ {value}</span>
+                            </React.Fragment>
+                        );
                     });
                 }
                 
                 if (req.maxStats) {
                     Object.entries(req.maxStats).forEach(([stat, value]) => {
                         const StatIcon = ACTOR_STAT_ICONS[stat as Stat];
-                        if (StatIcon) {
-                            statIcons.push(
-                                <StatIcon 
-                                    key={`max-${stat}`} 
-                                    style={{ fontSize: '1.2rem', color: '#ff6b6b' }} 
-                                />
-                            );
-                        }
-                        constraints.push(`${stat} ≤ ${value}`);
+                        statElements.push(
+                            <React.Fragment key={`max-${stat}`}>
+                                {StatIcon && <StatIcon style={{ fontSize: '1.2rem', color: '#ff6b6b', marginRight: '4px' }} />}
+                                <span>{stat} ≤ {value}</span>
+                            </React.Fragment>
+                        );
                     });
                 }
                 
                 return {
-                    text: `Actor: ${constraints.join(', ')}`,
-                    icons: statIcons,
+                    text: 'Actor:',
+                    statElements,
                     image: null
                 };
             }
@@ -105,31 +153,25 @@ export const RequestCard: FC<RequestCardProps> = ({
                 const actor = stage.getSave().actors[req.actorId];
                 return {
                     text: `Specific Actor: ${actor?.name || 'Unknown'}`,
-                    icons: [],
-                    image: actor?.avatarImageUrl || null
+                    statElements: [],
+                    image: null // We'll show actors in background instead
                 };
             }
             
             case 'station-stats': {
                 const req = request.requirement as StationStatsRequirement;
-                const statIcons: JSX.Element[] = [];
-                const stats = Object.entries(req.stats)
-                    .map(([stat, value]) => {
-                        const StatIcon = STATION_STAT_ICONS[stat as StationStat];
-                        if (StatIcon) {
-                            statIcons.push(
-                                <StatIcon 
-                                    key={stat} 
-                                    style={{ fontSize: '1.2rem', color: '#ff6b6b' }} 
-                                />
-                            );
-                        }
-                        return `${stat} -${value}`;
-                    })
-                    .join(', ');
+                const statElements = Object.entries(req.stats).map(([stat, value]) => {
+                    const StatIcon = STATION_STAT_ICONS[stat as StationStat];
+                    return (
+                        <React.Fragment key={stat}>
+                            {StatIcon && <StatIcon style={{ fontSize: '1.2rem', color: '#ff6b6b', marginRight: '4px' }} />}
+                            <span>{stat} -{value}</span>
+                        </React.Fragment>
+                    );
+                });
                 return {
-                    text: `Station: ${stats}`,
-                    icons: statIcons,
+                    text: 'Station:',
+                    statElements,
                     image: null
                 };
             }
@@ -137,7 +179,7 @@ export const RequestCard: FC<RequestCardProps> = ({
             default:
                 return {
                     text: 'Unknown requirement',
-                    icons: [],
+                    statElements: [],
                     image: null
                 };
         }
@@ -146,29 +188,21 @@ export const RequestCard: FC<RequestCardProps> = ({
     // Get reward content (text + icons)
     const getRewardContent = () => {
         if (request.reward.type === 'station-stats') {
-            const statIcons: JSX.Element[] = [];
-            const stats = Object.entries(request.reward.stats)
-                .map(([stat, value]) => {
-                    const StatIcon = STATION_STAT_ICONS[stat as StationStat];
-                    if (StatIcon) {
-                        statIcons.push(
-                            <StatIcon 
-                                key={stat} 
-                                style={{ fontSize: '1.2rem', color: '#00ff88' }} 
-                            />
-                        );
-                    }
-                    return `${stat} +${value}`;
-                })
-                .join(', ');
+            const statElements = Object.entries(request.reward.stats).map(([stat, value]) => {
+                const StatIcon = STATION_STAT_ICONS[stat as StationStat];
+                return (
+                    <React.Fragment key={stat}>
+                        {StatIcon && <StatIcon style={{ fontSize: '1.2rem', color: '#00ff88', marginRight: '4px' }} />}
+                        <span>{stat} +{value}</span>
+                    </React.Fragment>
+                );
+            });
             return {
-                text: stats,
-                icons: statIcons
+                statElements
             };
         }
         return {
-            text: 'Unknown reward',
-            icons: []
+            statElements: [<span key="unknown">Unknown reward</span>]
         };
     };
 
@@ -194,13 +228,87 @@ export const RequestCard: FC<RequestCardProps> = ({
                 display: 'flex',
                 flexDirection: 'column',
                 padding: '12px',
+                position: 'relative',
                 ...style
             }}
             className={className}
         >
-            {/* Faction Nameplate */}
-            {faction && (
+            {/* Background layer for specific-actor requests */}
+            {qualifiedActorsForBackground.length > 0 && (
                 <div style={{
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    zIndex: 0,
+                    pointerEvents: 'none',
+                    borderRadius: '5px',
+                    overflow: 'hidden',
+                }}>
+                    {/* Faction background layer */}
+                    {faction?.backgroundImageUrl && (
+                        <div style={{
+                            position: 'absolute',
+                            top: 0,
+                            left: 0,
+                            right: 0,
+                            bottom: 0,
+                            backgroundImage: `url(${faction.backgroundImageUrl})`,
+                            backgroundSize: 'cover',
+                            backgroundPosition: 'center',
+                            opacity: 0.15,
+                        }} />
+                    )}
+                    
+                    {/* Actor images layer */}
+                    <div style={{
+                        position: 'absolute',
+                        top: 0,
+                        left: 0,
+                        right: 0,
+                        bottom: 0,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: '8px',
+                        padding: '12px',
+                    }}>
+                        {qualifiedActorsForBackground.map((actor) => (
+                            actor.avatarImageUrl && (
+                                <div
+                                    key={actor.id}
+                                    style={{
+                                        width: '100%',
+                                        height: '100%',
+                                        backgroundImage: `url(${actor.avatarImageUrl})`,
+                                        backgroundSize: 'cover',
+                                        backgroundPosition: 'top center',
+                                        opacity: 0.3,
+                                        borderRadius: '4px',
+                                    }}
+                                />
+                            )
+                        ))}
+                    </div>
+                    
+                    {/* Dark overlay for readability */}
+                    <div style={{
+                        position: 'absolute',
+                        top: 0,
+                        left: 0,
+                        right: 0,
+                        bottom: 0,
+                        background: 'rgba(0, 10, 20, 0.7)',
+                    }} />
+                </div>
+            )}
+
+            {/* Content wrapper with higher z-index */}
+            <div style={{ position: 'relative', zIndex: 1, display: 'flex', flexDirection: 'column', flex: 1 }}>
+                {/* Faction Nameplate */}
+                {faction && (
+                    <div style={{
                     display: 'flex',
                     justifyContent: 'center',
                     marginBottom: '12px',
@@ -213,12 +321,12 @@ export const RequestCard: FC<RequestCardProps> = ({
                             border: faction.themeColor ? `2px solid ${faction.themeColor}CC` : '2px solid #718096',
                             fontFamily: faction.themeFont || 'Arial, sans-serif',
                         }}
-                    />
-                </div>
-            )}
+                        />
+                    </div>
+                )}
 
-            {/* Description (shown when expanded) */}
-            {isExpanded && (
+                {/* Description (shown when expanded) */}
+                {isExpanded && (
                 <div style={{
                     color: '#00ff88',
                     fontSize: '0.9rem',
@@ -232,10 +340,10 @@ export const RequestCard: FC<RequestCardProps> = ({
                 }}>
                     {request.description}
                 </div>
-            )}
+                )}
 
-            {/* Requirement section */}
-            <div style={{
+                {/* Requirement section */}
+                <div style={{
                 padding: '8px',
                 background: 'rgba(0, 0, 0, 0.6)',
                 borderRadius: '4px',
@@ -252,28 +360,6 @@ export const RequestCard: FC<RequestCardProps> = ({
                 }}>
                     Requires
                 </div>
-                
-                {/* Character image for specific-actor requirement */}
-                {requirementContent.image && (
-                    <div style={{
-                        display: 'flex',
-                        justifyContent: 'center',
-                        marginBottom: '4px',
-                    }}>
-                        <img 
-                            src={requirementContent.image}
-                            alt="Required character"
-                            style={{
-                                width: '60px',
-                                height: '60px',
-                                objectFit: 'cover',
-                                objectPosition: 'top center',
-                                borderRadius: '8px',
-                                border: '2px solid #00ff88',
-                            }}
-                        />
-                    </div>
-                )}
                 
                 <div style={{
                     display: 'flex',
@@ -294,31 +380,29 @@ export const RequestCard: FC<RequestCardProps> = ({
                         {canFulfill ? '✓' : '✗'}
                     </span>
                     
-                    {/* Stat icons */}
-                    {requirementContent.icons.length > 0 && (
-                        <div style={{
-                            display: 'flex',
-                            gap: '4px',
-                            flexShrink: 0,
-                        }}>
-                            {requirementContent.icons}
-                        </div>
-                    )}
-                    
                     <div style={{
                         fontSize: '0.85rem',
                         color: '#ffffff',
                         fontWeight: 600,
                         textShadow: '0 1px 0 rgba(0,0,0,0.6)',
-                        flex: 1,
+                        display: 'flex',
+                        alignItems: 'center',
+                        flexWrap: 'wrap',
+                        gap: '8px',
                     }}>
-                        {requirementContent.text}
+                        <span>{requirementContent.text}</span>
+                        {requirementContent.statElements.length > 0 && requirementContent.statElements.map((element, index) => (
+                            <span key={index} style={{ display: 'flex', alignItems: 'center', gap: '0px' }}>
+                                {element}
+                                {index < requirementContent.statElements.length - 1 && <span style={{ marginLeft: '4px' }}>,</span>}
+                            </span>
+                        ))}
+                        </div>
                     </div>
                 </div>
-            </div>
 
-            {/* Reward section */}
-            <div style={{
+                {/* Reward section */}
+                <div style={{
                 padding: '8px',
                 background: 'rgba(0, 0, 0, 0.6)',
                 borderRadius: '4px',
@@ -338,26 +422,146 @@ export const RequestCard: FC<RequestCardProps> = ({
                     gap: '8px',
                     flexWrap: 'wrap',
                 }}>
-                    {/* Stat icons */}
-                    {rewardContent.icons.length > 0 && (
-                        <div style={{
+                    {rewardContent.statElements.length > 0 && rewardContent.statElements.map((element, index) => (
+                        <span key={index} style={{
+                            fontSize: '0.85rem',
+                            color: '#00ff88',
+                            fontWeight: 700,
+                            textShadow: '0 1px 0 rgba(0,0,0,0.6)',
                             display: 'flex',
-                            gap: '4px',
-                            flexShrink: 0,
+                            alignItems: 'center',
+                            gap: '0px'
                         }}>
-                            {rewardContent.icons}
-                        </div>
-                    )}
-                    
-                    <div style={{
-                        fontSize: '0.85rem',
-                        color: '#00ff88',
-                        fontWeight: 700,
-                        textShadow: '0 1px 0 rgba(0,0,0,0.6)',
-                    }}>
-                        {rewardContent.text}
+                            {element}
+                            {index < rewardContent.statElements.length - 1 && <span style={{ marginLeft: '4px' }}>,</span>}
+                        </span>
+                        ))}
                     </div>
                 </div>
+
+                {/* Fulfill section (shown when expanded) */}
+                {isExpanded && onFulfill && (
+                    <div style={{
+                        marginTop: '12px',
+                        padding: '8px',
+                        background: 'rgba(0, 0, 0, 0.6)',
+                        borderRadius: '4px',
+                    }}>
+                        {/* Actor-with-stats: Show buttons for each qualified actor */}
+                        {request.requirement.type === 'actor-with-stats' && qualifiedActorsForStats.length > 0 && (
+                            <>
+                                <div style={{
+                                    fontSize: '0.75rem',
+                                    color: '#888',
+                                    marginBottom: '8px',
+                                    textTransform: 'uppercase',
+                                    letterSpacing: '0.5px',
+                                }}>
+                                    Select Actor to Fulfill
+                                </div>
+                                <div style={{
+                                    display: 'flex',
+                                    flexWrap: 'wrap',
+                                    gap: '8px',
+                                }}>
+                                    {qualifiedActorsForStats.map((actor) => (
+                                        <motion.button
+                                            key={actor.id}
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                onFulfill(actor.id);
+                                            }}
+                                            onMouseEnter={() => setTooltip(actor.name)}
+                                            onMouseLeave={clearTooltip}
+                                            whileHover={{ scale: 1.05, backgroundColor: 'rgba(0, 255, 136, 0.3)' }}
+                                            whileTap={{ scale: 0.95 }}
+                                            style={{
+                                                background: 'rgba(0, 255, 136, 0.2)',
+                                                border: '2px solid #00ff88',
+                                                borderRadius: '8px',
+                                                padding: '8px',
+                                                cursor: 'pointer',
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                justifyContent: 'center',
+                                                width: '60px',
+                                                height: '60px',
+                                                overflow: 'hidden',
+                                            }}
+                                        >
+                                            {actor.avatarImageUrl ? (
+                                                <img
+                                                    src={actor.avatarImageUrl}
+                                                    alt={actor.name}
+                                                    style={{
+                                                        width: '100%',
+                                                        height: '100%',
+                                                        objectFit: 'cover',
+                                                        objectPosition: 'top center',
+                                                        borderRadius: '4px',
+                                                    }}
+                                                />
+                                            ) : (
+                                                <div style={{
+                                                    color: '#00ff88',
+                                                    fontSize: '0.7rem',
+                                                    fontWeight: 600,
+                                                    textAlign: 'center',
+                                                    wordBreak: 'break-word',
+                                                }}>
+                                                    {actor.name}
+                                                </div>
+                                            )}
+                                        </motion.button>
+                                    ))}
+                                </div>
+                            </>
+                        )}
+
+                        {/* Specific-actor or station-stats: Show single accept button */}
+                        {(request.requirement.type === 'specific-actor' || request.requirement.type === 'station-stats') && canFulfill && (
+                            <motion.button
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    onFulfill(request.requirement.type === 'specific-actor' 
+                                        ? (request.requirement as SpecificActorRequirement).actorId 
+                                        : undefined);
+                                }}
+                                whileHover={{ scale: 1.02, backgroundColor: 'rgba(0, 255, 136, 0.3)' }}
+                                whileTap={{ scale: 0.98 }}
+                                style={{
+                                    width: '100%',
+                                    padding: '12px',
+                                    background: 'rgba(0, 255, 136, 0.2)',
+                                    border: '2px solid #00ff88',
+                                    borderRadius: '8px',
+                                    color: '#00ff88',
+                                    fontSize: '1rem',
+                                    fontWeight: 700,
+                                    cursor: 'pointer',
+                                    textTransform: 'uppercase',
+                                    letterSpacing: '1px',
+                                    textShadow: '0 0 8px #00ff88',
+                                }}
+                            >
+                                Accept Request
+                            </motion.button>
+                        )}
+
+                        {/* Show message if can't fulfill */}
+                        {!canFulfill && (
+                            <div style={{
+                                color: '#ff6b6b',
+                                fontSize: '0.85rem',
+                                fontWeight: 600,
+                                textAlign: 'center',
+                                textShadow: '0 1px 0 rgba(0,0,0,0.6)',
+                            }}>
+                                Requirements not met
+                            </div>
+                        )}
+                    </div>
+                )}
             </div>
         </motion.div>
     );

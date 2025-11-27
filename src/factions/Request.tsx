@@ -277,6 +277,66 @@ export class Request {
     }
 
     /**
+     * Fulfill this request by applying its requirements and rewards
+     * @param stage The game stage containing all game state
+     * @param actorId Optional actor ID for actor-based requirements
+     * @returns true if the request was successfully fulfilled, false otherwise
+     */
+    fulfill(stage: Stage, actorId?: string): boolean {
+        // Verify the request can be fulfilled
+        if (!this.canFulfill(stage)) {
+            console.warn('Cannot fulfill request - requirements not met');
+            return false;
+        }
+
+        const save = stage.getSave();
+
+        // TODO: Implement requirement processing
+        switch (this.requirement.type) {
+            case 'actor-with-stats':
+                if (!actorId) {
+                    console.warn('Actor ID required for actor-with-stats request');
+                    return false;
+                }
+                // TODO: Process actor removal/placement
+                console.log(`Fulfilling actor-with-stats request with actor ${actorId}`);
+                break;
+
+            case 'specific-actor':
+                if (!actorId) {
+                    console.warn('Actor ID required for specific-actor request');
+                    return false;
+                }
+                // TODO: Process specific actor removal/placement
+                console.log(`Fulfilling specific-actor request with actor ${actorId}`);
+                break;
+
+            case 'station-stats':
+                // TODO: Deduct station stats
+                const req = this.requirement as StationStatsRequirement;
+                console.log(`Fulfilling station-stats request, deducting:`, req.stats);
+                break;
+
+            default:
+                console.warn(`Unknown requirement type for fulfillment`);
+                return false;
+        }
+
+        // TODO: Apply rewards
+        if (this.reward.type === 'station-stats') {
+            const rew = this.reward as StationStatsReward;
+            console.log(`Applying station-stats rewards:`, rew.stats);
+            // TODO: Add station stats
+        }
+
+        // TODO: Remove request from active requests
+        // TODO: Increase faction reputation
+
+        console.log(`Request ${this.id} fulfilled successfully`);
+        return true;
+    }
+
+    /**
      * Get a human-readable text description of the requirement
      * @returns A text description of what is required to fulfill this request
      */

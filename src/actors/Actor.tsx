@@ -2,12 +2,10 @@ import { Emotion, EMOTION_PROMPTS, EmotionPack } from "./Emotion";
 import { Module } from "../Module";
 import { Stage } from "../Stage";
 import { v4 as generateUuid } from 'uuid';
-import { VoiceChatOutlined } from "@mui/icons-material";
-import { scoreToGrade } from "../utils";
 import { AspectRatio } from "@chub-ai/stages-ts";
-import { 
-    FitnessCenter, Construction, Psychology, Lightbulb, 
-    EmojiPeople, Favorite, SentimentSatisfied, Handshake 
+import { FlashOn, Forum, 
+    FitnessCenter, Construction, Lightbulb, 
+    Whatshot, SentimentVerySatisfied, Handshake 
 } from '@mui/icons-material';
 
 // Core character stats as an enum so other parts of the app can reference them safely
@@ -27,11 +25,11 @@ export enum Stat {
 export const ACTOR_STAT_ICONS: Record<Stat, any> = {
     [Stat.Brawn]: FitnessCenter,
     [Stat.Skill]: Construction,
-    [Stat.Nerve]: Psychology,
+    [Stat.Nerve]: FlashOn,
     [Stat.Wits]: Lightbulb,
-    [Stat.Charm]: EmojiPeople,
-    [Stat.Lust]: Favorite,
-    [Stat.Joy]: SentimentSatisfied,
+    [Stat.Charm]: Forum,
+    [Stat.Lust]: Whatshot,
+    [Stat.Joy]: SentimentVerySatisfied,
     [Stat.Trust]: Handshake,
 };
 
