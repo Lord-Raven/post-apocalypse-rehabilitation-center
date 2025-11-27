@@ -214,8 +214,8 @@ export async function loadReserveFaction(fullPath: string, stage: Stage): Promis
         if (repActor) {
             repActor.remote = true;
             newFaction.representativeId = repActor.id;
+            await generatePrimaryActorImage(repActor, stage);
             stage.getSave().actors[repActor.id] = repActor;
-            generatePrimaryActorImage(repActor, stage);
             break;
         }
     }
