@@ -549,10 +549,12 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
         }
     }
 
-    removeActorFromEcho(actorId: string): void {
+    removeActorFromEcho(actorId: string, thenSave: boolean): void {
         const save = this.getSave();
         save.echoes = save.echoes.map(slot => slot?.id === actorId ? null : slot);
-        this.saveGame();
+        if (thenSave) {
+            this.saveGame();
+        }
     }
 
     getEchoSlots(): (Actor | null)[] {

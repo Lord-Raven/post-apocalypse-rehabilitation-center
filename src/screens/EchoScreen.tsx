@@ -47,7 +47,7 @@ export const EchoScreen: FC<EchoScreenProps> = ({stage, setScreenType}) => {
 		const actor = echoSlots.find(a => a?.id === actorId);
 		if (actor) {
 			// Remove from echo slot
-			stage().removeActorFromEcho(actorId);
+			stage().removeActorFromEcho(actorId, true);
 			// Add back to reserve actors if not already there
 			if (!stage().reserveActors.find(a => a.id === actorId)) {
 				stage().reserveActors.push(actor);
@@ -69,7 +69,7 @@ export const EchoScreen: FC<EchoScreenProps> = ({stage, setScreenType}) => {
 			stage().getSave().actors[selected.id] = selected;
 			// Remove from reserve actors and echo slots
 			stage().reserveActors = stage().reserveActors.filter(a => a.id !== selected.id);
-			stage().removeActorFromEcho(selected.id);
+			stage().removeActorFromEcho(selected.id, false);
 			// Possibly set other properties on the selected actor as needed
 			selected.birth(stage().getSave().day);
 			stage().setSkit({
@@ -142,7 +142,7 @@ export const EchoScreen: FC<EchoScreenProps> = ({stage, setScreenType}) => {
 		const data = JSON.parse(e.dataTransfer.getData('application/json'));
 		if (data.source === 'echo') {
 			// Remove from echo slot using Stage method
-			stage().removeActorFromEcho(data.actorId);
+			stage().removeActorFromEcho(data.actorId, true);
 			setRefreshKey(prev => prev + 1); // Force re-render
 		}
 	};
