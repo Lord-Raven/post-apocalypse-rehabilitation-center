@@ -974,6 +974,9 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType}) =>
                                                                 action(module, stage(), setScreenType);
                                                             }
                                                         }}
+                                                        style={{
+                                                            marginBottom: '15px',
+                                                        }}
                                                     />
                                                 ))
                                         )}
@@ -998,6 +1001,9 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType}) =>
                                                     representative={stage().getSave().actors[faction.representativeId || '']}
                                                     onClick={() => {
                                                         console.log(`Clicked faction ${faction.name}`);
+                                                    }}
+                                                    style={{
+                                                        marginBottom: '15px',
                                                     }}
                                                 />
                                             ))
@@ -1039,6 +1045,9 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType}) =>
                                                         console.log(`Clicked request ${request.id}`);
                                                     }}
                                                     onFulfill={(actorId) => request.fulfill(stage(), setScreenType, actorId)}
+                                                    style={{
+                                                        marginBottom: '15px',
+                                                    }}
                                                 />
                                             ));
                                         })()}
