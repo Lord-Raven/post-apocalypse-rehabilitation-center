@@ -127,36 +127,43 @@ export const SaveLoadScreen: FC<SaveLoadScreenProps> = ({ stage, mode, onClose, 
                             }}
                             onMouseEnter={(e) => {
                                 e.stopPropagation();
-                                setTooltip('Delete save', Delete);
+                                setTooltip(isCurrentSlot ? 'Cannot delete current save' : 'Delete save', Delete);
                             }}
                             onMouseLeave={(e) => {
                                 e.stopPropagation();
                                 clearTooltip();
                             }}
+                            disabled={isCurrentSlot}
                             style={{
                                 position: 'absolute',
-                                top: '50%',
-                                right: '10px',
-                                transform: 'translateY(-50%)',
-                                background: 'rgba(255, 0, 0, 0.2)',
-                                border: '1px solid rgba(255, 0, 0, 0.4)',
-                                borderRadius: '4px',
-                                color: 'rgba(255, 100, 100, 0.9)',
-                                cursor: 'pointer',
-                                padding: '8px',
+                                top: 0,
+                                right: 0,
+                                bottom: 0,
+                                width: '40px',
+                                background: isCurrentSlot ? 'rgba(100, 100, 100, 0.2)' : 'rgba(255, 0, 0, 0.2)',
+                                border: 'none',
+                                borderLeft: isCurrentSlot ? '1px solid rgba(100, 100, 100, 0.4)' : '1px solid rgba(255, 0, 0, 0.4)',
+                                borderRadius: '0 4px 4px 0',
+                                color: isCurrentSlot ? 'rgba(150, 150, 150, 0.5)' : 'rgba(255, 100, 100, 0.9)',
+                                cursor: isCurrentSlot ? 'not-allowed' : 'pointer',
                                 display: 'flex',
                                 alignItems: 'center',
                                 justifyContent: 'center',
                                 transition: 'all 0.2s',
-                                fontSize: '18px'
+                                fontSize: '18px',
+                                opacity: isCurrentSlot ? 0.5 : 1
                             }}
                             onMouseOver={(e) => {
-                                e.currentTarget.style.background = 'rgba(255, 0, 0, 0.3)';
-                                e.currentTarget.style.color = 'rgba(255, 150, 150, 1)';
+                                if (!isCurrentSlot) {
+                                    e.currentTarget.style.background = 'rgba(255, 0, 0, 0.3)';
+                                    e.currentTarget.style.color = 'rgba(255, 150, 150, 1)';
+                                }
                             }}
                             onMouseOut={(e) => {
-                                e.currentTarget.style.background = 'rgba(255, 0, 0, 0.2)';
-                                e.currentTarget.style.color = 'rgba(255, 100, 100, 0.9)';
+                                if (!isCurrentSlot) {
+                                    e.currentTarget.style.background = 'rgba(255, 0, 0, 0.2)';
+                                    e.currentTarget.style.color = 'rgba(255, 100, 100, 0.9)';
+                                }
                             }}
                         >
                             <Delete fontSize="small" />
@@ -177,7 +184,7 @@ export const SaveLoadScreen: FC<SaveLoadScreenProps> = ({ stage, mode, onClose, 
                         </div>
                     ) : (
                         <>
-                            {/* Top row: timestamp and day */}
+                            {/* Top row: timestamp */}
                             <div style={{
                                 display: 'flex',
                                 justifyContent: 'space-between',
@@ -189,16 +196,9 @@ export const SaveLoadScreen: FC<SaveLoadScreenProps> = ({ stage, mode, onClose, 
                                 }}>
                                     {formatTimestamp(save.timestamp)}
                                 </div>
-                                <div style={{
-                                    fontSize: '14px',
-                                    fontWeight: 'bold',
-                                    color: 'rgba(0, 255, 136, 0.9)'
-                                }}>
-                                    Day {save.day}
-                                </div>
                             </div>
 
-                            {/* Middle row: player name and station stats */}
+                            {/* Middle row: player name with day and station stats */}
                             <div style={{
                                 display: 'flex',
                                 justifyContent: 'space-between',
@@ -210,7 +210,7 @@ export const SaveLoadScreen: FC<SaveLoadScreenProps> = ({ stage, mode, onClose, 
                                     fontWeight: 'bold',
                                     color: 'rgba(0, 255, 136, 1)'
                                 }}>
-                                    {save.player.name}
+                                    {save.player.name} - Day {save.day}
                                 </div>
                                 
                                 {/* Station stats */}
@@ -248,7 +248,7 @@ export const SaveLoadScreen: FC<SaveLoadScreenProps> = ({ stage, mode, onClose, 
                                 display: 'flex',
                                 gap: '5px',
                                 marginTop: '5px',
-                                justifyContent: 'flex-start',
+                                justifyContent: 'center',
                                 flexWrap: 'wrap'
                             }}>
                                 {actors.slice(0, 10).map((actor) => (
