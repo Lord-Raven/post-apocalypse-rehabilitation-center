@@ -5,6 +5,7 @@ import { Stage } from '../Stage';
 import { BlurredBackground } from '../components/BlurredBackground';
 import { GridOverlay, Title, Button } from '../components/UIComponents';
 import { SettingsScreen } from './SettingsScreen';
+import { SaveLoadScreen } from './SaveLoadScreen';
 import { useTooltip } from '../contexts/TooltipContext';
 import { Save, PlayArrow, FiberNew, Folder, Settings } from '@mui/icons-material';
 
@@ -21,6 +22,8 @@ export const MenuScreen: FC<MenuScreenProps> = ({ stage, setScreenType }) => {
     const [hoveredButton, setHoveredButton] = React.useState<string | null>(null);
     const [showSettings, setShowSettings] = React.useState(false);
     const [isNewGameSettings, setIsNewGameSettings] = React.useState(false);
+    const [showSaveLoad, setShowSaveLoad] = React.useState(false);
+    const [saveLoadMode, setSaveLoadMode] = React.useState<'save' | 'load'>('save');
     const { setTooltip, clearTooltip } = useTooltip();
     
     // Check if a save exists (if there are any actors or the layout has been modified)
@@ -53,16 +56,14 @@ export const MenuScreen: FC<MenuScreenProps> = ({ stage, setScreenType }) => {
     };
 
     const handleLoad = () => {
-        // Placeholder for load functionality
-        console.log('Load game clicked - functionality to be implemented');
+        setSaveLoadMode('load');
+        setShowSaveLoad(true);
     };
 
     const handleSave = () => {
         if (stage().initialized) {
-            // Display "Saving game..." message in the TooltipBar with 2 second expiry
-            setTooltip('Saving game...', Save, undefined, 2000);
-            console.log('Saving game.');
-            stage().saveGame();
+            setSaveLoadMode('save');
+            setShowSaveLoad(true);
         }
     };
 
@@ -112,8 +113,8 @@ export const MenuScreen: FC<MenuScreenProps> = ({ stage, setScreenType }) => {
             key: 'load', 
             label: 'Load Game', 
             onClick: handleLoad,
-            enabled: false, // Disabled for now
-            tooltip: 'Load a previously saved game (coming soon)',
+            enabled: true,
+            tooltip: 'Load a previously saved game',
             icon: Folder
         },
         { 
@@ -231,6 +232,16 @@ export const MenuScreen: FC<MenuScreenProps> = ({ stage, setScreenType }) => {
                     stage={stage}
                     onClose={handleSettingsClose}
                     isNewGame={isNewGameSettings}
+                />
+            )}
+
+            {/* Save/Load Modal */}
+            {showSaveLoad && (
+                <SaveLoadScreen
+                    stage={stage}
+                    mode={saveLoadMode}
+                    onClose={() => setShowSaveLoad(false)}
+                    setScreenType={setScreenType}
                 />
             )}
         </BlurredBackground>

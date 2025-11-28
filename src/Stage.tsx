@@ -27,7 +27,7 @@ type TimelineEvent = {
 
 type Timeline = TimelineEvent[];
 
-type SaveType = {
+export type SaveType = {
     player: {name: string, description: string};
     aide: {name: string, description: string};
     echoes: (Actor | null)[]; // actors currently in echo slots (can be null for empty slots)
@@ -41,10 +41,12 @@ type SaveType = {
     timeline?: Timeline;
     currentSkit?: SkitData;
     stationStats?: {[key in StationStat]: number};
+    timestamp?: number; // Unix timestamp (milliseconds) when save was last updated
 }
 
 export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateType, ConfigType> {
 
+    private currentSave: SaveType;
     private saves: SaveType[];
     private saveSlot: number = 0;
     // Flag/promise to avoid redundant concurrent requests for reserve actors
@@ -133,6 +135,8 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
             // Rehydrate saves with proper class instances
             this.saves = this.saves.map(save => this.rehydrateSave(save));
         }
+        this.currentSave = this.saves[this.saveSlot] || this.freshSave;
+
 /*
         this.mcp.registerTool('stationStatChange',
             {
@@ -234,7 +238,7 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
             const factionRep = save.actors[randomFaction.representativeId || ''];
             factionRep.locationId = commsModule.id;
         }
-        this.saves[this.saveSlot] = {...save}; // Update the current save slot with the modified save, ensuring a new object reference.
+        this.currentSave = {...save}; // Update the current save slot with the modified save, ensuring a new object reference.
         this.saveGame();
     }
 
@@ -262,12 +266,47 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
     }
 
     saveGame() {
+        // Update timestamp on current save
+        this.currentSave.timestamp = Date.now();
         console.log(this.saves);
+        this.saves[this.saveSlot] = this.currentSave;
         this.messenger.updateChatState(this.buildSaves());
     }
 
     getSave(): SaveType {
-        return this.saves[this.saveSlot];
+        return this.currentSave;
+    }
+
+    getAllSaves(): SaveType[] {
+        return this.saves;
+    }
+
+    getCurrentSlot(): number {
+        return this.saveSlot;
+    }
+
+    getFreshSave(): SaveType {
+        return JSON.parse(JSON.stringify(this.freshSave));
+    }
+
+    ensureSlotExists(slotIndex: number) {
+        while (this.saves.length <= slotIndex) {
+            this.saves.push(this.getFreshSave());
+        }
+    }
+
+    loadSave(slotIndex: number) {
+        this.saveSlot = slotIndex;
+        this.currentSave = this.saves[this.saveSlot];
+        this.initialized = false;
+        this.startGame();
+    }
+
+    saveToSlot(slotIndex: number) {
+        // Copy current save to target slot
+        this.saves[slotIndex] = JSON.parse(JSON.stringify(this.currentSave));
+        this.saveSlot = slotIndex;
+        this.saveGame();
     }
 
     startGame() {
