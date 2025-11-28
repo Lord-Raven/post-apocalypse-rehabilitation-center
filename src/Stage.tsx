@@ -303,7 +303,7 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
     }
 
     getFreshSave(): SaveType {
-        return JSON.parse(JSON.stringify(this.freshSave));
+        return this.rehydrateSave(JSON.parse(JSON.stringify(this.freshSave)));
     }
 
     loadSave(slotIndex: number) {
