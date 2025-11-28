@@ -170,31 +170,29 @@ export const SettingsScreen: FC<SettingsScreenProps> = ({ stage, onCancel, onCon
                         }}
                     >
                         {/* Close button */}
-                        {!isNewGame && (
-                            <motion.button
-                                whileHover={{ scale: 1.1, rotate: 90 }}
-                                whileTap={{ scale: 0.9 }}
-                                onClick={onCancel}
-                                style={{
-                                    position: 'absolute',
-                                    top: '15px',
-                                    right: '15px',
-                                    background: 'transparent',
-                                    border: '2px solid rgba(0, 255, 136, 0.3)',
-                                    borderRadius: '50%',
-                                    width: '36px',
-                                    height: '36px',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    justifyContent: 'center',
-                                    cursor: 'pointer',
-                                    color: '#00ff88',
-                                    transition: 'all 0.2s ease',
-                                }}
-                            >
-                                <Close />
-                            </motion.button>
-                        )}
+                        <motion.button
+                            whileHover={{ scale: 1.1, rotate: 90 }}
+                            whileTap={{ scale: 0.9 }}
+                            onClick={onCancel}
+                            style={{
+                                position: 'absolute',
+                                top: '15px',
+                                right: '15px',
+                                background: 'transparent',
+                                border: '2px solid rgba(0, 255, 136, 0.3)',
+                                borderRadius: '50%',
+                                width: '36px',
+                                height: '36px',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                cursor: 'pointer',
+                                color: '#00ff88',
+                                transition: 'all 0.2s ease',
+                            }}
+                        >
+                            <Close />
+                        </motion.button>
 
                         {/* Title */}
                         <Title variant="glow" style={{ textAlign: 'center', marginBottom: '30px', fontSize: '24px' }}>
@@ -404,14 +402,12 @@ export const SettingsScreen: FC<SettingsScreenProps> = ({ stage, onCancel, onCon
                                     justifyContent: 'flex-end',
                                 }}
                             >
-                                {!isNewGame && (
-                                    <Button
-                                        variant="secondary"
-                                        onClick={onCancel}
-                                    >
-                                        Cancel
-                                    </Button>
-                                )}
+                                <Button
+                                    variant="secondary"
+                                    onClick={onCancel}
+                                >
+                                    Cancel
+                                </Button>
                                 <Button
                                     variant="primary"
                                     onClick={handleSave}
