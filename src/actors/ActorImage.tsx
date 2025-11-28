@@ -39,7 +39,6 @@ const ActorImage: FC<ActorImageProps> = ({
     const [processedImageUrl, setProcessedImageUrl] = useState<string>('');
     const [prevImageUrl, setPrevImageUrl] = useState<string>('');
     const [aspectRatio, setAspectRatio] = useState<string>('9 / 16');
-    const [imageVersion, setImageVersion] = useState<number>(0);
     const prevRawImageUrl = useRef<string>(imageUrl);
 
     // Process image with color multiplication
@@ -59,7 +58,6 @@ const ActorImage: FC<ActorImageProps> = ({
             const result = multiplyImageByColor(img, actor.remote ? "#99ccff" : highlightColor);
             if (result) {
                 setProcessedImageUrl(result);
-                setImageVersion(prev => prev + 1);
             }
         };
         img.src = imageUrl;
@@ -144,7 +142,7 @@ const ActorImage: FC<ActorImageProps> = ({
                 {/* Backing image layer - solid but blurry. */}
                 {processedImageUrl && (
                     <motion.img
-                        key={`${actor.id}_${imageVersion}_bg`}
+                        key={`${actor.id}_${imageUrl}_bg`}
                         src={processedImageUrl}
                         initial={{ opacity: 0 }}
                         animate={actor.remote ? {
@@ -178,7 +176,7 @@ const ActorImage: FC<ActorImageProps> = ({
                 {/* Main image layer - semi transparent, but crisp. */}
                 {processedImageUrl && (
                     <motion.img
-                        key={`${actor.id}_${imageVersion}_main`}
+                        key={`${actor.id}_${imageUrl}_main`}
                         src={processedImageUrl}
                         initial={{ opacity: 0 }}
                         animate={actor.remote ? {
@@ -214,7 +212,7 @@ const ActorImage: FC<ActorImageProps> = ({
                 <AnimatePresence>
                     {processedImageUrl && (
                         <motion.img
-                            key={`${actor.id}_${imageVersion}_scanline`}
+                            key={`${actor.id}_${imageUrl}_scanline`}
                             src={processedImageUrl}
                             initial={{ 
                                 opacity: 0,
