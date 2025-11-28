@@ -120,7 +120,6 @@ export interface ModuleIntrinsic {
     roleDescription?: string;
     baseImageUrl: string; // Base image that is used for theming through image2image calls
     defaultImageUrl: string; // Default themed version of the module
-    requirements: {[key in StationStat]?: number}; // Minimum station stat requirements to build the module
     cost: {[key in StationStat]?: number}; // Cost to build the module (StationStat name to amount)
     [key: string]: any; // Additional properties, if needed
     // Action method; each module has an action that will need to take the Module and Stage as contextual parameters:
@@ -156,7 +155,6 @@ export const MODULE_DEFAULTS: Record<ModuleType, ModuleIntrinsic> = {
         roleDescription: `Manage station operations, monitoring the crew and supplementing their needs as the director's right hand.`,
         baseImageUrl: 'https://media.charhub.io/2f92a39f-02be-41fd-b61d-56de04a9ecc4/62d30715-01e1-4581-beb4-61cf31134955.png',
         defaultImageUrl: 'https://media.charhub.io/026ae01a-7dc8-472d-bfea-61548b87e6ef/84990780-8260-4833-ac0b-79c1a15ddb9e.png',
-        requirements: {}, // No requirements; starter module
         cost: {}, // Free; starter module
         action: (module: Module, stage: Stage, setScreenType: (type: ScreenType) => void) => {
             // Open the station management screen
@@ -177,7 +175,6 @@ export const MODULE_DEFAULTS: Record<ModuleType, ModuleIntrinsic> = {
         roleDescription: `Handle all communications for the station, liaising with external entities and managing internal announcements.`,
         baseImageUrl: 'https://media.charhub.io/e13c7784-9f5f-4ec2-a179-5bab52973b3a/f5e69e63-88bf-4f7d-919b-41c8a2adcc6c.png',
         defaultImageUrl: 'https://media.charhub.io/9293912a-ebf4-4a0f-bac6-b9bfc82115f1/2ce9899c-a8cb-4186-9abb-fb8192ced8bd.png',
-        requirements: {}, // No requirements; starter module
         cost: {}, // Free; starter module
         action: (module: Module, stage: Stage, setScreenType: (type: ScreenType) => void) => {
             // If there is a rep from a faction here, open a faction interaction skit
@@ -234,7 +231,6 @@ export const MODULE_DEFAULTS: Record<ModuleType, ModuleIntrinsic> = {
         roleDescription: `Oversee the station's mechanical systems, ensuring all modules receive adequate energy and maintenance to function optimally.`,
         baseImageUrl: 'https://media.charhub.io/e53eeeb3-81a9-4020-a336-070c65edbb8a/4141ed00-9ab7-47f5-a4ce-21983b013e46.png',
         defaultImageUrl: 'https://media.charhub.io/36c3c8b5-1abd-4766-8042-fa7a2af0ce42/6106d6ec-7746-4130-8e13-860c89a325c7.png',
-        requirements: {}, // No requirements; starter module
         cost: {}, // Free; starter module
         action: randomAction,
         available: (stage: Stage) => {
@@ -247,7 +243,6 @@ export const MODULE_DEFAULTS: Record<ModuleType, ModuleIntrinsic> = {
         imagePrompt: 'A sci-fi living quarters with a bed, personal storage, and ambient lighting, reflecting the occupant\'s personality.',
         baseImageUrl: 'https://media.charhub.io/5e39db53-9d66-459d-8926-281b3b089b36/8ff20bdb-b719-4cf7-bf53-3326d6f9fcaa.png', 
         defaultImageUrl: 'https://media.charhub.io/99ffcdf5-a01b-43cf-81e5-e7098d8058f5/d1ec2e67-9124-4b8b-82d9-9685cfb973d2.png',
-        requirements: {Provision: 2},
         cost: {Provision: 1},
         action: (module: Module, stage: Stage, setScreenType: (type: ScreenType) => void) => {
             // Open the skit screen to speak to occupants
@@ -278,7 +273,6 @@ export const MODULE_DEFAULTS: Record<ModuleType, ModuleIntrinsic> = {
         roleDescription: `Maintain the station's communal areas, ensuring they remain inviting and well-stocked for crew relaxation and socialization.`,
         baseImageUrl: 'https://media.charhub.io/0cee625e-73e7-43b3-86b3-a06c082e73a9/7f958523-48b9-40a4-ae67-59b0cea199d3.png', 
         defaultImageUrl: 'https://media.charhub.io/041617bd-1cb3-424d-8e66-788e60edc80d/3a21ddd2-bd66-40b0-84ca-68b11d8218b2.png',
-        requirements: {Provision: 2},
         cost: {Provision: 1},
         action: randomAction,
         available: (stage: Stage) => {
@@ -293,7 +287,6 @@ export const MODULE_DEFAULTS: Record<ModuleType, ModuleIntrinsic> = {
         roleDescription: `Provide medical care and emergency response for the crew, ensuring their health and well-being.`,
         baseImageUrl: 'https://media.charhub.io/b62f09a0-7a42-47e7-b0be-f54dfac00f33/fe73db8c-2cb6-4744-9464-6d26ecf776c0.png',
         defaultImageUrl: 'https://media.charhub.io/5e9c6119-51b4-4a2c-a06c-bb8f1c20aea1/c471f9ba-ea5f-495b-8e44-e02723a04938.png',
-        requirements: {Provision: 2, Comfort: 2},
         cost: {Provision: 1, Comfort: 1},
         action: randomAction,
         available: (stage: Stage) => {
@@ -308,7 +301,6 @@ export const MODULE_DEFAULTS: Record<ModuleType, ModuleIntrinsic> = {
         roleDescription: `Oversee the physical fitness and training of the crew, ensuring they remain in peak condition for their duties aboard the station.`,
         baseImageUrl: 'https://media.charhub.io/349ca504-7b7e-4afd-8a52-43dd7b166bc7/d91d37e1-eb9d-4211-a28f-16b8d4d341d1.png',
         defaultImageUrl: 'https://media.charhub.io/7f6bd636-804e-493c-8442-e691856a6703/589a3768-f0da-43c0-ab70-8b7d403f5a62.png',
-        requirements: {Comfort: 2, Wealth: 2},
         cost: {Comfort: 1, Wealth: 1},
         action: randomAction,
         available: (stage: Stage) => {
@@ -323,7 +315,6 @@ export const MODULE_DEFAULTS: Record<ModuleType, ModuleIntrinsic> = {
         roleDescription: `Oversee the station's leisure facilities, ensuring crew members have a comfortable and enjoyable environment to relax and socialize.`,
         baseImageUrl: 'https://media.charhub.io/323b12cf-8687-4475-851b-7c1bdeff447a/0b71cb51-c160-47c9-848e-fab183eb9314.png',
         defaultImageUrl: 'https://media.charhub.io/2e8bf9fc-67a8-499d-85ec-8198efafeb14/1da73912-d19e-4f4e-aeda-19688e16e474.png',
-        requirements: {Comfort: 4, Wealth: 4, Harmony: 4},
         cost: {Comfort: 2, Wealth: 1},
         action: randomAction,
         available: (stage: Stage) => {
@@ -338,8 +329,7 @@ export const MODULE_DEFAULTS: Record<ModuleType, ModuleIntrinsic> = {
         roleDescription: `Manage the station's defenses and ensure the safety of the crew against external and internal threats.`,
         baseImageUrl: 'https://media.charhub.io/7ccddb81-bed6-4395-80c6-912fe2932e53/c58a4f32-270d-4b62-b2b4-bcc1a3dedc94.png',
         defaultImageUrl: 'https://media.charhub.io/090e6a42-62f9-46da-9a29-09de8b469f05/eedf310f-af7a-40b4-ac56-686f4daa5c07.png',
-        requirements: {Security: 2, Wealth: 2},
-        cost: {Security: 1, Wealth: 1},
+        cost: {Systems: 1, Wealth: 1},
         action: randomAction,
         available: (stage: Stage) => {
             // Can have only one in stage.getSave().layout:

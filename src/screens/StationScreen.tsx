@@ -142,7 +142,7 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType}) =>
             }
             
             // Check if requirements are met
-            const requirements = moduleDefaults.requirements || {};
+            const requirements = moduleDefaults.cost || {};
             const stationStats = stage().getSave().stationStats;
             
             if (!stationStats) {
@@ -152,7 +152,7 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType}) =>
             
             for (const [stat, requiredValue] of Object.entries(requirements)) {
                 const currentValue = stationStats[stat as StationStat] || 1;
-                if (currentValue < requiredValue) {
+                if (currentValue < requiredValue + 1) {
                     return false;
                 }
             }
