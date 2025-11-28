@@ -14,7 +14,7 @@ type MessageStateType = any;
 type ConfigType = any;
 type InitStateType = any;
 type ChatStateType = {
-    saves: SaveType[]
+    saves: (SaveType | undefined)[]
     lastSaveSlot: number;
 }
 
@@ -47,13 +47,14 @@ export type SaveType = {
 export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateType, ConfigType> {
 
     private currentSave: SaveType;
-    private saves: SaveType[];
+    private saves: (SaveType | undefined)[];
     private saveSlot: number = 0;
     // Flag/promise to avoid redundant concurrent requests for reserve actors
     private reserveActorsLoadPromise?: Promise<void>;
     private reserveFactionsLoadPromise?: Promise<void>;
     public imageGenerationPromises: {[key: string]: Promise<string>} = {};
     private freshSave: SaveType;
+    readonly SAVE_SLOTS = 10;
     readonly RESERVE_ACTORS = 5;
     readonly PREGEN_FACTION_COUNT = 3;
     readonly MAX_FACTIONS = 5;
@@ -134,6 +135,12 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
             console.log(this.saves);
             // Rehydrate saves with proper class instances
             this.saves = this.saves.map(save => this.rehydrateSave(save));
+        }
+        if (this.saves.length < this.SAVE_SLOTS) {
+            // Fill out to SAVE_SLOTS with fresh saves
+            for (let i = this.saves.length; i < this.SAVE_SLOTS; i++) {
+                this.saves.push(undefined);
+            }
         }
         this.currentSave = this.saves[this.saveSlot] || this.freshSave;
 
@@ -277,7 +284,7 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
         return this.currentSave;
     }
 
-    getAllSaves(): SaveType[] {
+    getAllSaves(): (SaveType | undefined)[] {
         return this.saves;
     }
 
@@ -289,15 +296,9 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
         return JSON.parse(JSON.stringify(this.freshSave));
     }
 
-    ensureSlotExists(slotIndex: number) {
-        while (this.saves.length <= slotIndex) {
-            this.saves.push(this.getFreshSave());
-        }
-    }
-
     loadSave(slotIndex: number) {
         this.saveSlot = slotIndex;
-        this.currentSave = this.saves[this.saveSlot];
+        this.currentSave = this.saves[this.saveSlot] || this.freshSave;
         this.initialized = false;
         this.startGame();
     }

@@ -191,22 +191,22 @@ export async function loadReserveActor(data: any, stage: Stage): Promise<Actor|n
         'school': 'college'};
     // Mapping of voice IDs to a description of the voice, so the AI can choose an ID based on the character profile.
     const voiceMap: {[key: string]: string} = {
-        '03a438b7-ebfa-4f72-9061-f086d8f1fca6': 'female - calm and soothing', // HQ Female Lowrange
-        'a2533977-83cb-4c10-9955-0277e047538f': 'female - energetic and lively', // LQ Female Midrange
-        '057d53b3-bb28-47f1-9c19-a85a79851863': 'female - low and warm', // HQ Female Midrange
-        '6e6619ba-4880-4cf3-a5df-d0697ba46656': 'female - high and soft', // LQ Female Highrange
-        'd6e05564-eea9-4181-aee9-fa0d7315f67d': 'male - cool and confident', // HQ Male Lowrange
-        'dc42cdc0-3f05-43a9-b843-7920e2e041aa': 'male - low and murmuring', // HQ Male Highrange
-        'e6b74abb-f4b2-4a84-b9ef-c390512f2f47': 'male - posh and articulate', // HQ Male Midrange
-        'bright_female_20s': 'female - bright and cheerful',
-        'resonant_male_40s': 'male - resonant and mature',
-        'gentle_female_30s': 'female - gentle and caring',
-        'whispery_female_40s': 'female - whispery and mysterious',
-        'formal_female_30s': 'female - formal and refined',
-        'professional_female_30s': 'female - professional and direct',
-        'calm_female_20s': 'female - calm and soothing',
-        'light_male_20s': 'male - light and thoughtful',
-        'animated_male_20s': 'male - hip and lively',
+        '03a438b7-ebfa-4f72-9061-f086d8f1fca6': 'feminine - calm and soothing', // HQ Female Lowrange
+        'a2533977-83cb-4c10-9955-0277e047538f': 'feminine - energetic and lively', // LQ Female Midrange
+        '057d53b3-bb28-47f1-9c19-a85a79851863': 'feminine - low and warm', // HQ Female Midrange
+        '6e6619ba-4880-4cf3-a5df-d0697ba46656': 'feminine - high and soft', // LQ Female Highrange
+        'd6e05564-eea9-4181-aee9-fa0d7315f67d': 'masculine - cool and confident', // HQ Male Lowrange
+        'dc42cdc0-3f05-43a9-b843-7920e2e041aa': 'masculine - low and murmuring', // HQ Male Highrange
+        'e6b74abb-f4b2-4a84-b9ef-c390512f2f47': 'masculine - posh and articulate', // HQ Male Midrange
+        'bright_female_20s': 'feminine - bright and cheerful',
+        'resonant_male_40s': 'masculine - resonant and mature',
+        'gentle_female_30s': 'feminine - gentle and caring',
+        'whispery_female_40s': 'feminine - whispery and mysterious',
+        'formal_female_30s': 'feminine - formal and refined',
+        'professional_female_30s': 'feminine - professional and direct',
+        'calm_female_20s': 'feminine - calm and soothing',
+        'light_male_20s': 'masculine - light and thoughtful',
+        'animated_male_20s': 'masculine - hip and lively',
     };
 
     // Preserve content while removing JSON-like structures.

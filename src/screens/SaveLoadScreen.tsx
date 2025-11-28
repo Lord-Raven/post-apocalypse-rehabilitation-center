@@ -50,15 +50,13 @@ export const SaveLoadScreen: FC<SaveLoadScreenProps> = ({ stage, mode, onClose, 
     };
 
     const renderSaveSlot = (slotIndex: number) => {
-        // Ensure slot exists
-        stage().ensureSlotExists(slotIndex);
 
         const save = stage().getAllSaves()[slotIndex];
-        const isEmpty = !save.timestamp;
+        const isEmpty = !save;
         const isCurrentSlot = stage().getCurrentSlot() === slotIndex;
 
         // Get non-remote actors
-        const actors = Object.values(save.actors).filter(actor => !actor.remote);
+        const actors = !isEmpty ? Object.values(save.actors).filter(actor => !actor.remote) : [];
 
         return (
             <motion.div
