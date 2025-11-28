@@ -7,7 +7,7 @@ import { useTooltip } from '../contexts/TooltipContext';
 import { scoreToGrade } from '../utils';
 import { Save, FolderOpen, Close, Delete } from '@mui/icons-material';
 import { ScreenType } from './BaseScreen';
-import { STATION_STAT_ICONS } from '../Module';
+import { STATION_STAT_ICONS, StationStat } from '../Module';
 
 interface SaveLoadScreenProps {
     stage: () => Stage;
@@ -102,13 +102,13 @@ export const SaveLoadScreen: FC<SaveLoadScreenProps> = ({ stage, mode, onClose, 
                     disabled={mode === 'load' && isEmpty}
                     style={{
                         width: '100%',
-                        height: '120px',
-                        padding: '15px',
-                        paddingRight: isEmpty ? '15px' : '50px',
+                        height: '85px',
+                        padding: '12px',
+                        paddingRight: isEmpty ? '12px' : '50px',
                         display: 'flex',
                         flexDirection: 'column',
                         alignItems: 'stretch',
-                        justifyContent: 'space-between',
+                        justifyContent: 'center',
                         background: isCurrentSlot 
                             ? 'rgba(0, 255, 136, 0.15)' 
                             : hoveredSlot === slotIndex && !(mode === 'load' && isEmpty)
@@ -189,14 +189,14 @@ export const SaveLoadScreen: FC<SaveLoadScreenProps> = ({ stage, mode, onClose, 
                             <div style={{
                                 display: 'flex',
                                 justifyContent: 'space-between',
-                                gap: '20px',
-                                height: '100%'
+                                gap: '20px'
                             }}>
                                 {/* Left column: timestamp and player/day */}
                                 <div style={{
                                     display: 'flex',
                                     flexDirection: 'column',
-                                    justifyContent: 'space-between',
+                                    alignItems: 'flex-start',
+                                    gap: '6px',
                                     flex: 1
                                 }}>
                                     <div style={{
@@ -218,9 +218,8 @@ export const SaveLoadScreen: FC<SaveLoadScreenProps> = ({ stage, mode, onClose, 
                                 <div style={{
                                     display: 'flex',
                                     flexDirection: 'column',
-                                    justifyContent: 'space-between',
                                     alignItems: 'flex-end',
-                                    gap: '8px'
+                                    gap: '6px'
                                 }}>
                                     {/* Station stats with icons */}
                                     {save.stationStats && (
@@ -229,7 +228,8 @@ export const SaveLoadScreen: FC<SaveLoadScreenProps> = ({ stage, mode, onClose, 
                                             gap: '10px',
                                             alignItems: 'center'
                                         }}>
-                                            {Object.entries(save.stationStats).map(([stat, value]) => {
+                                            {Object.values(StationStat).map((stat) => {
+                                                const value = save.stationStats ? save.stationStats[stat] : 1;
                                                 const Icon = STATION_STAT_ICONS[stat as keyof typeof STATION_STAT_ICONS];
                                                 return (
                                                     <div
