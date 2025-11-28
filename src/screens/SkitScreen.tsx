@@ -75,7 +75,7 @@ const formatMessage = (text: string, speakerActor?: Actor | null): JSX.Element =
                 if (part.startsWith('"') && part.endsWith('"')) {
                     // Apply custom font and drop shadow to dialogue if speaker has custom properties
                     const brightenedColor = speakerActor?.themeColor 
-                        ? adjustColor(speakerActor.themeColor, 0.7)
+                        ? adjustColor(speakerActor.themeColor, 0.6)
                         : '#87CEEB';
                     
                     const dialogueStyle: React.CSSProperties = { 

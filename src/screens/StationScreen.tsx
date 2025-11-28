@@ -85,6 +85,22 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType}) =>
     const addModule = (moduleType: ModuleType, x: number, y: number) => {
         console.log(`Adding module of type ${moduleType} at ${x}, ${y}`);
         const newModule: Module = createModule(moduleType);
+        
+        // Deduct cost from station stats
+        const moduleDefaults = MODULE_DEFAULTS[moduleType];
+        const cost = moduleDefaults.cost || {};
+        const save = stage().getSave();
+        
+        if (!save.stationStats) {
+            return;
+        }
+        
+        for (const [stat, costValue] of Object.entries(cost)) {
+            if (save.stationStats[stat as StationStat] !== undefined) {
+                save.stationStats[stat as StationStat] = Math.max(1, save.stationStats[stat as StationStat] - costValue);
+            }
+        }
+        
         // Write into the Stage's layout
         stage().getLayout().setModuleAt(x, y, newModule);
         // update local layout state so this component re-renders with the new module
@@ -117,8 +133,31 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType}) =>
 
     const getAvailableModules = (): ModuleType[] => {
         return Object.keys(MODULE_DEFAULTS).filter(moduleType => {
-            const available = MODULE_DEFAULTS[moduleType as ModuleType].available;
-            return available ? available(stage()) : true;
+            const moduleDefaults = MODULE_DEFAULTS[moduleType as ModuleType];
+            const available = moduleDefaults.available;
+            
+            // Check if available() returns true
+            if (available && !available(stage())) {
+                return false;
+            }
+            
+            // Check if requirements are met
+            const requirements = moduleDefaults.requirements || {};
+            const stationStats = stage().getSave().stationStats;
+            
+            if (!stationStats) {
+                // If no station stats exist, all requirements are considered unmet
+                return Object.keys(requirements).length === 0;
+            }
+            
+            for (const [stat, requiredValue] of Object.entries(requirements)) {
+                const currentValue = stationStats[stat as StationStat] || 1;
+                if (currentValue < requiredValue) {
+                    return false;
+                }
+            }
+            
+            return true;
         }) as ModuleType[];
     };
 
@@ -1119,6 +1158,9 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType}) =>
                             }}>
                                 {getAvailableModules().map((moduleType) => {
                                     const moduleDefaults = MODULE_DEFAULTS[moduleType];
+                                    const cost = moduleDefaults.cost || {};
+                                    const hasCost = Object.keys(cost).length > 0;
+                                    
                                     return (
                                         <motion.div
                                             key={moduleType}
@@ -1168,6 +1210,35 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType}) =>
                                                     >
                                                         {moduleDefaults.role}
                                                     </Typography>
+                                                )}
+                                                {hasCost && (
+                                                    <div style={{
+                                                        display: 'flex',
+                                                        justifyContent: 'center',
+                                                        gap: '8px',
+                                                        marginTop: '8px',
+                                                        flexWrap: 'wrap',
+                                                    }}>
+                                                        {Object.entries(cost).map(([stat, value]) => {
+                                                            const StatIcon = STATION_STAT_ICONS[stat as StationStat];
+                                                            return (
+                                                                <div
+                                                                    key={stat}
+                                                                    style={{
+                                                                        display: 'flex',
+                                                                        alignItems: 'center',
+                                                                        gap: '4px',
+                                                                        color: '#ff6666',
+                                                                        fontSize: '0.9rem',
+                                                                        fontWeight: 700,
+                                                                    }}
+                                                                >
+                                                                    <StatIcon style={{ fontSize: '1rem' }} />
+                                                                    <span>-{value}</span>
+                                                                </div>
+                                                            );
+                                                        })}
+                                                    </div>
                                                 )}
                                             </div>
                                         </motion.div>
