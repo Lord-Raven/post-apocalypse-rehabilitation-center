@@ -138,6 +138,9 @@ export const EMOTION_SYNONYMS: {[key: string]: Emotion} = {
     hope: Emotion.wonder,
     humor: Emotion.joy,
     challenge: Emotion.pride,
+    contempt: Emotion.disgust,
+    rivulsion: Emotion.disgust,
+    hesitance: Emotion.nervousness,
 }
 
 export const EMOTION_PROMPTS: {[emotion in Emotion]?: string} = {

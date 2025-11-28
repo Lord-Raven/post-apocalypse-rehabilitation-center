@@ -176,7 +176,7 @@ const ActorImage: FC<ActorImageProps> = ({
                 {/* Main image layer - semi transparent, but crisp. */}
                 {processedImageUrl && (
                     <motion.img
-                        key={`${actor.id}_${imageUrl}_main`}
+                        key={`${actor.id}_${processedImageUrl}_main`}
                         src={processedImageUrl}
                         initial={{ opacity: 0 }}
                         animate={actor.remote ? {
@@ -212,7 +212,7 @@ const ActorImage: FC<ActorImageProps> = ({
                 <AnimatePresence>
                     {processedImageUrl && (
                         <motion.img
-                            key={`${actor.id}_${imageUrl}_scanline`}
+                            key={`${actor.id}_${processedImageUrl}_scanline`}
                             src={processedImageUrl}
                             initial={{ 
                                 opacity: 0,
@@ -233,8 +233,8 @@ const ActorImage: FC<ActorImageProps> = ({
                                 zIndex: 6,
                                 transform: `translate(calc(${modX}vw - 50%), ${modY}vh)`,
                                 filter: 'blur(0.5px) brightness(1.5)',
-                                maskImage: 'linear-gradient(to bottom, transparent 0%, rgba(0, 0, 0, 0.8) 98%, black 99% transparent 100%)',
-                                WebkitMaskImage: 'linear-gradient(to bottom, transparent 0%, rgba(0, 0, 0, 0.8) 98%, black 99% transparent 100%)',
+                                maskImage: 'linear-gradient(to bottom, transparent 0%, rgba(0, 0, 0, 0.8) 98%, black 99%, transparent 100%)',
+                                WebkitMaskImage: 'linear-gradient(to bottom, transparent 0%, rgba(0, 0, 0, 0.8) 98%, black 99%, transparent 100%)',
                                 maskSize: '100% 200%',
                                 WebkitMaskSize: '100% 200%',
                                 maskPosition: '0% -100%',
