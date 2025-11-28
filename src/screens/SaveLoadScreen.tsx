@@ -185,11 +185,47 @@ export const SaveLoadScreen: FC<SaveLoadScreenProps> = ({ stage, mode, onClose, 
                         </div>
                     ) : (
                         <>
+                            {/* Actor portraits as background */}
+                            <div style={{
+                                position: 'absolute',
+                                bottom: 0,
+                                right: 0,
+                                display: 'flex',
+                                height: '85px',
+                                opacity: 0.3,
+                                pointerEvents: 'none'
+                            }}>
+                                {actors.slice(0, 10).map((actor) => (
+                                    <div
+                                        key={actor.id}
+                                        style={{
+                                            width: '85px',
+                                            height: '85px',
+                                            overflow: 'hidden'
+                                        }}
+                                        title={actor.name}
+                                    >
+                                        <img
+                                            src={actor.getEmotionImage(actor.getDefaultEmotion())}
+                                            alt={actor.name}
+                                            style={{
+                                                width: '100%',
+                                                height: '100%',
+                                                objectFit: 'cover',
+                                                objectPosition: 'top center'
+                                            }}
+                                        />
+                                    </div>
+                                ))}
+                            </div>
+
                             {/* Two-column layout */}
                             <div style={{
                                 display: 'flex',
                                 justifyContent: 'space-between',
-                                gap: '20px'
+                                gap: '20px',
+                                position: 'relative',
+                                zIndex: 1
                             }}>
                                 {/* Left column: timestamp and player/day */}
                                 <div style={{
@@ -214,7 +250,7 @@ export const SaveLoadScreen: FC<SaveLoadScreenProps> = ({ stage, mode, onClose, 
                                     </div>
                                 </div>
 
-                                {/* Right column: station stats and actor portraits */}
+                                {/* Right column: station stats */}
                                 <div style={{
                                     display: 'flex',
                                     flexDirection: 'column',
@@ -254,56 +290,6 @@ export const SaveLoadScreen: FC<SaveLoadScreenProps> = ({ stage, mode, onClose, 
                                             })}
                                         </div>
                                     )}
-
-                                    {/* Actor portraits */}
-                                    <div style={{
-                                        display: 'flex',
-                                        gap: '5px',
-                                        flexWrap: 'wrap',
-                                        justifyContent: 'flex-end',
-                                        maxWidth: '250px'
-                                    }}>
-                                        {actors.slice(0, 10).map((actor) => (
-                                            <div
-                                                key={actor.id}
-                                                style={{
-                                                    width: '30px',
-                                                    height: '30px',
-                                                    borderRadius: '4px',
-                                                    overflow: 'hidden',
-                                                    border: '1px solid rgba(0, 255, 136, 0.3)',
-                                                    background: 'rgba(0, 20, 40, 0.8)'
-                                                }}
-                                                title={actor.name}
-                                            >
-                                                <img
-                                                    src={actor.getEmotionImage(actor.getDefaultEmotion())}
-                                                    alt={actor.name}
-                                                    style={{
-                                                        width: '100%',
-                                                        height: '100%',
-                                                        objectFit: 'cover',
-                                                        objectPosition: 'top center'
-                                                    }}
-                                                />
-                                            </div>
-                                        ))}
-                                        {actors.length > 10 && (
-                                            <div style={{
-                                                width: '30px',
-                                                height: '30px',
-                                                borderRadius: '4px',
-                                                display: 'flex',
-                                                alignItems: 'center',
-                                                justifyContent: 'center',
-                                                background: 'rgba(0, 255, 136, 0.2)',
-                                                fontSize: '10px',
-                                                color: 'rgba(0, 255, 136, 0.8)'
-                                            }}>
-                                                +{actors.length - 10}
-                                            </div>
-                                        )}
-                                    </div>
                                 </div>
                             </div>
                         </>
@@ -349,33 +335,48 @@ export const SaveLoadScreen: FC<SaveLoadScreenProps> = ({ stage, mode, onClose, 
                     position: 'relative'
                 }}
             >
-                {/* Close button */}
-                <button
-                    onClick={onClose}
-                    onMouseEnter={() => setTooltip('Close', Close)}
-                    onMouseLeave={() => clearTooltip()}
-                    style={{
-                        position: 'absolute',
-                        top: '15px',
-                        right: '15px',
-                        background: 'transparent',
-                        border: 'none',
-                        color: 'rgba(0, 255, 136, 0.7)',
-                        cursor: 'pointer',
-                        fontSize: '24px',
-                        padding: '5px',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center'
-                    }}
-                >
-                    <Close />
-                </button>
+                {/* Header with close button */}
+                <div style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    marginBottom: '10px'
+                }}>
+                    <Title variant="glow" style={{ fontSize: '24px', margin: 0 }}>
+                        {mode === 'save' ? 'Save Game' : 'Load Game'}
+                    </Title>
+                    <button
+                        onClick={onClose}
+                        onMouseEnter={() => setTooltip('Close', Close)}
+                        onMouseLeave={() => clearTooltip()}
+                        style={{
+                            background: 'transparent',
+                            border: 'none',
+                            color: 'rgba(0, 255, 136, 0.7)',
+                            cursor: 'pointer',
+                            fontSize: '24px',
+                            padding: '5px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center'
+                        }}
+                    >
+                        <Close />
+                    </button>
+                </div>
 
-                {/* Title */}
-                <Title variant="glow" style={{ textAlign: 'center', marginBottom: '25px', fontSize: '24px' }}>
-                    {mode === 'save' ? 'Save Game' : 'Load Game'}
-                </Title>
+                {/* Auto-save note for save mode */}
+                {mode === 'save' && (
+                    <div style={{
+                        fontSize: '12px',
+                        color: 'rgba(0, 255, 136, 0.6)',
+                        fontStyle: 'italic',
+                        marginBottom: '15px',
+                        textAlign: 'left'
+                    }}>
+                        The game will continue to auto-save to your selected slot.
+                    </div>
+                )}
 
                 {/* Save slots container */}
                 <div style={{
