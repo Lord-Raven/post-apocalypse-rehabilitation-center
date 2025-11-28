@@ -84,6 +84,10 @@ export const MenuScreen: FC<MenuScreenProps> = ({ stage, setScreenType }) => {
         }
     };
 
+    const noSaveSlotsAvailable = () => {
+        return stage().getAllSaves().every(save => save !== undefined);
+    }
+
     const menuButtons = [
         ...(saveExists() ? [{ 
             key: 'continue', 
@@ -98,8 +102,9 @@ export const MenuScreen: FC<MenuScreenProps> = ({ stage, setScreenType }) => {
             label: 'New Game', 
             onClick: handleNewGame,
             enabled: true,
-            tooltip: 'Start a fresh playthrough',
-            icon: FiberNew
+            tooltip: noSaveSlotsAvailable() ? 'No save slots remaining; delete a save to start a new game' : 'Start a fresh playthrough',
+            icon: FiberNew,
+            disabled: noSaveSlotsAvailable()
         },
         {
             key: 'save',

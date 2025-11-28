@@ -267,8 +267,13 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
     }
 
     newGame() {
-        this.saves.push(this.freshSave);
-        this.saveSlot = this.saves.length - 1;
+        // find first undefined save slot:
+        this.saveSlot = this.saves.findIndex(save => !save);
+        if (this.saveSlot === -1) {
+            // Yikes, overwrite the last one. Should avoid this in the UI.
+            this.saveSlot = this.saves.length - 1;
+            this.currentSave = this.freshSave;
+        }
         this.saveGame();
     }
 
@@ -278,6 +283,11 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
         console.log(this.saves);
         this.saves[this.saveSlot] = this.currentSave;
         this.messenger.updateChatState(this.buildSaves());
+    }
+
+    deleteSave(slotIndex: number) {
+        this.saves[slotIndex] = undefined;
+        this.saveGame();
     }
 
     getSave(): SaveType {

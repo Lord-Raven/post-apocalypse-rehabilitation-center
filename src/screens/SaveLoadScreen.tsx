@@ -5,7 +5,7 @@ import { BlurredBackground } from '../components/BlurredBackground';
 import { Title, Button } from '../components/UIComponents';
 import { useTooltip } from '../contexts/TooltipContext';
 import { scoreToGrade } from '../utils';
-import { Save, FolderOpen, Close } from '@mui/icons-material';
+import { Save, FolderOpen, Close, Delete } from '@mui/icons-material';
 import { ScreenType } from './BaseScreen';
 
 interface SaveLoadScreenProps {
@@ -18,6 +18,7 @@ interface SaveLoadScreenProps {
 export const SaveLoadScreen: FC<SaveLoadScreenProps> = ({ stage, mode, onClose, setScreenType }) => {
     const { setTooltip, clearTooltip } = useTooltip();
     const [hoveredSlot, setHoveredSlot] = React.useState<number | null>(null);
+    const [deleteConfirmSlot, setDeleteConfirmSlot] = React.useState<number | null>(null);
 
     const handleSlotClick = (slotIndex: number) => {
         if (mode === 'save') {
@@ -35,6 +36,12 @@ export const SaveLoadScreen: FC<SaveLoadScreenProps> = ({ stage, mode, onClose, 
                 setScreenType(ScreenType.STATION);
             }
         }
+    };
+
+    const handleDelete = (slotIndex: number) => {
+        stage().deleteSave(slotIndex);
+        setDeleteConfirmSlot(null);
+        setTooltip('Save deleted', Delete, undefined, 2000);
     };
 
     const formatTimestamp = (timestamp?: number): string => {
@@ -96,6 +103,7 @@ export const SaveLoadScreen: FC<SaveLoadScreenProps> = ({ stage, mode, onClose, 
                         width: '100%',
                         height: '120px',
                         padding: '15px',
+                        paddingRight: isEmpty ? '15px' : '50px',
                         display: 'flex',
                         flexDirection: 'column',
                         alignItems: 'stretch',
@@ -110,6 +118,51 @@ export const SaveLoadScreen: FC<SaveLoadScreenProps> = ({ stage, mode, onClose, 
                         overflow: 'hidden'
                     }}
                 >
+                    {/* Delete button for filled slots */}
+                    {!isEmpty && (
+                        <button
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                setDeleteConfirmSlot(slotIndex);
+                            }}
+                            onMouseEnter={(e) => {
+                                e.stopPropagation();
+                                setTooltip('Delete save', Delete);
+                            }}
+                            onMouseLeave={(e) => {
+                                e.stopPropagation();
+                                clearTooltip();
+                            }}
+                            style={{
+                                position: 'absolute',
+                                top: '50%',
+                                right: '10px',
+                                transform: 'translateY(-50%)',
+                                background: 'rgba(255, 0, 0, 0.2)',
+                                border: '1px solid rgba(255, 0, 0, 0.4)',
+                                borderRadius: '4px',
+                                color: 'rgba(255, 100, 100, 0.9)',
+                                cursor: 'pointer',
+                                padding: '8px',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                transition: 'all 0.2s',
+                                fontSize: '18px'
+                            }}
+                            onMouseOver={(e) => {
+                                e.currentTarget.style.background = 'rgba(255, 0, 0, 0.3)';
+                                e.currentTarget.style.color = 'rgba(255, 150, 150, 1)';
+                            }}
+                            onMouseOut={(e) => {
+                                e.currentTarget.style.background = 'rgba(255, 0, 0, 0.2)';
+                                e.currentTarget.style.color = 'rgba(255, 100, 100, 0.9)';
+                            }}
+                        >
+                            <Delete fontSize="small" />
+                        </button>
+                    )}
+
                     {isEmpty ? (
                         <div style={{
                             display: 'flex',
@@ -321,6 +374,89 @@ export const SaveLoadScreen: FC<SaveLoadScreenProps> = ({ stage, mode, onClose, 
                     {Array.from({ length: 10 }, (_, i) => renderSaveSlot(i))}
                 </div>
             </motion.div>
+
+            {/* Delete confirmation modal */}
+            {deleteConfirmSlot !== null && (
+                <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    style={{
+                        position: 'fixed',
+                        top: 0,
+                        left: 0,
+                        right: 0,
+                        bottom: 0,
+                        background: 'rgba(0, 0, 0, 0.7)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        zIndex: 1001
+                    }}
+                    onClick={(e) => {
+                        if (e.target === e.currentTarget) {
+                            setDeleteConfirmSlot(null);
+                        }
+                    }}
+                >
+                    <motion.div
+                        initial={{ scale: 0.9, opacity: 0 }}
+                        animate={{ scale: 1, opacity: 1 }}
+                        className="glass-panel-bright"
+                        style={{
+                            padding: '30px',
+                            maxWidth: '400px',
+                            width: '90%',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            gap: '20px'
+                        }}
+                    >
+                        <Title variant="glow" style={{ textAlign: 'center', fontSize: '20px' }}>
+                            Delete Save?
+                        </Title>
+                        <div style={{
+                            color: 'rgba(0, 255, 136, 0.8)',
+                            textAlign: 'center',
+                            fontSize: '14px'
+                        }}>
+                            Are you sure you want to delete this save? This action cannot be undone.
+                        </div>
+                        <div style={{
+                            display: 'flex',
+                            gap: '10px',
+                            justifyContent: 'center'
+                        }}>
+                            <Button
+                                variant="menu"
+                                onClick={() => setDeleteConfirmSlot(null)}
+                                onMouseEnter={() => setTooltip('Cancel', Close)}
+                                onMouseLeave={() => clearTooltip()}
+                                style={{
+                                    padding: '10px 20px',
+                                    background: 'rgba(0, 255, 136, 0.1)'
+                                }}
+                            >
+                                Cancel
+                            </Button>
+                            <Button
+                                variant="menu"
+                                onClick={() => handleDelete(deleteConfirmSlot)}
+                                onMouseEnter={() => setTooltip('Confirm deletion', Delete)}
+                                onMouseLeave={() => clearTooltip()}
+                                style={{
+                                    padding: '10px 20px',
+                                    background: 'rgba(255, 0, 0, 0.2)',
+                                    border: '2px solid rgba(255, 0, 0, 0.4)',
+                                    color: 'rgba(255, 150, 150, 1)'
+                                }}
+                            >
+                                Delete
+                            </Button>
+                        </div>
+                    </motion.div>
+                </motion.div>
+            )}
         </div>
     );
 };
