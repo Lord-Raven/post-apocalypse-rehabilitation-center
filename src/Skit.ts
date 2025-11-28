@@ -3,6 +3,7 @@ import { Emotion, EMOTION_SYNONYMS } from "./actors/Emotion";
 import { getStatRating, STATION_STAT_PROMPTS, StationStat } from "./Module";
 import { Stage } from "./Stage";
 import { Request } from "./factions/Request";
+import { s } from "vite/dist/node/types.d-aGj9QkWt";
 
 export enum SkitType {
     INTRO_CHARACTER = 'INTRO CHARACTER',
@@ -137,7 +138,7 @@ export function generateSkitPrompt(skit: SkitData, stage: Stage, historyLength: 
         ) : '') +
         (Object.values(stage.getSave().requests).length > 0 ? (
             `\n\nActive Requests:\n` +
-            Object.values(stage.getSave().requests).map(request => `-${stage.getSave().factions[request.factionId]?.name || 'Unknown Faction'}: ${request.description} \n  Requirement: ${request.getRequirementText()} \n  Reward: ${request.getRewardText()}`).join('\n')
+            Object.values(stage.getSave().requests).map(request => `-${stage.getSave().factions[request.factionId]?.name || 'Unknown Faction'}: ${request.description} \n  Requirement: ${request.getRequirementText(stage)} \n  Reward: ${request.getRewardText()}`).join('\n')
         ) : '') +
         `\n\n${playerName}'s profile: ${stage.getSave().player.description}` +
         // List characters who are here, along with full stat details:
@@ -160,7 +161,7 @@ export function generateSkitPrompt(skit: SkitData, stage: Stage, historyLength: 
         // List stat meanings, for reference:
         `\n\nStats:\n${Object.values(Stat).map(stat => `${stat.toUpperCase()}: ${getStatDescription(stat)}`).join('\n')}` +
         `\n\nScene Prompt:\n${generateSkitTypePrompt(skit, stage, skit.script.length > 0)}` +
-        (request ? `\n\nRequest Details:\n  Description: ${request.description}\n  Requirement: ${request.getRequirementText()}\n  Reward: ${request.getRewardText()}\n` : '') +
+        (request ? `\n\nRequest Details:\n  Description: ${request.description}\n  Requirement: ${request.getRequirementText(stage)}\n  Reward: ${request.getRewardText()}\n` : '') +
         (faction ? `\n\n${faction.name} Details: ${faction.description}\n${faction.name} Aesthetic: ${faction.visualStyle}` : '') +
         (factionRepresentative ? `\n${faction?.name || 'The faction'}'s representative, ${factionRepresentative.name}, appears on-screen. Their description: ${factionRepresentative.description}` : 'They have no designated liaison for this communication; any characters introduced during this scene will be transient.') +
         (faction ? `\nThis skit may explore the nature of this faction's relationship with and intentions for the Director, the PARC, or other characters present in the Comms module (if any). ` +

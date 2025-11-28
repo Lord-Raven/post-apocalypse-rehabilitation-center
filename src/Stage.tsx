@@ -581,8 +581,34 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
             for (const actorId in endProps) {
                 const actorChanges = endProps[actorId];
                 
+                // Handle Faction reputation changes
+                if (actorId === 'FACTION') {
+                    Object.entries(endProps[actorId]).forEach(([factionId, change]) => {
+                        const faction = this.getSave().factions[factionId];
+                        if (!faction) return;
+
+                        const newReputation = Math.max(0, Math.min(10, faction.reputation + change));
+
+                        faction.reputation = newReputation;
+                        const hasCutTies = newReputation === 0;
+                    
+                        // If reputation reaches 0, deactivate faction and remove all their requests
+                        if (hasCutTies) {
+                            faction.active = false;
+                            
+                            // Remove all requests from this faction
+                            const requestsToRemove = Object.keys(this.getSave().requests).filter(
+                                requestId => this.getSave().requests[requestId].factionId === factionId
+                            );
+                            requestsToRemove.forEach(requestId => {
+                                delete this.getSave().requests[requestId];
+                            });
+                            
+                            console.log(`Faction ${faction.name} has cut ties with PARC. Removed ${requestsToRemove.length} requests.`);
+                        }
+                    });
                 // Handle special "STATION" id for station stat changes
-                if (actorId === 'STATION') {
+                } else if (actorId === 'STATION') {
                     if (!save.stationStats) {
                         save.stationStats = {
                             Systems: 3,

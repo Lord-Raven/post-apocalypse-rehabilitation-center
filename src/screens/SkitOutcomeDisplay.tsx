@@ -144,23 +144,6 @@ const SkitOutcomeDisplay: FC<SkitOutcomeDisplayProps> = ({ skitData, stage, layo
             const newReputation = Math.max(0, Math.min(10, oldReputation + change));
 
             if (newReputation !== oldReputation) {
-                const hasCutTies = newReputation === 0;
-                
-                // If reputation reaches 0, deactivate faction and remove all their requests
-                if (hasCutTies) {
-                    faction.active = false;
-                    
-                    // Remove all requests from this faction
-                    const requestsToRemove = Object.keys(stage.getSave().requests).filter(
-                        requestId => stage.getSave().requests[requestId].factionId === factionId
-                    );
-                    requestsToRemove.forEach(requestId => {
-                        delete stage.getSave().requests[requestId];
-                    });
-                    
-                    console.log(`Faction ${faction.name} has cut ties with PARC. Removed ${requestsToRemove.length} requests.`);
-                }
-                
                 factionChanges.push({
                     faction: faction,
                     oldReputation: oldReputation,
@@ -190,54 +173,60 @@ const SkitOutcomeDisplay: FC<SkitOutcomeDisplayProps> = ({ skitData, stage, layo
                 position: 'absolute',
                 top: '3%',
                 right: '3%',
-                width: '400px',
+                left: '3%',
                 maxHeight: '85vh',
                 zIndex: 3,
-                display: 'flex',
-                flexDirection: 'column',
+                display: 'grid',
+                gridAutoFlow: 'column',
+                gridTemplateRows: 'repeat(auto-fill, minmax(0, max-content))',
+                gridAutoColumns: '400px',
                 gap: '20px',
-                overflow: 'auto',
+                direction: 'rtl',
+                overflowX: 'auto',
+                overflowY: 'hidden',
                 padding: '0 20px'
             }}
         >
             {/* Header */}
-            <Paper
-                elevation={8}
-                sx={{
-                    background: 'linear-gradient(135deg, rgba(0,255,136,0.25) 0%, rgba(0,180,100,0.35) 50%, rgba(0,120,80,0.25) 100%)',
-                    border: '2px solid rgba(0,255,136,0.4)',
-                    borderRadius: 2,
-                    p: 2,
-                    backdropFilter: 'blur(12px)',
-                    textAlign: 'center'
-                }}
-            >
-                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1 }}>
-                    <TrendingUp sx={{ color: '#00ff88', fontSize: '1.5rem' }} />
-                    <Typography
-                        variant="h6"
-                        sx={{
-                            fontWeight: 800,
-                            color: '#fff',
-                            textTransform: 'uppercase',
-                            letterSpacing: '1px',
-                            textShadow: '0 2px 4px rgba(0,0,0,0.8)'
-                        }}
-                    >
-                        Outcome
-                    </Typography>
-                </Box>
-            </Paper>
+            <div style={{ direction: 'ltr' }}>
+                <Paper
+                    elevation={8}
+                    sx={{
+                        background: 'linear-gradient(135deg, rgba(0,255,136,0.25) 0%, rgba(0,180,100,0.35) 50%, rgba(0,120,80,0.25) 100%)',
+                        border: '2px solid rgba(0,255,136,0.4)',
+                        borderRadius: 2,
+                        p: 2,
+                        backdropFilter: 'blur(12px)',
+                        textAlign: 'center'
+                    }}
+                >
+                    <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1 }}>
+                        <TrendingUp sx={{ color: '#00ff88', fontSize: '1.5rem' }} />
+                        <Typography
+                            variant="h6"
+                            sx={{
+                                fontWeight: 800,
+                                color: '#fff',
+                                textTransform: 'uppercase',
+                                letterSpacing: '1px',
+                                textShadow: '0 2px 4px rgba(0,0,0,0.8)'
+                            }}
+                        >
+                            Outcome
+                        </Typography>
+                    </Box>
+                </Paper>
+            </div>
 
             {/* Character stat changes */}
             {characterChanges.map((charChange, charIndex) => (
-                <motion.div
-                    key={charChange.actor ? `stat_${charChange.actor.id}` : `stat_PARC`}
-                    initial={{ opacity: 0, y: 30 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.4, delay: 0.5 + charIndex * 0.2 }}
-                >
-                    <Paper
+                <div key={charChange.actor ? `stat_${charChange.actor.id}` : `stat_PARC`} style={{ direction: 'ltr' }}>
+                    <motion.div
+                        initial={{ opacity: 0, y: 30 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.4, delay: 0.5 + charIndex * 0.2 }}
+                    >
+                        <Paper
                         elevation={6}
                         sx={{
                             background: 'rgba(10,20,30,0.95)',
@@ -422,12 +411,13 @@ const SkitOutcomeDisplay: FC<SkitOutcomeDisplayProps> = ({ skitData, stage, layo
                         </Box>
                     </Paper>
                 </motion.div>
+                </div>
             ))}
 
             {/* Faction Reputation Changes */}
             {factionReputationChanges.map((repChange, repIndex) => (
+                <div key={`faction_rep_${repChange.faction.id}`} style={{ direction: 'ltr' }}>
                 <motion.div
-                    key={`faction_rep_${repChange.faction.id}`}
                     initial={{ opacity: 0, y: 30 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.4, delay: 0.5 + characterChanges.length * 0.2 + repIndex * 0.2 }}
@@ -703,10 +693,12 @@ const SkitOutcomeDisplay: FC<SkitOutcomeDisplayProps> = ({ skitData, stage, layo
                         </Box>
                     </Paper>
                 </motion.div>
+                </div>
             ))}
 
             {/* New Requests Section */}
             {requests.length > 0 && (
+                <div style={{ direction: 'ltr' }}>
                 <motion.div
                     initial={{ opacity: 0, y: 30 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -856,7 +848,7 @@ const SkitOutcomeDisplay: FC<SkitOutcomeDisplayProps> = ({ skitData, stage, layo
                                                         textShadow: '0 1px 0 rgba(0,0,0,0.6)'
                                                     }}
                                                 >
-                                                    {request.getRequirementText()}
+                                                    {request.getRequirementText(stage)}
                                                 </Typography>
                                             </Box>
 
@@ -898,6 +890,7 @@ const SkitOutcomeDisplay: FC<SkitOutcomeDisplayProps> = ({ skitData, stage, layo
                         })}
                     </Box>
                 </motion.div>
+                </div>
             )}
         </motion.div>
     );

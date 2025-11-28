@@ -408,7 +408,7 @@ export class Request {
      * Get a human-readable text description of the requirement
      * @returns A text description of what is required to fulfill this request
      */
-    getRequirementText(): string {
+    getRequirementText(stage: Stage): string {
         switch (this.requirement.type) {
             case 'actor-with-stats': {
                 const req = this.requirement as ActorWithStatsRequirement;
@@ -426,12 +426,12 @@ export class Request {
                     parts.push(...maxParts);
                 }
                 
-                return `Actor with ${parts.join(', ')}`;
+                return `Patient with ${parts.join(', ')}`;
             }
             
             case 'specific-actor': {
                 const req = this.requirement as SpecificActorRequirement;
-                return `Specific actor (ID: ${req.actorId})`;
+                return `Specific patient: ${stage.getSave().actors[req.actorId]?.name || req.actorId})`;
             }
             
             case 'station-stats': {
