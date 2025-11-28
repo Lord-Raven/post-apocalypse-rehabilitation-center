@@ -435,7 +435,7 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
                         generating: true,
                         context: {}
                     });
-                    // Screen will automatically switch to SKIT via BaseScreen monitoring currentSkit
+                    // Need to invoke setScreenType(ScreenType.SKIT); here or somewhere else that will catch this.
                 }
             }
         })();

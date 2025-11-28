@@ -126,6 +126,7 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType}) =>
                 script: [],
                 context: { moduleType }
             });
+            setScreenType(ScreenType.SKIT);
         } else {
             stage().incPhase(1);
         }
@@ -263,6 +264,7 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType}) =>
                     script: [],
                     context: { role: roleName }
                 });
+                setScreenType(ScreenType.SKIT);
             }
         }
 
@@ -311,6 +313,16 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType}) =>
             });
         }
     }, []);
+
+    // Check if beginning skit was set after aide generation completes
+    React.useEffect(() => {
+        if (!isGeneratingAide) {
+            const save = stage().getSave();
+            if (save.currentSkit && save.currentSkit.type === SkitType.BEGINNING) {
+                setScreenType(ScreenType.SKIT);
+            }
+        }
+    }, [isGeneratingAide]);
 
     const renderDayPhaseDisplay = () => {
         return (

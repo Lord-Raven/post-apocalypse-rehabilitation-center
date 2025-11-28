@@ -79,7 +79,8 @@ export const EchoScreen: FC<EchoScreenProps> = ({stage, setScreenType}) => {
                     script: [],
                     generating: true,
                     context: {}
-                });
+			});
+			setScreenType(ScreenType.SKIT);
 		}
 	};
 

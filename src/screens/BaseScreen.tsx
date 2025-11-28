@@ -33,17 +33,6 @@ const BaseScreenContent: FC<{ stage: () => Stage }> = ({ stage }) => {
         clearTooltip();
     }, [screenType]);
 
-    // Monitor currentSkit and automatically switch to skit screen when set
-    React.useEffect(() => {
-        const currentSkit = stage().getSave().currentSkit;
-        if (currentSkit && screenType !== ScreenType.SKIT) {
-            setScreenType(ScreenType.SKIT);
-        } else if (!currentSkit && screenType === ScreenType.SKIT) {
-            // When skit is cleared, return to station screen
-            setScreenType(ScreenType.STATION);
-        }
-    }, [stage().getSave().currentSkit, screenType]);
-
     return (
         <div style={{ position: 'relative', width: '100vw', height: '100vh' }}>
             {screenType === ScreenType.MENU && (
