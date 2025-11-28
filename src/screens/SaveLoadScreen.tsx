@@ -7,6 +7,7 @@ import { useTooltip } from '../contexts/TooltipContext';
 import { scoreToGrade } from '../utils';
 import { Save, FolderOpen, Close, Delete } from '@mui/icons-material';
 import { ScreenType } from './BaseScreen';
+import { STATION_STAT_ICONS } from '../Module';
 
 interface SaveLoadScreenProps {
     stage: () => Stage;
@@ -184,113 +185,126 @@ export const SaveLoadScreen: FC<SaveLoadScreenProps> = ({ stage, mode, onClose, 
                         </div>
                     ) : (
                         <>
-                            {/* Top row: timestamp */}
+                            {/* Two-column layout */}
                             <div style={{
                                 display: 'flex',
                                 justifyContent: 'space-between',
-                                alignItems: 'flex-start'
+                                gap: '20px',
+                                height: '100%'
                             }}>
+                                {/* Left column: timestamp and player/day */}
                                 <div style={{
-                                    fontSize: '12px',
-                                    color: 'rgba(0, 255, 136, 0.7)'
+                                    display: 'flex',
+                                    flexDirection: 'column',
+                                    justifyContent: 'space-between',
+                                    flex: 1
                                 }}>
-                                    {formatTimestamp(save.timestamp)}
+                                    <div style={{
+                                        fontSize: '12px',
+                                        color: 'rgba(0, 255, 136, 0.7)'
+                                    }}>
+                                        {formatTimestamp(save.timestamp)}
+                                    </div>
+                                    <div style={{
+                                        fontSize: '16px',
+                                        fontWeight: 'bold',
+                                        color: 'rgba(0, 255, 136, 1)'
+                                    }}>
+                                        {save.player.name} - Day {save.day}
+                                    </div>
                                 </div>
-                            </div>
 
-                            {/* Middle row: player name with day and station stats */}
-                            <div style={{
-                                display: 'flex',
-                                justifyContent: 'space-between',
-                                alignItems: 'center',
-                                marginTop: '5px'
-                            }}>
+                                {/* Right column: station stats and actor portraits */}
                                 <div style={{
-                                    fontSize: '16px',
-                                    fontWeight: 'bold',
-                                    color: 'rgba(0, 255, 136, 1)'
+                                    display: 'flex',
+                                    flexDirection: 'column',
+                                    justifyContent: 'space-between',
+                                    alignItems: 'flex-end',
+                                    gap: '8px'
                                 }}>
-                                    {save.player.name} - Day {save.day}
-                                </div>
-                                
-                                {/* Station stats */}
-                                {save.stationStats && (
+                                    {/* Station stats with icons */}
+                                    {save.stationStats && (
+                                        <div style={{
+                                            display: 'flex',
+                                            gap: '10px',
+                                            alignItems: 'center'
+                                        }}>
+                                            {Object.entries(save.stationStats).map(([stat, value]) => {
+                                                const Icon = STATION_STAT_ICONS[stat as keyof typeof STATION_STAT_ICONS];
+                                                return (
+                                                    <div
+                                                        key={stat}
+                                                        style={{
+                                                            display: 'flex',
+                                                            alignItems: 'center',
+                                                            gap: '3px',
+                                                            color: 'rgba(0, 255, 136, 0.8)'
+                                                        }}
+                                                        title={stat}
+                                                    >
+                                                        {Icon && <Icon style={{ fontSize: '14px' }} />}
+                                                        <span style={{ 
+                                                            fontWeight: 'bold',
+                                                            fontSize: '12px'
+                                                        }}>
+                                                            {scoreToGrade(value)}
+                                                        </span>
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+                                    )}
+
+                                    {/* Actor portraits */}
                                     <div style={{
                                         display: 'flex',
-                                        gap: '8px',
-                                        fontSize: '11px'
+                                        gap: '5px',
+                                        flexWrap: 'wrap',
+                                        justifyContent: 'flex-end',
+                                        maxWidth: '250px'
                                     }}>
-                                        {Object.entries(save.stationStats).map(([stat, value]) => (
+                                        {actors.slice(0, 10).map((actor) => (
                                             <div
-                                                key={stat}
+                                                key={actor.id}
                                                 style={{
-                                                    display: 'flex',
-                                                    flexDirection: 'column',
-                                                    alignItems: 'center',
-                                                    color: 'rgba(0, 255, 136, 0.8)'
+                                                    width: '30px',
+                                                    height: '30px',
+                                                    borderRadius: '4px',
+                                                    overflow: 'hidden',
+                                                    border: '1px solid rgba(0, 255, 136, 0.3)',
+                                                    background: 'rgba(0, 20, 40, 0.8)'
                                                 }}
+                                                title={actor.name}
                                             >
-                                                <div style={{ fontWeight: 'bold' }}>{scoreToGrade(value)}</div>
-                                                <div style={{ 
-                                                    fontSize: '9px',
-                                                    color: 'rgba(0, 255, 136, 0.5)'
-                                                }}>
-                                                    {stat.slice(0, 3).toUpperCase()}
-                                                </div>
+                                                <img
+                                                    src={actor.getEmotionImage(actor.getDefaultEmotion())}
+                                                    alt={actor.name}
+                                                    style={{
+                                                        width: '100%',
+                                                        height: '100%',
+                                                        objectFit: 'cover',
+                                                        objectPosition: 'top center'
+                                                    }}
+                                                />
                                             </div>
                                         ))}
+                                        {actors.length > 10 && (
+                                            <div style={{
+                                                width: '30px',
+                                                height: '30px',
+                                                borderRadius: '4px',
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                justifyContent: 'center',
+                                                background: 'rgba(0, 255, 136, 0.2)',
+                                                fontSize: '10px',
+                                                color: 'rgba(0, 255, 136, 0.8)'
+                                            }}>
+                                                +{actors.length - 10}
+                                            </div>
+                                        )}
                                     </div>
-                                )}
-                            </div>
-
-                            {/* Bottom row: actor images */}
-                            <div style={{
-                                display: 'flex',
-                                gap: '5px',
-                                marginTop: '5px',
-                                justifyContent: 'center',
-                                flexWrap: 'wrap'
-                            }}>
-                                {actors.slice(0, 10).map((actor) => (
-                                    <div
-                                        key={actor.id}
-                                        style={{
-                                            width: '30px',
-                                            height: '30px',
-                                            borderRadius: '4px',
-                                            overflow: 'hidden',
-                                            border: '1px solid rgba(0, 255, 136, 0.3)',
-                                            background: 'rgba(0, 20, 40, 0.8)'
-                                        }}
-                                        title={actor.name}
-                                    >
-                                        <img
-                                            src={actor.getEmotionImage(actor.getDefaultEmotion())}
-                                            alt={actor.name}
-                                            style={{
-                                                width: '100%',
-                                                height: '100%',
-                                                objectFit: 'cover',
-                                                objectPosition: 'top center'
-                                            }}
-                                        />
-                                    </div>
-                                ))}
-                                {actors.length > 10 && (
-                                    <div style={{
-                                        width: '30px',
-                                        height: '30px',
-                                        borderRadius: '4px',
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        justifyContent: 'center',
-                                        background: 'rgba(0, 255, 136, 0.2)',
-                                        fontSize: '10px',
-                                        color: 'rgba(0, 255, 136, 0.8)'
-                                    }}>
-                                        +{actors.length - 10}
-                                    </div>
-                                )}
+                                </div>
                             </div>
                         </>
                     )}
