@@ -188,8 +188,8 @@ export async function generateSkitScript(skit: SkitData, stage: Stage): Promise<
 
     // There are two optional phrases for gently/more firmly prodding the model toward wrapping up the scene, and then we calculate one to show based on the skit.script.length and some randomness:
     const wrapUpPhrases = [
-        `\n\nPriority Instruction: Consider whether the scene has reached or can reach a natural stopping point in this response; if not, work toward a conclusion and include the "[SUMMARY]" tag.`, // Gently prod toward and ending.
-        `\n\nCritical Instruction: This scene is running long; finish this narrative beat and immediately print out the "[SUMMARY]" tag.` // Firmer prod
+        `\n\nPriority Instruction: Consider whether the scene has reached or can reach a natural stopping point or suspended moment where it might employ a "[SUMMARY]" tag.`, // Gently prod toward and ending.
+        `\n\nCritical Instruction: This scene is running long and needs a summary. Finish the immediate beat and include a "[SUMMARY]" tag.` // Firmer prod
     ];
 
     // Use script length + random(1, 10) > 12 for gentle or > 24 for firm.
@@ -207,7 +207,7 @@ export async function generateSkitScript(skit: SkitData, stage: Stage): Promise<
                 'System: CHARACTER NAME: They do actions in prose. "Their dialogue is in quotation marks."\nANOTHER CHARACTER NAME: [ANOTHER CHARACTER NAME EXPRESSES JOY][CHARACTER NAME EXPRESSES SURPRISE] "Dialogue in quotation marks."\nNARRATOR: [CHARACTER NAME EXPRESSES RELIEF] Descriptive content that is not attributed to a character.' +
                 `\n\nExample Ending Script Format:\n` +
                 'System: CHARACTER NAME: [CHARACTER NAME EXPRESSES OPTIMISM] Action in prose. "Dialogue in quotation marks."\nNARRATOR: A moment of prose describing events.' +
-                `\n[SUMMARY: CHARACTER NAME is is hopeful about this demonstration.]` +
+                `\n[SUMMARY: CHARACTER NAME is hopeful about this demonstration.]` +
                 `\n\nCurrent Scene Script Log to Continue:\nSystem: ${buildScriptLog(skit)}` +
                 `\n\nPrimary Instruction:\nAt the "System:" prompt, ${skit.script.length == 0 ? 'generate a short scene script' : 'extend or conclude the current scene script'} based upon the Premise and the specified Scene Prompt, ` +
                 `involving the Present Characters (Absent Characters are listed for reference only). ` +
@@ -215,15 +215,12 @@ export async function generateSkitScript(skit: SkitData, stage: Stage): Promise<
                 `\nFollow the structure of the strict Example Script formatting above: ` +
                 `actions are depicted in prose and character dialogue in quotation marks. Emotion tags (e.g. "[CHARACTER NAME EXPRESSES JOY]") should be used to indicate significant emotional shifts—` +
                 `these cues will be utilized by the game engine to visually display appropriate character emotions. ` +
-                `An ending "[SUMMARY]" tag (e.g., "[SUMMARY: Brief summary of the scene's events.]") should be included when the scene reaches an explicit or _implicit_ stopping point or suspendable moment. ` +
-                `\nThis scene is a brief visual novel skit within a video game; as such, the scene should avoid major developments which would fundamentally change the mechanics or nature of the game, ` +
+                `A "[SUMMARY]" tag (e.g., "[SUMMARY: Brief summary of the scene's events.]") should be included when the scene reaches a significant moment or conclusion before continuing with the script. ` +
+                `\nThis scene is a brief visual novel skit within a video game; as such, the scene avoids major developments which would fundamentally change the mechanics or nature of the game, ` +
                 `instead developing content within the existing mechanics. ` +
                 `Generally, focus upon interpersonal dynamics, character growth, faction relationships, and the state of the Station and its inhabitants.` +
-                `\nWhen the script completes a story beat, indicates a scene change, or includes an implied closure or suspended moment—or if the current script has already done so—, ` +
-                `use the critical "[SUMMARY: A brief synopsis]" tag to signal the conclusion to the scene. ` +
-                `This tag includes a brief description of the scene's events, enabling the game to proceed. ` +
-                `Much like a movie, these scene scripts favor implied endings that move the plot along without belaboring the narrative beat; ` +
-                `even a suspended moment is enough to prompt a "[SUMMARY]" tag and end the current scene.${wrapupPrompt}`
+                `\nWhen the script completes a story beat, indicates a scene change, or includes an implied closure or suspended moment—or if the current script has already achieved a significant moment—, ` +
+                `insert a "[SUMMARY: A brief synopsis of this scene's key events.]" tag, so the game engine can store the summary.${wrapupPrompt}`
             );
 
 
