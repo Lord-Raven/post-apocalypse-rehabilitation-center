@@ -6,7 +6,8 @@ import { Close } from '@mui/icons-material';
 
 interface SettingsScreenProps {
     stage: () => Stage;
-    onClose: () => void;
+    onCancel: () => void;
+    onConfirm: () => void;
     isNewGame?: boolean;
 }
 
@@ -18,7 +19,7 @@ interface SettingsData {
     tagToggles: { [key: string]: boolean };
 }
 
-export const SettingsScreen: FC<SettingsScreenProps> = ({ stage, onClose, isNewGame = false }) => {
+export const SettingsScreen: FC<SettingsScreenProps> = ({ stage, onCancel, onConfirm, isNewGame = false }) => {
 
     // Each toggle can map to multiple tags when saved.
     const tagMap: { [key: string]: string[] } = {
@@ -90,7 +91,6 @@ export const SettingsScreen: FC<SettingsScreenProps> = ({ stage, onClose, isNewG
     });
 
     const handleSave = () => {
-        // TODO: Actually save settings to Stage/Save
         console.log('Saving settings:', settings);
         
         // Update player name in save
@@ -105,7 +105,7 @@ export const SettingsScreen: FC<SettingsScreenProps> = ({ stage, onClose, isNewG
 
         stage().saveGame();
         
-        onClose();
+        onConfirm();
     };
 
     const handleToggle = (key: string) => {
@@ -147,9 +147,9 @@ export const SettingsScreen: FC<SettingsScreenProps> = ({ stage, onClose, isNewG
                     padding: '20px',
                 }}
                 onClick={(e) => {
-                    // Close if clicking backdrop
-                    if (e.target === e.currentTarget) {
-                        onClose();
+                    // Close if clicking backdrop (but not during new game setup)
+                    if (e.target === e.currentTarget && !isNewGame) {
+                        onCancel();
                     }
                 }}
             >
@@ -174,7 +174,7 @@ export const SettingsScreen: FC<SettingsScreenProps> = ({ stage, onClose, isNewG
                             <motion.button
                                 whileHover={{ scale: 1.1, rotate: 90 }}
                                 whileTap={{ scale: 0.9 }}
-                                onClick={onClose}
+                                onClick={onCancel}
                                 style={{
                                     position: 'absolute',
                                     top: '15px',
@@ -407,7 +407,7 @@ export const SettingsScreen: FC<SettingsScreenProps> = ({ stage, onClose, isNewG
                                 {!isNewGame && (
                                     <Button
                                         variant="secondary"
-                                        onClick={onClose}
+                                        onClick={onCancel}
                                     >
                                         Cancel
                                     </Button>

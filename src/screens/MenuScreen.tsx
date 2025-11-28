@@ -73,7 +73,12 @@ export const MenuScreen: FC<MenuScreenProps> = ({ stage, setScreenType }) => {
         setShowSettings(true);
     };
 
-    const handleSettingsClose = () => {
+    const handleSettingsCancel = () => {
+        setShowSettings(false);
+        setIsNewGameSettings(false);
+    };
+
+    const handleSettingsConfirm = () => {
         setShowSettings(false);
         
         // If this was new game settings, start the game
@@ -81,6 +86,7 @@ export const MenuScreen: FC<MenuScreenProps> = ({ stage, setScreenType }) => {
             stage().newGame();
             stage().startGame();
             setScreenType(ScreenType.STATION);
+            setIsNewGameSettings(false);
         }
     };
 
@@ -235,7 +241,8 @@ export const MenuScreen: FC<MenuScreenProps> = ({ stage, setScreenType }) => {
             {showSettings && (
                 <SettingsScreen
                     stage={stage}
-                    onClose={handleSettingsClose}
+                    onCancel={handleSettingsCancel}
+                    onConfirm={handleSettingsConfirm}
                     isNewGame={isNewGameSettings}
                 />
             )}
