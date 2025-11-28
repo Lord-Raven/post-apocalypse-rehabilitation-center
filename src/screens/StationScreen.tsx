@@ -828,20 +828,14 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType}) =>
                     const [isHeaderHovered, setIsHeaderHovered] = React.useState(false);
                     
                     return (
-                        <motion.div 
+                        <div 
                             key={item} 
-                            layout
                             style={{ 
                                 margin: '10px 0',
                                 flex: isExpanded ? '1 1 auto' : '0 0 auto',
                                 display: 'flex',
                                 flexDirection: 'column',
                                 minHeight: 0,
-                            }}
-                            animate={{ x: isHeaderHovered ? 10 : 0 }}
-                            transition={{ 
-                                layout: { duration: 0.4, ease: [0.4, 0, 0.2, 1] },
-                                x: { duration: 0.2, ease: 'easeOut' }
                             }}
                         >
                             <motion.button
@@ -851,6 +845,8 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType}) =>
                                 }}
                                 onMouseEnter={() => setIsHeaderHovered(true)}
                                 onMouseLeave={() => setIsHeaderHovered(false)}
+                                animate={{ x: isHeaderHovered ? 10 : 0 }}
+                                transition={{ x: { duration: 0.2, ease: 'easeOut' } }}
                                 whileTap={{ scale: 0.95 }}
                                 className="section-header"
                                 style={{
@@ -878,16 +874,14 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType}) =>
                             
                             {/* Expandable content */}
                             <motion.div
-                                layout
                                 initial={{ height: 0, opacity: 0 }}
                                 animate={{ 
                                     height: isExpanded ? 'auto' : 0,
                                     opacity: isExpanded ? 1 : 0
                                 }}
                                 transition={{ 
-                                    height: { duration: 0.4, ease: [0.4, 0, 0.2, 1] },
-                                    opacity: { duration: isExpanded ? 0.3 : 0.2, delay: isExpanded ? 0.1 : 0, ease: 'easeInOut' },
-                                    layout: { duration: 0.4, ease: [0.4, 0, 0.2, 1] }
+                                    height: { duration: 0.3, ease: [0.4, 0, 0.2, 1] },
+                                    opacity: { duration: isExpanded ? 0.25 : 0.15, delay: isExpanded ? 0.05 : 0, ease: 'easeInOut' }
                                 }}
                                 style={{ 
                                     overflow: isExpanded ? 'visible' : 'hidden',
@@ -955,15 +949,7 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType}) =>
                                     </div>
                                 )}
                                 {itemKey === 'modules' && (
-                                    <div style={{ 
-                                        padding: '15px', 
-                                        flex: '1 1 auto', 
-                                        overflowY: 'auto', 
-                                        minHeight: 0,
-                                        display: 'flex',
-                                        flexDirection: 'column',
-                                        gap: '10px',
-                                    }}>
+                                    <div style={{ padding: '15px', flex: '1 1 auto', overflowY: 'auto', minHeight: 0 }}>
                                         {layout.getModulesWhere(m => true).length === 0 ? (
                                             <p style={{ 
                                                 color: '#00ff88', 
@@ -1059,7 +1045,7 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType}) =>
                                     </div>
                                 )}
                             </motion.div>
-                        </motion.div>
+                        </div>
                     );
                 })}
 
