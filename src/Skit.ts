@@ -32,6 +32,7 @@ export interface SkitData {
     generating?: boolean;
     context: any;
     requests?: Request[];
+    summary?: string;
     endProperties?: { [actorId: string]: { [stat: string]: number } }; // Stat changes to apply when scene ends
 }
 
@@ -176,9 +177,10 @@ export function generateSkitPrompt(skit: SkitData, stage: Stage, historyLength: 
 
         ((historyLength > 0 && pastSkits.length) ? 
             // Include last few skit scripts for context and style reference
-            '\n\nRecent Scene Scripts for additional context:' + pastSkits.map((v, index) => 
-                `\n\n  Scene in ${stage.getSave().layout.getModuleById(v.moduleId || '')?.type || 'Unknown'} (${stage.getSave().day - v.context.day}) days ago:\n` +
-                `System: ${buildScriptLog(v)}\n[SUMMARY: Scene in ${stage.getSave().layout.getModuleById(v.moduleId || '')?.type || 'Unknown'}]`).join('') :
+            '\n\nRecent Scenes for additional context:' + pastSkits.map((v, index) => 
+            (v.summary ? (`\n\n  Summary of scene in ${stage.getSave().layout.getModuleById(v.moduleId || '')?.type || 'Unknown'} (${stage.getSave().day - v.context.day}) days ago:\n` + v.summary) : 
+                (`\n\n  Script of Scene in ${stage.getSave().layout.getModuleById(v.moduleId || '')?.type || 'Unknown'} (${stage.getSave().day - v.context.day}) days ago:\n` +
+                `System: ${buildScriptLog(v)}\n[SUMMARY: Scene in ${stage.getSave().layout.getModuleById(v.moduleId || '')?.type || 'Unknown'}]`))).join('') :
             '') +
         `\n\n${instruction}`;
     return fullPrompt;
@@ -234,6 +236,7 @@ export async function generateSkitScript(skit: SkitData, stage: Stage): Promise<
                 // First, detect and parse any END tags and stat changes that may be embedded in the response.
                 let text = response.result;
                 let endScene = false;
+                let summary = undefined;
 
                 // Parse response based on format "NAME: content"; content could be multi-line. We want to ensure that lines that don't start with a name are appended to the previous line.
                 const lines = text.split('\n');
@@ -249,6 +252,8 @@ export async function generateSkitScript(skit: SkitData, stage: Stage): Promise<
                     if (trimmed.startsWith('[SUMMARY')) {
                         console.log("Detected end scene tag.");
                         endScene = true;
+                        const summaryMatch = /\[SUMMARY:\s*([^\]]+)\]/i.exec(trimmed);
+                        summary = summaryMatch ? summaryMatch[1].trim() : undefined;
                         continue;
                     }
 
@@ -376,17 +381,6 @@ export async function generateSkitScript(skit: SkitData, stage: Stage): Promise<
                         entry.speechUrl = '';
                     }
                 });
-                
-                // Run an experimental tooling prompt here to see if any tools are invoked in the script entries. Doesn't look like tooling information is passed to stage-originated textGen requests at this time.
-                /*stage.mcp.
-                const toolTest = await stage.generator.textGen({
-                    prompt: `{{messages}}Analyze the following skit script for any tool invocations (e.g. stat changes).\n\nSkit Script:\n${scriptEntries.map(e => `${e.speaker}: ${e.message}`).join('\n')}\n\n`,
-                    min_tokens: 50,
-                    max_tokens: 500,
-                    include_history: true,
-
-                })
-                console.log('Tool analysis response:', toolTest?.result);*/
 
                 const statChanges: { [actorId: string]: { [stat: string]: number } } = {};
                 const requests: Request[] = [];
@@ -439,7 +433,14 @@ export async function generateSkitScript(skit: SkitData, stage: Stage): Promise<
                             `Reputation is a value between 1 and 10, and changes are incremental. If the faction is cutting ties, provide a large negative value. ` +
                             `Multiple faction tags can be provided in the output if, for instance, improving the esteem of one faction inherently reduces the opinion of a rival.` +
 
-                            `\n\nSummary Instruction:\n` +
+                            (!summary ? 
+                                `\n\nSummarize Scene:\n` +
+                                `"[SUMMARY: A brief synopsis of this scene's key events.]"` +
+                                `The Summary tag must be used to describe the scene's key events.`
+                                : ''
+                            ) +
+
+                            `\n\nFinal Instruction:\n` +
                             `All relevant tags should be output in this response. Stat changes should be a fair reflection of the scene's direct or implied events. ` +
                             `Bear in mind the somewhat abstract meaning of character and station stats when determining reasonable changes and goals. ` +
                             `All stats (station and character) exist on a scale of 1-10, with 1 being the lowest and 10 being the highest possible value; ` +
@@ -449,7 +450,7 @@ export async function generateSkitScript(skit: SkitData, stage: Stage): Promise<
                         const requestAnalysis = await stage.generator.textGen({
                             prompt: analysisPrompt,
                             min_tokens: 5,
-                            max_tokens: 250,
+                            max_tokens: summary ? 250 : 400,
                             include_history: true,
                             stop: ['[END]']
                         });
@@ -471,6 +472,12 @@ export async function generateSkitScript(skit: SkitData, stage: Stage): Promise<
                                         console.log('Added new request from tag:', request);
                                         requests.push(request);
                                     }
+                                    continue;
+                                }
+
+                                if (trimmed.toUpperCase().startsWith('[SUMMARY:')) {
+                                    const summaryMatch = /\[SUMMARY:\s*([^\]]+)\]/i.exec(trimmed);
+                                    summary = summaryMatch ? summaryMatch[1].trim() : undefined;
                                     continue;
                                 }
 
@@ -576,6 +583,7 @@ export async function generateSkitScript(skit: SkitData, stage: Stage): Promise<
 
                 skit.endProperties = statChanges;
                 skit.requests = requests;
+                skit.summary = summary;
 
                 return { entries: scriptEntries, endScene: endScene, statChanges: statChanges, requests: requests };
             }
