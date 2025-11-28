@@ -28,8 +28,7 @@ export const MenuScreen: FC<MenuScreenProps> = ({ stage, setScreenType }) => {
     
     // Check if a save exists (if there are any actors or the layout has been modified)
     const saveExists = () => {
-        const save = stage().getSave();
-        return Object.keys(save.actors).length > 0 || save.day > 1 || save.phase > 0;
+        return stage().getSave();
     };
 
     // Handle escape key to continue game if available

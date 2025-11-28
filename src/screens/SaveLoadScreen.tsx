@@ -329,7 +329,7 @@ export const SaveLoadScreen: FC<SaveLoadScreenProps> = ({ stage, mode, onClose, 
                         {mode === 'save' ? 'Save Game' : 'Load Game'}
                     </Title>
                     <motion.button
-                        whileHover={{ scale: 1.1, rotate: 90 }}
+                        whileHover={{ scale: 1.1 }}
                         whileTap={{ scale: 0.9 }}
                         onClick={onClose}
                         onMouseEnter={() => setTooltip('Close', Close)}

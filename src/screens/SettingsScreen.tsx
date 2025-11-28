@@ -182,7 +182,7 @@ export const SettingsScreen: FC<SettingsScreenProps> = ({ stage, onCancel, onCon
                                 {isNewGame ? 'New Game Setup' : 'Settings'}
                             </Title>
                             <motion.button
-                                whileHover={{ scale: 1.1, rotate: 90 }}
+                                whileHover={{ scale: 1.1 }}
                                 whileTap={{ scale: 0.9 }}
                                 onClick={onCancel}
                                 style={{
