@@ -83,7 +83,6 @@ export const MenuScreen: FC<MenuScreenProps> = ({ stage, setScreenType }) => {
         
         // If this was new game settings, start the game
         if (isNewGameSettings) {
-            stage().newGame();
             stage().startGame();
             setScreenType(ScreenType.STATION);
             setIsNewGameSettings(false);

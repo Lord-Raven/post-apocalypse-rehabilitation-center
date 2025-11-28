@@ -129,7 +129,7 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
 
         // ensure at least one save exists and has a layout
         if (!this.saves.length) {
-            this.saves.push(this.freshSave);
+            this.saves.push(this.getFreshSave());
         } else {
             console.log("Something in saves:");
             console.log(this.saves);
@@ -142,7 +142,7 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
                 this.saves.push(undefined);
             }
         }
-        this.currentSave = this.saves[this.saveSlot] || this.freshSave;
+        this.currentSave = this.saves[this.saveSlot] || this.getFreshSave();
 
 /*
         this.mcp.registerTool('stationStatChange',
@@ -273,7 +273,7 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
             // Yikes, overwrite the last one. Should avoid this in the UI.
             this.saveSlot = Math.min(this.SAVE_SLOTS - 1, this.saves.length - 1);
         }
-        this.currentSave = this.freshSave;
+        this.currentSave = this.getFreshSave();
         this.saveGame();
     }
 
@@ -308,7 +308,7 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
 
     loadSave(slotIndex: number) {
         this.saveSlot = slotIndex;
-        this.currentSave = this.saves[this.saveSlot] || this.freshSave;
+        this.currentSave = this.saves[this.saveSlot] || this.getFreshSave();
         this.initialized = false;
         this.startGame();
     }

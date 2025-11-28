@@ -94,6 +94,9 @@ export const SettingsScreen: FC<SettingsScreenProps> = ({ stage, onCancel, onCon
         console.log('Saving settings:', settings);
         
         // Update player name in save
+        if (isNewGame) {
+            stage().newGame();
+        }
         const save = stage().getSave();
         save.player.name = settings.playerName;
         save.player.description = settings.playerDescription;
@@ -102,9 +105,7 @@ export const SettingsScreen: FC<SettingsScreenProps> = ({ stage, onCancel, onCon
 
         save.bannedTags = Object.keys(settings.tagToggles).filter(key => !settings.tagToggles[key]).map(key => tagMap[key] ? tagMap[key] : [key]).flat();
 
-
         stage().saveGame();
-        
         onConfirm();
     };
 
