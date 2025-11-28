@@ -103,7 +103,7 @@ export const SaveLoadScreen: FC<SaveLoadScreenProps> = ({ stage, mode, onClose, 
                     style={{
                         width: '100%',
                         height: '85px',
-                        padding: '12px',
+                        padding: '8px 12px',
                         paddingRight: isEmpty ? '12px' : '50px',
                         display: 'flex',
                         flexDirection: 'column',
@@ -189,7 +189,7 @@ export const SaveLoadScreen: FC<SaveLoadScreenProps> = ({ stage, mode, onClose, 
                             <div style={{
                                 position: 'absolute',
                                 bottom: 0,
-                                right: 0,
+                                right: '40px',
                                 display: 'flex',
                                 height: '85px',
                                 opacity: 0.3,
@@ -219,78 +219,61 @@ export const SaveLoadScreen: FC<SaveLoadScreenProps> = ({ stage, mode, onClose, 
                                 ))}
                             </div>
 
-                            {/* Two-column layout */}
+                            {/* Single column layout */}
                             <div style={{
                                 display: 'flex',
-                                justifyContent: 'space-between',
-                                gap: '20px',
+                                flexDirection: 'column',
+                                alignItems: 'flex-start',
+                                gap: '4px',
                                 position: 'relative',
                                 zIndex: 1
                             }}>
-                                {/* Left column: timestamp and player/day */}
                                 <div style={{
-                                    display: 'flex',
-                                    flexDirection: 'column',
-                                    alignItems: 'flex-start',
-                                    gap: '6px',
-                                    flex: 1
+                                    fontSize: '12px',
+                                    color: 'rgba(0, 255, 136, 0.7)'
                                 }}>
-                                    <div style={{
-                                        fontSize: '12px',
-                                        color: 'rgba(0, 255, 136, 0.7)'
-                                    }}>
-                                        {formatTimestamp(save.timestamp)}
-                                    </div>
-                                    <div style={{
-                                        fontSize: '16px',
-                                        fontWeight: 'bold',
-                                        color: 'rgba(0, 255, 136, 1)'
-                                    }}>
-                                        {save.player.name} - Day {save.day}
-                                    </div>
+                                    {formatTimestamp(save.timestamp)}
                                 </div>
-
-                                {/* Right column: station stats */}
                                 <div style={{
-                                    display: 'flex',
-                                    flexDirection: 'column',
-                                    alignItems: 'flex-end',
-                                    gap: '6px'
+                                    fontSize: '16px',
+                                    fontWeight: 'bold',
+                                    color: 'rgba(0, 255, 136, 1)'
                                 }}>
-                                    {/* Station stats with icons */}
-                                    {save.stationStats && (
-                                        <div style={{
-                                            display: 'flex',
-                                            gap: '10px',
-                                            alignItems: 'center'
-                                        }}>
-                                            {Object.values(StationStat).map((stat) => {
-                                                const value = save.stationStats ? save.stationStats[stat] : 1;
-                                                const Icon = STATION_STAT_ICONS[stat as keyof typeof STATION_STAT_ICONS];
-                                                return (
-                                                    <div
-                                                        key={stat}
-                                                        style={{
-                                                            display: 'flex',
-                                                            alignItems: 'center',
-                                                            gap: '3px',
-                                                            color: 'rgba(0, 255, 136, 0.8)'
-                                                        }}
-                                                        title={stat}
-                                                    >
-                                                        {Icon && <Icon style={{ fontSize: '14px' }} />}
-                                                        <span style={{ 
-                                                            fontWeight: 'bold',
-                                                            fontSize: '12px'
-                                                        }}>
-                                                            {scoreToGrade(value)}
-                                                        </span>
-                                                    </div>
-                                                );
-                                            })}
-                                        </div>
-                                    )}
+                                    {save.player.name} - Day {save.day}
                                 </div>
+                                {/* Station stats with icons */}
+                                {save.stationStats && (
+                                    <div style={{
+                                        display: 'flex',
+                                        gap: '10px',
+                                        alignItems: 'center'
+                                    }}>
+                                        {Object.values(StationStat).map((stat) => {
+                                            const value = save.stationStats ? save.stationStats[stat] : 1;
+                                            const Icon = STATION_STAT_ICONS[stat as keyof typeof STATION_STAT_ICONS];
+                                            return (
+                                                <div
+                                                    key={stat}
+                                                    style={{
+                                                        display: 'flex',
+                                                        alignItems: 'center',
+                                                        gap: '3px',
+                                                        color: 'rgba(0, 255, 136, 0.8)'
+                                                    }}
+                                                    title={stat}
+                                                >
+                                                    {Icon && <Icon style={{ fontSize: '14px' }} />}
+                                                    <span style={{ 
+                                                        fontWeight: 'bold',
+                                                        fontSize: '12px'
+                                                    }}>
+                                                        {scoreToGrade(value)}
+                                                    </span>
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+                                )}
                             </div>
                         </>
                     )}
