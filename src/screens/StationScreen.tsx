@@ -1,6 +1,6 @@
 import React, { FC } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Typography, Card, CardContent } from '@mui/material';
+import { Typography, Card, CardContent, CircularProgress, Box } from '@mui/material';
 import { styled } from '@mui/material/styles';
 import { ScreenType } from './BaseScreen';
 import { Layout, Module, createModule, ModuleType, MODULE_DEFAULTS, StationStat, STATION_STAT_DESCRIPTIONS, STATION_STAT_ICONS } from '../Module';
@@ -59,6 +59,7 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType}) =>
     const [phase, setPhase] = React.useState<number>(stage().getSave().phase);
 
     const [layout, setLayout] = React.useState<Layout>(stage()?.getLayout());
+    const [isGeneratingAide, setIsGeneratingAide] = React.useState<boolean>(false);
     
     // Module selection state
     const [showModuleSelector, setShowModuleSelector] = React.useState(false);
@@ -298,6 +299,20 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType}) =>
         window.addEventListener('keydown', handleKeyDown);
         return () => window.removeEventListener('keydown', handleKeyDown);
     }, [setScreenType]);
+
+    // Check if aide exists and generate if needed
+    React.useEffect(() => {
+        const save = stage().getSave();
+        if (!save.aide.actorId) {
+            setIsGeneratingAide(true);
+            stage().generateAide().then(() => {
+                setIsGeneratingAide(false);
+            }).catch((error) => {
+                console.error('Error generating aide:', error);
+                setIsGeneratingAide(false);
+            });
+        }
+    }, []);
 
     const renderDayPhaseDisplay = () => {
         return (
@@ -662,6 +677,41 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType}) =>
             }
         }
         return cells;
+    }
+
+    // Show loading spinner if aide hasn't been generated yet
+    if (isGeneratingAide || !stage().getSave().aide.actorId) {
+        return (
+            <Box
+                sx={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    height: '100vh',
+                    width: '100vw',
+                    background: 'linear-gradient(45deg, #001122 0%, #002244 100%)',
+                }}
+            >
+                <CircularProgress 
+                    size={80} 
+                    sx={{ 
+                        color: '#00ff88',
+                        marginBottom: 3
+                    }} 
+                />
+                <Typography
+                    variant="h5"
+                    sx={{
+                        color: '#00ff88',
+                        fontWeight: 700,
+                        textShadow: '0 0 20px rgba(0, 255, 136, 0.5)',
+                    }}
+                >
+                    Initializing Station Aide...
+                </Typography>
+            </Box>
+        );
     }
 
     return (

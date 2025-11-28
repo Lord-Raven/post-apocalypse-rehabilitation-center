@@ -29,7 +29,7 @@ type Timeline = TimelineEvent[];
 
 export type SaveType = {
     player: {name: string, description: string};
-    aide: {name: string, description: string};
+    aide: {name: string, description: string, actorId?: string};
     echoes: (Actor | null)[]; // actors currently in echo slots (can be null for empty slots)
     actors: {[key: string]: Actor};
     factions: {[key: string]: Faction};
@@ -52,6 +52,7 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
     // Flag/promise to avoid redundant concurrent requests for reserve actors
     private reserveActorsLoadPromise?: Promise<void>;
     private reserveFactionsLoadPromise?: Promise<void>;
+    private generateAidePromise?: Promise<void>;
     public imageGenerationPromises: {[key: string]: Promise<string>} = {};
     private freshSave: SaveType;
     readonly SAVE_SLOTS = 10;
@@ -328,6 +329,7 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
 
         this.loadReserveActors();
         this.loadReserveFactions();
+        this.generateAide();
 
         const save = this.getSave();
         // Initialize stationStats if missing
@@ -387,6 +389,36 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
         }
     }
 
+    async generateAide() {
+        if (this.generateAidePromise) return this.generateAidePromise;
+
+        const save = this.getSave();
+        if (save.aide && save.aide.actorId) {
+            // If aide already exists, do nothing
+            return;
+        }
+
+        this.generateAidePromise = (async () => {
+            // Generate a new aide
+            const actorData = {
+                name: save.aide.name,
+                fullPath: '',
+                description: save.aide.description,
+                personality: ''
+            }
+            // Retry a few times if it fails (or returns null):
+            for (let attempt = 0; attempt < 3; attempt++) {
+                const aideActor = await loadReserveActor(actorData, this);
+                if (aideActor) {
+                    aideActor.remote = true;
+                    save.aide.actorId = aideActor.id;
+                    await generatePrimaryActorImage(aideActor, this);
+                    this.getSave().actors[aideActor.id] = aideActor;
+                    break;
+                }
+            }
+        })();
+    }
 
 
     async loadReserveActors() {
