@@ -328,7 +328,9 @@ export const SaveLoadScreen: FC<SaveLoadScreenProps> = ({ stage, mode, onClose, 
                     <Title variant="glow" style={{ fontSize: '24px', margin: 0 }}>
                         {mode === 'save' ? 'Save Game' : 'Load Game'}
                     </Title>
-                    <button
+                    <motion.button
+                        whileHover={{ scale: 1.1, rotate: 90 }}
+                        whileTap={{ scale: 0.9 }}
                         onClick={onClose}
                         onMouseEnter={() => setTooltip('Close', Close)}
                         onMouseLeave={() => clearTooltip()}
@@ -345,7 +347,7 @@ export const SaveLoadScreen: FC<SaveLoadScreenProps> = ({ stage, mode, onClose, 
                         }}
                     >
                         <Close />
-                    </button>
+                    </motion.button>
                 </div>
 
                 {/* Auto-save note for save mode */}

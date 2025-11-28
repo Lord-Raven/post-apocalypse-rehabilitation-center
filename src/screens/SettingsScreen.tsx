@@ -58,8 +58,8 @@ export const SettingsScreen: FC<SettingsScreenProps> = ({ stage, onCancel, onCon
         'Big Butt': ['Big Butt', 'Large Butt', 'Big Ass', 'Huge Butt'],
         'Big Dick': ['Big Dick', 'Huge Dick', 'Large Dick', 'Big Cock', 'Huge Cock', 'Large Cock'],
         'Small Breasts': ['Small Breasts', 'Flat'],
-        'Small Butt': ['Small Butt'],
-        'Small Dick': ['Small Dick'],
+        'Small Butt': ['Small Butt', 'Flat Butt'],
+        'Small Dick': ['Small Dick', 'Small Penis', 'Small Cock'],
         'Petite': ['Petite'],
         'Chubby': ['Chubby', 'Fat'],
         'Muscular': ['Muscular'],
@@ -168,37 +168,38 @@ export const SettingsScreen: FC<SettingsScreenProps> = ({ stage, onCancel, onCon
                             maxHeight: '85vh',
                             overflow: 'auto',
                             position: 'relative',
+                            padding: '30px',
                         }}
                     >
-                        {/* Close button */}
-                        <motion.button
-                            whileHover={{ scale: 1.1, rotate: 90 }}
-                            whileTap={{ scale: 0.9 }}
-                            onClick={onCancel}
-                            style={{
-                                position: 'absolute',
-                                top: '15px',
-                                right: '15px',
-                                background: 'transparent',
-                                border: '2px solid rgba(0, 255, 136, 0.3)',
-                                borderRadius: '50%',
-                                width: '36px',
-                                height: '36px',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                cursor: 'pointer',
-                                color: '#00ff88',
-                                transition: 'all 0.2s ease',
-                            }}
-                        >
-                            <Close />
-                        </motion.button>
-
-                        {/* Title */}
-                        <Title variant="glow" style={{ textAlign: 'center', marginBottom: '30px', fontSize: '24px' }}>
-                            {isNewGame ? 'New Game Setup' : 'Settings'}
-                        </Title>
+                        {/* Header with close button */}
+                        <div style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'space-between',
+                            marginBottom: '20px'
+                        }}>
+                            <Title variant="glow" style={{ fontSize: '24px', margin: 0 }}>
+                                {isNewGame ? 'New Game Setup' : 'Settings'}
+                            </Title>
+                            <motion.button
+                                whileHover={{ scale: 1.1, rotate: 90 }}
+                                whileTap={{ scale: 0.9 }}
+                                onClick={onCancel}
+                                style={{
+                                    background: 'transparent',
+                                    border: 'none',
+                                    color: 'rgba(0, 255, 136, 0.7)',
+                                    cursor: 'pointer',
+                                    fontSize: '24px',
+                                    padding: '5px',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center'
+                                }}
+                            >
+                                <Close />
+                            </motion.button>
+                        </div>
 
                         {/* Settings Form */}
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>

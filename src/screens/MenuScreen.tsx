@@ -191,17 +191,17 @@ export const MenuScreen: FC<MenuScreenProps> = ({ stage, setScreenType }) => {
                                 opacity: { delay: 0.4 + (index * 0.1), duration: 0.4, ease: 'easeOut' },
                                 x: { duration: 0.2, ease: 'easeOut' }
                             }}
+                            onMouseEnter={() => {
+                                setHoveredButton(button.enabled ? button.key : null);
+                                setTooltip(button.tooltip, button.icon);
+                            }}
+                            onMouseLeave={() => {
+                                setHoveredButton(null);
+                                clearTooltip();
+                            }}
                         >
                             <Button
                                 variant="menu"
-                                onMouseEnter={() => {
-                                    setHoveredButton(button.enabled ? button.key : null);
-                                    setTooltip(button.tooltip, button.icon);
-                                }}
-                                onMouseLeave={() => {
-                                    setHoveredButton(null);
-                                    clearTooltip();
-                                }}
                                 whileTap={{ scale: button.enabled ? 0.95 : 1 }}
                                 onClick={button.enabled ? button.onClick : undefined}
                                 disabled={!button.enabled}
