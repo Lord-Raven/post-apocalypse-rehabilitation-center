@@ -4,6 +4,7 @@ import { Stage, SaveType } from '../Stage';
 import { BlurredBackground } from '../components/BlurredBackground';
 import { Title, Button } from '../components/UIComponents';
 import { useTooltip } from '../contexts/TooltipContext';
+import { scoreToGrade } from '../utils';
 import { Save, FolderOpen, Close } from '@mui/icons-material';
 import { ScreenType } from './BaseScreen';
 
@@ -37,7 +38,7 @@ export const SaveLoadScreen: FC<SaveLoadScreenProps> = ({ stage, mode, onClose, 
     };
 
     const formatTimestamp = (timestamp?: number): string => {
-        if (!timestamp) return 'Never saved';
+        if (!timestamp) return 'No Date';
         const date = new Date(timestamp);
         return date.toLocaleString('en-US', {
             month: 'short',
@@ -109,21 +110,6 @@ export const SaveLoadScreen: FC<SaveLoadScreenProps> = ({ stage, mode, onClose, 
                         overflow: 'hidden'
                     }}
                 >
-                    {/* Slot number badge */}
-                    <div style={{
-                        position: 'absolute',
-                        top: '5px',
-                        left: '5px',
-                        background: 'rgba(0, 255, 136, 0.3)',
-                        padding: '2px 8px',
-                        borderRadius: '4px',
-                        fontSize: '11px',
-                        fontWeight: 'bold',
-                        color: 'rgba(0, 255, 136, 1)'
-                    }}>
-                        #{slotIndex + 1}
-                    </div>
-
                     {isEmpty ? (
                         <div style={{
                             display: 'flex',
@@ -142,8 +128,7 @@ export const SaveLoadScreen: FC<SaveLoadScreenProps> = ({ stage, mode, onClose, 
                             <div style={{
                                 display: 'flex',
                                 justifyContent: 'space-between',
-                                alignItems: 'flex-start',
-                                marginTop: '20px'
+                                alignItems: 'flex-start'
                             }}>
                                 <div style={{
                                     fontSize: '12px',
@@ -192,7 +177,7 @@ export const SaveLoadScreen: FC<SaveLoadScreenProps> = ({ stage, mode, onClose, 
                                                     color: 'rgba(0, 255, 136, 0.8)'
                                                 }}
                                             >
-                                                <div style={{ fontWeight: 'bold' }}>{value}</div>
+                                                <div style={{ fontWeight: 'bold' }}>{scoreToGrade(value)}</div>
                                                 <div style={{ 
                                                     fontSize: '9px',
                                                     color: 'rgba(0, 255, 136, 0.5)'
@@ -227,12 +212,13 @@ export const SaveLoadScreen: FC<SaveLoadScreenProps> = ({ stage, mode, onClose, 
                                         title={actor.name}
                                     >
                                         <img
-                                            src={actor.avatarImageUrl}
+                                            src={actor.getEmotionImage(actor.getDefaultEmotion())}
                                             alt={actor.name}
                                             style={{
                                                 width: '100%',
                                                 height: '100%',
-                                                objectFit: 'cover'
+                                                objectFit: 'cover',
+                                                objectPosition: 'top center'
                                             }}
                                         />
                                     </div>
