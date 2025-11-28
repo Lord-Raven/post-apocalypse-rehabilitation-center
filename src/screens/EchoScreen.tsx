@@ -311,19 +311,8 @@ export const EchoScreen: FC<EchoScreenProps> = ({stage, setScreenType}) => {
 									justifyContent: actor ? 'flex-end' : 'center',
 									alignItems: actor ? 'stretch' : 'center',
 									borderRadius: 12,
-								overflow: 'hidden',
-								background: actor 
-									? `linear-gradient(
-											135deg, 
-											rgba(0, 255, 136, 0.15) 0%, 
-											rgba(0, 200, 255, 0.1) 50%, 
-											rgba(109, 87, 131, 0.15) 100%
-										), url(${actor.getEmotionImage('neutral', stage())})`
-									: 'linear-gradient(135deg, rgba(0,255,136,0.15), rgba(0,200,255,0.1))',
-								backgroundSize: actor ? 'cover, cover' : 'cover',
-								backgroundPosition: actor ? 'center, center top' : 'center',
-									backgroundBlendMode: actor ? 'overlay, normal' : 'normal',
-									backgroundRepeat: 'no-repeat',
+									overflow: 'hidden',
+									background: actor ? undefined : 'linear-gradient(135deg, rgba(0,255,136,0.15), rgba(0,200,255,0.1))',
 									border: isSelected
 										? `5px solid ${actor?.themeColor || '#ffffff'}` 
 										: actor 
@@ -337,6 +326,44 @@ export const EchoScreen: FC<EchoScreenProps> = ({stage, setScreenType}) => {
 									position: 'relative',
 								}}
 							>
+								{/* Background layers for actor slots */}
+								{actor && (
+									<>
+										{/* Actor portrait image layer */}
+										<div 
+											style={{
+												position: 'absolute',
+												top: 0,
+												left: 0,
+												width: '100%',
+												height: '100%',
+												backgroundImage: `url(${actor.getEmotionImage('neutral', stage())})`,
+												backgroundSize: 'cover',
+												backgroundPosition: 'center top',
+												backgroundRepeat: 'no-repeat',
+												zIndex: 0,
+											}}
+										/>
+										{/* Gradient overlay layer */}
+										<div 
+											style={{
+												position: 'absolute',
+												top: 0,
+												left: 0,
+												width: '100%',
+												height: '100%',
+												background: `linear-gradient(
+													135deg, 
+													rgba(0, 255, 136, 0.15) 0%, 
+													rgba(0, 200, 255, 0.1) 50%, 
+													rgba(109, 87, 131, 0.15) 100%
+												)`,
+												mixBlendMode: 'overlay',
+												zIndex: 1,
+											}}
+										/>
+									</>
+								)}
 							{actor ? (
 								<>
 									<RemoveButton
@@ -344,9 +371,10 @@ export const EchoScreen: FC<EchoScreenProps> = ({stage, setScreenType}) => {
 										title="Move to reserves"
 										variant="topRightInset"
 										size="medium"
+										style={{ zIndex: 10, position: 'relative' }}
 									/>
 									{/* Spacer to push the nameplate and stats down about 30vh */}
-									<div style={{ flex: '0 0 30vh' }}></div>
+									<div style={{ flex: '0 0 30vh', position: 'relative', zIndex: 2 }}></div>
 									{/* Actor nameplate */}
 									<Nameplate 
 										actor={actor} 
@@ -360,11 +388,13 @@ export const EchoScreen: FC<EchoScreenProps> = ({stage, setScreenType}) => {
 										layout="stacked"
 										style={{
 											padding: '12px 16px',
-											fontSize: 18
+											fontSize: 18,
+											position: 'relative',
+											zIndex: 2
 										}}
 									/>
 									{/* Stats */}
-									<div className="stat-list" style={{ padding: '8px 12px', background: 'rgba(0,0,0,0.8)', flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'space-evenly' }}>
+									<div className="stat-list" style={{ padding: '8px 12px', background: 'rgba(0,0,0,0.8)', flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'space-evenly', position: 'relative', zIndex: 2 }}>
 										{Object.values(Stat).map((stat) => {
 											const grade = scoreToGrade(actor.stats[stat]);
 											const StatIcon = ACTOR_STAT_ICONS[stat];
