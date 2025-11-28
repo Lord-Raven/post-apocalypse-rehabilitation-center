@@ -142,7 +142,7 @@ const ActorImage: FC<ActorImageProps> = ({
                 {/* Backing image layer - solid but blurry. */}
                 {processedImageUrl && (
                     <motion.img
-                        key={`${actor.id}_${imageUrl}_bg`}
+                        key={`${actor.id}_${processedImageUrl}_bg`}
                         src={processedImageUrl}
                         initial={{ opacity: 0 }}
                         animate={actor.remote ? {
@@ -233,8 +233,8 @@ const ActorImage: FC<ActorImageProps> = ({
                                 zIndex: 6,
                                 transform: `translate(calc(${modX}vw - 50%), ${modY}vh)`,
                                 filter: 'blur(0.5px) brightness(1.5)',
-                                maskImage: 'linear-gradient(to bottom, transparent 0%, black 50%, black 100%)',
-                                WebkitMaskImage: 'linear-gradient(to bottom, transparent 0%, black 50%, black 100%)',
+                                maskImage: 'linear-gradient(to bottom, transparent 0%, rgba(0, 0, 0, 0.8) 98%, black 99% transparent 100%)',
+                                WebkitMaskImage: 'linear-gradient(to bottom, transparent 0%, rgba(0, 0, 0, 0.8) 98%, black 99% transparent 100%)',
                                 maskSize: '100% 200%',
                                 WebkitMaskSize: '100% 200%',
                                 maskPosition: '0% -100%',
