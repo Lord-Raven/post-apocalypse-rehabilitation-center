@@ -53,7 +53,7 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
     public imageGenerationPromises: {[key: string]: Promise<string>} = {};
     private freshSave: SaveType;
     readonly RESERVE_ACTORS = 5;
-    readonly RESERVE_FACTIONS = 3;
+    readonly PREGEN_FACTION_COUNT = 3;
     readonly MAX_FACTIONS = 5;
     readonly FETCH_AT_TIME = 10;
     readonly MAX_PAGES = 100;
@@ -91,7 +91,6 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
     screenProps: any = {};
 
     reserveActors: Actor[] = [];
-    reserveFactions: Faction[] = [];
 
     initialized: boolean = false;
 
@@ -225,16 +224,15 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
             console.log(`Moved actor ${actor.name} to location ${actor.locationId}`);
         }
 
-        if (Object.values(save.factions).length >= this.MAX_FACTIONS || this.reserveFactions.length == 0) {
-            const randomFaction = Object.values(save.factions).sort(() => Math.random() - 0.5)[0];
-            if (randomFaction && randomFaction.representativeId) {
-                // Move the faction rep to the comms room, if available:
-                const commsModule = save.layout.getModulesWhere(m => m.type === 'comms')[0];
-                if (commsModule) {
-                    const factionRep = save.actors[randomFaction.representativeId];
-                    factionRep.locationId = commsModule.id;
-                }
-            }
+        // Move a random faction rep to comms room, if any factions exist:
+        const commsModule = save.layout.getModulesWhere(m => m.type === 'comms')[0];
+        const eligibleFactions = Object.values(save.factions).filter(faction => faction.reputation > 0 && faction.representativeId && save.actors[faction.representativeId]);
+        if (eligibleFactions.length > 0 && commsModule) {
+            const randomFaction = eligibleFactions.sort(() => Math.random() - 0.5)[0];
+            
+            // Move the faction rep to the comms room, if available:
+            const factionRep = save.actors[randomFaction.representativeId || ''];
+            factionRep.locationId = commsModule.id;
         }
         this.saves[this.saveSlot] = {...save}; // Update the current save slot with the modified save, ensuring a new object reference.
         this.saveGame();
@@ -388,8 +386,10 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
 
         this.reserveFactionsLoadPromise = (async () => {
             try {
-                console.log('Loading reserve factions...');
-                while (this.reserveFactions.length < Math.min(this.RESERVE_FACTIONS, this.MAX_FACTIONS - Object.values(this.getSave().factions).length)) {
+                console.log('Loading additional factions...');
+                const eligibleFactions = Object.values(this.getSave().factions).filter(faction => faction.reputation > 0);
+                while (eligibleFactions.length < this.MAX_FACTIONS) {
+                    const needed = this.MAX_FACTIONS - eligibleFactions.length;
                     // Populate reserveFactions; this is loaded with data from a service, calling the characterSearchQuery URL:
                     const exclusions = (this.getSave().bannedTags || []).concat(this.bannedTagsDefault).map(tag => encodeURIComponent(tag)).join('%2C');
                     console.log('Applying exclusions:', exclusions);
@@ -400,7 +400,7 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
                     const searchResults = await response.json();
                     console.log(searchResults);
                     // Need to do a secondary lookup for each faction in searchResults, to get the details we actually care about:
-                    const basicFactionData = searchResults.data?.nodes.filter((item: string, index: number) => index < Math.min(this.RESERVE_FACTIONS, this.MAX_FACTIONS - Object.values(this.getSave().factions).length)).map((item: any) => item.fullPath) || [];
+                    const basicFactionData = searchResults.data?.nodes.filter((item: string, index: number) => index < needed).map((item: any) => item.fullPath) || [];
                     this.factionPageNumber = (this.factionPageNumber % this.MAX_PAGES) + 1;
                     console.log(basicFactionData);
                     // Do these in series instead of parallel to reduce load on the service:
@@ -411,8 +411,7 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
                             newFactions.push(faction);
                         }
                     }
-
-                    this.reserveFactions = [...this.reserveFactions, ...newFactions.filter(f => f !== null)];
+                    newFactions.forEach(faction => {faction != null ? this.getSave().factions[faction.id] = faction : null;});
                 }
             } catch (err) {
                 console.error('Error loading reserve factions', err);

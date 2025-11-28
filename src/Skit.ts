@@ -158,10 +158,9 @@ export function generateSkitPrompt(skit: SkitData, stage: Stage, historyLength: 
         }).join('\n')}` +
         // List stat meanings, for reference:
         `\n\nStats:\n${Object.values(Stat).map(stat => `${stat.toUpperCase()}: ${getStatDescription(stat)}`).join('\n')}` +
-        `\n\nEmotions:\n${Object.values(Emotion).map(emotion => `${emotion.toUpperCase()}`).join(', ')}` +
         `\n\nScene Prompt:\n${generateSkitTypePrompt(skit, stage, skit.script.length > 0)}` +
         (request ? `\n\nRequest Details:\n  Description: ${request.description}\n  Requirement: ${request.getRequirementText()}\n  Reward: ${request.getRewardText()}\n` : '') +
-        (faction ? `\n\n${faction.name} Details: ${faction.description}\n${faction.name} Aesthetic: ${faction.visualStyle}\nThe PARC's current reputation with this faction is ${faction.reputation} / 10.` : '') +
+        (faction ? `\n\n${faction.name} Details: ${faction.description}\n${faction.name} Aesthetic: ${faction.visualStyle}` : '') +
         (factionRepresentative ? `\n${faction?.name || 'The faction'}'s representative, ${factionRepresentative.name}, appears on-screen. Their description: ${factionRepresentative.description}` : 'They have no designated liaison for this communication; any characters introduced during this scene will be transient.') +
         (faction ? `\nThis skit may explore the nature of this faction's relationship with and intentions for the Director, the PARC, or other characters present in the Comms module (if any). ` +
             `However, this and other factions generally contact the PARC to express interest or make offers: ` +
@@ -170,6 +169,7 @@ export function generateSkitPrompt(skit: SkitData, stage: Stage, historyLength: 
             `\n3) Finally, some offers are for other Station resources or exchanges; these are informed by the PARC's core stats, but typically presented in a narrative or abstract fashion.` +
             `\nAll requests come with some offer of compensation. Remember that a 'job' in this context may be something the Director can compel a patient into—not necessarily gainful employment. ` +
             `Although deals and offers are discussed in this skit, they can only be finalized through a separate game mechanic, so the skit should leave the offer open without confirming anything.` : '') +
+        `\n\nKnown Factions: \n${Object.values(stage.getSave().factions).map(faction => `${faction.name}: ${faction.getReputationDescription()}`).join('\n')}` +
         (module ? (`\n\nModule Details:\n  This scene is set in ` +
             `${module.type === 'quarters' ? `${moduleOwner ? `${moduleOwner.name}'s` : 'a vacant'} quarters` : 
             `the ${module.type || 'Unknown'}`}. ${module.getAttribute('skitPrompt') || 'No description available.'}\n`) : '') +
@@ -401,15 +401,18 @@ export async function generateSkitScript(skit: SkitData, stage: Stage): Promise<
                         const analysisPrompt = generateSkitPrompt(skit, stage, 0,
                             `Scene Script:\nSystem: ${buildScriptLog(skit)}` +
                             `\n\nPrimary Instruction:\nAnalyze the preceding scene script and output formatted tags in brackets, identifying the following categorical changes to be inorporated into the game. ` +
+
                             `\n\nCharacter Stat Changes:\nIdentify any changes to character stats implied by the scene. For each change, output a line in the following format:\n` +
                             `"[CHARACTER NAME: <stat> +<value>(, ...)]"` +
                             `Where <stat> is the name of the stat to be changed, and <value> is the amount to increase or decrease the stat by (positive or negative). ` +
-                            `Multiple stat changes can be included in a single tag, separated by commas. Similarly, multiple character tags can be provided in the output.\n\n` +
-                            `Station Stat Changes:\nIdentify any changes to station stats implied by the scene. For each change, output a line in the following format:\n` +
+                            `Multiple stat changes can be included in a single tag, separated by commas. Similarly, multiple character tags can be provided in the output.` +
+
+                            `\n\nStation Stat Changes:\nIdentify any changes to station stats implied by the scene. For each change, output a line in the following format:\n` +
                             `"[STATION: <stat> +<value>(, ...)]"` +
                             `Where <stat> is the name of the station stat to be changed, and <value> is the amount to increase or decrease the stat by (positive or negative). ` +
-                            `Multiple stat changes can be included in a single tag, separated by commas.\n\n` +
-                            `Faction Requests:\n` +
+                            `Multiple stat changes can be included in a single tag, separated by commas.` +
+
+                            `\n\nFaction Requests:\n` +
                             `Identify any requests made by factions or faction representatives toward the player or station. ` +
                             `For each request identified, output a line in the following format:\n` +
                             `"[REQUEST: <factionName> | <description> | <requirement> -> <reward>]"` +
@@ -430,7 +433,16 @@ export async function generateSkitScript(skit: SkitData, stage: Stage): Promise<
                             `Full Examples:\n` +
                             `"[REQUEST: Stellar Concord | We need a strong laborer | ACTOR brawn>=7, charm>=6 -> Systems+2, Comfort+1]"\n` +
                             `"[REQUEST: Shadow Syndicate | Return our missing operative | ACTOR-NAME Jane Doe -> Harmony+3]"\n` +
-                            `"[REQUEST: Defense Coalition | Help us bolster our defenses | STATION Security-2, Harmony-1 -> Systems+2, Provision+2]"\n\n` +
+                            `"[REQUEST: Defense Coalition | Help us bolster our defenses | STATION Security-2, Harmony-1 -> Systems+2, Provision+2]"` +
+
+                            `\n\nFaction Reputation Changes:\n` +
+                            `Identify any changes to faction reputations implied by the scene. For each change, output a line in the following format:\n` +
+                            `"[FACTION: <factionName> +<value>]"` +
+                            `Where <factionName> is the name of the faction whose reputation is changing, and <value> is the amount to increase or decrease the reputation by (positive or negative). ` +
+                            `Reputation is a value between 1 and 10, and changes are incremental. If the faction is cutting ties, provide a large negative value. ` +
+                            `Multiple faction tags can be provided in the output if, for instance, improving the esteem of one faction inherently reduces the opinion of a rival.` +
+
+                            `\n\nSummary Instruction:\n` +
                             `All relevant tags should be output in this response. Stat changes should be a fair reflection of the scene's direct or implied events. ` +
                             `Bear in mind the somewhat abstract meaning of character and station stats when determining reasonable changes and goals. ` +
                             `All stats (station and character) exist on a scale of 1-10, with 1 being the lowest and 10 being the highest possible value; ` +
@@ -461,6 +473,44 @@ export async function generateSkitScript(skit: SkitData, stage: Stage): Promise<
                                     if (request) {
                                         console.log('Added new request from tag:', request);
                                         requests.push(request);
+                                    }
+                                    continue;
+                                }
+
+                                // Process faction reputation tags: [FACTION: <factionName> +<value>]
+                                if (trimmed.toUpperCase().startsWith('[FACTION:')) {
+                                    console.log('Processing faction reputation tag:', trimmed);
+                                    const factionTagRegex = /\[FACTION:\s*([^+\-]+)\s*([+\-]\s*\d+)\]/i;
+                                    const factionMatch = factionTagRegex.exec(trimmed);
+                                    if (factionMatch) {
+                                        const factionNameRaw = factionMatch[1].trim();
+                                        const reputationChange = parseInt(factionMatch[2].replace(/\s+/g, ''), 10) || 0;
+                                        
+                                        // Find matching faction using namesMatch
+                                        const allFactions = Object.values(stage.getSave().factions);
+                                        const matchedFaction = allFactions.find(f => namesMatch(f.name.toLowerCase(), factionNameRaw.toLowerCase()));
+                                        
+                                        if (matchedFaction && reputationChange !== 0) {
+                                            if (!statChanges['FACTION']) statChanges['FACTION'] = {};
+                                            statChanges['FACTION'][matchedFaction.id] = (statChanges['FACTION'][matchedFaction.id] || 0) + reputationChange;
+                                            matchedFaction.reputation = Math.max(0, Math.min(10, (matchedFaction.reputation || 5) + reputationChange));
+                                            console.log(`Faction reputation change detected: ${matchedFaction.name} ${reputationChange > 0 ? '+' : ''}${reputationChange}`);
+                                            // If reputation is 0, the faction will cut ties.
+                                            if (matchedFaction.reputation <= 0) {
+                                                console.log(`${matchedFaction.name} has cut ties with the PARC due to low reputation.`);
+                                                stage.getSave().timeline?.push({
+                                                    day: stage.getSave().day,
+                                                    phase: stage.getSave().phase,
+                                                    description: `The ${matchedFaction.name} has cut all ties with the PARC.`,
+                                                    skit: undefined
+                                                });
+                                                matchedFaction.active = false;
+                                                const requestsForRemoval = Object.values(stage.getSave().requests).filter(r => r.factionId === matchedFaction.id);
+                                                for (const req of requestsForRemoval) {
+                                                    delete stage.getSave().requests[req.id];
+                                                }
+                                            }
+                                        }
                                     }
                                     continue;
                                 }

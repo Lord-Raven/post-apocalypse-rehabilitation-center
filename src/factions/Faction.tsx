@@ -12,7 +12,8 @@ class Faction {
     visualStyle: string;
     themeColor: string;
     themeFont: string;
-    reputation: number = 1; // 1-10, starts at 1
+    reputation: number = 3; // 1-10, starts at 3
+    active: boolean = false; // Whether the faction is still doing business with PARC
     representativeId: string | null = null;
     backgroundImageUrl: string = '';
 
@@ -22,6 +23,10 @@ class Faction {
     static fromSave(savedFaction: any): Faction {
         const faction = Object.create(Faction.prototype);
         Object.assign(faction, savedFaction);
+        // Ensure active property exists (for backwards compatibility with older saves)
+        if (faction.active === undefined) {
+            faction.active = true;
+        }
         return faction;
     }
 
@@ -34,7 +39,8 @@ class Faction {
         roles: string[],
         themeColor: string,
         themeFont: string,
-        reputation: number = 1
+        reputation: number = 1,
+        active: boolean = false
     ) {
         this.id = id;
         this.name = name;
@@ -44,7 +50,27 @@ class Faction {
         this.roles = roles;
         this.themeColor = themeColor;
         this.themeFont = themeFont;
-        this.reputation = Math.max(1, Math.min(10, reputation)); // Clamp between 1-10
+        this.reputation = Math.max(0, Math.min(10, reputation)); // Clamp between 0-10 (0 means cutting ties)
+        this.active = active;
+    }
+
+    /**
+     * Get a prompt-style description of the PARC's relationship with this faction based on reputation
+     */
+    getReputationDescription(): string {
+        if (this.reputation <= 0) {
+            return 'They have cut ties with the PARC.';
+        } else if (this.reputation <= 2) {
+            return 'They have a low opinion of the PARC and consider the relationship strained.';
+        } else if (this.reputation <= 4) {
+            return 'They view the PARC with caution and maintain only necessary interactions.';
+        } else if (this.reputation <= 6) {
+            return 'They have a neutral, professional relationship with the PARC.';
+        } else if (this.reputation <= 8) {
+            return 'They regard the PARC favorably and maintain a positive working relationship.';
+        } else {
+            return 'They hold the PARC in high esteem and consider them a trusted partner.';
+        }
     }
 }
 
@@ -108,11 +134,11 @@ export async function loadReserveFaction(fullPath: string, stage: Stage): Promis
             `with the goal of placing these characters into a new role in this universe. These new roles are offered by external factions, generally in exchange for a finder's fee or reputation boost. ` +
             `Some roles are above board, while others may involve morally ambiguous or covert activities; many may even be illicit, sexual, or compulsory (essentially human trafficking). ` +
             `The player's motives and ethics are open-ended; they may be benevolent or self-serving, and the characters they interact with may respond accordingly. ` +
-            (stage.reserveFactions.length + Object.values(stage.getSave().factions).length > 0 ? `\n\nEstablished Factions:\n${[...stage.reserveFactions, ...Object.values(stage.getSave().factions)].map(faction => `- ${faction.name}: ${faction.description}. Representative: ${stage.getSave().actors[faction.representativeId || '']}`).join('\n')}` : '') +
+            (Object.values(stage.getSave().factions).length > 0 ? `\n\nEstablished Factions:\n${Object.values(stage.getSave().factions).map(faction => `- ${faction.name}: ${faction.description}. Representative: ${stage.getSave().actors[faction.representativeId || '']}`).join('\n')}` : '') +
             `\n\nThe Original Details below describe a character, faction, organization, or setting (${data.name}) from another universe. ` +
             `This request and response must digest and distill these details into a new faction that suits the game's narrative scenario, ` +
             `crafting a complex and intriguing organization that fits seamlessly into the game's expansive, flavorful, and varied sci-fi setting. ` +
-            (stage.reserveFactions.length > 0 ? `Ensure that this new faction feels distinct from or complementary to the Established Factions, as the primary goal is engaging diversity.` : '') +
+            (Object.values(stage.getSave().factions).length > 0 ? `Ensure that this new faction feels distinct from or complementary to the Established Factions, as the primary goal is engaging diversity.` : '') +
             `The Original Details may not lend themselves directly to a faction, so creative interpretation is encouraged; pull from and lean into the dominant themes found in the details. ` +
             `\n\nOriginal Details about ${data.name}:\n${data.description} ${data.personality}` +
             `\n\nInstructions: After carefully considering this description, generate a concise breakdown for a faction based upon these details in the following strict format:\n` +

@@ -996,7 +996,7 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType}) =>
                                 {itemKey === 'factions' && (
                                     
                                     <div style={{ padding: '15px', flex: '1 1 auto', overflowY: 'auto', minHeight: 0 }}>
-                                        {Object.values(stage().getSave().factions).length === 0 ? (
+                                        {Object.values(stage().getSave().factions).filter(f => f.active).length === 0 ? (
                                             <p style={{ 
                                                 color: '#00ff88', 
                                                 opacity: 0.5, 
@@ -1005,7 +1005,7 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType}) =>
                                                 fontWeight: 700 
                                             }}>No factions in contact.</p>
                                         ) : (
-                                            Object.values(stage().getSave().factions).map((faction) => (
+                                            Object.values(stage().getSave().factions).filter(f => f.active).map((faction) => (
                                                 <FactionCard
                                                     key={faction.id}
                                                     faction={faction}

@@ -1,14 +1,14 @@
 import React, { FC } from 'react';
 import { motion } from 'framer-motion';
 import { Paper, Typography, Box } from '@mui/material';
-import { TrendingUp, Handshake } from '@mui/icons-material';
+import { TrendingUp, Handshake, TrendingDown } from '@mui/icons-material';
 import Actor, { Stat, ACTOR_STAT_ICONS } from '../actors/Actor';
 import { StationStat, STATION_STAT_ICONS } from '../Module';
 import Nameplate from '../components/Nameplate';
+import Faction from '../factions/Faction';
 import { scoreToGrade } from '../utils';
 import { SkitData } from '../Skit';
 import { Stage } from '../Stage';
-import Request from '../factions/Request';
 
 interface StatChange {
     statName: string;
@@ -19,6 +19,12 @@ interface StatChange {
 interface CharacterStatChanges {
     actor: Actor | undefined;
     statChanges: StatChange[];
+}
+
+interface FactionReputationChange {
+    faction: Faction;
+    oldReputation: number;
+    newReputation: number;
 }
 
 interface SkitOutcomeDisplayProps {
@@ -76,6 +82,11 @@ const SkitOutcomeDisplay: FC<SkitOutcomeDisplayProps> = ({ skitData, stage, layo
                 return;
             }
 
+            // Skip FACTION changes here, they are handled separately
+            if (actorId === 'FACTION') {
+                return;
+            }
+
             const actor = stage.getSave().actors[actorId];
             if (!actor) return;
 
@@ -119,11 +130,54 @@ const SkitOutcomeDisplay: FC<SkitOutcomeDisplayProps> = ({ skitData, stage, layo
         return changes;
     };
 
+    const processFactionReputationChanges = (): FactionReputationChange[] => {
+        if (!skitData.endProperties || !skitData.endProperties['FACTION']) return [];
+
+        const factionChanges: FactionReputationChange[] = [];
+        const factionReputationData = skitData.endProperties['FACTION'];
+
+        Object.entries(factionReputationData).forEach(([factionId, change]) => {
+            const faction = stage.getSave().factions[factionId];
+            if (!faction) return;
+
+            const oldReputation = faction.reputation;
+            const newReputation = Math.max(0, Math.min(10, oldReputation + change));
+
+            if (newReputation !== oldReputation) {
+                const hasCutTies = newReputation === 0;
+                
+                // If reputation reaches 0, deactivate faction and remove all their requests
+                if (hasCutTies) {
+                    faction.active = false;
+                    
+                    // Remove all requests from this faction
+                    const requestsToRemove = Object.keys(stage.getSave().requests).filter(
+                        requestId => stage.getSave().requests[requestId].factionId === factionId
+                    );
+                    requestsToRemove.forEach(requestId => {
+                        delete stage.getSave().requests[requestId];
+                    });
+                    
+                    console.log(`Faction ${faction.name} has cut ties with PARC. Removed ${requestsToRemove.length} requests.`);
+                }
+                
+                factionChanges.push({
+                    faction: faction,
+                    oldReputation: oldReputation,
+                    newReputation: newReputation
+                });
+            }
+        });
+
+        return factionChanges;
+    };
+
     const characterChanges = processStatChanges();
+    const factionReputationChanges = processFactionReputationChanges();
     const requests = skitData.requests || [];
 
     // Don't render if there's nothing to display
-    if (characterChanges.length === 0 && requests.length === 0) {
+    if (characterChanges.length === 0 && requests.length === 0 && factionReputationChanges.length === 0) {
         return null;
     }
 
@@ -365,6 +419,287 @@ const SkitOutcomeDisplay: FC<SkitOutcomeDisplayProps> = ({ skitData, stage, layo
                                 </motion.div>
                                 );
                             })}
+                        </Box>
+                    </Paper>
+                </motion.div>
+            ))}
+
+            {/* Faction Reputation Changes */}
+            {factionReputationChanges.map((repChange, repIndex) => (
+                <motion.div
+                    key={`faction_rep_${repChange.faction.id}`}
+                    initial={{ opacity: 0, y: 30 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.4, delay: 0.5 + characterChanges.length * 0.2 + repIndex * 0.2 }}
+                >
+                    <Paper
+                        elevation={6}
+                        sx={{
+                            background: 'rgba(10,20,30,0.95)',
+                            border: repChange.newReputation <= 0
+                                ? '2px solid rgba(150,150,150,0.3)'
+                                : repChange.newReputation > repChange.oldReputation
+                                ? '2px solid rgba(0,255,136,0.15)'
+                                : '2px solid rgba(255,80,80,0.15)',
+                            borderRadius: 3,
+                            p: 3,
+                            backdropFilter: 'blur(8px)',
+                            textAlign: 'center',
+                            position: 'relative',
+                            overflow: 'hidden'
+                        }}
+                    >
+                        {/* Background Image */}
+                        {repChange.faction.backgroundImageUrl && (
+                            <Box
+                                sx={{
+                                    position: 'absolute',
+                                    top: 0,
+                                    left: 0,
+                                    right: 0,
+                                    bottom: 0,
+                                    backgroundImage: `url(${repChange.faction.backgroundImageUrl})`,
+                                    backgroundSize: 'cover',
+                                    backgroundPosition: 'center',
+                                    opacity: 0.1,
+                                    zIndex: 0
+                                }}
+                            />
+                        )}
+
+                        {/* Dark overlay for readability */}
+                        <Box
+                            sx={{
+                                position: 'absolute',
+                                top: 0,
+                                left: 0,
+                                right: 0,
+                                bottom: 0,
+                                background: 'rgba(0, 10, 20, 0.7)',
+                                zIndex: 0
+                            }}
+                        />
+
+                        {/* Content */}
+                        <Box sx={{ position: 'relative', zIndex: 1 }}>
+                            {/* Header with icon */}
+                            <motion.div
+                                initial={{ scale: 0.8, opacity: 0 }}
+                                animate={{ scale: 1, opacity: 1 }}
+                                transition={{ duration: 0.5, delay: 0.6 + characterChanges.length * 0.2 + repIndex * 0.2 }}
+                                style={{ marginBottom: '16px' }}
+                            >
+                                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1, mb: 2 }}>
+                                    {repChange.newReputation <= 0 ? (
+                                        <Handshake sx={{ color: '#888', fontSize: '2rem', transform: 'rotate(15deg)' }} />
+                                    ) : repChange.newReputation > repChange.oldReputation ? (
+                                        <TrendingUp sx={{ color: '#00ff88', fontSize: '2rem' }} />
+                                    ) : (
+                                        <TrendingDown sx={{ color: '#ff5050', fontSize: '2rem' }} />
+                                    )}
+                                    <Typography
+                                        variant="h6"
+                                        sx={{
+                                            fontWeight: 800,
+                                            color: repChange.newReputation <= 0 ? '#888' : repChange.newReputation > repChange.oldReputation ? '#00ff88' : '#ff5050',
+                                            textTransform: 'uppercase',
+                                            letterSpacing: '1px',
+                                            textShadow: '0 2px 4px rgba(0,0,0,0.8)'
+                                        }}
+                                    >
+                                        {repChange.newReputation <= 0 ? 'Ties Severed' : `Reputation ${repChange.newReputation > repChange.oldReputation ? 'Improved' : 'Declined'}`}
+                                    </Typography>
+                                </Box>
+                            </motion.div>
+
+                            {/* Faction Nameplate */}
+                            <motion.div
+                                initial={{ opacity: 0, y: 20 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ duration: 0.4, delay: 0.7 + characterChanges.length * 0.2 + repIndex * 0.2 }}
+                                style={{ marginBottom: '20px' }}
+                            >
+                                <Nameplate
+                                    name={repChange.faction.name}
+                                    size="large"
+                                    layout="inline"
+                                    style={{
+                                        background: repChange.faction.themeColor || '#4a5568',
+                                        border: repChange.faction.themeColor ? `2px solid ${repChange.faction.themeColor}CC` : '2px solid #718096',
+                                        fontFamily: repChange.faction.themeFont || 'Arial, sans-serif',
+                                    }}
+                                />
+                            </motion.div>
+
+                            {/* Reputation change display or cut ties message */}
+                            {repChange.newReputation <= 0 ? (
+                                <motion.div
+                                    initial={{ opacity: 0, scale: 0.8 }}
+                                    animate={{ opacity: 1, scale: 1 }}
+                                    transition={{ duration: 0.5, delay: 0.8 + characterChanges.length * 0.2 + repIndex * 0.2 }}
+                                    style={{
+                                        padding: '24px',
+                                        background: 'rgba(80,80,80,0.15)',
+                                        borderRadius: '12px',
+                                        border: '2px solid rgba(150,150,150,0.3)'
+                                    }}
+                                >
+                                    <Typography
+                                        sx={{
+                                            fontSize: '1.1rem',
+                                            fontWeight: 700,
+                                            color: '#aaa',
+                                            textAlign: 'center',
+                                            lineHeight: 1.6,
+                                            textShadow: '0 2px 4px rgba(0,0,0,0.8)'
+                                        }}
+                                    >
+                                        {repChange.faction.name} has severed all ties with the PARC.
+                                    </Typography>
+                                    <Typography
+                                        sx={{
+                                            fontSize: '0.9rem',
+                                            color: '#777',
+                                            textAlign: 'center',
+                                            mt: 1.5,
+                                            fontStyle: 'italic'
+                                        }}
+                                    >
+                                        All active requests have been withdrawn.
+                                    </Typography>
+                                </motion.div>
+                            ) : (
+                                <motion.div
+                                    initial={{ opacity: 0, x: -20 }}
+                                    animate={{ opacity: 1, x: 0 }}
+                                    transition={{ duration: 0.3, delay: 0.8 + characterChanges.length * 0.2 + repIndex * 0.2 }}
+                                    style={{
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        padding: '16px',
+                                        background: repChange.newReputation > repChange.oldReputation
+                                            ? 'rgba(0,255,136,0.08)'
+                                            : 'rgba(255,80,80,0.08)',
+                                        borderRadius: '12px',
+                                        border: repChange.newReputation > repChange.oldReputation
+                                            ? '1px solid rgba(0,255,136,0.3)'
+                                            : '1px solid rgba(255,80,80,0.3)',
+                                        gap: '24px'
+                                    }}
+                                >
+                                {/* Old reputation */}
+                                <Box sx={{ textAlign: 'center' }}>
+                                    <Typography
+                                        sx={{
+                                            fontSize: '0.7rem',
+                                            color: '#888',
+                                            textTransform: 'uppercase',
+                                            letterSpacing: '0.5px',
+                                            mb: 0.5
+                                        }}
+                                    >
+                                        Previous
+                                    </Typography>
+                                    <Typography
+                                        sx={{
+                                            fontSize: '2.5rem',
+                                            fontWeight: 900,
+                                            color: '#666',
+                                            opacity: 0.6,
+                                            textShadow: '0 2px 4px rgba(0,0,0,0.6)'
+                                        }}
+                                    >
+                                        {repChange.oldReputation}
+                                    </Typography>
+                                </Box>
+
+                                {/* Arrow */}
+                                <Typography
+                                    sx={{
+                                        color: repChange.newReputation > repChange.oldReputation ? '#00ff88' : '#ff5050',
+                                        fontWeight: 900,
+                                        fontSize: '2rem',
+                                        textShadow: repChange.newReputation > repChange.oldReputation
+                                            ? '0 2px 4px rgba(0,255,0,0.6)'
+                                            : '0 2px 4px rgba(255,0,0,0.6)'
+                                    }}
+                                >
+                                    {repChange.newReputation > repChange.oldReputation ? '↑' : '↓'}
+                                </Typography>
+
+                                {/* New reputation */}
+                                <Box sx={{ textAlign: 'center' }}>
+                                    <Typography
+                                        sx={{
+                                            fontSize: '0.7rem',
+                                            color: '#888',
+                                            textTransform: 'uppercase',
+                                            letterSpacing: '0.5px',
+                                            mb: 0.5
+                                        }}
+                                    >
+                                        Current
+                                    </Typography>
+                                    <motion.div
+                                        initial={{ scale: 0.8, opacity: 0 }}
+                                        animate={{ scale: 1, opacity: 1 }}
+                                        transition={{ duration: 0.5, delay: 0.9 + characterChanges.length * 0.2 + repIndex * 0.2 }}
+                                    >
+                                        <Typography
+                                            sx={{
+                                                fontSize: '2.5rem',
+                                                fontWeight: 900,
+                                                color: repChange.newReputation > repChange.oldReputation ? '#00ff88' : '#ff5050',
+                                                textShadow: repChange.newReputation > repChange.oldReputation
+                                                    ? '0 2px 4px rgba(0,255,0,0.6)'
+                                                    : '0 2px 4px rgba(255,0,0,0.6)'
+                                            }}
+                                        >
+                                            {repChange.newReputation}
+                                        </Typography>
+                                    </motion.div>
+                                </Box>
+                            </motion.div>
+                            )}
+
+                            {/* Reputation scale indicator - only show if not cut ties */}
+                            {repChange.newReputation > 0 && (
+                            <Box sx={{ mt: 2, px: 2 }}>
+                                <Box
+                                    sx={{
+                                        height: '8px',
+                                        background: 'rgba(255,255,255,0.1)',
+                                        borderRadius: '4px',
+                                        position: 'relative',
+                                        overflow: 'hidden'
+                                    }}
+                                >
+                                    <motion.div
+                                        initial={{ width: `${(repChange.oldReputation / 10) * 100}%` }}
+                                        animate={{ width: `${(repChange.newReputation / 10) * 100}%` }}
+                                        transition={{ duration: 1, delay: 1 + characterChanges.length * 0.2 + repIndex * 0.2 }}
+                                        style={{
+                                            height: '100%',
+                                            background: repChange.newReputation > repChange.oldReputation
+                                                ? 'linear-gradient(90deg, #00ff88, #00cc66)'
+                                                : 'linear-gradient(90deg, #ff5050, #cc3030)',
+                                            borderRadius: '4px'
+                                        }}
+                                    />
+                                </Box>
+                                <Typography
+                                    sx={{
+                                        fontSize: '0.65rem',
+                                        color: '#666',
+                                        textAlign: 'center',
+                                        mt: 0.5
+                                    }}
+                                >
+                                    {repChange.newReputation}/10
+                                </Typography>
+                            </Box>
+                            )}
                         </Box>
                     </Paper>
                 </motion.div>
