@@ -140,25 +140,14 @@ const ActorImage: FC<ActorImageProps> = ({
             </AnimatePresence>
             <AnimatePresence>
                 {/* Backing image layer - solid but blurry. */}
-                {processedImageUrl && (
+                {processedImageUrl && !actor.remote && (
                     <motion.img
                         key={`${actor.id}_${imageUrl}_bg`}
                         src={processedImageUrl}
                         initial={{ opacity: 0 }}
-                        animate={actor.remote ? {
-                            opacity: [0.8, 0.5, 0.7, 0.8],
-                            filter: [
-                                'blur(2.5px) brightness(1.3)',
-                                'blur(3.2px) brightness(1.1)',
-                                'blur(2.8px) brightness(1.2)',
-                                'blur(2.5px) brightness(1.3)'
-                            ]
-                        } : { opacity: 1, filter: 'blur(2.5px)' }}
+                        animate={{ opacity: 1, filter: 'blur(2.5px)' }}
                         exit={{ opacity: 0 }}
-                        transition={actor.remote ? {
-                            opacity: { duration: 2.5, repeat: Infinity, ease: "easeInOut", repeatType: "loop" },
-                            filter: { duration: 2.7, repeat: Infinity, ease: "easeInOut", repeatType: "loop" }
-                        } : { duration: 0.5 }}
+                        transition={{ duration: 0.5 }}
                         style={{
                             position: 'absolute',
                             top: 0,
