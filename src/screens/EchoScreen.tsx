@@ -371,7 +371,6 @@ export const EchoScreen: FC<EchoScreenProps> = ({stage, setScreenType}) => {
 										title="Move to reserves"
 										variant="topRightInset"
 										size="medium"
-										style={{ zIndex: 10, position: 'relative' }}
 									/>
 									{/* Spacer to push the nameplate and stats down about 30vh */}
 									<div style={{ flex: '0 0 30vh', position: 'relative', zIndex: 2 }}></div>

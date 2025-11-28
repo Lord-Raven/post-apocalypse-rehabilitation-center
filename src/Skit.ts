@@ -196,7 +196,7 @@ export async function generateSkitScript(skit: SkitData, stage: Stage): Promise<
     ];
 
     // Use script length + random(1, 10) > 12 for gentle or > 24 for firm.
-    const scriptLengthFactor = skit.script.length + Math.floor(Math.random() * 10) + 1;
+    const scriptLengthFactor = skit.script.length > 0 ? (skit.script.length + Math.floor(Math.random() * 10) + 1) : 0;
     const wrapupPrompt = scriptLengthFactor > 24 ? wrapUpPhrases[1] : (scriptLengthFactor > 12 ? wrapUpPhrases[0] : '');
 
 
