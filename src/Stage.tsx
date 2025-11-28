@@ -271,9 +271,9 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
         this.saveSlot = this.saves.findIndex(save => !save);
         if (this.saveSlot === -1) {
             // Yikes, overwrite the last one. Should avoid this in the UI.
-            this.saveSlot = this.saves.length - 1;
-            this.currentSave = this.freshSave;
+            this.saveSlot = Math.min(this.SAVE_SLOTS - 1, this.saves.length - 1);
         }
+        this.currentSave = this.freshSave;
         this.saveGame();
     }
 
