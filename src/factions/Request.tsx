@@ -374,7 +374,6 @@ export class Request {
                 },
                 actorId: actorId || ''
             });
-            setScreenType(ScreenType.SKIT);
         } else if (this.requirement.type === 'station-stats') {
             const module = stage.getSave().layout.getModulesWhere(m => m.type === 'comms')[0];
             // Kick off a request completion skit.
@@ -398,7 +397,6 @@ export class Request {
                     requestId: this.id
                 }
             });
-            setScreenType(ScreenType.SKIT);
         }
 
         return true;

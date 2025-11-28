@@ -410,11 +410,32 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
             for (let attempt = 0; attempt < 3; attempt++) {
                 const aideActor = await loadReserveActor(actorData, this);
                 if (aideActor) {
+                    save.actors[aideActor.id] = aideActor;
+                    aideActor.name = save.aide.name;
+                    aideActor.profile = save.aide.description;
                     aideActor.remote = true;
                     save.aide.actorId = aideActor.id;
                     await generatePrimaryActorImage(aideActor, this);
                     this.getSave().actors[aideActor.id] = aideActor;
                     break;
+                }
+            }
+            this.generateAidePromise = undefined;
+            if (save.aide.actorId) {
+                // Aide was created; check if this is day 0, and kick off an intro skit:
+                if (save.day === 1 && save.phase === 0 && !save.currentSkit) {
+                    const module = save.layout.getModulesWhere(m => m.type === 'echo chamber')[0];
+                    const stationAide = save.actors[save.aide.actorId || ''];
+                    stationAide.locationId = module.id;
+                    this.setSkit({
+                        type: SkitType.BEGINNING,
+                        actorId: module.ownerId,
+                        moduleId: module.id,
+                        script: [],
+                        generating: true,
+                        context: {}
+                    });
+                    // Screen will automatically switch to SKIT via BaseScreen monitoring currentSkit
                 }
             }
         })();

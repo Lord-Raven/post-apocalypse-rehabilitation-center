@@ -6,6 +6,7 @@ import { Request } from "./factions/Request";
 import { s } from "vite/dist/node/types.d-aGj9QkWt";
 
 export enum SkitType {
+    BEGINNING = 'BEGINNING',
     INTRO_CHARACTER = 'INTRO CHARACTER',
     VISIT_CHARACTER = 'VISIT CHARACTER',
     ROLE_ASSIGNMENT = 'ROLE ASSIGNMENT',
@@ -43,6 +44,16 @@ export function generateSkitTypePrompt(skit: SkitData, stage: Stage, continuing:
     const faction = stage.getSave().factions[skit.context.factionId || ''];
     const notHereText = 'This communication is being conducted via remote video link; no representative is physically present on the station. ';
     switch (skit.type) {
+        case SkitType.BEGINNING:
+            return !continuing ?
+                `This scene introduces the beginning of the story, as the holographic StationAide™, ${stage.getSave().aide.name}, resurrects the player, ` +
+                `${stage.getSave().player.name} from their echo chamber aboard the otherwise-abandoned PARC station ` +
+                `and declares the player to be the new Director of said station. ${stage.getSave().aide.name} has been keeping the station stable but was unable to keep it running without a Director, ` +
+                `so they are relieved to have someone take on the role once more. ` :
+                `Continue this introductory scene, expanding on the initial situation and context as the holographic StationAide™, ${stage.getSave().aide.name}, ` +
+                `welcomes the newly reconstituted ${stage.getSave().player.name} and names them the new Director of the otherwise-abandoned PARC. ` +
+                `${stage.getSave().aide.name} should explain the PARC's core premise of bringing back characters from dead timelines and rehabilitating them, ` +
+                `either to help them find a place in this universe or as crew aboard the PARC itself.`;
         case SkitType.INTRO_CHARACTER:
             return !continuing ? 
                 `This scene will introduce a new character, ${actor.name}, fresh from their echo chamber. ${actor.name} will have no knowledge of this universe. Establish their personality and possibly some motivations.` :

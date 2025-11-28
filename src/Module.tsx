@@ -143,7 +143,6 @@ const randomAction = (module: Module, stage: Stage, setScreenType: (type: Screen
                     generating: true,
                     context: {},
                 });
-                setScreenType(ScreenType.SKIT);
             }
         };
 
@@ -205,7 +204,6 @@ export const MODULE_DEFAULTS: Record<ModuleType, ModuleIntrinsic> = {
                             context: {factionId: faction.id}
                         });
                     }
-                    setScreenType(ScreenType.SKIT);
                 }
             } else if (Object.values(stage.getSave().actors).some(a => a.locationId === module.id)) {
                 console.log("Opening skit.");
@@ -216,7 +214,6 @@ export const MODULE_DEFAULTS: Record<ModuleType, ModuleIntrinsic> = {
                     generating: true,
                     context: {}
                 });
-                setScreenType(ScreenType.SKIT);
             }
         },
         available: (stage: Stage) => {
@@ -257,7 +254,6 @@ export const MODULE_DEFAULTS: Record<ModuleType, ModuleIntrinsic> = {
                     generating: true,
                     context: {}
                 });
-                setScreenType(ScreenType.SKIT);
             }
         },
         available: (stage: Stage) => {

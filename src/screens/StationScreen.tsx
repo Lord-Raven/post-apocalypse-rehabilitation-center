@@ -126,7 +126,6 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType}) =>
                 script: [],
                 context: { moduleType }
             });
-            setScreenType(ScreenType.SKIT);
         } else {
             stage().incPhase(1);
         }
@@ -264,7 +263,6 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType}) =>
                     script: [],
                     context: { role: roleName }
                 });
-                setScreenType(ScreenType.SKIT);
             }
         }
 
@@ -708,7 +706,7 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType}) =>
                         textShadow: '0 0 20px rgba(0, 255, 136, 0.5)',
                     }}
                 >
-                    Initializing Station Aide...
+                    Initializing StationAide™...
                 </Typography>
             </Box>
         );

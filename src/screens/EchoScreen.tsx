@@ -72,7 +72,7 @@ export const EchoScreen: FC<EchoScreenProps> = ({stage, setScreenType}) => {
 			stage().removeActorFromEcho(selected.id, false);
 			// Possibly set other properties on the selected actor as needed
 			selected.birth(stage().getSave().day);
-			stage().setSkit({
+            stage().setSkit({
                     type: SkitType.INTRO_CHARACTER,
                     actorId: selected.id,
                     moduleId: sceneRoom?.id,
@@ -80,7 +80,6 @@ export const EchoScreen: FC<EchoScreenProps> = ({stage, setScreenType}) => {
                     generating: true,
                     context: {}
                 });
-			setScreenType(ScreenType.SKIT);
 		}
 	};
 
