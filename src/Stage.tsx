@@ -333,12 +333,12 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
         // Initialize stationStats if missing
         if (!save.stationStats || Object.keys(save.stationStats).length < 6) {
             save.stationStats = {
-                'Systems': 3,
-                'Comfort': 3,
-                'Provision': 3,
-                'Security': 3,
-                'Harmony': 3,
-                'Wealth': 3
+                'Systems': 4,
+                'Comfort': 4,
+                'Provision': 4,
+                'Security': 4,
+                'Harmony': 4,
+                'Wealth': 4
             };
         }
         if (!save.factions) {
@@ -660,14 +660,7 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
                 // Handle special "STATION" id for station stat changes
                 } else if (actorId === 'STATION') {
                     if (!save.stationStats) {
-                        save.stationStats = {
-                            Systems: 3,
-                            Comfort: 3,
-                            Provision: 3,
-                            Security: 3,
-                            Harmony: 3,
-                            Wealth: 3
-                        };
+                        continue;
                     }
                     // Apply to save.stationStats; actorChanges is a map of stat name to change amount
                     for (const prop of Object.keys(actorChanges)) {
