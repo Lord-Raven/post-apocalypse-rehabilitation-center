@@ -421,23 +421,6 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
                 }
             }
             this.generateAidePromise = undefined;
-            if (save.aide.actorId) {
-                // Aide was created; check if this is day 1, and kick off an intro skit:
-                if (save.day === 1 && !save.currentSkit) {
-                    const module = save.layout.getModulesWhere(m => m.type === 'echo chamber')[0];
-                    const stationAide = save.actors[save.aide.actorId || ''];
-                    stationAide.locationId = module.id;
-                    this.setSkit({
-                        type: SkitType.BEGINNING,
-                        actorId: module.ownerId,
-                        moduleId: module.id,
-                        script: [],
-                        generating: true,
-                        context: {}
-                    });
-                    // Need to invoke setScreenType(ScreenType.SKIT); here or somewhere else that will catch this.
-                }
-            }
         })();
     }
 

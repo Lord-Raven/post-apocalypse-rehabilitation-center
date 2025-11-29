@@ -307,22 +307,35 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType}) =>
             setIsGeneratingAide(true);
             stage().generateAide().then(() => {
                 setIsGeneratingAide(false);
+                startIntro();
             }).catch((error) => {
                 console.error('Error generating aide:', error);
                 setIsGeneratingAide(false);
             });
+        } else {
+            startIntro();
         }
     }, []);
 
-    // Check if beginning skit was set after aide generation completes
-    React.useEffect(() => {
-        if (!isGeneratingAide) {
-            const save = stage().getSave();
-            if (save.currentSkit && save.currentSkit.type === SkitType.BEGINNING) {
-                setScreenType(ScreenType.SKIT);
-            }
+    const startIntro = () => {
+        const save = stage().getSave();
+        console.log('Checking for beginning skit conditions...');
+        if (save.day == 1 && save.aide.actorId && !save.timeline?.some(s => s.skit?.type === SkitType.BEGINNING)) {
+            console.log('Starting beginning skit...');
+            const module = save.layout.getModulesWhere(m => m.type === 'echo chamber')[0];
+            const stationAide = save.actors[save.aide.actorId || ''];
+            stationAide.locationId = module.id;
+
+            stage().setSkit({
+                type: SkitType.BEGINNING,
+                actorId: save.aide.actorId,
+                moduleId: module.id,
+                script: [],
+                context: {}
+            });
+            setScreenType(ScreenType.SKIT);
         }
-    }, [isGeneratingAide]);
+    };
 
     const renderDayPhaseDisplay = () => {
         return (
