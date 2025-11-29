@@ -165,15 +165,15 @@ function canActorArriveOrDepart(actorId: string, isArrival: boolean, skit: SkitD
 export function generateSkitPrompt(skit: SkitData, stage: Stage, historyLength: number, instruction: string): string {
     const playerName = stage.getSave().player.name;
 
+    // Initialize skit with actors at the location if this is the first generation
+    if (skit.script.length === 0 && !skit.initialActorIds) {
+        skit.initialActorIds = Object.values(stage.getSave().actors).filter(a => a.locationId == skit.moduleId).map(a => a.id);
+    }
+
     // Determine present and absent actors for this moment in the skit (as of the last entry in skit.script):
     const presentActorIds = getCurrentActorsInScene(skit, -1);
     const presentPatients = Object.values(stage.getSave().actors).filter(a => presentActorIds.has(a.id) && !a.remote);
     const absentPatients = Object.values(stage.getSave().actors).filter(a => !presentActorIds.has(a.id) && !a.remote);
-
-    // Initialize skit with actors at the location if this is the first generation
-    if (skit.script.length === 0 && !skit.initialActorIds) {
-        skit.initialActorIds = [...presentActorIds];
-    }
 
     // Update participation counts if this is the start of the skit
     if (skit.script.length === 0) {

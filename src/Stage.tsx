@@ -417,6 +417,7 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
                     save.aide.actorId = aideActor.id;
                     await generatePrimaryActorImage(aideActor, this);
                     this.getSave().actors[aideActor.id] = aideActor;
+                    this.saveGame();
                     break;
                 }
             }
