@@ -52,11 +52,11 @@ export function generateSkitTypePrompt(skit: SkitData, stage: Stage, continuing:
                 `This scene introduces the beginning of the story, as the holographic StationAide™, ${stage.getSave().aide.name}, resurrects the player, ` +
                 `${stage.getSave().player.name} from their echo chamber aboard the otherwise-abandoned PARC station ` +
                 `and declares the player to be the new Director of said station. ${stage.getSave().aide.name} has been keeping the station stable but was unable to keep it running without a Director, ` +
-                `so they are relieved to have someone take on the role once more. ` :
+                `so they are relieved to have someone take on the role once more.` :
                 `Continue this introductory scene, expanding on the initial situation and context as the holographic StationAide™, ${stage.getSave().aide.name}, ` +
                 `welcomes the newly reconstituted ${stage.getSave().player.name} and names them the new Director of the otherwise-abandoned PARC. ` +
                 `${stage.getSave().aide.name} should explain the PARC's core premise of bringing back characters from dead timelines and rehabilitating them, ` +
-                `either to help them find a place in this universe or as crew aboard the PARC itself.`;
+                `either to help them find a place in this universe or as crew aboard the PARC itself. Once the concept is established, use a "[SUMMARY]" tag to summarize the scene before moving on.`;
         case SkitType.INTRO_CHARACTER:
             return !continuing ? 
                 `This scene will introduce a new character, ${actor.name}, fresh from their echo chamber. ${actor.name} will have no knowledge of this universe. Establish their personality and possibly some motivations.` :
@@ -166,7 +166,8 @@ export function generateSkitPrompt(skit: SkitData, stage: Stage, historyLength: 
     const playerName = stage.getSave().player.name;
 
     // Initialize skit with actors at the location if this is the first generation
-    if (skit.script.length === 0 && !skit.initialActorIds) {
+    if (skit.script.length === 0) {
+        
         skit.initialActorIds = Object.values(stage.getSave().actors).filter(a => a.locationId == skit.moduleId).map(a => a.id);
     }
 
