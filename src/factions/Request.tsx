@@ -1,4 +1,4 @@
-import { namesMatch, Stat } from "../actors/Actor";
+import { findBestNameMatch, Stat } from "../actors/Actor";
 import { StationStat } from "../Module";
 import { ScreenType } from "../screens/BaseScreen";
 import { SkitType } from "../Skit";
@@ -517,11 +517,9 @@ export class Request {
                 return null;
             }
 
-            // Resolve faction name to faction ID using namesMatch
+            // Resolve faction name to faction ID using findBestNameMatch
             const save = stage.getSave();
-            const faction = Object.values(save.factions).find(f => 
-                namesMatch(f.name.toLowerCase(), factionName.toLowerCase())
-            );
+            const faction = findBestNameMatch(factionName, Object.values(save.factions));
             
             if (!faction) {
                 console.warn(`Failed to find faction matching name: ${factionName}`);
@@ -577,11 +575,9 @@ export class Request {
                 return null;
             }
             
-            // Resolve actor name to actor ID using namesMatch
+            // Resolve actor name to actor ID using findBestNameMatch
             const save = stage.getSave();
-            const actor = Object.values(save.actors).find(a => 
-                namesMatch(a.name.toLowerCase(), actorName.toLowerCase())
-            );
+            const actor = findBestNameMatch(actorName, Object.values(save.actors));
             
             if (!actor) {
                 console.warn(`Failed to find actor matching name: ${actorName}`);

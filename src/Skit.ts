@@ -1,9 +1,8 @@
-import Actor, { getStatDescription, namesMatch, Stat } from "./actors/Actor";
+import Actor, { getStatDescription, findBestNameMatch, Stat } from "./actors/Actor";
 import { Emotion, EMOTION_SYNONYMS } from "./actors/Emotion";
 import { getStatRating, STATION_STAT_PROMPTS, StationStat } from "./Module";
 import { Stage } from "./Stage";
 import { Request } from "./factions/Request";
-import { s } from "vite/dist/node/types.d-aGj9QkWt";
 
 export enum SkitType {
     BEGINNING = 'BEGINNING',
@@ -115,7 +114,15 @@ export function generateSkitTypePrompt(skit: SkitData, stage: Stage, continuing:
 
 function buildScriptLog(skit: SkitData): string {
         return skit.script && skit.script.length > 0 ?
-        skit.script.map(e => `${e.speaker}:${e.message}${Object.keys(e.actorEmotions || {}).filter(feeler => namesMatch(feeler, e.speaker)).map(feeler => ` [${feeler} EXPRESSES ${e.actorEmotions?.[feeler]}]`).join('\n')} `).join('\n')
+        skit.script.map(e => {
+            // Find the best matching emotion key for this speaker
+            const emotionKeys = Object.keys(e.actorEmotions || {});
+            const candidates = emotionKeys.map(key => ({ name: key }));
+            const bestMatch = findBestNameMatch(e.speaker, candidates);
+            const matchingKey = bestMatch?.name;
+            const emotionText = matchingKey ? ` [${matchingKey} EXPRESSES ${e.actorEmotions?.[matchingKey]}]` : '';
+            return `${e.speaker}:${e.message}${emotionText}`;
+        }).join('\n')
         : '(None so far)';
 }
 
@@ -356,8 +363,8 @@ export async function generateSkitScript(skit: SkitData, stage: Stage): Promise<
                         const arrivesMatch = arrivesRegex.exec(raw);
                         if (arrivesMatch) {
                             const characterName = arrivesMatch[1].trim();
-                            // Find matching actor using namesMatch
-                            const matched = allActors.find(a => namesMatch(a.name.toLowerCase(), characterName.toLowerCase()));
+                            // Find matching actor using findBestNameMatch
+                            const matched = findBestNameMatch(characterName, allActors);
                             if (matched) {
                                 // Validate if this actor can arrive (using current combined line index)
                                 const currentIndex = combinedLines.length;
@@ -376,8 +383,8 @@ export async function generateSkitScript(skit: SkitData, stage: Stage): Promise<
                         const departsMatch = departsRegex.exec(raw);
                         if (departsMatch) {
                             const characterName = departsMatch[1].trim();
-                            // Find matching actor using namesMatch
-                            const matched = allActors.find(a => namesMatch(a.name.toLowerCase(), characterName.toLowerCase()));
+                            // Find matching actor using findBestNameMatch
+                            const matched = findBestNameMatch(characterName, allActors);
                             if (matched) {
                                 // Validate if this actor can depart (using current combined line index)
                                 const currentIndex = combinedLines.length;
@@ -397,8 +404,8 @@ export async function generateSkitScript(skit: SkitData, stage: Stage): Promise<
                         if (emotionMatch) {
                             const characterName = emotionMatch[1].trim();
                             const emotionName = emotionMatch[2].trim().toLowerCase();
-                            // Find matching actor using namesMatch
-                            const matched = allActors.find(a => namesMatch(a.name.toLowerCase(), characterName.toLowerCase()));
+                            // Find matching actor using findBestNameMatch
+                            const matched = findBestNameMatch(characterName, allActors);
                             if (!matched) continue;
                             
                             // Try to map emotion using EMOTION_SYNONYMS if not a standard emotion
@@ -488,7 +495,7 @@ export async function generateSkitScript(skit: SkitData, stage: Stage): Promise<
                     }
                     // Adjust speaker name to match actor name if possible
                     const presentActors = Object.values(stage.getSave().actors).filter(a => a.locationId === (skit.moduleId || ''));
-                    const matched = presentActors.find(a => namesMatch(a.name.toLowerCase(), entry.speaker.toLowerCase()));
+                    const matched = findBestNameMatch(entry.speaker, presentActors);
                     if (matched) {
                         entry.speaker = matched.name;
                     }
@@ -496,7 +503,7 @@ export async function generateSkitScript(skit: SkitData, stage: Stage): Promise<
 
                 // TTS for each entry's dialogue
                 const ttsPromises = scriptEntries.map(async (entry) => {
-                    const actor = Object.values(stage.getSave().actors).find(a => namesMatch(a.name.toLowerCase(), entry.speaker.toLowerCase()));
+                    const actor = findBestNameMatch(entry.speaker, Object.values(stage.getSave().actors));
                     // Only TTS if entry.speaker matches an actor from stage().getSave().actors and entry.message includes dialogue in quotes.
                     if (!actor || !entry.message.includes('"')) {
                         entry.speechUrl = '';
@@ -629,9 +636,9 @@ export async function generateSkitScript(skit: SkitData, stage: Stage): Promise<
                                         const factionNameRaw = factionMatch[1].trim();
                                         const reputationChange = parseInt(factionMatch[2].replace(/\s+/g, ''), 10) || 0;
                                         
-                                        // Find matching faction using namesMatch
+                                        // Find matching faction using findBestNameMatch
                                         const allFactions = Object.values(stage.getSave().factions);
-                                        const matchedFaction = allFactions.find(f => namesMatch(f.name.toLowerCase(), factionNameRaw.toLowerCase()));
+                                        const matchedFaction = findBestNameMatch(factionNameRaw, allFactions);
                                         
                                         if (matchedFaction && reputationChange !== 0) {
                                             if (!statChanges['FACTION']) statChanges['FACTION'] = {};
@@ -684,9 +691,9 @@ export async function generateSkitScript(skit: SkitData, stage: Stage): Promise<
                                         }
                                     } else {
                                         // Character stat changes
-                                        // Find matching present actor using namesMatch
+                                        // Find matching present actor using findBestNameMatch
                                         const presentActors: Actor[] = Object.values(stage.getSave().actors).filter(a => a.locationId === (skit.moduleId || ''));
-                                        const matched = presentActors.find(a => namesMatch(a.name.toLowerCase(), target.toLowerCase()));
+                                        const matched = findBestNameMatch(target, presentActors);
                                         if (!matched) continue;
 
                                         const adjustments = payload.split(',').map(p => p.trim());

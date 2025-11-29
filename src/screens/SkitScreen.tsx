@@ -4,7 +4,7 @@
 import React, { FC, useEffect } from 'react';
 import { ScreenType } from './BaseScreen';
 import { Module } from '../Module';
-import Actor, { namesMatch } from '../actors/Actor';
+import Actor, { namesMatch, findBestNameMatch } from '../actors/Actor';
 import { Stage } from '../Stage';
 import { SkitData } from '../Skit';
 import ActorImage from '../actors/ActorImage';
@@ -318,9 +318,7 @@ export const SkitScreen: FC<SkitScreenProps> = ({ stage, setScreenType }) => {
         if (skit.script && skit.script.length > 0) {
             const currentSpeakerName = skit.script[index]?.speaker?.trim() || '';
             const actors = Object.values(stage().getSave().actors);
-            const matchingActor = actors.find(actor => 
-                actor.name && namesMatch(actor.name.trim().toLowerCase(), currentSpeakerName.toLowerCase())
-            );
+            const matchingActor = findBestNameMatch(currentSpeakerName, actors);
             
             // Check if this is the player speaking
             const playerName = stage().getSave().player.name;
