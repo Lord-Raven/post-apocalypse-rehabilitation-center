@@ -165,18 +165,20 @@ function canActorArriveOrDepart(actorId: string, isArrival: boolean, skit: SkitD
 export function generateSkitPrompt(skit: SkitData, stage: Stage, historyLength: number, instruction: string): string {
     const playerName = stage.getSave().player.name;
 
-    const presentActors = Object.values(stage.getSave().actors).filter(a => a.locationId === (skit.moduleId || '') && !a.remote);
-    const absentActors = Object.values(stage.getSave().actors).filter(a => a.locationId !== (skit.moduleId || '') && !a.remote);
+    // Determine present and absent actors for this moment in the skit (as of the last entry in skit.script):
+    const presentActorIds = getCurrentActorsInScene(skit, -1);
+    const presentPatients = Object.values(stage.getSave().actors).filter(a => presentActorIds.has(a.id) && !a.remote);
+    const absentPatients = Object.values(stage.getSave().actors).filter(a => !presentActorIds.has(a.id) && !a.remote);
 
     // Initialize skit with actors at the location if this is the first generation
     if (skit.script.length === 0 && !skit.initialActorIds) {
-        skit.initialActorIds = presentActors.map(a => a.id);
+        skit.initialActorIds = [...presentActorIds];
     }
 
     // Update participation counts if this is the start of the skit
     if (skit.script.length === 0) {
         // Increment participation count for present actors
-        presentActors.forEach(a => {
+        presentPatients.forEach(a => {
             a.participations = (a.participations || 0) + 1;
         });
     }
@@ -205,9 +207,9 @@ export function generateSkitPrompt(skit: SkitData, stage: Stage, historyLength: 
             Object.values(stage.getSave().requests).map(request => `-${stage.getSave().factions[request.factionId]?.name || 'Unknown Faction'}: ${request.description} \n  Requirement: ${request.getRequirementText(stage)} \n  Reward: ${request.getRewardText()}`).join('\n')
         ) : '') +
         `\n\n${playerName}'s profile: ${stage.getSave().player.description}` +
-        (stationAide ? (presentActors.includes(stationAide) ? `\n\nThe holographic StationAide™ ${stationAide.name} is active in the scene. Profile: ${stationAide.profile}` : '\n\nThe holographic StationAide™ ${stationAide.name} remains absent from the scene unless summoned by the Director.') : '') +
+        (stationAide ? (presentActorIds.has(stationAide.id) ? `\n\nThe holographic StationAide™ ${stationAide.name} is active in the scene. Profile: ${stationAide.profile}` : '\n\nThe holographic StationAide™ ${stationAide.name} remains absent from the scene unless summoned by the Director.') : '') +
         // List characters who are here, along with full stat details:
-        `\n\nPresent Characters:\n${presentActors.map(actor => {
+        `\n\nPresent Characters:\n${presentPatients.map(actor => {
             const roleModule = stage.getLayout().getModulesWhere((m: any) => 
                 m && m.type !== 'quarters' && m.ownerId === actor.id
             )[0];
@@ -216,7 +218,7 @@ export function generateSkitPrompt(skit: SkitData, stage: Stage, historyLength: 
             `  Role Description: ${roleModule?.getAttribute('roleDescription') || 'This character has no assigned role aboard the PARC. They are to focus upon their own needs.'}\n` +
             `  Stats:\n    ${Object.entries(actor.stats).map(([stat, value]) => `${stat}: ${value}`).join('\n    ')}`}).join('\n')}` +
         // List non-present characters for reference; just need description and profile:
-        `\n\nAbsent Characters:\n${absentActors.map(actor => {
+        `\n\nAbsent Characters:\n${absentPatients.map(actor => {
             // Just role name and not full details.
             const roleModule = stage.getLayout().getModulesWhere((m: any) => 
                 m && m.type !== 'quarters' && m.ownerId === actor.id
