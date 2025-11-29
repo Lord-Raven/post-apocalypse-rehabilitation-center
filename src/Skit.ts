@@ -285,7 +285,8 @@ export async function generateSkitScript(skit: SkitData, stage: Stage): Promise<
                 `\nFollow the structure of the strict Example Script formatting above: ` +
                 `actions are depicted in prose and character dialogue in quotation marks. Emotion tags (e.g. "[CHARACTER NAME EXPRESSES JOY]") should be used to indicate significant emotional shifts—` +
                 `these cues will be utilized by the game engine to visually display appropriate character emotions. ` +
-                `Character movement tags (e.g. "[CHARACTER NAME arrives]" or "[CHARACTER NAME departs]") can be used when an Absent Character joins the scene or a Present Character leaves. ` +
+                `Character movement tags (e.g. "[CHARACTER NAME arrives]" or "[CHARACTER NAME departs]") should be used to indicate when an Absent Character (or the StationAide) joins the scene or a Present Character (or the StationAide) leaves; ` +
+                `the game engine uses these tags to visually display character presence in the scene. ` +
                 `These tags enable the game to track who is present throughout the scene. ` +
                 (skit.script.length > 0 ? (`A "[SUMMARY]" tag (e.g., "[SUMMARY: Brief summary of the scene's events.]") should be included when the scene has fulfilled the current Scene Prompt or reached a conclusive moment before continuing with the script. `) : '') +
                 `\nThis scene is a brief visual novel skit within a video game; as such, the scene avoids major developments which would fundamentally change the mechanics or nature of the game, ` +
