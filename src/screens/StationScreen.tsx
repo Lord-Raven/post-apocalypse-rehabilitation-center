@@ -325,7 +325,6 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType}) =>
             const module = save.layout.getModulesWhere(m => m.type === 'echo chamber')[0];
             const stationAide = save.actors[save.aide.actorId || ''];
             stationAide.locationId = module.id;
-            stage().saveGame();
 
             stage().setSkit({
                 type: SkitType.BEGINNING,

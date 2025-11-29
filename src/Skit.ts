@@ -280,7 +280,7 @@ export async function generateSkitScript(skit: SkitData, stage: Stage): Promise<
                 'System: NARRATOR: [CHARACTER NAME arrives] CHARACTER NAME enters the room.\nNARRATOR: [CHARACTER NAME departs] CHARACTER NAME leaves the scene.' +
                 `\n\nExample Ending Script Format:\n` +
                 'System: CHARACTER NAME: [CHARACTER NAME EXPRESSES OPTIMISM] Action in prose. "Dialogue in quotation marks."\nNARRATOR: A moment of prose describing events.' +
-                `\n[SUMMARY: CHARACTER NAME is hopeful about this demonstration.]` +
+                (skit.script.length > 0 ? `\n[SUMMARY: CHARACTER NAME is hopeful about this demonstration.]` : '') +
                 `\n\nCurrent Scene Script Log to Continue:\nSystem: ${buildScriptLog(skit)}` +
                 `\n\nPrimary Instruction:\nAt the "System:" prompt, ${skit.script.length == 0 ? 'generate a short scene script' : 'extend or conclude the current scene script'} based upon the Premise and the specified Scene Prompt, ` +
                 `involving the Present Characters (Absent Characters are listed for reference only). ` +
