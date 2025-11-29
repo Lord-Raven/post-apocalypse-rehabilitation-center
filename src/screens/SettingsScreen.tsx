@@ -76,7 +76,7 @@ export const SettingsScreen: FC<SettingsScreenProps> = ({ stage, onCancel, onCon
     const [settings, setSettings] = useState<SettingsData>({
         playerName: stage().getSave().player?.name || 'Director',
         playerDescription: stage().getSave().player?.description || 'The PARC\'s enigmatic Director is the station\'s sole authority.',
-        aideName: stage().getSave().aide?.name || 'StationAide™',
+        aideName: stage().getSave().aide?.name || 'Soji',
         aideDescription: stage().getSave().aide?.description || 
             (`Your holographic aide is acutely familiar with the technical details of your Post-Apocalypse Rehabilitation Center, so you don't have to be! ` +
             `Your StationAide™ comes pre-programmed with a friendly and non-condescending demeanor that will leave you feeling empowered but never patronized; ` +

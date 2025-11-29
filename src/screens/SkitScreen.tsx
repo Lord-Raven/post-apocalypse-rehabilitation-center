@@ -251,6 +251,31 @@ interface SkitScreenProps {
     setScreenType: (type: ScreenType) => void;
 }
 
+/**
+ * Helper function to get the actors present in the scene at a given script index.
+ * Walks through arrivals and departures from initialActorIds.
+ */
+const getActorsAtIndex = (skit: SkitData, scriptIndex: number, allActors: {[key: string]: Actor}): Actor[] => {
+    // Start with initial actors
+    const currentActorIds = new Set<string>(skit.initialActorIds || []);
+    
+    // Apply arrivals and departures up to and including the current index
+    for (let i = 0; i <= scriptIndex && i < skit.script.length; i++) {
+        const entry = skit.script[i];
+        if (entry.arrivals) {
+            entry.arrivals.forEach(actorId => currentActorIds.add(actorId));
+        }
+        if (entry.departures) {
+            entry.departures.forEach(actorId => currentActorIds.delete(actorId));
+        }
+    }
+    
+    // Convert IDs to Actor objects
+    return Array.from(currentActorIds)
+        .map(id => allActors[id])
+        .filter(actor => actor !== undefined);
+};
+
 export const SkitScreen: FC<SkitScreenProps> = ({ stage, setScreenType }) => {
     const { setTooltip, clearTooltip } = useTooltip();
     const [index, setIndex] = React.useState<number>(0);
@@ -412,7 +437,7 @@ export const SkitScreen: FC<SkitScreenProps> = ({ stage, setScreenType }) => {
 
             {/* Actors */}
             <div style={{ position: 'absolute', inset: 0, zIndex: 1 }}>
-                {renderActors(stage().getSave().layout.getModuleById(skit.moduleId || ''), Object.values(stage().getSave().actors).filter(actor => actor.locationId === (skit.moduleId || '')) || [], skit.script && skit.script.length > 0 ? skit.script[index]?.speaker : undefined)}
+                {renderActors(stage().getSave().layout.getModuleById(skit.moduleId || ''), getActorsAtIndex(skit, index, stage().getSave().actors), skit.script && skit.script.length > 0 ? skit.script[index]?.speaker : undefined)}
             </div>
 
             {/* Skit Outcome Display - shown when scene ends */}

@@ -24,12 +24,15 @@ export interface ScriptEntry {
     speechUrl: string; // URL of TTS audio
     actorEmotions?: {[key: string]: Emotion}; // actor name -> emotion string
     endScene?: boolean; // Whether this entry marks the end of the scene
+    arrivals?: string[]; // ActorIds arriving in this entry
+    departures?: string[]; // ActorIds departing in this entry
 }
 
 export interface SkitData {
     type: SkitType;
     moduleId: string;
     actorId?: string;
+    initialActorIds?: string[]; // Actors who are initially present at the start of the skit
     script: ScriptEntry[];
     generating?: boolean;
     context: any;
@@ -115,11 +118,60 @@ function buildScriptLog(skit: SkitData): string {
         : '(None so far)';
 }
 
+/**
+ * Helper function to determine the current set of actors present at a given script index.
+ * Walks through the script from the beginning, applying arrivals and departures.
+ * @param skit - The skit data
+ * @param upToIndex - Process script entries up to (but not including) this index. -1 means process all.
+ * @returns Set of actor IDs currently present
+ */
+function getCurrentActorsInScene(skit: SkitData, upToIndex: number = -1): Set<string> {
+    const currentActors = new Set<string>(skit.initialActorIds || []);
+    const endIndex = upToIndex === -1 ? skit.script.length : upToIndex;
+    
+    for (let i = 0; i < endIndex; i++) {
+        const entry = skit.script[i];
+        if (entry.arrivals) {
+            entry.arrivals.forEach(actorId => currentActors.add(actorId));
+        }
+        if (entry.departures) {
+            entry.departures.forEach(actorId => currentActors.delete(actorId));
+        }
+    }
+    
+    return currentActors;
+}
+
+/**
+ * Validates whether an actor can logically arrive or depart at the current point in the script.
+ * @param actorId - The actor's ID
+ * @param isArrival - true for arrival, false for departure
+ * @param skit - The skit data
+ * @param currentScriptIndex - The index where this action would occur
+ * @returns true if the action is valid, false otherwise
+ */
+function canActorArriveOrDepart(actorId: string, isArrival: boolean, skit: SkitData, currentScriptIndex: number): boolean {
+    const currentActors = getCurrentActorsInScene(skit, currentScriptIndex);
+    
+    if (isArrival) {
+        // Actor can arrive if they're not currently present
+        return !currentActors.has(actorId);
+    } else {
+        // Actor can depart if they are currently present
+        return currentActors.has(actorId);
+    }
+}
+
 export function generateSkitPrompt(skit: SkitData, stage: Stage, historyLength: number, instruction: string): string {
     const playerName = stage.getSave().player.name;
 
     const presentActors = Object.values(stage.getSave().actors).filter(a => a.locationId === (skit.moduleId || '') && !a.remote);
     const absentActors = Object.values(stage.getSave().actors).filter(a => a.locationId !== (skit.moduleId || '') && !a.remote);
+
+    // Initialize skit with actors at the location if this is the first generation
+    if (skit.script.length === 0 && !skit.initialActorIds) {
+        skit.initialActorIds = presentActors.map(a => a.id);
+    }
 
     // Update participation counts if this is the start of the skit
     if (skit.script.length === 0) {
@@ -136,6 +188,7 @@ export function generateSkitPrompt(skit: SkitData, stage: Stage, historyLength: 
     const faction = skit.context.factionId ? stage.getSave().factions[skit.context.factionId] : null;
     const factionRepresentative = faction ? stage.getSave().actors[faction.representativeId || ''] : null;
     const request = skit.context.requestId ? stage.getSave().requests[skit.context.requestId] : null;
+    const stationAide = stage.getSave().actors[stage.getSave().aide.actorId || ''];
 
     let fullPrompt = `{{messages}}\nPremise:\nThis is a sci-fi visual novel game set on a space station that resurrects and rehabilitates patients who died in a multiverse-wide apocalypse: ` +
         `the Post-Apocalypse Rehabilitation Center. ` +
@@ -152,6 +205,7 @@ export function generateSkitPrompt(skit: SkitData, stage: Stage, historyLength: 
             Object.values(stage.getSave().requests).map(request => `-${stage.getSave().factions[request.factionId]?.name || 'Unknown Faction'}: ${request.description} \n  Requirement: ${request.getRequirementText(stage)} \n  Reward: ${request.getRewardText()}`).join('\n')
         ) : '') +
         `\n\n${playerName}'s profile: ${stage.getSave().player.description}` +
+        (stationAide ? (presentActors.includes(stationAide) ? `\n\nThe holographic StationAide™ ${stationAide.name} is active in the scene. Profile: ${stationAide.profile}` : '\n\nThe holographic StationAide™ ${stationAide.name} remains absent from the scene unless summoned by the Director.') : '') +
         // List characters who are here, along with full stat details:
         `\n\nPresent Characters:\n${presentActors.map(actor => {
             const roleModule = stage.getLayout().getModulesWhere((m: any) => 
@@ -219,6 +273,8 @@ export async function generateSkitScript(skit: SkitData, stage: Stage): Promise<
             const fullPrompt = generateSkitPrompt(skit, stage, 2 + retries,
                 `Example Script Format:\n` +
                 'System: CHARACTER NAME: They do actions in prose. "Their dialogue is in quotation marks."\nANOTHER CHARACTER NAME: [ANOTHER CHARACTER NAME EXPRESSES JOY][CHARACTER NAME EXPRESSES SURPRISE] "Dialogue in quotation marks."\nNARRATOR: [CHARACTER NAME EXPRESSES RELIEF] Descriptive content that is not attributed to a character.' +
+                `\n\nExample Character Movement Format:\n` +
+                'System: NARRATOR: [CHARACTER NAME arrives] CHARACTER NAME enters the room.\nNARRATOR: [CHARACTER NAME departs] CHARACTER NAME leaves the scene.' +
                 `\n\nExample Ending Script Format:\n` +
                 'System: CHARACTER NAME: [CHARACTER NAME EXPRESSES OPTIMISM] Action in prose. "Dialogue in quotation marks."\nNARRATOR: A moment of prose describing events.' +
                 `\n[SUMMARY: CHARACTER NAME is hopeful about this demonstration.]` +
@@ -229,6 +285,8 @@ export async function generateSkitScript(skit: SkitData, stage: Stage): Promise<
                 `\nFollow the structure of the strict Example Script formatting above: ` +
                 `actions are depicted in prose and character dialogue in quotation marks. Emotion tags (e.g. "[CHARACTER NAME EXPRESSES JOY]") should be used to indicate significant emotional shifts—` +
                 `these cues will be utilized by the game engine to visually display appropriate character emotions. ` +
+                `Character movement tags (e.g. "[CHARACTER NAME arrives]" or "[CHARACTER NAME departs]") can be used when an Absent Character joins the scene or a Present Character leaves. ` +
+                `These tags enable the game to track who is present throughout the scene. ` +
                 `A "[SUMMARY]" tag (e.g., "[SUMMARY: Brief summary of the scene's events.]") should be included when the scene has fulfilled the current Scene Prompt or reached a conclusive moment before continuing with the script. ` +
                 `\nThis scene is a brief visual novel skit within a video game; as such, the scene avoids major developments which would fundamentally change the mechanics or nature of the game, ` +
                 `instead developing content within the existing mechanics. ` +
@@ -253,9 +311,11 @@ export async function generateSkitScript(skit: SkitData, stage: Stage): Promise<
                 // Parse response based on format "NAME: content"; content could be multi-line. We want to ensure that lines that don't start with a name are appended to the previous line.
                 const lines = text.split('\n');
                 const combinedLines: string[] = [];
-                const combinedEmotionTags: {[key: string]: Emotion}[] = [];
+                const combinedEmotionTags: {emotions: {[key: string]: Emotion}, arrivals: string[], departures: string[]}[] = [];
                 let currentLine = '';
                 let currentEmotionTags: {[key: string]: Emotion} = {};
+                let currentArrivals: string[] = [];
+                let currentDepartures: string[] = [];
                 for (const line of lines) {
                     // Skip empty lines
                     let trimmed = line.trim();
@@ -273,25 +333,67 @@ export async function generateSkitScript(skit: SkitData, stage: Stage): Promise<
                     if (!trimmed || ![']', '*', '_', ')', '.', '!', '?', '"', '\''].some(end => trimmed.endsWith(end))) continue;
 
                     const newEmotionTags: {[key: string]: Emotion} = {};
+                    const newArrivals: string[] = [];
+                    const newDepartures: string[] = [];
 
-                    // Prepare list of present actors (based on module/location)
-                    const presentActors: Actor[] = Object.values(stage.getSave().actors).filter(a => a.locationId === (skit.moduleId || ''));
+                    // Prepare list of all actors (not just present)
+                    const allActors: Actor[] = Object.values(stage.getSave().actors);
                     
-                    // Process tags in the line (just expresses at the moment):
-                    // [Character Name EXPRESSES Emotion]
+                    // Process tags in the line
                     for (const tag of trimmed.match(/\[[^\]]+\]/g) || []) {
                         const raw = tag.slice(1, -1).trim();
                         if (!raw) continue;
 
                         console.log(`Processing tag: ${raw}`);
+                        
+                        // Look for arrives tags: [Character Name arrives]
+                        const arrivesRegex = /^([^[\]]+)\s+arrives$/i;
+                        const arrivesMatch = arrivesRegex.exec(raw);
+                        if (arrivesMatch) {
+                            const characterName = arrivesMatch[1].trim();
+                            // Find matching actor using namesMatch
+                            const matched = allActors.find(a => namesMatch(a.name.toLowerCase(), characterName.toLowerCase()));
+                            if (matched) {
+                                // Validate if this actor can arrive (using current combined line index)
+                                const currentIndex = combinedLines.length;
+                                if (canActorArriveOrDepart(matched.id, true, skit, currentIndex)) {
+                                    newArrivals.push(matched.id);
+                                    console.log(`Detected arrival: ${matched.name}`);
+                                } else {
+                                    console.warn(`Invalid arrival for ${matched.name}: actor is already present`);
+                                }
+                            }
+                            continue;
+                        }
+                        
+                        // Look for departs tags: [Character Name departs]
+                        const departsRegex = /^([^[\]]+)\s+departs$/i;
+                        const departsMatch = departsRegex.exec(raw);
+                        if (departsMatch) {
+                            const characterName = departsMatch[1].trim();
+                            // Find matching actor using namesMatch
+                            const matched = allActors.find(a => namesMatch(a.name.toLowerCase(), characterName.toLowerCase()));
+                            if (matched) {
+                                // Validate if this actor can depart (using current combined line index)
+                                const currentIndex = combinedLines.length;
+                                if (canActorArriveOrDepart(matched.id, false, skit, currentIndex)) {
+                                    newDepartures.push(matched.id);
+                                    console.log(`Detected departure: ${matched.name}`);
+                                } else {
+                                    console.warn(`Invalid departure for ${matched.name}: actor is not present`);
+                                }
+                            }
+                            continue;
+                        }
+                        
                         // Look for expresses tags:
                         const emotionTagRegex = /([^[\]]+)\s+EXPRESSES\s+([^[\]]+)/gi;
                         let emotionMatch = emotionTagRegex.exec(raw);
                         if (emotionMatch) {
                             const characterName = emotionMatch[1].trim();
                             const emotionName = emotionMatch[2].trim().toLowerCase();
-                            // Find matching present actor using namesMatch
-                            const matched = presentActors.find(a => namesMatch(a.name.toLowerCase(), characterName.toLowerCase()));
+                            // Find matching actor using namesMatch
+                            const matched = allActors.find(a => namesMatch(a.name.toLowerCase(), characterName.toLowerCase()));
                             if (!matched) continue;
                             
                             // Try to map emotion using EMOTION_SYNONYMS if not a standard emotion
@@ -316,19 +418,31 @@ export async function generateSkitScript(skit: SkitData, stage: Stage): Promise<
                         // New line
                         if (currentLine) {
                             combinedLines.push(currentLine.trim());
-                            combinedEmotionTags.push(currentEmotionTags);
+                            combinedEmotionTags.push({
+                                emotions: currentEmotionTags,
+                                arrivals: currentArrivals,
+                                departures: currentDepartures
+                            });
                         }
                         currentLine = trimmed;
                         currentEmotionTags = newEmotionTags;
+                        currentArrivals = newArrivals;
+                        currentDepartures = newDepartures;
                     } else {
                         // Continuation of previous line
                         currentLine += '\n' + trimmed;
                         currentEmotionTags = {...currentEmotionTags, ...newEmotionTags};
+                        currentArrivals = [...currentArrivals, ...newArrivals];
+                        currentDepartures = [...currentDepartures, ...newDepartures];
                     }
                 }
                 if (currentLine) {
                     combinedLines.push(currentLine.trim());
-                    combinedEmotionTags.push(currentEmotionTags);
+                    combinedEmotionTags.push({
+                        emotions: currentEmotionTags,
+                        arrivals: currentArrivals,
+                        departures: currentDepartures
+                    });
                 }
 
                 // Convert combined lines into ScriptEntry objects by splitting at first ':'
@@ -342,12 +456,20 @@ export async function generateSkitScript(skit: SkitData, stage: Stage): Promise<
                         message = l.slice(idx + 1).trim();
                     }
                     
-                    // Remove any remaining non-emotion tags
+                    // Remove any remaining tags
                     message = message.replace(/\[([^\]]+)\]/g, '').trim();
                     
                     const entry: ScriptEntry = { speaker, message, speechUrl: '' };
-                    if (Object.keys(combinedEmotionTags[index]).length > 0) {
-                        entry.actorEmotions = combinedEmotionTags[index];
+                    const tagData = combinedEmotionTags[index];
+                    
+                    if (tagData.emotions && Object.keys(tagData.emotions).length > 0) {
+                        entry.actorEmotions = tagData.emotions;
+                    }
+                    if (tagData.arrivals && tagData.arrivals.length > 0) {
+                        entry.arrivals = tagData.arrivals;
+                    }
+                    if (tagData.departures && tagData.departures.length > 0) {
+                        entry.departures = tagData.departures;
                     }
                     
                     return entry;

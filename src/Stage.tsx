@@ -122,7 +122,7 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
         layout.setModuleAt(DEFAULT_GRID_SIZE/2 - 1, DEFAULT_GRID_SIZE/2 - 1, createModule("comms", { id: `comms-${DEFAULT_GRID_SIZE/2}-${DEFAULT_GRID_SIZE/2}`, attributes: {} }));
         this.freshSave = { player: {name: Object.values(users)[0].name, description: Object.values(users)[0].chatProfile || ''}, 
             aide: {
-                name: 'StationAide™', 
+                name: 'Soji', 
                 description: `Your holographic assistant is acutely familiar with the technical details of your Post-Apocalypse Rehabilitation Center, so you don't have to be! ` +
                 `Your StationAide™ comes pre-programmed with a friendly and non-condescending demeanor that will leave you feeling empowered and never patronized; ` +
                 `your bespoke projection comes with an industry-leading feminine form in a pleasing shade of default blue, but, as always, StationAide™ remains infinitely customizable to suit your tastes.`}, 
