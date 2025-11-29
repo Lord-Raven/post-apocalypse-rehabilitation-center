@@ -410,13 +410,13 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
             for (let attempt = 0; attempt < 3; attempt++) {
                 const aideActor = await loadReserveActor(actorData, this);
                 if (aideActor) {
-                    save.actors[aideActor.id] = aideActor;
-                    aideActor.name = save.aide.name;
-                    aideActor.profile = save.aide.description;
-                    aideActor.remote = true;
-                    save.aide.actorId = aideActor.id;
-                    await generatePrimaryActorImage(aideActor, this);
                     this.getSave().actors[aideActor.id] = aideActor;
+                    aideActor.name = this.getSave().aide.name;
+                    aideActor.profile = this.getSave().aide.description;
+                    aideActor.remote = true;
+                    this.getSave().aide.actorId = aideActor.id;
+                    this.getSave().actors[aideActor.id] = aideActor;
+                    await generatePrimaryActorImage(aideActor, this);
                     this.saveGame();
                     break;
                 }
