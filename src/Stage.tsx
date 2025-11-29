@@ -474,6 +474,8 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
             try {
                 console.log('Loading additional factions...');
                 const eligibleFactions = Object.values(this.getSave().factions).filter(faction => faction.reputation > 0);
+                console.log('Existing factions:', Object.values(this.getSave().factions));
+                console.log('Currently eligible factions:', eligibleFactions);
                 while (eligibleFactions.length < this.MAX_FACTIONS) {
                     const needed = this.MAX_FACTIONS - eligibleFactions.length;
                     // Populate reserveFactions; this is loaded with data from a service, calling the characterSearchQuery URL:
