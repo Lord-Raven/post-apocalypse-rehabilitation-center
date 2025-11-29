@@ -287,12 +287,12 @@ export async function generateSkitScript(skit: SkitData, stage: Stage): Promise<
                 `these cues will be utilized by the game engine to visually display appropriate character emotions. ` +
                 `Character movement tags (e.g. "[CHARACTER NAME arrives]" or "[CHARACTER NAME departs]") can be used when an Absent Character joins the scene or a Present Character leaves. ` +
                 `These tags enable the game to track who is present throughout the scene. ` +
-                `A "[SUMMARY]" tag (e.g., "[SUMMARY: Brief summary of the scene's events.]") should be included when the scene has fulfilled the current Scene Prompt or reached a conclusive moment before continuing with the script. ` +
+                (skit.script.length > 0 ? (`A "[SUMMARY]" tag (e.g., "[SUMMARY: Brief summary of the scene's events.]") should be included when the scene has fulfilled the current Scene Prompt or reached a conclusive moment before continuing with the script. `) : '') +
                 `\nThis scene is a brief visual novel skit within a video game; as such, the scene avoids major developments which would fundamentally change the mechanics or nature of the game, ` +
                 `instead developing content within the existing mechanics. ` +
                 `Generally, focus upon interpersonal dynamics, character growth, faction relationships, and the state of the Station and its inhabitants.` +
-                `\nWhen the script completes a full story beat, indicates a scene change, or includes an implied closure—or if the current script has already achieved a significant moment—, ` +
-                `insert a "[SUMMARY: A brief synopsis of this scene's key events.]" tag, so the game engine can store the summary.${wrapupPrompt}`
+                (skit.script.length > 0 ? (`\nWhen the script completes a full story beat, indicates a scene change, or includes an implied closure—or if the current script has already achieved a significant moment—, ` +
+                `insert a "[SUMMARY: A brief synopsis of this scene's key events.]" tag, so the game engine can store the summary.${wrapupPrompt}`) : '')
             );
 
 
