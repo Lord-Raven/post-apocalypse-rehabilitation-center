@@ -257,7 +257,7 @@ export async function loadReserveActor(data: any, stage: Stage): Promise<Actor|n
             `DESCRIPTION: A vivid description of the character's physical appearance, attire, and any distinguishing features.\n` +
             `PROFILE: A brief summary of the character's key personality traits and behaviors.\n` +
             `STYLE: A concise description of the character's sense of overall style, mood, interests, or aesthetic, to be applied to the way they decorate their space.\n` +
-            `VOICE: Output the specific voice ID from the Available Voices section that best matches the character's personality\n` +
+            `VOICE: Output the specific voice ID from the Available Voices section that best matches the character's apparent gender and personality\n` +
             `COLOR: A hex color that reflects the character's theme or mood—use darker or richer colors that will contrast with white text.\n` +
             `FONT: A web-safe font family that reflects the character's personality.\n` +
             Object.entries(Stat).map(([key, value]) => {
