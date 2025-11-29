@@ -349,7 +349,6 @@ export const SkitScreen: FC<SkitScreenProps> = ({ stage, setScreenType }) => {
             setDisplayMessage(<></>);
             setFinishTyping(false);
         }
-
         
         // Update sceneEnded based on current index
         if (skit.script[index]?.endScene) {
