@@ -173,22 +173,30 @@ const SkitOutcomeDisplay: FC<SkitOutcomeDisplayProps> = ({ skitData, stage, layo
                 position: 'absolute',
                 top: '3%',
                 right: '3%',
-                left: '3%',
-                maxHeight: '85vh',
+                bottom: '20vh',
                 zIndex: 3,
-                display: 'grid',
-                gridAutoFlow: 'column',
-                gridTemplateRows: 'repeat(auto-fill, minmax(0, max-content))',
-                gridAutoColumns: '400px',
+                display: 'flex',
+                flexDirection: 'row-reverse',
+                alignItems: 'flex-start',
                 gap: '20px',
-                direction: 'rtl',
                 overflowX: 'auto',
                 overflowY: 'hidden',
                 padding: '0 20px'
             }}
         >
+            {/* Column container */}
+            <Box
+                sx={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '20px',
+                    minWidth: '400px',
+                    maxHeight: '100%',
+                    overflowY: 'auto'
+                }}
+            >
             {/* Header */}
-            <div style={{ direction: 'ltr' }}>
+            <div>
                 <Paper
                     elevation={8}
                     sx={{
@@ -220,7 +228,7 @@ const SkitOutcomeDisplay: FC<SkitOutcomeDisplayProps> = ({ skitData, stage, layo
 
             {/* Character stat changes */}
             {characterChanges.map((charChange, charIndex) => (
-                <div key={charChange.actor ? `stat_${charChange.actor.id}` : `stat_PARC`} style={{ direction: 'ltr' }}>
+                <div key={charChange.actor ? `stat_${charChange.actor.id}` : `stat_PARC`}>
                     <motion.div
                         initial={{ opacity: 0, y: 30 }}
                         animate={{ opacity: 1, y: 0 }}
@@ -416,7 +424,7 @@ const SkitOutcomeDisplay: FC<SkitOutcomeDisplayProps> = ({ skitData, stage, layo
 
             {/* Faction Reputation Changes */}
             {factionReputationChanges.map((repChange, repIndex) => (
-                <div key={`faction_rep_${repChange.faction.id}`} style={{ direction: 'ltr' }}>
+                <div key={`faction_rep_${repChange.faction.id}`}>
                 <motion.div
                     initial={{ opacity: 0, y: 30 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -582,17 +590,6 @@ const SkitOutcomeDisplay: FC<SkitOutcomeDisplayProps> = ({ skitData, stage, layo
                                 <Box sx={{ textAlign: 'center' }}>
                                     <Typography
                                         sx={{
-                                            fontSize: '0.7rem',
-                                            color: '#888',
-                                            textTransform: 'uppercase',
-                                            letterSpacing: '0.5px',
-                                            mb: 0.5
-                                        }}
-                                    >
-                                        Previous
-                                    </Typography>
-                                    <Typography
-                                        sx={{
                                             fontSize: '2.5rem',
                                             fontWeight: 900,
                                             color: '#666',
@@ -600,7 +597,7 @@ const SkitOutcomeDisplay: FC<SkitOutcomeDisplayProps> = ({ skitData, stage, layo
                                             textShadow: '0 2px 4px rgba(0,0,0,0.6)'
                                         }}
                                     >
-                                        {repChange.oldReputation}
+                                        {scoreToGrade(repChange.oldReputation)}
                                     </Typography>
                                 </Box>
 
@@ -620,17 +617,6 @@ const SkitOutcomeDisplay: FC<SkitOutcomeDisplayProps> = ({ skitData, stage, layo
 
                                 {/* New reputation */}
                                 <Box sx={{ textAlign: 'center' }}>
-                                    <Typography
-                                        sx={{
-                                            fontSize: '0.7rem',
-                                            color: '#888',
-                                            textTransform: 'uppercase',
-                                            letterSpacing: '0.5px',
-                                            mb: 0.5
-                                        }}
-                                    >
-                                        Current
-                                    </Typography>
                                     <motion.div
                                         initial={{ scale: 0.8, opacity: 0 }}
                                         animate={{ scale: 1, opacity: 1 }}
@@ -646,7 +632,7 @@ const SkitOutcomeDisplay: FC<SkitOutcomeDisplayProps> = ({ skitData, stage, layo
                                                     : '0 2px 4px rgba(255,0,0,0.6)'
                                             }}
                                         >
-                                            {repChange.newReputation}
+                                            {scoreToGrade(repChange.newReputation)}
                                         </Typography>
                                     </motion.div>
                                 </Box>
@@ -698,7 +684,7 @@ const SkitOutcomeDisplay: FC<SkitOutcomeDisplayProps> = ({ skitData, stage, layo
 
             {/* New Requests Section */}
             {requests.length > 0 && (
-                <div style={{ direction: 'ltr' }}>
+                <div>
                 <motion.div
                     initial={{ opacity: 0, y: 30 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -892,6 +878,7 @@ const SkitOutcomeDisplay: FC<SkitOutcomeDisplayProps> = ({ skitData, stage, layo
                 </motion.div>
                 </div>
             )}
+            </Box>
         </motion.div>
     );
 };

@@ -771,7 +771,7 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType}) =>
                         zIndex: 90,
                     }}
                 >
-                    {(['Systems', 'Comfort', 'Provision', 'Security', 'Harmony', 'Wealth'] as StationStat[]).map((statName) => {
+                    {Object.values(StationStat).map((statName) => {
                         const statValue = stage().getSave().stationStats?.[statName] || 5;
                         const grade = scoreToGrade(statValue);
                         const StatIcon = STATION_STAT_ICONS[statName];
@@ -796,6 +796,12 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType}) =>
                                     alignItems: 'center',
                                     gap: '8px',
                                 }}>
+                                    {/* Stat Icon */}
+                                    <StatIcon style={{ 
+                                        fontSize: '1.2rem',
+                                        color: '#00ff88',
+                                    }} />
+                                    
                                     <span
                                         className="stat-label"
                                         style={{

@@ -135,7 +135,7 @@ function buildScriptLog(skit: SkitData): string {
  */
 function getCurrentActorsInScene(skit: SkitData, upToIndex: number = -1): Set<string> {
     const currentActors = new Set<string>(skit.initialActorIds || []);
-    const endIndex = upToIndex === -1 ? skit.script.length : upToIndex;
+    const endIndex = Math.max(skit.script.length, upToIndex === -1 ? skit.script.length : upToIndex);
     
     for (let i = 0; i < endIndex; i++) {
         const entry = skit.script[i];
