@@ -218,7 +218,7 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
                 this.storage.get(`saveData_${slot}`).forUser(this.userId).then((response) => {
                     console.log('Fetched save slot data from storage API:', response);
 
-                    if (response && response.data && response.data.length > 0 && response.data[0].value) {
+                    if (response && response.data && response.data.length > 0 && response.data[0].value && Object.keys(response.data[0].value).length > 0) {
                         console.log(`Loaded save slot ${slot} from storage API:`);
                         console.log(response.data[0].value);
                         saves[slot] = this.rehydrateSave(response.data[0].value);
