@@ -219,8 +219,6 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
                     console.log('Fetched save slot data from storage API:', response);
 
                     if (response && response.data && response.data.length > 0 && response.data[0].value && Object.keys(response.data[0].value).length > 0) {
-                        console.log(`Loaded save slot ${slot} from storage API:`);
-                        console.log(response.data[0].value);
                         saves[slot] = this.rehydrateSave(response.data[0].value);
                     } else if (response && response.status !== 200) {
                         console.log(`Falling back to chatstate save for slot ${slot} due to error response:`, response);
@@ -235,10 +233,8 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
         
         // If any saves were loaded, use them:
         if (saves.some(save => save !== undefined)) {
-            console.log('Saves loaded from storage API:');
             this.saves = saves;
         } else {
-            console.log('No saves loaded');
             console.log(this.buildSaves());
             this.saves = saves;
             this.saveAllGames()
@@ -331,18 +327,15 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
         this.currentSave.timestamp = Date.now();
         console.log(this.saves);
         this.saves[this.saveSlot] = this.currentSave;
-        this.messenger.updateChatState(this.buildSaves());
+        const chatState = this.buildSaves();
+        this.messenger.updateChatState(chatState);
         // Persist to storage API
-        this.storage.set(`saveData_${this.saveSlot}`, this.saves[this.saveSlot]).forUser().then(() => {
-            console.log(`Saved save slot ${this.saveSlot} to storage API.`);
-        });
+        this.storage.set(`saveData_${this.saveSlot}`, this.currentSave).forUser();
     }
 
     saveAllGames() {
         for (let slot = 0; slot < this.SAVE_SLOTS; slot++) {
-            this.storage.set(`saveData_${slot}`, this.saves[slot]).forUser().then(() => {
-                console.log(`Saved save slot ${slot} to storage API.`);
-            });
+            this.storage.set(`saveData_${slot}`, this.saves[slot]).forUser();
         }
     }
 

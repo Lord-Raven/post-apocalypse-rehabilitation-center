@@ -40,9 +40,6 @@ const ActorImage: FC<ActorImageProps> = ({
     const [prevImageUrl, setPrevImageUrl] = useState<string>('');
     const [aspectRatio, setAspectRatio] = useState<string>('9 / 16');
     const prevRawImageUrl = useRef<string>(imageUrl);
-    const prevProcessedUrl = useRef<string>('');
-    const imageVersion = useRef<number>(0);
-    const [currentVersion, setCurrentVersion] = useState<number>(0);
 
     // Process image with color multiplication
     useEffect(() => {
@@ -66,17 +63,11 @@ const ActorImage: FC<ActorImageProps> = ({
         img.src = imageUrl;
     }, [imageUrl, highlightColor]);
 
-    // Track previous processed image for fade transition and update version
+    // Track previous processed image for fade transition
     useEffect(() => {
         if (prevRawImageUrl.current !== imageUrl) {
             setPrevImageUrl(processedImageUrl);
             prevRawImageUrl.current = imageUrl;
-        }
-        // Update version only when processedImageUrl actually changes
-        if (prevProcessedUrl.current !== processedImageUrl && processedImageUrl) {
-            prevProcessedUrl.current = processedImageUrl;
-            imageVersion.current += 1;
-            setCurrentVersion(imageVersion.current);
         }
     }, [imageUrl, processedImageUrl]);
 
@@ -147,11 +138,11 @@ const ActorImage: FC<ActorImageProps> = ({
                     />
                 )}
             </AnimatePresence>
-            <AnimatePresence mode="wait">
+            <AnimatePresence>
                 {/* Backing image layer - solid but blurry. */}
                 {processedImageUrl && !actor.remote && (
                     <motion.img
-                        key={`${actor.id}_${currentVersion}_bg`}
+                        key={`${actor.id}_${imageUrl}_bg`}
                         src={processedImageUrl}
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1, filter: 'blur(2.5px)' }}
@@ -170,27 +161,16 @@ const ActorImage: FC<ActorImageProps> = ({
                     />
                 )}
             </AnimatePresence>
-            <AnimatePresence mode="wait">
+            <AnimatePresence>
                 {/* Main image layer - semi transparent, but crisp. */}
                 {processedImageUrl && (
                     <motion.img
-                        key={`${actor.id}_${currentVersion}_main`}
+                        key={`${actor.id}_${imageUrl}_main`}
                         src={processedImageUrl}
                         initial={{ opacity: 0 }}
-                        animate={actor.remote ? {
-                            opacity: [0.5, 0.75, 0.6, 0.5],
-                            filter: [
-                                'blur(1.5px) brightness(1.3)',
-                                'blur(2px) brightness(1.1)',
-                                'blur(1px) brightness(1.2)',
-                                'blur(1.5px) brightness(1.3)'
-                            ]
-                        } : { opacity: 0.75 }}
+                        animate={{ opacity: 0.75 }}
                         exit={{ opacity: 0 }}
-                        transition={actor.remote ? {
-                            opacity: { duration: 2.5, repeat: Infinity, ease: "easeInOut", repeatType: "loop" },
-                            filter: { duration: 3.8, repeat: Infinity, ease: "easeInOut", repeatType: "loop" }
-                        } : { duration: 0.5 }}
+                        transition={{ duration: 0.5 }}
                         style={{
                             position: 'absolute',
                             top: 0,
@@ -207,10 +187,10 @@ const ActorImage: FC<ActorImageProps> = ({
             </AnimatePresence>
             {/* Rolling scanline effect for remote actors */}
             {actor.remote && (
-                <AnimatePresence mode="wait">
+                <AnimatePresence>
                     {processedImageUrl && (
                         <motion.img
-                            key={`${actor.id}_${currentVersion}_scanline`}
+                            key={`${actor.id}_${imageUrl}_scanline`}
                             src={processedImageUrl}
                             initial={{ 
                                 opacity: 0,
