@@ -40,6 +40,8 @@ const ActorImage: FC<ActorImageProps> = ({
     const [prevImageUrl, setPrevImageUrl] = useState<string>('');
     const [aspectRatio, setAspectRatio] = useState<string>('9 / 16');
     const prevRawImageUrl = useRef<string>(imageUrl);
+    const imageVersion = useRef<number>(0);
+    const [currentVersion, setCurrentVersion] = useState<number>(0);
 
     // Process image with color multiplication
     useEffect(() => {
@@ -68,6 +70,8 @@ const ActorImage: FC<ActorImageProps> = ({
         if (prevRawImageUrl.current !== imageUrl) {
             setPrevImageUrl(processedImageUrl);
             prevRawImageUrl.current = imageUrl;
+            imageVersion.current += 1;
+            setCurrentVersion(imageVersion.current);
         }
     }, [imageUrl, processedImageUrl]);
 
@@ -138,11 +142,11 @@ const ActorImage: FC<ActorImageProps> = ({
                     />
                 )}
             </AnimatePresence>
-            <AnimatePresence>
+            <AnimatePresence mode="wait">
                 {/* Backing image layer - solid but blurry. */}
                 {processedImageUrl && !actor.remote && (
                     <motion.img
-                        key={`${actor.id}_${imageUrl}_bg`}
+                        key={`${actor.id}_${currentVersion}_bg`}
                         src={processedImageUrl}
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1, filter: 'blur(2.5px)' }}
@@ -161,11 +165,11 @@ const ActorImage: FC<ActorImageProps> = ({
                     />
                 )}
             </AnimatePresence>
-            <AnimatePresence>
+            <AnimatePresence mode="wait">
                 {/* Main image layer - semi transparent, but crisp. */}
                 {processedImageUrl && (
                     <motion.img
-                        key={`${actor.id}_${imageUrl}_main`}
+                        key={`${actor.id}_${currentVersion}_main`}
                         src={processedImageUrl}
                         initial={{ opacity: 0 }}
                         animate={actor.remote ? {
@@ -198,10 +202,10 @@ const ActorImage: FC<ActorImageProps> = ({
             </AnimatePresence>
             {/* Rolling scanline effect for remote actors */}
             {actor.remote && (
-                <AnimatePresence>
+                <AnimatePresence mode="wait">
                     {processedImageUrl && (
                         <motion.img
-                            key={`${actor.id}_${imageUrl}_scanline`}
+                            key={`${actor.id}_${currentVersion}_scanline`}
                             src={processedImageUrl}
                             initial={{ 
                                 opacity: 0,
