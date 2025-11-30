@@ -3,6 +3,7 @@ import { StationStat } from "../Module";
 import { ScreenType } from "../screens/BaseScreen";
 import { SkitType } from "../Skit";
 import { Stage } from "../Stage";
+import { scoreToGrade } from "../utils";
 import { v4 as generateUuid } from 'uuid';
 
 /**
@@ -416,13 +417,13 @@ export class Request {
                 
                 if (req.minStats) {
                     const minParts = Object.entries(req.minStats)
-                        .map(([stat, value]) => `${stat} ≥ ${value}`);
+                        .map(([stat, value]) => `${stat} ≥ ${scoreToGrade(value)}`);
                     parts.push(...minParts);
                 }
                 
                 if (req.maxStats) {
                     const maxParts = Object.entries(req.maxStats)
-                        .map(([stat, value]) => `${stat} ≤ ${value}`);
+                        .map(([stat, value]) => `${stat} ≤ ${scoreToGrade(value)}`);
                     parts.push(...maxParts);
                 }
                 

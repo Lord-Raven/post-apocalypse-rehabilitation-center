@@ -7,7 +7,7 @@ import { GridOverlay, Title, Button } from '../components/UIComponents';
 import { SettingsScreen } from './SettingsScreen';
 import { SaveLoadScreen } from './SaveLoadScreen';
 import { useTooltip } from '../contexts/TooltipContext';
-import { Save, PlayArrow, FiberNew, Folder, Settings } from '@mui/icons-material';
+import { Save, SaveAlt, PlayArrow, FiberNew, Folder, Settings } from '@mui/icons-material';
 
 /*
  * This screen represents both the start-up and in-game menu screen. It should present basic options: new game, load game, settings.
@@ -109,13 +109,24 @@ export const MenuScreen: FC<MenuScreenProps> = ({ stage, setScreenType }) => {
             tooltip: noSaveSlotsAvailable() ? 'No save slots remaining; delete a save to start a new game' : 'Start a fresh playthrough',
             icon: FiberNew
         },
+        ...(saveExists() && stage().initialized ? [{
+            key: 'quicksave',
+            label: 'Quick Save',
+            onClick: () => {
+                stage().saveGame();
+                setTooltip('Game saved!', Save, undefined, 2000);
+            },
+            enabled: true,
+            tooltip: 'Quickly save your current progress',
+            icon: Save,
+        }] : []),
         {
             key: 'save',
             label: 'Save Game',
             onClick: handleSave,
             enabled: stage().initialized,
-            tooltip: 'Save your current progress',
-            icon: Save
+            tooltip: 'Save progress to a specific slot',
+            icon: SaveAlt
         },
         { 
             key: 'load', 
@@ -229,7 +240,8 @@ export const MenuScreen: FC<MenuScreenProps> = ({ stage, setScreenType }) => {
                         fontSize: '12px',
                     }}
                 >
-                    v2025.24.11 - Beta
+                    v2025.30.11 - Beta
+                    Intro Done. Save Slots. Factions. Requests.
                 </motion.div>
             </motion.div>
             </div>

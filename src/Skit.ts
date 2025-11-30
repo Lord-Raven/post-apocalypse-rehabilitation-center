@@ -540,17 +540,20 @@ export async function generateSkitScript(skit: SkitData, stage: Stage): Promise<
                         const analysisPrompt = generateSkitPrompt(skit, stage, 0,
                             `Scene Script:\nSystem: ${buildScriptLog(skit)}` +
                             `\n\nPrimary Instruction:\nAnalyze the preceding scene script and output formatted tags in brackets, identifying the following categorical changes to be inorporated into the game. ` +
-
                             `\n\nCharacter Stat Changes:\nIdentify any changes to character stats implied by the scene. For each change, output a line in the following format:\n` +
                             `"[CHARACTER NAME: <stat> +<value>(, ...)]"` +
                             `Where <stat> is the name of the stat to be changed, and <value> is the amount to increase or decrease the stat by (positive or negative). ` +
                             `Multiple stat changes can be included in a single tag, separated by commas. Similarly, multiple character tags can be provided in the output.` +
-
-                            `\n\nStation Stat Changes:\nIdentify any changes to station stats implied by the scene. For each change, output a line in the following format:\n` +
+                            `Full Examples:\n` +
+                            `"[${Object.values(stage.getSave().actors)[0].name}: brawn +1, charm +2]"\n` +
+                            `"[${Object.values(stage.getSave().actors)[0].name}: lust -1]"\n` +
+                            `\n\nStation Stat Changes:\nIdentify any changes to PARC station stats implied by the scene. For each change, output a line in the following format:\n` +
                             `"[STATION: <stat> +<value>(, ...)]"` +
                             `Where <stat> is the name of the station stat to be changed, and <value> is the amount to increase or decrease the stat by (positive or negative). ` +
                             `Multiple stat changes can be included in a single tag, separated by commas.` +
-
+                            `Full Examples:\n` +
+                            `"[STATION: Systems +2, Comfort +1]"\n` +
+                            `"[STATION: Security -1]"` +
                             `\n\nFaction Requests:\n` +
                             `Identify any requests made by factions or faction representatives toward the player or station. ` +
                             `For each request identified, output a line in the following format:\n` +
@@ -580,6 +583,9 @@ export async function generateSkitScript(skit: SkitData, stage: Stage): Promise<
                             `Where <factionName> is the name of the faction whose reputation is changing, and <value> is the amount to increase or decrease the reputation by (positive or negative). ` +
                             `Reputation is a value between 1 and 10, and changes are incremental. If the faction is cutting ties, provide a large negative value. ` +
                             `Multiple faction tags can be provided in the output if, for instance, improving the esteem of one faction inherently reduces the opinion of a rival.` +
+                            `Full Examples:\n` +
+                            `"[FACTION: Stellar Concord +1]"\n` +
+                            `"[FACTION: Shadow Syndicate -2]"\n` +
 
                             (!summary ? 
                                 `\n\nSummarize Scene:\n` +
@@ -589,11 +595,11 @@ export async function generateSkitScript(skit: SkitData, stage: Stage): Promise<
                             ) +
 
                             `\n\nFinal Instruction:\n` +
-                            `All relevant tags should be output in this response. Stat changes should be a fair reflection of the scene's direct or implied events. ` +
+                            `All suitable tags should be output in this response. Stat changes should be a fair reflection of the scene's direct or implied events. ` +
                             `Bear in mind the somewhat abstract meaning of character and station stats when determining reasonable changes and goals. ` +
                             `All stats (station and character) exist on a scale of 1-10, with 1 being the lowest and 10 being the highest possible value; ` +
-                            `typically, these changes should be incremental (+/- 1 or 2) at a time, unless something incredibly dramatic occurs. ` +
-                            `If there is little or no change, the response may be ended early with [END]. \n\n`
+                            `typically, these changes should be minor (+/- 1 or 2) at a time, unless something incredibly dramatic occurs. ` +
+                            `If there is little or no change, or all relevant changes have been presented, the response may be ended early with [END]. \n\n`
                         );
                         const requestAnalysis = await stage.generator.textGen({
                             prompt: analysisPrompt,
