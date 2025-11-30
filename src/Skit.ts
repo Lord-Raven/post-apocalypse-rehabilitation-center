@@ -51,12 +51,14 @@ export function generateSkitTypePrompt(skit: SkitData, stage: Stage, continuing:
                 `This scene introduces the beginning of the story, as the holographic StationAide™, ${stage.getSave().aide.name}, resurrects the player, ` +
                 `${stage.getSave().player.name} from their echo chamber aboard the otherwise-abandoned PARC station ` +
                 `and declares the player to be the new Director of said station. ${stage.getSave().aide.name} has been keeping the station stable but was unable to take on patients without a Director, ` +
-                `so they are relieved to have someone take on the role once more and eager to get back to the business of rehabilitation.` :
+                `so they are relieved to have someone take on the role once more and eager to get back to the business of rehabilitation. This scene must end before bringing any additional patients aboard; ` +
+                `this process is handled via a separate game mechanic.` :
                 `Continue this introductory scene, expanding on the initial situation and context as the holographic StationAide™, ${stage.getSave().aide.name}, ` +
                 `welcomes the newly reconstituted ${stage.getSave().player.name} and names them the new Director of the otherwise-abandoned PARC. ` +
                 `${stage.getSave().aide.name} should explain the PARC's core premise of bringing back characters from dead timelines and rehabilitating them. ` +
                 `The holographic aide was unable to take on patients without a Director, so they are eager to get back to business, echofusing new patients and helping them find their place in this universe. ` +
-                `Once the concept is established, use a "[SUMMARY]" tag to summarize the scene before moving on.`;
+                `Once the concept is established, use a "[SUMMARY]" tag to summarize the scene before moving on. This scene must end before bringing any additional patients aboard; ` +
+                `this process is handled via a separate game mechanic; use the "[SUMMARY]" tag to summarize the events of this intro and end the scene before that occurs.`;
         case SkitType.INTRO_CHARACTER:
             return !continuing ? 
                 `This scene will introduce a new character, ${actor.name}, fresh from their echo chamber. ${actor.name} will have no knowledge of this universe. Establish their personality and possibly some motivations.` :

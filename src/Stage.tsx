@@ -221,10 +221,10 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
                     if (response && response.data && response.data.length > 0 && response.data[0].value && Object.keys(response.data[0].value).length > 0) {
                         console.log(`Loaded save slot ${slot} from storage API:`);
                         console.log(response.data[0].value);
-                        //saves[slot] = this.rehydrateSave(response.data[0].value);
-                    } else {
+                        saves[slot] = this.rehydrateSave(response.data[0].value);
+                    } else if (response && response.status !== 200) {
                         console.log(`No save data found for slot ${slot}.`);
-                        //saves[slot] = undefined;
+
                     }
                 })
             );
@@ -233,6 +233,7 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
         
         // If any saves were loaded, use them:
         if (saves.some(save => save !== undefined)) {
+            console.log('Saves loaded from storage API:');
             this.saves = saves;
         } else {
             console.log('No saves loaded');
