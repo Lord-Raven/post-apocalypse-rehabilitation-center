@@ -36,10 +36,13 @@ export const MenuScreen: FC<MenuScreenProps> = ({ stage, setScreenType }) => {
         const handleKeyDown = (event: KeyboardEvent) => {
             if (event.key === 'Escape') {
                 if (showSettings) {
+                    console.log('close settings');
                     handleSettingsCancel();
                 } else if (showSaveLoad) {
+                    console.log('close save/load');
                     setShowSaveLoad(false);
                 } else if (saveExists() && !showSettings) {
+                    console.log('continue');
                     handleContinue();
                 }
             }

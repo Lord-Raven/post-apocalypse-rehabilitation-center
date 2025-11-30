@@ -699,6 +699,10 @@ export const SkitScreen: FC<SkitScreenProps> = ({ stage, setScreenType }) => {
                                     }
                                 }
                                 else if (sceneEnded) handleClose();
+                            } else if (e.key === 'ArrowLeft') {
+                                prev();
+                            } else if (e.key === 'ArrowRight') {
+                                next();
                             }
                         }}
                         placeholder={

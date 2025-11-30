@@ -366,9 +366,11 @@ export async function generateSkitScript(skit: SkitData, stage: Stage): Promise<
                         const arrivesRegex = /^([^[\]]+)\s+arrives$/i;
                         const arrivesMatch = arrivesRegex.exec(raw);
                         if (arrivesMatch) {
+                            console.log(`Found arrives tag for ${arrivesMatch[1].trim()}`);
                             const characterName = arrivesMatch[1].trim();
                             // Find matching actor using findBestNameMatch
                             const matched = findBestNameMatch(characterName, allActors);
+                            console.log(`Matched actor for ${characterName} arrival: ${matched ? matched.name : 'None'}`);
                             if (matched) {
                                 // Validate if this actor can arrive (using current combined line index)
                                 const currentIndex = combinedLines.length;
@@ -386,9 +388,11 @@ export async function generateSkitScript(skit: SkitData, stage: Stage): Promise<
                         const departsRegex = /^([^[\]]+)\s+departs$/i;
                         const departsMatch = departsRegex.exec(raw);
                         if (departsMatch) {
+                            console.log(`Found departs tag for ${departsMatch[1].trim()}`);
                             const characterName = departsMatch[1].trim();
                             // Find matching actor using findBestNameMatch
                             const matched = findBestNameMatch(characterName, allActors);
+                            console.log(`Matched actor for ${characterName} departure: ${matched ? matched.name : 'None'}`);
                             if (matched) {
                                 // Validate if this actor can depart (using current combined line index)
                                 const currentIndex = combinedLines.length;
@@ -573,7 +577,8 @@ export async function generateSkitScript(skit: SkitData, stage: Stage): Promise<
                             `   - Example: STATION Security-2, Harmony-1\n` +
                             `Valid <reward> formats:\n` +
                             `"  <stat>+<value>[, <stat>+<value>]" // Station stat bonuses\n` +
-                            `   - Example: Systems+2, Comfort+1, Security+3\n` +
+                            `   - Positive rewards that disinclude stats reduced by the requirements\n` +
+                            `   - Example: Systems+2, Comfort+1\n` +
                             `Full Examples:\n` +
                             `"[REQUEST: Stellar Concord | We need a strong laborer | ACTOR brawn>=7, charm>=6 -> Systems+2, Comfort+1]"\n` +
                             `"[REQUEST: Shadow Syndicate | Return our missing operative | ACTOR-NAME Jane Doe -> Harmony+3]"\n` +
