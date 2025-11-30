@@ -212,10 +212,10 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
         for (let slot = 0; slot < this.SAVE_SLOTS; slot++) {
             promises.push(
                 this.storage.get(`saveData_${slot}`).forUser(this.userId).then((data) => {
-                    if (data) {
+                    if (data && data.data) {
                         console.log(`Loaded save slot ${slot} from storage API:`);
-                        console.log(data);
-                        saves[slot] = this.rehydrateSave(data);
+                        console.log(data.data);
+                        saves[slot] = this.rehydrateSave(data.data);
                     } else {
                         console.log(`No save data found for slot ${slot}.`);
                         saves[slot] = undefined;
