@@ -594,7 +594,7 @@ export function findBestNameMatch<T extends { name: string }>(
 
     for (const candidate of candidates) {
         const score = getNameSimilarity(candidate.name, searchName);
-        
+        console.log(`Comparing "${searchName}" to "${candidate.name}" - Similarity Score: ${score.toFixed(3)}`);
         // Only consider matches above threshold
         if (score > threshold && score > bestScore) {
             bestScore = score;

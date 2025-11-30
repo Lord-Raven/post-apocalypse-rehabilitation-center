@@ -701,8 +701,10 @@ export const SkitScreen: FC<SkitScreenProps> = ({ stage, setScreenType }) => {
                                 }
                                 else if (sceneEnded) handleClose();
                             } else if (e.key === 'ArrowLeft') {
+                                e.preventDefault();
                                 prev();
                             } else if (e.key === 'ArrowRight') {
+                                e.preventDefault();
                                 next();
                             }
                         }}
