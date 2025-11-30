@@ -253,11 +253,13 @@ export function generateSkitPrompt(skit: SkitData, stage: Stage, historyLength: 
             `the ${module.type || 'Unknown'}`}. ${module.getAttribute('skitPrompt') || 'No description available.'}\n`) : '') +
 
         ((historyLength > 0 && pastSkits.length) ? 
-            // Include last few skit scripts for context and style reference
+            // Include last few skit scripts for context and style reference; use summary except for most recent skit or if no summary.
             '\n\nRecent Scenes for additional context:' + pastSkits.map((v, index) => 
-            (v.summary ? (`\n\n  Summary of scene in ${stage.getSave().layout.getModuleById(v.moduleId || '')?.type || 'Unknown'} (${stage.getSave().day - v.context.day}) days ago:\n` + v.summary) : 
+            ((!v.summary || index == pastSkits.length - 1) ?
                 (`\n\n  Script of Scene in ${stage.getSave().layout.getModuleById(v.moduleId || '')?.type || 'Unknown'} (${stage.getSave().day - v.context.day}) days ago:\n` +
-                `System: ${buildScriptLog(v)}\n[SUMMARY: Scene in ${stage.getSave().layout.getModuleById(v.moduleId || '')?.type || 'Unknown'}]`))).join('') :
+                `System: ${buildScriptLog(v)}`) :
+                (`\n\n  Summary of scene in ${stage.getSave().layout.getModuleById(v.moduleId || '')?.type || 'Unknown'} (${stage.getSave().day - v.context.day}) days ago:\n` + v.summary)
+                )).join('') :
             '') +
         `\n\n${instruction}`;
     return fullPrompt;
