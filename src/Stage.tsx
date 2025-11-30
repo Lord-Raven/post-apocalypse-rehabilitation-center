@@ -229,6 +229,8 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
         // If any saves were loaded, use them:
         if (saves.some(save => save !== undefined)) {
             this.saves = saves;
+        } else {
+            this.saveAllGames()
         }
 
         return {
@@ -320,7 +322,13 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
         this.saves[this.saveSlot] = this.currentSave;
         this.messenger.updateChatState(this.buildSaves());
         // Persist to storage API
-        for (let slot = 0; slot < this.saves.length; slot++) {
+        this.storage.set(`saveData_${this.saveSlot}`, this.saves[this.saveSlot]).forUser().then(() => {
+            console.log(`Saved save slot ${this.saveSlot} to storage API.`);
+        });
+    }
+
+    saveAllGames() {
+        for (let slot = 0; slot < this.SAVE_SLOTS; slot++) {
             this.storage.set(`saveData_${slot}`, this.saves[slot]).forUser().then(() => {
                 console.log(`Saved save slot ${slot} to storage API.`);
             });
