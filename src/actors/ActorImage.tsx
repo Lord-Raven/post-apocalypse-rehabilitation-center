@@ -40,6 +40,7 @@ const ActorImage: FC<ActorImageProps> = ({
     const [prevImageUrl, setPrevImageUrl] = useState<string>('');
     const [aspectRatio, setAspectRatio] = useState<string>('9 / 16');
     const prevRawImageUrl = useRef<string>(imageUrl);
+    const prevProcessedUrl = useRef<string>('');
     const imageVersion = useRef<number>(0);
     const [currentVersion, setCurrentVersion] = useState<number>(0);
 
@@ -65,11 +66,15 @@ const ActorImage: FC<ActorImageProps> = ({
         img.src = imageUrl;
     }, [imageUrl, highlightColor]);
 
-    // Track previous processed image for fade transition
+    // Track previous processed image for fade transition and update version
     useEffect(() => {
         if (prevRawImageUrl.current !== imageUrl) {
             setPrevImageUrl(processedImageUrl);
             prevRawImageUrl.current = imageUrl;
+        }
+        // Update version only when processedImageUrl actually changes
+        if (prevProcessedUrl.current !== processedImageUrl && processedImageUrl) {
+            prevProcessedUrl.current = processedImageUrl;
             imageVersion.current += 1;
             setCurrentVersion(imageVersion.current);
         }
