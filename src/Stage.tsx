@@ -208,7 +208,7 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
 
         // Attempt to load data from storage API; ten parallel requests for each save slot:
         const promises = [];
-        const saves: (SaveType | undefined)[] = [];
+        const saves: (SaveType | undefined)[] = Array(this.SAVE_SLOTS).fill(undefined);
         for (let slot = 0; slot < this.SAVE_SLOTS; slot++) {
             promises.push(
                 // response structure is: 
@@ -221,10 +221,10 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
                     if (response && response.data && response.data.length > 0 && response.data[0].value && Object.keys(response.data[0].value).length > 0) {
                         console.log(`Loaded save slot ${slot} from storage API:`);
                         console.log(response.data[0].value);
-                        saves[slot] = this.rehydrateSave(response.data[0].value);
+                        //saves[slot] = this.rehydrateSave(response.data[0].value);
                     } else {
                         console.log(`No save data found for slot ${slot}.`);
-                        saves[slot] = undefined;
+                        //saves[slot] = undefined;
                     }
                 })
             );
