@@ -239,6 +239,7 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
             this.saves = saves;
             this.saveAllGames()
         }
+        this.currentSave = this.saves[this.saveSlot] || this.getFreshSave();
 
         return {
             success: true,
@@ -325,7 +326,6 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
     saveGame() {
         // Update timestamp on current save
         this.currentSave.timestamp = Date.now();
-        console.log(this.saves);
         this.saves[this.saveSlot] = this.currentSave;
         const chatState = this.buildSaves();
         this.messenger.updateChatState(chatState);
@@ -341,7 +341,7 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
 
     deleteSave(slotIndex: number) {
         this.saves[slotIndex] = undefined;
-        this.saveGame();
+        this.saveAllGames();
     }
 
     getSave(): SaveType {
