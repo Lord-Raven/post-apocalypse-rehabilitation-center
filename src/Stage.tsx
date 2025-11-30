@@ -89,6 +89,8 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
     private actorPageNumber = Math.floor(Math.random() * this.MAX_PAGES);
     private factionPageNumber = Math.floor(Math.random() * this.MAX_PAGES);
 
+    private userId: string;
+
     // Expose a simple grid size (can be tuned)
     public gridSize = DEFAULT_GRID_SIZE;
 
@@ -120,6 +122,7 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
         layout.setModuleAt(DEFAULT_GRID_SIZE/2 - 1, DEFAULT_GRID_SIZE/2, createModule("quarters", { id: `quarters-${DEFAULT_GRID_SIZE/2 - 1}-${DEFAULT_GRID_SIZE/2}`, attributes: {} }));
         layout.setModuleAt(DEFAULT_GRID_SIZE/2, DEFAULT_GRID_SIZE/2 - 1, createModule("generator", { id: `generator-${DEFAULT_GRID_SIZE/2}-${DEFAULT_GRID_SIZE/2 - 1}`, attributes: {} }));
         layout.setModuleAt(DEFAULT_GRID_SIZE/2 - 1, DEFAULT_GRID_SIZE/2 - 1, createModule("comms", { id: `comms-${DEFAULT_GRID_SIZE/2}-${DEFAULT_GRID_SIZE/2}`, attributes: {} }));
+        this.userId = Object.values(users)[0].anonymizedId;
         this.freshSave = { player: {name: Object.values(users)[0].name, description: Object.values(users)[0].chatProfile || ''}, 
             aide: {
                 name: 'Soji', 
@@ -203,6 +206,14 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
 
     async load(): Promise<Partial<LoadResponse<InitStateType, ChatStateType, MessageStateType>>> {
 
+        // Attempt to load data from storage API
+        await this.storage.get(`saveData`).forUser(this.userId).then((data) => {
+            if (data) {
+                console.log('Loaded save data from storage API:');
+                console.log(data);
+            }
+        });
+
         return {
             success: true,
             error: null,
@@ -234,6 +245,13 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
             const actor = save.actors[actorId];
             actor.locationId = actor.remote ? '' : (save.layout.getModulesWhere(m => m.type !== 'quarters' || m.ownerId == actorId).sort(() => Math.random() - 0.5)[0]?.id || '');
             console.log(`Moved actor ${actor.name} to location ${actor.locationId}`);
+            // If no patients exist, put the aide in the echo chamber:
+            if (actor.id === save.aide.actorId && Object.values(save.actors).filter(a => !a.remote && a.id !== save.aide.actorId).length === 0) {
+                const echoModule = save.layout.getModulesWhere(m => m.type === 'echo chamber')[0];
+                if (echoModule) {
+                    actor.locationId = echoModule.id;
+                }
+            }
         }
 
         // Move a random faction rep to comms room, if any factions exist:
@@ -284,6 +302,10 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
         console.log(this.saves);
         this.saves[this.saveSlot] = this.currentSave;
         this.messenger.updateChatState(this.buildSaves());
+        // Persist to storage API
+        this.storage.set(`saveData`, this.saves).forUser().then(() => {
+            console.log('Saved save data to storage API.');
+        });
     }
 
     deleteSave(slotIndex: number) {
