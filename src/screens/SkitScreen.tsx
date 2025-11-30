@@ -319,6 +319,7 @@ export const SkitScreen: FC<SkitScreenProps> = ({ stage, setScreenType }) => {
             const currentSpeakerName = skit.script[index]?.speaker?.trim() || '';
             const actors = Object.values(stage().getSave().actors);
             const matchingActor = findBestNameMatch(currentSpeakerName, actors);
+            console.log('SkitScreen: Finding speaker for', currentSpeakerName, 'Matched actor:', matchingActor ? matchingActor.name : 'None');
             
             // Check if this is the player speaking
             const playerName = stage().getSave().player.name;

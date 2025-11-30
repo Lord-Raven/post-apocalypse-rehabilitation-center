@@ -595,7 +595,7 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
         };
     }
 
-        async makeImage(imageRequest: Object, defaultUrl: string): Promise<string> {
+    async makeImage(imageRequest: Object, defaultUrl: string): Promise<string> {
         return (await this.generator.makeImage(imageRequest))?.url ?? defaultUrl;
     }
 
@@ -803,6 +803,15 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
                     }
                     // Add new request
                     save.requests[request.id] = request;
+                    // If faction wasn't met before, they should be now:
+                    const faction = save.factions[request.factionId];
+                    if (faction) {
+                        // Re-establish ties, I guess.
+                        if (faction.reputation <= 0) {
+                            faction.reputation = 1;
+                        }
+                        faction.active = true;
+                    }
                 }
             }
 
