@@ -223,8 +223,10 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
                         console.log(response.data[0].value);
                         saves[slot] = this.rehydrateSave(response.data[0].value);
                     } else if (response && response.status !== 200) {
+                        console.log(`Falling back to chatstate save for slot ${slot} due to error response:`, response);
+                        saves[slot] = this.saves[slot]; // fall back to existing save data if available
+                    } else {
                         console.log(`No save data found for slot ${slot}.`);
-
                     }
                 })
             );
