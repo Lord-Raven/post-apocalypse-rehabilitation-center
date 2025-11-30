@@ -354,6 +354,8 @@ export async function generateSkitScript(skit: SkitData, stage: Stage): Promise<
 
                     // Prepare list of all actors (not just present)
                     const allActors: Actor[] = Object.values(stage.getSave().actors);
+                    console.log(stage.getSave().actors);
+                    console.log(`All actors for matching: ${allActors.map(a => a.name).join(', ')}`);
                     
                     // Process tags in the line
                     for (const tag of trimmed.match(/\[[^\]]+\]/g) || []) {
@@ -369,7 +371,6 @@ export async function generateSkitScript(skit: SkitData, stage: Stage): Promise<
                             console.log(`Found arrives tag for ${arrivesMatch[1].trim()}`);
                             const characterName = arrivesMatch[1].trim();
                             // Find matching actor using findBestNameMatch
-                            console.log(`All actors for matching: ${allActors.map(a => a.name).join(', ')}`);
                             const matched = findBestNameMatch(characterName, allActors);
                             console.log(`Matched actor for ${characterName} arrival: ${matched ? matched.name : 'None'}`);
                             if (matched) {
