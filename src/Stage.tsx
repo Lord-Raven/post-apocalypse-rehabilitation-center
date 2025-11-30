@@ -230,10 +230,14 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
             );
         }
         await Promise.all(promises);
+        
         // If any saves were loaded, use them:
         if (saves.some(save => save !== undefined)) {
             this.saves = saves;
         } else {
+            console.log('No saves loaded');
+            console.log(this.buildSaves());
+            this.saves = saves;
             this.saveAllGames()
         }
 
