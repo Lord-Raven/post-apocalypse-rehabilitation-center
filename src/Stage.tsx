@@ -446,7 +446,7 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
         if (this.generateAidePromise) return this.generateAidePromise;
 
         let save = this.getSave();
-        if (save.aide && save.aide.actorId) {
+        if (save.aide && save.aide.actorId && save.actors[save.aide.actorId]) {
             // If aide already exists, do nothing
             return;
         }
@@ -464,13 +464,13 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
                 const aideActor = await loadReserveActor(actorData, this);
                 if (aideActor) {
                     save = this.getSave();
-                    save.actors[aideActor.id] = aideActor;
                     aideActor.name = save.aide.name;
                     aideActor.profile = save.aide.description;
                     aideActor.remote = true;
                     save.aide.actorId = aideActor.id;
                     save.actors[aideActor.id] = aideActor;
                     await generatePrimaryActorImage(aideActor, this);
+                    this.saveGame();
                     break;
                 }
             }
