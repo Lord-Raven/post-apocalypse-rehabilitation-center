@@ -60,7 +60,7 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType}) =>
 
     const [layout, setLayout] = React.useState<Layout>(stage()?.getLayout());
     const [isGeneratingAide, setIsGeneratingAide] = React.useState<boolean>(false);
-    const [hasRunStartIntro, setHasRunStartIntro] = React.useState<boolean>(false);
+    const hasRunStartIntroRef = React.useRef<boolean>(false);
     
     // Module selection state
     const [showModuleSelector, setShowModuleSelector] = React.useState(false);
@@ -283,11 +283,20 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType}) =>
     };
 
     // Need to make sure re-renders when layout or save is updated.
+    // Using empty dependency array to avoid infinite loops from object reference changes
     React.useEffect(() => {
-        setLayout(stage().getLayout());
-        setDay(stage().getSave().day);
-        setPhase(stage().getSave().phase);
-    }, [stage().getLayout(), stage().getSave()]);
+        // Create an interval to poll for changes instead of using dependencies
+        const interval = setInterval(() => {
+            const currentSave = stage().getSave();
+            const currentLayout = stage().getLayout();
+            
+            if (currentSave.day !== day) setDay(currentSave.day);
+            if (currentSave.phase !== phase) setPhase(currentSave.phase);
+            if (currentLayout !== layout) setLayout(currentLayout);
+        }, 100);
+        
+        return () => clearInterval(interval);
+    }, [day, phase, layout]);
 
     // Handle Escape key to open menu
     React.useEffect(() => {
@@ -303,7 +312,8 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType}) =>
 
     // Check if aide exists and generate if needed
     React.useEffect(() => {
-        if (hasRunStartIntro) return;
+        if (hasRunStartIntroRef.current) return;
+        hasRunStartIntroRef.current = true;
         
         const save = stage().getSave();
         if (!save.aide.actorId) {
@@ -318,12 +328,9 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType}) =>
         } else {
             startIntro();
         }
-    }, [hasRunStartIntro]);
+    }, []);
 
     const startIntro = () => {
-        if (hasRunStartIntro) return;
-        setHasRunStartIntro(true);
-        
         const save = stage().getSave();
         console.log('Checking for beginning skit conditions...');
         if (save.day == 1 && save.aide.actorId && !save.timeline?.some(s => s.skit?.type === SkitType.BEGINNING)) {
