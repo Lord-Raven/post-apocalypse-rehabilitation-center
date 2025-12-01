@@ -60,6 +60,7 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType}) =>
 
     const [layout, setLayout] = React.useState<Layout>(stage()?.getLayout());
     const [isInitializing, setIsInitializing] = React.useState<boolean>(true);
+    const hasCheckedBeginingSkit = React.useRef<boolean>(false);
     
     // Module selection state
     const [showModuleSelector, setShowModuleSelector] = React.useState(false);
@@ -281,19 +282,37 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType}) =>
         }
     };
 
-    // Poll for changes to day/phase/layout
+    // Poll for changes to day/phase/layout and check initialization status
     React.useEffect(() => {
         const interval = setInterval(() => {
-            const currentSave = stage().getSave();
-            const currentLayout = stage().getLayout();
+            const stageInstance = stage();
+            const currentSave = stageInstance.getSave();
+            const currentLayout = stageInstance.getLayout();
+            const aidePromise = stageInstance.getGenerateAidePromise();
             
+            // Update state if changed
             if (currentSave.day !== day) setDay(currentSave.day);
             if (currentSave.phase !== phase) setPhase(currentSave.phase);
             if (currentLayout !== layout) setLayout(currentLayout);
+            
+            // Check if aide promise has completed
+            if (aidePromise) {
+                // Still initializing
+                if (!isInitializing) setIsInitializing(true);
+            } else {
+                // Initialization complete
+                if (isInitializing) setIsInitializing(false);
+                
+                // Check for beginning skit once after initialization
+                if (!hasCheckedBeginingSkit.current) {
+                    hasCheckedBeginingSkit.current = true;
+                    checkAndStartBeginingSkit();
+                }
+            }
         }, 100);
         
         return () => clearInterval(interval);
-    }, []);
+    }, [day, phase, layout, isInitializing]);
 
     // Handle Escape key to open menu
     React.useEffect(() => {
@@ -306,21 +325,6 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType}) =>
         window.addEventListener('keydown', handleKeyDown);
         return () => window.removeEventListener('keydown', handleKeyDown);
     }, [setScreenType]);
-
-    // Monitor the stage's aide promise to determine when initialization is complete
-    React.useEffect(() => {
-        const stageInstance = stage();
-        const aidePromise = stageInstance.getGenerateAidePromise();
-        
-        if (aidePromise) {
-            // Aide is still being generated
-            setIsInitializing(true);
-        } else {
-            // Aide promise is null/undefined, meaning it completed
-            setIsInitializing(false);
-            checkAndStartBeginingSkit();
-        }
-    }, [stage().getGenerateAidePromise(), stage().getSave().aide.actorId]);
 
     const checkAndStartBeginingSkit = () => {
         const save = stage().getSave();
