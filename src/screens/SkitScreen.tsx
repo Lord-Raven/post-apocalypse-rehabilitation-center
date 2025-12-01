@@ -253,27 +253,31 @@ interface SkitScreenProps {
 
 /**
  * Helper function to get the actors present in the scene at a given script index.
- * Walks through arrivals and departures from initialActorIds.
+ * Walks through movements from initialActorLocations, filtering by skit's moduleId.
  */
 const getActorsAtIndex = (skit: SkitData, scriptIndex: number, allActors: {[key: string]: Actor}): Actor[] => {
-    // Start with initial actors
-    const currentActorIds = new Set<string>(skit.initialActorIds || []);
+    // Start with initial actor locations
+    const currentLocations = {...(skit.initialActorLocations || {})};
     
-    // Apply arrivals and departures up to and including the current index
+    // Apply movements up to and including the current index
     for (let i = 0; i <= scriptIndex && i < skit.script.length; i++) {
         const entry = skit.script[i];
-        if (entry.arrivals) {
-            entry.arrivals.forEach(actorId => currentActorIds.add(actorId));
-        }
-        if (entry.departures) {
-            entry.departures.forEach(actorId => currentActorIds.delete(actorId));
+        if (entry.movements) {
+            Object.entries(entry.movements).forEach(([actorId, newLocationId]) => {
+                currentLocations[actorId] = newLocationId;
+            });
         }
     }
     
-    // Convert IDs to Actor objects
-    return Array.from(currentActorIds)
-        .map(id => allActors[id])
-        .filter(actor => actor !== undefined);
+    // Filter actors who are at the skit's module
+    const actorsAtModule: Actor[] = [];
+    Object.entries(currentLocations).forEach(([actorId, locationId]) => {
+        if (locationId === skit.moduleId && allActors[actorId]) {
+            actorsAtModule.push(allActors[actorId]);
+        }
+    });
+    
+    return actorsAtModule;
 };
 
 export const SkitScreen: FC<SkitScreenProps> = ({ stage, setScreenType }) => {
@@ -298,6 +302,32 @@ export const SkitScreen: FC<SkitScreenProps> = ({ stage, setScreenType }) => {
             currentAudioRef.current.currentTime = 0;
         }
     }, [audioEnabled]);
+
+    // Update actor locationIds when navigating through the skit
+    useEffect(() => {
+        if (!skit.initialActorLocations) return;
+        
+        // Start with initial locations
+        const currentLocations = {...skit.initialActorLocations};
+        
+        // Apply movements up to and including the current index
+        for (let i = 0; i <= index && i < skit.script.length; i++) {
+            const entry = skit.script[i];
+            if (entry.movements) {
+                Object.entries(entry.movements).forEach(([actorId, newLocationId]) => {
+                    currentLocations[actorId] = newLocationId;
+                });
+            }
+        }
+        
+        // Update actual actor locationIds in the save data
+        Object.entries(currentLocations).forEach(([actorId, locationId]) => {
+            const actor = stage().getSave().actors[actorId];
+            if (actor) {
+                actor.locationId = locationId;
+            }
+        });
+    }, [index, skit, stage]);
 
     // Handle arrow key navigation globally (when input is not focused or is empty)
     useEffect(() => {

@@ -23,15 +23,14 @@ export interface ScriptEntry {
     speechUrl: string; // URL of TTS audio
     actorEmotions?: {[key: string]: Emotion}; // actor name -> emotion string
     endScene?: boolean; // Whether this entry marks the end of the scene
-    arrivals?: string[]; // ActorIds arriving in this entry
-    departures?: string[]; // ActorIds departing in this entry
+    movements?: {[actorId: string]: string}; // actor ID -> new module ID
 }
 
 export interface SkitData {
     type: SkitType;
     moduleId: string;
     actorId?: string;
-    initialActorIds?: string[]; // Actors who are initially present at the start of the skit
+    initialActorLocations?: {[actorId: string]: string}; // Initial actor locations at the start of the skit.
     script: ScriptEntry[];
     generating?: boolean;
     context: any;
@@ -129,62 +128,53 @@ function buildScriptLog(skit: SkitData): string {
 }
 
 /**
- * Helper function to determine the current set of actors present at a given script index.
- * Walks through the script from the beginning, applying arrivals and departures.
+ * Helper function to determine the current set of actors present in a module at a given script index.
+ * Walks through the script from the beginning, applying movement changes.
  * @param skit - The skit data
+ * @param moduleId - The module to check presence in (defaults to skit.moduleId)
  * @param upToIndex - Process script entries up to (but not including) this index. -1 means process all.
- * @returns Set of actor IDs currently present
+ * @returns Set of actor IDs currently present in the module
  */
-function getCurrentActorsInScene(skit: SkitData, upToIndex: number = -1): Set<string> {
-    const currentActors = new Set<string>(skit.initialActorIds || []);
+function getCurrentActorsInScene(skit: SkitData, moduleId?: string, upToIndex: number = -1): Set<string> {
+    const targetModuleId = moduleId || skit.moduleId;
+    // Start with initial actor locations
+    const currentLocations = {...(skit.initialActorLocations || {})};
     const endIndex = Math.min(skit.script.length, upToIndex === -1 ? skit.script.length : upToIndex);
     
+    // Apply movements from script entries
     for (let i = 0; i < endIndex; i++) {
         const entry = skit.script[i];
-        if (entry) {
-            if (entry.arrivals) {
-                entry.arrivals.forEach(actorId => currentActors.add(actorId));
-            }
-            if (entry.departures) {
-                entry.departures.forEach(actorId => currentActors.delete(actorId));
-            }
+        if (entry?.movements) {
+            Object.entries(entry.movements).forEach(([actorId, newLocationId]) => {
+                currentLocations[actorId] = newLocationId;
+            });
         }
     }
     
-    return currentActors;
-}
-
-/**
- * Validates whether an actor can logically arrive or depart at the current point in the script.
- * @param actorId - The actor's ID
- * @param isArrival - true for arrival, false for departure
- * @param skit - The skit data
- * @param currentScriptIndex - The index where this action would occur
- * @returns true if the action is valid, false otherwise
- */
-function canActorArriveOrDepart(actorId: string, isArrival: boolean, skit: SkitData, currentScriptIndex: number): boolean {
-    const currentActors = getCurrentActorsInScene(skit, currentScriptIndex);
+    // Return actors at the target module
+    const presentActors = new Set<string>();
+    Object.entries(currentLocations).forEach(([actorId, locationId]) => {
+        if (locationId === targetModuleId) {
+            presentActors.add(actorId);
+        }
+    });
     
-    if (isArrival) {
-        // Actor can arrive if they're not currently present
-        return !currentActors.has(actorId);
-    } else {
-        // Actor can depart if they are currently present
-        return currentActors.has(actorId);
-    }
+    return presentActors;
 }
 
 export function generateSkitPrompt(skit: SkitData, stage: Stage, historyLength: number, instruction: string): string {
     const playerName = stage.getSave().player.name;
 
-    // Initialize skit with actors at the location if this is the first generation
+    // Initialize skit with all actor locations if this is the first generation
     if (skit.script.length === 0) {
-        
-        skit.initialActorIds = Object.values(stage.getSave().actors).filter(a => a.locationId == skit.moduleId).map(a => a.id);
+        skit.initialActorLocations = {};
+        Object.values(stage.getSave().actors).forEach(a => {
+            skit.initialActorLocations![a.id] = a.locationId;
+        });
     }
 
     // Determine present and absent actors for this moment in the skit (as of the last entry in skit.script):
-    const presentActorIds = getCurrentActorsInScene(skit, -1);
+    const presentActorIds = getCurrentActorsInScene(skit, skit.moduleId, -1);
     const presentPatients = Object.values(stage.getSave().actors).filter(a => presentActorIds.has(a.id) && !a.remote);
     const absentPatients = Object.values(stage.getSave().actors).filter(a => !presentActorIds.has(a.id) && !a.remote);
 
@@ -290,8 +280,8 @@ export async function generateSkitScript(skit: SkitData, stage: Stage): Promise<
             const fullPrompt = generateSkitPrompt(skit, stage, 2 + retries,
                 `Example Script Format:\n` +
                 'System: CHARACTER NAME: They do actions in prose. "Their dialogue is in quotation marks."\nANOTHER CHARACTER NAME: [ANOTHER CHARACTER NAME EXPRESSES JOY][CHARACTER NAME EXPRESSES SURPRISE] "Dialogue in quotation marks."\nNARRATOR: [CHARACTER NAME EXPRESSES RELIEF] Descriptive content that is not attributed to a character.' +
-                `\n\nExample Character Movement Format:\n` +
-                'System: NARRATOR: [CHARACTER NAME arrives] CHARACTER NAME enters the room.\nNARRATOR: [CHARACTER NAME departs] CHARACTER NAME leaves the scene.' +
+                `Example Character Movement Format:\n` +
+                'System: NARRATOR: [CHARACTER NAME moves to THIS MODULE NAME] CHARACTER NAME enters the room.\nNARRATOR: [CHARACTER NAME moves to OTHER CHARACTER\'s QUARTERS] CHARACTER NAME leaves the scene.' +
                 `\n\nExample Ending Script Format:\n` +
                 'System: CHARACTER NAME: [CHARACTER NAME EXPRESSES OPTIMISM] Action in prose. "Dialogue in quotation marks."\nNARRATOR: A moment of prose describing events.' +
                 (skit.script.length > 0 ? `\n[SUMMARY: CHARACTER NAME is hopeful about this demonstration.]` : '') +
@@ -302,9 +292,9 @@ export async function generateSkitScript(skit: SkitData, stage: Stage): Promise<
                 `\nFollow the structure of the strict Example Script formatting above: ` +
                 `actions are depicted in prose and character dialogue in quotation marks. Emotion tags (e.g. "[CHARACTER NAME EXPRESSES JOY]") should be used to indicate significant emotional shifts—` +
                 `these cues will be utilized by the game engine to visually display appropriate character emotions. ` +
-                `Character movement tags (e.g. "[CHARACTER NAME arrives]" or "[CHARACTER NAME departs]") should be used to indicate when an Absent Character (or the StationAide) joins the scene or a Present Character (or the StationAide) leaves; ` +
-                `the game engine uses these tags to visually display character presence in the scene. ` +
-                `These tags enable the game to track who is present throughout the scene. ` +
+                `Character movement tags (e.g. "[CHARACTER NAME moves to MODULE NAME]") should be used to indicate when a character moves to a different module on the station. ` +
+                `MODULE NAME should be the name of a module type (e.g., 'comms', 'infirmary', 'lounge'), a character's quarters (e.g., 'Susan's quarters' or just 'quarters' for their own), or simply "Another module" to leave this area. ` +
+                `The game engine uses these tags to update character locations and visually display character presence in scenes. ` +
                 (skit.script.length > 0 ? (`A "[SUMMARY]" tag (e.g., "[SUMMARY: Brief summary of the scene's events.]") should be included when the scene has fulfilled the current Scene Prompt or reached a conclusive moment before continuing with the script. `) : '') +
                 `\nThis scene is a brief visual novel skit within a video game; as such, the scene avoids major developments which would fundamentally change the mechanics or nature of the game, ` +
                 `instead developing content within the existing mechanics. ` +
@@ -329,11 +319,10 @@ export async function generateSkitScript(skit: SkitData, stage: Stage): Promise<
                 // Parse response based on format "NAME: content"; content could be multi-line. We want to ensure that lines that don't start with a name are appended to the previous line.
                 const lines = text.split('\n');
                 const combinedLines: string[] = [];
-                const combinedEmotionTags: {emotions: {[key: string]: Emotion}, arrivals: string[], departures: string[]}[] = [];
+                const combinedEmotionTags: {emotions: {[key: string]: Emotion}, movements: {[actorId: string]: string}}[] = [];
                 let currentLine = '';
                 let currentEmotionTags: {[key: string]: Emotion} = {};
-                let currentArrivals: string[] = [];
-                let currentDepartures: string[] = [];
+                let currentMovements: {[actorId: string]: string} = {};
                 for (const line of lines) {
                     // Skip empty lines
                     let trimmed = line.trim();
@@ -351,8 +340,7 @@ export async function generateSkitScript(skit: SkitData, stage: Stage): Promise<
                     if (!trimmed || ![']', '*', '_', ')', '.', '!', '?', '"', '\''].some(end => trimmed.endsWith(end))) continue;
 
                     const newEmotionTags: {[key: string]: Emotion} = {};
-                    const newArrivals: string[] = [];
-                    const newDepartures: string[] = [];
+                    const newMovements: {[actorId: string]: string} = {};
 
                     // Prepare list of all actors (not just present)
                     const allActors: Actor[] = Object.values(stage.getSave().actors);
@@ -364,42 +352,73 @@ export async function generateSkitScript(skit: SkitData, stage: Stage): Promise<
 
                         console.log(`Processing tag: ${raw}`);
                         
-                        // Look for arrives tags: [Character Name arrives]
-                        const arrivesRegex = /^([^[\]]+)\s+arrives$/i;
-                        const arrivesMatch = arrivesRegex.exec(raw);
-                        if (arrivesMatch) {
-                            const characterName = arrivesMatch[1].trim();
+                        // Look for movement tags: [Character Name moves to Module Name]
+                        const movementRegex = /^([^[\]]+?)\s+moves\s+to\s+(.+)$/i;
+                        const movementMatch = movementRegex.exec(raw);
+                        if (movementMatch) {
+                            const characterName = movementMatch[1].trim();
+                            const destinationName = movementMatch[2].trim();
+                            
                             // Find matching actor using findBestNameMatch
                             const matched = findBestNameMatch(characterName, allActors);
-                            if (matched) {
-                                // Validate if this actor can arrive (using current combined line index)
-                                const currentIndex = combinedLines.length;
-                                if (canActorArriveOrDepart(matched.id, true, skit, currentIndex)) {
-                                    newArrivals.push(matched.id);
-                                    console.log(`Detected arrival: ${matched.name}`);
+                            if (!matched) {
+                                console.warn(`Could not find actor matching: ${characterName}`);
+                                continue;
+                            }
+                            
+                            // Resolve destination module
+                            let destinationModuleId = '';
+                            
+                            // Check if it's a quarters reference (e.g., "Susan's quarters" or "quarters")
+                            const quartersMatch = /^(.+?)'s\s+quarters$/i.exec(destinationName);
+                            if (quartersMatch) {
+                                // Specific character's quarters
+                                const quartersOwnerName = quartersMatch[1].trim();
+                                const quartersOwner = findBestNameMatch(quartersOwnerName, allActors);
+                                if (quartersOwner) {
+                                    // Find the quarters module owned by this actor
+                                    const quartersModule = stage.getLayout().getModulesWhere(m => 
+                                        m.type === 'quarters' && m.ownerId === quartersOwner.id
+                                    )[0];
+                                    if (quartersModule) {
+                                        destinationModuleId = quartersModule.id;
+                                    } else {
+                                        console.warn(`${quartersOwner.name} has no quarters assigned`);
+                                    }
                                 } else {
-                                    console.warn(`Invalid arrival for ${matched.name}: actor is already present`);
+                                    console.warn(`Could not find quarters owner: ${quartersOwnerName}`);
+                                }
+                            } else if (destinationName.toLowerCase() === 'quarters') {
+                                // Character's own quarters (if they have any)
+                                const ownQuarters = stage.getLayout().getModulesWhere(m => 
+                                    m.type === 'quarters' && m.ownerId === matched.id
+                                )[0];
+                                if (ownQuarters) {
+                                    destinationModuleId = ownQuarters.id;
+                                } else {
+                                    console.warn(`${matched.name} has no quarters assigned`);
+                                }
+                            } else {
+                                // Try to find a module by type name
+                                const normalizedDestination = destinationName.toLowerCase().trim();
+                                const targetModule = stage.getLayout().getModulesWhere(m => 
+                                    m.type.toLowerCase() === normalizedDestination
+                                )[0];
+                                if (targetModule) {
+                                    destinationModuleId = targetModule.id;
+                                } else {
+                                    console.warn(`Could not find module matching: ${destinationName}`);
                                 }
                             }
-                            continue;
-                        }
-                        
-                        // Look for departs tags: [Character Name departs]
-                        const departsRegex = /^([^[\]]+)\s+departs$/i;
-                        const departsMatch = departsRegex.exec(raw);
-                        if (departsMatch) {
-                            const characterName = departsMatch[1].trim();
-                            // Find matching actor using findBestNameMatch
-                            const matched = findBestNameMatch(characterName, allActors);
-                            if (matched) {
-                                // Validate if this actor can depart (using current combined line index)
-                                const currentIndex = combinedLines.length;
-                                if (canActorArriveOrDepart(matched.id, false, skit, currentIndex)) {
-                                    newDepartures.push(matched.id);
-                                    console.log(`Detected departure: ${matched.name}`);
-                                } else {
-                                    console.warn(`Invalid departure for ${matched.name}: actor is not present`);
-                                }
+                            
+                            // Track movement in the movements map
+                            if (destinationModuleId) {
+                                newMovements[matched.id] = destinationModuleId;
+                                console.log(`Movement detected: ${matched.name} moves to ${destinationName} (${destinationModuleId})`);
+                            } else {
+                                // Invalid destination - set to empty string
+                                newMovements[matched.id] = '';
+                                console.log(`Movement detected: ${matched.name} moves to invalid location, clearing locationId`);
                             }
                             continue;
                         }
@@ -438,28 +457,24 @@ export async function generateSkitScript(skit: SkitData, stage: Stage): Promise<
                             combinedLines.push(currentLine.trim());
                             combinedEmotionTags.push({
                                 emotions: currentEmotionTags,
-                                arrivals: currentArrivals,
-                                departures: currentDepartures
+                                movements: currentMovements
                             });
                         }
                         currentLine = trimmed;
                         currentEmotionTags = newEmotionTags;
-                        currentArrivals = newArrivals;
-                        currentDepartures = newDepartures;
+                        currentMovements = newMovements;
                     } else {
                         // Continuation of previous line
                         currentLine += '\n' + trimmed;
                         currentEmotionTags = {...currentEmotionTags, ...newEmotionTags};
-                        currentArrivals = [...currentArrivals, ...newArrivals];
-                        currentDepartures = [...currentDepartures, ...newDepartures];
+                        currentMovements = {...currentMovements, ...newMovements};
                     }
                 }
                 if (currentLine) {
                     combinedLines.push(currentLine.trim());
                     combinedEmotionTags.push({
                         emotions: currentEmotionTags,
-                        arrivals: currentArrivals,
-                        departures: currentDepartures
+                        movements: currentMovements
                     });
                 }
 
@@ -483,11 +498,8 @@ export async function generateSkitScript(skit: SkitData, stage: Stage): Promise<
                     if (tagData.emotions && Object.keys(tagData.emotions).length > 0) {
                         entry.actorEmotions = tagData.emotions;
                     }
-                    if (tagData.arrivals && tagData.arrivals.length > 0) {
-                        entry.arrivals = tagData.arrivals;
-                    }
-                    if (tagData.departures && tagData.departures.length > 0) {
-                        entry.departures = tagData.departures;
+                    if (tagData.movements && Object.keys(tagData.movements).length > 0) {
+                        entry.movements = tagData.movements;
                     }
                     
                     return entry;

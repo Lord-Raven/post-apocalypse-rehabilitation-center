@@ -262,7 +262,7 @@ export const MenuScreen: FC<MenuScreenProps> = ({ stage, setScreenType }) => {
                         fontSize: '12px',
                     }}
                 >
-                    v2025.01.12(beta) - I think things are stable again.
+                    v2025.12.01(beta) - I think things are stable again.
                 </motion.div>
             </motion.div>
             </div>
