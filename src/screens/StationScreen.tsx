@@ -300,6 +300,26 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType}) =>
         return () => window.removeEventListener('keydown', handleKeyDown);
     }, [setScreenType]);
 
+    const startIntro = React.useCallback(() => {
+        const save = stage().getSave();
+        console.log('Checking for beginning skit conditions...');
+        if (save.day == 1 && save.aide.actorId && !save.timeline?.some(s => s.skit?.type === SkitType.BEGINNING)) {
+            console.log('Starting beginning skit...');
+            const module = save.layout.getModulesWhere(m => m.type === 'echo chamber')[0];
+            const stationAide = save.actors[save.aide.actorId || ''];
+            stationAide.locationId = module.id;
+
+            stage().setSkit({
+                type: SkitType.BEGINNING,
+                actorId: save.aide.actorId,
+                moduleId: module.id,
+                script: [],
+                context: {}
+            });
+            setScreenType(ScreenType.SKIT);
+        }
+    }, [stage, setScreenType]);
+
     // Check if aide exists and generate if needed
     React.useEffect(() => {
         const save = stage().getSave();
@@ -320,27 +340,7 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType}) =>
         } else {
             startIntro();
         }
-    }, []);
-
-    const startIntro = () => {
-        const save = stage().getSave();
-        console.log('Checking for beginning skit conditions...');
-        if (save.day == 1 && save.aide.actorId && !save.timeline?.some(s => s.skit?.type === SkitType.BEGINNING)) {
-            console.log('Starting beginning skit...');
-            const module = save.layout.getModulesWhere(m => m.type === 'echo chamber')[0];
-            const stationAide = save.actors[save.aide.actorId || ''];
-            stationAide.locationId = module.id;
-
-            stage().setSkit({
-                type: SkitType.BEGINNING,
-                actorId: save.aide.actorId,
-                moduleId: module.id,
-                script: [],
-                context: {}
-            });
-            setScreenType(ScreenType.SKIT);
-        }
-    };
+    }, [stage, startIntro]);
 
     const renderDayPhaseDisplay = () => {
         return (
