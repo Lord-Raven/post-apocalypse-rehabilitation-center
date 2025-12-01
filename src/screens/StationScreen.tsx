@@ -286,7 +286,7 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType}) =>
         setLayout(stage().getLayout());
         setDay(stage().getSave().day);
         setPhase(stage().getSave().phase);
-    }, [stage().getLayout(), stage().getSave()]);
+    }, []);
 
     // Handle Escape key to open menu
     React.useEffect(() => {
@@ -298,30 +298,36 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType}) =>
 
         window.addEventListener('keydown', handleKeyDown);
         return () => window.removeEventListener('keydown', handleKeyDown);
-    }, [setScreenType]);
+    }, []);
 
-    const startIntro = React.useCallback(() => {
-        const save = stage().getSave();
-        console.log('Checking for beginning skit conditions...');
-        if (save.day == 1 && save.aide.actorId && !save.timeline?.some(s => s.skit?.type === SkitType.BEGINNING)) {
-            console.log('Starting beginning skit...');
-            const module = save.layout.getModulesWhere(m => m.type === 'echo chamber')[0];
-            const stationAide = save.actors[save.aide.actorId || ''];
-            stationAide.locationId = module.id;
-
-            stage().setSkit({
-                type: SkitType.BEGINNING,
-                actorId: save.aide.actorId,
-                moduleId: module.id,
-                script: [],
-                context: {}
-            });
-            setScreenType(ScreenType.SKIT);
-        }
-    }, [stage, setScreenType]);
+    // Use a ref to track if initialization has run
+    const hasInitialized = React.useRef(false);
 
     // Check if aide exists and generate if needed
     React.useEffect(() => {
+        if (hasInitialized.current) return;
+        hasInitialized.current = true;
+
+        const startIntro = () => {
+            const save = stage().getSave();
+            console.log('Checking for beginning skit conditions...');
+            if (save.day == 1 && save.aide.actorId && !save.timeline?.some(s => s.skit?.type === SkitType.BEGINNING)) {
+                console.log('Starting beginning skit...');
+                const module = save.layout.getModulesWhere(m => m.type === 'echo chamber')[0];
+                const stationAide = save.actors[save.aide.actorId || ''];
+                stationAide.locationId = module.id;
+
+                stage().setSkit({
+                    type: SkitType.BEGINNING,
+                    actorId: save.aide.actorId,
+                    moduleId: module.id,
+                    script: [],
+                    context: {}
+                });
+                setScreenType(ScreenType.SKIT);
+            }
+        };
+
         const save = stage().getSave();
         if (!save.aide.actorId || !save.actors[save.aide.actorId]) {
             setIsGeneratingAide(true);
@@ -340,7 +346,7 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType}) =>
         } else {
             startIntro();
         }
-    }, [stage, startIntro]);
+    }, []);
 
     const renderDayPhaseDisplay = () => {
         return (
