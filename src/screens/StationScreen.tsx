@@ -60,6 +60,7 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType}) =>
 
     const [layout, setLayout] = React.useState<Layout>(stage()?.getLayout());
     const [isGeneratingAide, setIsGeneratingAide] = React.useState<boolean>(false);
+    const [hasRunStartIntro, setHasRunStartIntro] = React.useState<boolean>(false);
     
     // Module selection state
     const [showModuleSelector, setShowModuleSelector] = React.useState(false);
@@ -302,6 +303,8 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType}) =>
 
     // Check if aide exists and generate if needed
     React.useEffect(() => {
+        if (hasRunStartIntro) return;
+        
         const save = stage().getSave();
         if (!save.aide.actorId) {
             setIsGeneratingAide(true);
@@ -315,9 +318,12 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType}) =>
         } else {
             startIntro();
         }
-    }, []);
+    }, [hasRunStartIntro]);
 
     const startIntro = () => {
+        if (hasRunStartIntro) return;
+        setHasRunStartIntro(true);
+        
         const save = stage().getSave();
         console.log('Checking for beginning skit conditions...');
         if (save.day == 1 && save.aide.actorId && !save.timeline?.some(s => s.skit?.type === SkitType.BEGINNING)) {
