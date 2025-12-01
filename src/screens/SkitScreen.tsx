@@ -601,14 +601,14 @@ export const SkitScreen: FC<SkitScreenProps> = ({ stage, setScreenType }) => {
 
                     {/* Audio toggle button */}
                     <IconButton
-                        onClick={() => setAudioEnabled(!audioEnabled)}
+                        onClick={() => { if (stage().getSave().disableTextToSpeech) return; setAudioEnabled(!audioEnabled); }}
                         onMouseEnter={() => {
-                            setTooltip(stage().getSave().disableTextToSpeech ? 'Speech generation is disabled' : (audioEnabled ? 'Disable speech audio' : 'Enable speech audio'), (stage().getSave().disableTextToSpeech || !audioEnabled) ? VolumeOff : VolumeUp);
+                            setTooltip(stage().getSave().disableTextToSpeech ? 'Speech generation is disabled in settings' : (audioEnabled ? 'Disable speech audio' : 'Enable speech audio'),
+                                (stage().getSave().disableTextToSpeech || !audioEnabled) ? VolumeOff : VolumeUp);
                         }}
                         onMouseLeave={() => {
                             clearTooltip();
                         }}
-                        disabled={stage().getSave().disableTextToSpeech}
                         size="small"
                         sx={{
                             color: stage().getSave().disableTextToSpeech ? '#888888' : (audioEnabled ? '#00ff88' : '#ff6b6b'),

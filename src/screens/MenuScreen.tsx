@@ -97,8 +97,10 @@ export const MenuScreen: FC<MenuScreenProps> = ({ stage, setScreenType }) => {
         
         // If this was new game settings, start the game
         if (isNewGameSettings) {
+            stage().initialized = false;
             stage().startGame();
             // Check if aide is still being generated
+            console.log(`Starting new game from settings: ${stage().getGenerateAidePromise() ? "loading aide" : "entering station"}`);
             if (stage().getGenerateAidePromise()) {
                 setScreenType(ScreenType.LOADING);
             } else {
@@ -260,7 +262,7 @@ export const MenuScreen: FC<MenuScreenProps> = ({ stage, setScreenType }) => {
                         fontSize: '12px',
                     }}
                 >
-                    v2025.01.12(beta) - I've broken something. Maybe don't play for a bit.
+                    v2025.01.12(beta) - I think things are stable again.
                 </motion.div>
             </motion.div>
             </div>
