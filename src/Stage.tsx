@@ -450,36 +450,36 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
         if (this.generateAidePromise) return this.generateAidePromise;
 
         let save = this.getSave();
-        if (save.aide && save.aide.actorId) {
+        if (!save.aide || !save.aide.actorId) {
             // If aide already exists, do nothing
-            return;
-        }
 
-        this.generateAidePromise = (async () => {
-            // Generate a new aide
-            const actorData = {
-                name: save.aide.name,
-                fullPath: '',
-                description: `The PARC's StationAide™ holographic assistant: ${save.aide.description}`,
-                personality: ''
-            }
-            // Retry a few times if it fails (or returns null):
-            for (let attempt = 0; attempt < 3; attempt++) {
-                const aideActor = await loadReserveActor(actorData, this);
-                if (aideActor) {
-                    save = this.getSave();
-                    save.actors[aideActor.id] = aideActor;
-                    aideActor.name = save.aide.name;
-                    aideActor.profile = save.aide.description;
-                    aideActor.remote = true;
-                    save.aide.actorId = aideActor.id;
-                    save.actors[aideActor.id] = aideActor;
-                    await generatePrimaryActorImage(aideActor, this);
-                    break;
+            this.generateAidePromise = (async () => {
+                // Generate a new aide
+                const actorData = {
+                    name: save.aide.name,
+                    fullPath: '',
+                    description: `The PARC's StationAide™ holographic assistant: ${save.aide.description}`,
+                    personality: ''
                 }
-            }
-            this.generateAidePromise = undefined;
-        })();
+                // Retry a few times if it fails (or returns null):
+                for (let attempt = 0; attempt < 3; attempt++) {
+                    const aideActor = await loadReserveActor(actorData, this);
+                    if (aideActor) {
+                        save = this.getSave();
+                        save.actors[aideActor.id] = aideActor;
+                        aideActor.name = save.aide.name;
+                        aideActor.profile = save.aide.description;
+                        aideActor.remote = true;
+                        save.aide.actorId = aideActor.id;
+                        save.actors[aideActor.id] = aideActor;
+                        await generatePrimaryActorImage(aideActor, this);
+                        break;
+                    }
+                }
+                this.generateAidePromise = undefined;
+            })();
+        }
+        return this.generateAidePromise;
     }
 
 
