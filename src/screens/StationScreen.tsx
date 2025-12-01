@@ -59,8 +59,7 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType}) =>
     const [phase, setPhase] = React.useState<number>(stage().getSave().phase);
 
     const [layout, setLayout] = React.useState<Layout>(stage()?.getLayout());
-    const [isGeneratingAide, setIsGeneratingAide] = React.useState<boolean>(false);
-    const hasRunStartIntroRef = React.useRef<boolean>(false);
+    const [isInitializing, setIsInitializing] = React.useState<boolean>(true);
     
     // Module selection state
     const [showModuleSelector, setShowModuleSelector] = React.useState(false);
@@ -282,10 +281,8 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType}) =>
         }
     };
 
-    // Need to make sure re-renders when layout or save is updated.
-    // Using empty dependency array to avoid infinite loops from object reference changes
+    // Poll for changes to day/phase/layout
     React.useEffect(() => {
-        // Create an interval to poll for changes instead of using dependencies
         const interval = setInterval(() => {
             const currentSave = stage().getSave();
             const currentLayout = stage().getLayout();
@@ -296,7 +293,7 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType}) =>
         }, 100);
         
         return () => clearInterval(interval);
-    }, [day, phase, layout]);
+    }, []);
 
     // Handle Escape key to open menu
     React.useEffect(() => {
@@ -310,27 +307,19 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType}) =>
         return () => window.removeEventListener('keydown', handleKeyDown);
     }, [setScreenType]);
 
-    // Check if aide exists and generate if needed
+    // Wait for aide generation to complete (if in progress), then check for beginning skit
     React.useEffect(() => {
-        if (hasRunStartIntroRef.current) return;
-        hasRunStartIntroRef.current = true;
-        
-        const save = stage().getSave();
-        if (!save.aide.actorId) {
-            setIsGeneratingAide(true);
-            stage().generateAide().then(() => {
-                setIsGeneratingAide(false);
-                startIntro();
-            }).catch((error) => {
-                console.error('Error generating aide:', error);
-                setIsGeneratingAide(false);
-            });
-        } else {
-            startIntro();
-        }
+        // Wait for the generateAide promise that was started during stage initialization
+        stage().generateAide().then(() => {
+            setIsInitializing(false);
+            checkAndStartBeginingSkit();
+        }).catch((error) => {
+            console.error('Error waiting for aide generation:', error);
+            setIsInitializing(false);
+        });
     }, []);
 
-    const startIntro = () => {
+    const checkAndStartBeginingSkit = () => {
         const save = stage().getSave();
         console.log('Checking for beginning skit conditions...');
         if (save.day == 1 && save.aide.actorId && !save.timeline?.some(s => s.skit?.type === SkitType.BEGINNING)) {
@@ -715,8 +704,8 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType}) =>
         return cells;
     }
 
-    // Show loading spinner if aide hasn't been generated yet
-    if (isGeneratingAide || !stage().getSave().aide.actorId) {
+    // Show loading spinner while initializing (waiting for aide generation)
+    if (isInitializing) {
         return (
             <Box
                 sx={{

@@ -53,8 +53,8 @@ export const MenuScreen: FC<MenuScreenProps> = ({ stage, setScreenType }) => {
     }, [showSettings]);
 
     const handleContinue = () => {
-        setScreenType(ScreenType.STATION);
         stage().startGame();
+        setScreenType(ScreenType.STATION);
     };
 
     const handleNewGame = () => {
