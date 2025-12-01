@@ -25,6 +25,7 @@ export const MenuScreen: FC<MenuScreenProps> = ({ stage, setScreenType }) => {
     const [showSaveLoad, setShowSaveLoad] = React.useState(false);
     const [saveLoadMode, setSaveLoadMode] = React.useState<'save' | 'load'>('save');
     const { setTooltip, clearTooltip } = useTooltip();
+    const disableAllButtons = true; // When true, disable all options on this menu, including escape to continue; this is being used to effectively shut down the game at the moment.
     
     // Check if a save exists (if there are any actors or the layout has been modified)
     const saveExists = () => {
@@ -34,7 +35,7 @@ export const MenuScreen: FC<MenuScreenProps> = ({ stage, setScreenType }) => {
     // Handle escape key to continue game if available
     React.useEffect(() => {
         const handleKeyDown = (event: KeyboardEvent) => {
-            if (event.key === 'Escape') {
+            if (event.key === 'Escape' && !disableAllButtons) {
                 if (showSettings) {
                     console.log('close settings');
                     handleSettingsCancel();
@@ -106,16 +107,16 @@ export const MenuScreen: FC<MenuScreenProps> = ({ stage, setScreenType }) => {
             key: 'continue', 
             label: 'Continue', 
             onClick: handleContinue,
-            enabled: true,
-            tooltip: 'Resume your current game',
+            enabled: !disableAllButtons,
+            tooltip: disableAllButtons ? 'Currently unavailable' : 'Resume your current game',
             icon: PlayArrow
         }] : []),
         { 
             key: 'new', 
             label: 'New Game', 
             onClick: handleNewGame,
-            enabled: !noSaveSlotsAvailable(),
-            tooltip: noSaveSlotsAvailable() ? 'No save slots remaining; delete a save to start a new game' : 'Start a fresh playthrough',
+            enabled: !disableAllButtons && !noSaveSlotsAvailable(),
+            tooltip: disableAllButtons ? 'Currently unavailable' : (noSaveSlotsAvailable() ? 'No save slots remaining; delete a save to start a new game' : 'Start a fresh playthrough'),
             icon: FiberNew
         },
         ...(saveExists() && stage().initialized ? [{
@@ -125,32 +126,32 @@ export const MenuScreen: FC<MenuScreenProps> = ({ stage, setScreenType }) => {
                 stage().saveGame();
                 setTooltip('Game saved!', Save, undefined, 2000);
             },
-            enabled: true,
-            tooltip: 'Quickly save your current progress',
+            enabled: !disableAllButtons,
+            tooltip: disableAllButtons ? 'Currently unavailable' : 'Quickly save your current progress',
             icon: Save,
         }] : []),
         {
             key: 'save',
             label: 'Save Game',
             onClick: handleSave,
-            enabled: stage().initialized,
-            tooltip: 'Save progress to a specific slot',
+            enabled: !disableAllButtons && stage().initialized,
+            tooltip: disableAllButtons ? 'Currently unavailable' : 'Save progress to a specific slot',
             icon: SaveAlt
         },
         { 
             key: 'load', 
             label: 'Load Game', 
             onClick: handleLoad,
-            enabled: true,
-            tooltip: 'Load a previously saved game',
+            enabled: !disableAllButtons,
+            tooltip: disableAllButtons ? 'Currently unavailable' : 'Load a previously saved game',
             icon: Folder
         },
         { 
             key: 'settings', 
             label: 'Settings', 
             onClick: handleSettings,
-            enabled: true,
-            tooltip: 'Adjust game settings and preferences',
+            enabled: !disableAllButtons,
+            tooltip: disableAllButtons ? 'Currently unavailable' : 'Adjust game settings and preferences',
             icon: Settings
         }
     ];
@@ -249,8 +250,7 @@ export const MenuScreen: FC<MenuScreenProps> = ({ stage, setScreenType }) => {
                         fontSize: '12px',
                     }}
                 >
-                    v2025.30.11 - Beta
-                    Intro Done. Save Slots. Factions. Requests.
+                    v2025.30.11(beta) - I've broken something, so the stage is disabled until I fix it.
                 </motion.div>
             </motion.div>
             </div>
