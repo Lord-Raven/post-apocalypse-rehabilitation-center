@@ -380,8 +380,13 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
         // Called when a game is loaded or a new game is started
         console.log('Starting game...');
 
+        if (!this.getSave().actors[this.getSave().aide.actorId || '']) {
+            this.getSave().aide.actorId = undefined;
+        }
+
         this.loadReserveActors();
         this.loadReserveFactions();
+        this.generateAide();
 
         const save = this.getSave();
         // Initialize stationStats if missing
@@ -442,13 +447,12 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
     }
 
     async generateAide() {
-        console.log('generateAide() called');
         if (this.generateAidePromise) return this.generateAidePromise;
 
         let save = this.getSave();
-        if (save.aide && save.aide.actorId && save.actors[save.aide.actorId]) {
+        if (save.aide && save.aide.actorId) {
             // If aide already exists, do nothing
-            return undefined;
+            return;
         }
 
         this.generateAidePromise = (async () => {
@@ -460,31 +464,22 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
                 personality: ''
             }
             // Retry a few times if it fails (or returns null):
-            try {
-                for (let attempt = 0; attempt < 3; attempt++) {
-                    console.log(`Generating aide, attempt ${attempt + 1}...`);
-                    const aideActor = await loadReserveActor(actorData, this);
-                    if (aideActor) {
-                        console.log('Aide actor generated:', aideActor);
-                        save = this.getSave();
-                        aideActor.name = save.aide.name;
-                        aideActor.profile = save.aide.description;
-                        aideActor.remote = true;
-                        save.aide.actorId = aideActor.id;
-                        save.actors[aideActor.id] = aideActor;
-                        await generatePrimaryActorImage(aideActor, this);
-                        console.log('Aide primary image generated.');
-                        break;
-                    }
+            for (let attempt = 0; attempt < 3; attempt++) {
+                const aideActor = await loadReserveActor(actorData, this);
+                if (aideActor) {
+                    save = this.getSave();
+                    save.actors[aideActor.id] = aideActor;
+                    aideActor.name = save.aide.name;
+                    aideActor.profile = save.aide.description;
+                    aideActor.remote = true;
+                    save.aide.actorId = aideActor.id;
+                    save.actors[aideActor.id] = aideActor;
+                    await generatePrimaryActorImage(aideActor, this);
+                    break;
                 }
-            } catch (err) {
-                console.error('Error generating aide', err);
-            } finally {
-                this.generateAidePromise = undefined;
             }
-            return;
+            this.generateAidePromise = undefined;
         })();
-        return this.generateAidePromise;
     }
 
 
