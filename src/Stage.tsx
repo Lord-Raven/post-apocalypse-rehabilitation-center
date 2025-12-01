@@ -382,7 +382,6 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
 
         this.loadReserveActors();
         this.loadReserveFactions();
-        this.generateAide();
 
         const save = this.getSave();
         // Initialize stationStats if missing
@@ -460,22 +459,28 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
                 personality: ''
             }
             // Retry a few times if it fails (or returns null):
-            for (let attempt = 0; attempt < 3; attempt++) {
-                const aideActor = await loadReserveActor(actorData, this);
-                if (aideActor) {
-                    save = this.getSave();
-                    aideActor.name = save.aide.name;
-                    aideActor.profile = save.aide.description;
-                    aideActor.remote = true;
-                    save.aide.actorId = aideActor.id;
-                    save.actors[aideActor.id] = aideActor;
-                    await generatePrimaryActorImage(aideActor, this);
-                    this.saveGame();
-                    break;
+            try {
+                for (let attempt = 0; attempt < 3; attempt++) {
+                    const aideActor = await loadReserveActor(actorData, this);
+                    if (aideActor) {
+                        save = this.getSave();
+                        aideActor.name = save.aide.name;
+                        aideActor.profile = save.aide.description;
+                        aideActor.remote = true;
+                        save.aide.actorId = aideActor.id;
+                        save.actors[aideActor.id] = aideActor;
+                        await generatePrimaryActorImage(aideActor, this);
+                        this.saveGame();
+                        break;
+                    }
                 }
+            } catch (err) {
+                console.error('Error generating aide', err);
+            } finally {
+                this.generateAidePromise = undefined;
             }
-            this.generateAidePromise = undefined;
         })();
+        return this.generateAidePromise;
     }
 
 

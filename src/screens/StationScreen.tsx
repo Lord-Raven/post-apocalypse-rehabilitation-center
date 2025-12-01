@@ -305,13 +305,16 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType}) =>
         const save = stage().getSave();
         if (!save.aide.actorId || !save.actors[save.aide.actorId]) {
             setIsGeneratingAide(true);
-            stage().generateAide().then(() => {
-                setIsGeneratingAide(false);
-                startIntro();
-            }).catch((error) => {
-                console.error('Error generating aide:', error);
-                setIsGeneratingAide(false);
-            });
+            const promise = stage().generateAide();
+            if (promise) {
+                promise.then(() => {
+                    setIsGeneratingAide(false);
+                    startIntro();
+                }).catch((error) => {
+                    console.error('Error generating aide:', error);
+                    setIsGeneratingAide(false);
+                });
+            }
         } else {
             startIntro();
         }
