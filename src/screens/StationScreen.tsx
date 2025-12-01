@@ -314,6 +314,8 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType}) =>
                     console.error('Error generating aide:', error);
                     setIsGeneratingAide(false);
                 });
+            } else {
+                setIsGeneratingAide(false);
             }
         } else {
             startIntro();

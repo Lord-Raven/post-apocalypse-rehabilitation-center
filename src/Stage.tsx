@@ -442,12 +442,13 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
     }
 
     async generateAide() {
+        console.log('generateAide() called');
         if (this.generateAidePromise) return this.generateAidePromise;
 
         let save = this.getSave();
         if (save.aide && save.aide.actorId && save.actors[save.aide.actorId]) {
             // If aide already exists, do nothing
-            return;
+            return undefined;
         }
 
         this.generateAidePromise = (async () => {
@@ -461,8 +462,10 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
             // Retry a few times if it fails (or returns null):
             try {
                 for (let attempt = 0; attempt < 3; attempt++) {
+                    console.log(`Generating aide, attempt ${attempt + 1}...`);
                     const aideActor = await loadReserveActor(actorData, this);
                     if (aideActor) {
+                        console.log('Aide actor generated:', aideActor);
                         save = this.getSave();
                         aideActor.name = save.aide.name;
                         aideActor.profile = save.aide.description;
@@ -470,7 +473,7 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
                         save.aide.actorId = aideActor.id;
                         save.actors[aideActor.id] = aideActor;
                         await generatePrimaryActorImage(aideActor, this);
-                        this.saveGame();
+                        console.log('Aide primary image generated.');
                         break;
                     }
                 }
@@ -479,6 +482,7 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
             } finally {
                 this.generateAidePromise = undefined;
             }
+            return;
         })();
         return this.generateAidePromise;
     }
