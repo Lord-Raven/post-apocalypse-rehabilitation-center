@@ -4,6 +4,7 @@ import { SkitScreen } from './SkitScreen';
 import { StationScreen } from './StationScreen';
 import { EchoScreen } from './EchoScreen';
 import { MenuScreen } from './MenuScreen';
+import { LoadingScreen } from './LoadingScreen';
 import { TooltipProvider } from '../contexts/TooltipContext';
 import TooltipBar from '../components/TooltipBar';
 import { useTooltip } from '../contexts/TooltipContext';
@@ -14,6 +15,7 @@ import { useTooltip } from '../contexts/TooltipContext';
 
 export enum ScreenType {
     MENU = 'menu',
+    LOADING = 'loading',
     STATION = 'station',
     ECHO = 'echo',
     SKIT = 'skit',
@@ -38,6 +40,10 @@ const BaseScreenContent: FC<{ stage: () => Stage }> = ({ stage }) => {
             {screenType === ScreenType.MENU && (
                 // Render menu screen
                 <MenuScreen stage={stage} setScreenType={setScreenType} />
+            )}
+            {screenType === ScreenType.LOADING && (
+                // Render loading screen
+                <LoadingScreen stage={stage} setScreenType={setScreenType} />
             )}
             {screenType === ScreenType.STATION && (
                 // Render station screen

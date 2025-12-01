@@ -25,7 +25,7 @@ export const MenuScreen: FC<MenuScreenProps> = ({ stage, setScreenType }) => {
     const [showSaveLoad, setShowSaveLoad] = React.useState(false);
     const [saveLoadMode, setSaveLoadMode] = React.useState<'save' | 'load'>('save');
     const { setTooltip, clearTooltip } = useTooltip();
-    const disableAllButtons = true; // When true, disable all options on this menu, including escape to continue; this is being used to effectively shut down the game at the moment.
+    const disableAllButtons = false; // When true, disable all options on this menu, including escape to continue; this is being used to effectively shut down the game at the moment.
     
     // Check if a save exists (if there are any actors or the layout has been modified)
     const saveExists = () => {
@@ -55,7 +55,12 @@ export const MenuScreen: FC<MenuScreenProps> = ({ stage, setScreenType }) => {
 
     const handleContinue = () => {
         stage().startGame();
-        setScreenType(ScreenType.STATION);
+        // Check if aide is still being generated
+        if (stage().getGenerateAidePromise()) {
+            setScreenType(ScreenType.LOADING);
+        } else {
+            setScreenType(ScreenType.STATION);
+        }
     };
 
     const handleNewGame = () => {
@@ -93,7 +98,12 @@ export const MenuScreen: FC<MenuScreenProps> = ({ stage, setScreenType }) => {
         // If this was new game settings, start the game
         if (isNewGameSettings) {
             stage().startGame();
-            setScreenType(ScreenType.STATION);
+            // Check if aide is still being generated
+            if (stage().getGenerateAidePromise()) {
+                setScreenType(ScreenType.LOADING);
+            } else {
+                setScreenType(ScreenType.STATION);
+            }
             setIsNewGameSettings(false);
         }
     };

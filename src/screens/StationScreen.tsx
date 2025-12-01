@@ -1,6 +1,6 @@
 import React, { FC } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Typography, Card, CardContent, CircularProgress, Box } from '@mui/material';
+import { Typography, Card, CardContent } from '@mui/material';
 import { styled } from '@mui/material/styles';
 import { ScreenType } from './BaseScreen';
 import { Layout, Module, createModule, ModuleType, MODULE_DEFAULTS, StationStat, STATION_STAT_DESCRIPTIONS, STATION_STAT_ICONS } from '../Module';
@@ -59,7 +59,6 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType}) =>
     const [phase, setPhase] = React.useState<number>(stage().getSave().phase);
 
     const [layout, setLayout] = React.useState<Layout>(stage()?.getLayout());
-    const [isInitializing, setIsInitializing] = React.useState<boolean>(true);
     const hasCheckedBeginingSkit = React.useRef<boolean>(false);
     
     // Module selection state
@@ -282,37 +281,29 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType}) =>
         }
     };
 
-    // Poll for changes to day/phase/layout and check initialization status
+    // Poll for changes to day/phase/layout
     React.useEffect(() => {
         const interval = setInterval(() => {
             const stageInstance = stage();
             const currentSave = stageInstance.getSave();
             const currentLayout = stageInstance.getLayout();
-            const aidePromise = stageInstance.getGenerateAidePromise();
             
             // Update state if changed
             if (currentSave.day !== day) setDay(currentSave.day);
             if (currentSave.phase !== phase) setPhase(currentSave.phase);
             if (currentLayout !== layout) setLayout(currentLayout);
-            
-            // Check if aide promise has completed
-            if (aidePromise) {
-                // Still initializing
-                if (!isInitializing) setIsInitializing(true);
-            } else {
-                // Initialization complete
-                if (isInitializing) setIsInitializing(false);
-                
-                // Check for beginning skit once after initialization
-                if (!hasCheckedBeginingSkit.current) {
-                    hasCheckedBeginingSkit.current = true;
-                    checkAndStartBeginingSkit();
-                }
-            }
         }, 100);
         
         return () => clearInterval(interval);
-    }, [day, phase, layout, isInitializing]);
+    }, [day, phase, layout]);
+
+    // Check for beginning skit on mount
+    React.useEffect(() => {
+        if (!hasCheckedBeginingSkit.current) {
+            hasCheckedBeginingSkit.current = true;
+            checkAndStartBeginingSkit();
+        }
+    }, []);
 
     // Handle Escape key to open menu
     React.useEffect(() => {
@@ -711,41 +702,6 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType}) =>
             }
         }
         return cells;
-    }
-
-    // Show loading spinner while initializing (waiting for aide generation)
-    if (isInitializing) {
-        return (
-            <Box
-                sx={{
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    height: '100vh',
-                    width: '100vw',
-                    background: 'linear-gradient(45deg, #001122 0%, #002244 100%)',
-                }}
-            >
-                <CircularProgress 
-                    size={80} 
-                    sx={{ 
-                        color: '#00ff88',
-                        marginBottom: 3
-                    }} 
-                />
-                <Typography
-                    variant="h5"
-                    sx={{
-                        color: '#00ff88',
-                        fontWeight: 700,
-                        textShadow: '0 0 20px rgba(0, 255, 136, 0.5)',
-                    }}
-                >
-                    Initializing StationAide™...
-                </Typography>
-            </Box>
-        );
     }
 
     return (
