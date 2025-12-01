@@ -703,7 +703,7 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType}) =>
     }
 
     // Show loading spinner if aide hasn't been generated yet
-    if (isGeneratingAide || !stage().getSave().aide.actorId) {
+    if (isGeneratingAide || !stage().getSave().aide.actorId || !stage().getSave().actors[stage().getSave().aide.actorId || '']) {
         return (
             <Box
                 sx={{

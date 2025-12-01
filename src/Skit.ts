@@ -354,8 +354,6 @@ export async function generateSkitScript(skit: SkitData, stage: Stage): Promise<
 
                     // Prepare list of all actors (not just present)
                     const allActors: Actor[] = Object.values(stage.getSave().actors);
-                    console.log(stage.getSave().actors);
-                    console.log(`All actors for matching: ${allActors.map(a => a.name).join(', ')}`);
                     
                     // Process tags in the line
                     for (const tag of trimmed.match(/\[[^\]]+\]/g) || []) {
@@ -368,11 +366,9 @@ export async function generateSkitScript(skit: SkitData, stage: Stage): Promise<
                         const arrivesRegex = /^([^[\]]+)\s+arrives$/i;
                         const arrivesMatch = arrivesRegex.exec(raw);
                         if (arrivesMatch) {
-                            console.log(`Found arrives tag for ${arrivesMatch[1].trim()}`);
                             const characterName = arrivesMatch[1].trim();
                             // Find matching actor using findBestNameMatch
                             const matched = findBestNameMatch(characterName, allActors);
-                            console.log(`Matched actor for ${characterName} arrival: ${matched ? matched.name : 'None'}`);
                             if (matched) {
                                 // Validate if this actor can arrive (using current combined line index)
                                 const currentIndex = combinedLines.length;
@@ -390,11 +386,9 @@ export async function generateSkitScript(skit: SkitData, stage: Stage): Promise<
                         const departsRegex = /^([^[\]]+)\s+departs$/i;
                         const departsMatch = departsRegex.exec(raw);
                         if (departsMatch) {
-                            console.log(`Found departs tag for ${departsMatch[1].trim()}`);
                             const characterName = departsMatch[1].trim();
                             // Find matching actor using findBestNameMatch
                             const matched = findBestNameMatch(characterName, allActors);
-                            console.log(`Matched actor for ${characterName} departure: ${matched ? matched.name : 'None'}`);
                             if (matched) {
                                 // Validate if this actor can depart (using current combined line index)
                                 const currentIndex = combinedLines.length;

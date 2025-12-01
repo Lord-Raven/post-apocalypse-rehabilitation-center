@@ -406,7 +406,7 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
 
         // Clean out remote actors that aren't supported by current factions
         const idsToRemove: string[] = [];
-        Object.values(save.actors).filter(actor => actor.remote && (!save.factions || !Object.values(save.factions).some(faction => faction.representativeId === actor.id))).forEach(actor => {
+        Object.values(save.actors).filter(actor => actor.remote && (save.aide?.actorId || '') !== actor.id && (!save.factions || !Object.values(save.factions).some(faction => faction.representativeId === actor.id))).forEach(actor => {
             idsToRemove.push(actor.id);
         });
         idsToRemove.forEach(id => {
