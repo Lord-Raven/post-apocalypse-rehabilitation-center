@@ -299,6 +299,26 @@ export const SkitScreen: FC<SkitScreenProps> = ({ stage, setScreenType }) => {
         }
     }, [audioEnabled]);
 
+    // Handle arrow key navigation globally (when input is not focused or is empty)
+    useEffect(() => {
+        const handleKeyDown = (e: KeyboardEvent) => {
+            const target = e.target as HTMLElement;
+            const isInputFocused = target.tagName === 'INPUT' || target.tagName === 'TEXTAREA';
+            
+            // Only handle arrow keys if input is not focused OR input is empty
+            if (e.key === 'ArrowLeft' && (!isInputFocused || inputText.trim() === '')) {
+                e.preventDefault();
+                prev();
+            } else if (e.key === 'ArrowRight' && (!isInputFocused || inputText.trim() === '')) {
+                e.preventDefault();
+                next();
+            }
+        };
+
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, [inputText, index, skit, finishTyping, loading]);
+
     useEffect(() => {
         if (skit.script.length == 0) {
             setLoading(true);
@@ -700,12 +720,6 @@ export const SkitScreen: FC<SkitScreenProps> = ({ stage, setScreenType }) => {
                                     }
                                 }
                                 else if (sceneEnded) handleClose();
-                            } else if (e.key === 'ArrowLeft') {
-                                e.preventDefault();
-                                prev();
-                            } else if (e.key === 'ArrowRight') {
-                                e.preventDefault();
-                                next();
                             }
                         }}
                         placeholder={

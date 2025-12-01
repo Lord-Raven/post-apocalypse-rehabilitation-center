@@ -1,5 +1,5 @@
 import {ReactElement, useEffect, useState} from "react";
-import {StageBase, StageResponse, InitialData, Message} from "@chub-ai/stages-ts";
+import {StageBase, StageResponse, InitialData, Message, UpdateBuilder} from "@chub-ai/stages-ts";
 import {LoadResponse} from "@chub-ai/stages-ts/dist/types/load";
 import Actor, { loadReserveActor, generatePrimaryActorImage, commitActorToEcho, Stat, generateAdditionalActorImages, loadReserveActorFromFullPath } from "./actors/Actor";
 import Faction, { loadReserveFaction } from "./factions/Faction";
@@ -42,6 +42,8 @@ export type SaveType = {
     currentSkit?: SkitData;
     stationStats?: {[key in StationStat]: number};
     timestamp?: number; // Unix timestamp (milliseconds) when save was last updated
+    disableTextToSpeech?: boolean;
+    disableEmotionImages?: boolean;
 }
 
 export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateType, ConfigType> {
@@ -210,24 +212,19 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
         const promises = [];
         const saves: (SaveType | undefined)[] = Array(this.SAVE_SLOTS).fill(undefined);
         for (let slot = 0; slot < this.SAVE_SLOTS; slot++) {
-            promises.push(
-                // response structure is: 
-                // response {
-                // data: [{value: {}}]
+            promises.push(async () => {
+                const response = await this.storage.get(`saveData_${slot}`).forUser(this.userId);
+                console.log('Fetched save slot data from storage API:', response);
 
-                this.storage.get(`saveData_${slot}`).forUser(this.userId).then((response) => {
-                    console.log('Fetched save slot data from storage API:', response);
-
-                    if (response && response.data && response.data.length > 0 && response.data[0].value && Object.keys(response.data[0].value).length > 0) {
-                        saves[slot] = this.rehydrateSave(response.data[0].value);
-                    } else if (response && response.status !== 200) {
-                        console.log(`Falling back to chatstate save for slot ${slot} due to error response:`, response);
-                        saves[slot] = this.saves[slot]; // fall back to existing save data if available
-                    } else {
-                        console.log(`No save data found for slot ${slot}.`);
-                    }
-                })
-            );
+                if (response && response.data && response.data.length > 0 && response.data[0].value && Object.keys(response.data[0].value).length > 0) {
+                    saves[slot] = this.rehydrateSave(response.data[0].value);
+                } else if (response && response.status !== 200) {
+                    console.log(`Falling back to chatstate save for slot ${slot} due to error response:`, response);
+                    saves[slot] = this.saves[slot]; // fall back to existing save data if available
+                } else {
+                    console.log(`No save data found for slot ${slot}.`);
+                }
+            });
         }
         await Promise.all(promises);
         
@@ -235,8 +232,7 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
         if (saves.some(save => save !== undefined)) {
             this.saves = saves;
         } else {
-            console.log(this.buildSaves());
-            this.saves = saves;
+            console.log('No saves loaded from storage API; using existing saves.');
             this.saveAllGames()
         }
         this.currentSave = this.saves[this.saveSlot] || this.getFreshSave();
@@ -330,12 +326,27 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
         const chatState = this.buildSaves();
         this.messenger.updateChatState(chatState);
         // Persist to storage API
-        this.storage.set(`saveData_${this.saveSlot}`, this.currentSave).forUser();
+        this.storage.set(`saveData_${this.saveSlot}`, this.currentSave).forUser().then(() => {
+            console.log(`Saved game to slot ${this.saveSlot} in storage API.`)
+        });
     }
 
     saveAllGames() {
+        let updateBuilder: UpdateBuilder | undefined = undefined;
         for (let slot = 0; slot < this.SAVE_SLOTS; slot++) {
-            this.storage.set(`saveData_${slot}`, this.saves[slot]).forUser();
+            if (updateBuilder === undefined) {
+                updateBuilder = this.storage.set(`saveData_${slot}`, this.saves[slot]).forUser();
+            } else {
+                updateBuilder = updateBuilder.set(`saveData_${slot}`, this.saves[slot]).forUser();
+            }
+        }
+        
+        if (updateBuilder) {
+            void updateBuilder.then(() => {
+                console.log('All saves completed');
+            }, (err) => {
+                console.error('Save failed:', err);
+            });
         }
     }
 

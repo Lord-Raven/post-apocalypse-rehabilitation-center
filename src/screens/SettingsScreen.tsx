@@ -16,6 +16,8 @@ interface SettingsData {
     playerDescription: string;
     aideName: string;
     aideDescription: string;
+    disableTextToSpeech: boolean;
+    disableEmotionImages: boolean;
     tagToggles: { [key: string]: boolean };
 }
 
@@ -82,6 +84,8 @@ export const SettingsScreen: FC<SettingsScreenProps> = ({ stage, onCancel, onCon
             `Your StationAide™ comes pre-programmed with a friendly and non-condescending demeanor that will leave you feeling empowered but never patronized; ` +
             `your bespoke projection comes with an industry-leading feminine form in a pleasing shade of default blue, but, as always, StationAide™ remains infinitely customizable to suit your tastes.\n\n` +
             `StationAide™. "When life gives you space stations..."`),
+        disableTextToSpeech: stage().getSave().disableTextToSpeech ?? true,
+        disableEmotionImages: stage().getSave().disableEmotionImages ?? true,
         // Tag toggles; disabling these can be used to filter undesired content. Load from save array, if one. Otherwise, default to true.
         tagToggles: stage().getSave().bannedTags ? Object.fromEntries(
             Object.keys(tagMap).map(key => [
@@ -104,6 +108,8 @@ export const SettingsScreen: FC<SettingsScreenProps> = ({ stage, onCancel, onCon
         save.aide.description = settings.aideDescription;
 
         save.bannedTags = Object.keys(settings.tagToggles).filter(key => !settings.tagToggles[key]).map(key => tagMap[key] ? tagMap[key] : [key]).flat();
+        save.disableTextToSpeech = settings.disableTextToSpeech;
+        save.disableEmotionImages = settings.disableEmotionImages;
 
         stage().saveGame();
         onConfirm();
@@ -309,6 +315,142 @@ export const SettingsScreen: FC<SettingsScreenProps> = ({ stage, onCancel, onCon
                                         resize: 'vertical',
                                     }}
                                 />
+                            </div>
+
+                            {/* Accessibility Settings */}
+                            <div>
+                                <label 
+                                    style={{
+                                        display: 'block',
+                                        color: '#00ff88',
+                                        fontSize: '14px',
+                                        fontWeight: 'bold',
+                                        marginBottom: '12px',
+                                    }}
+                                >
+                                    Accessibility Settings
+                                </label>
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                                    {/* Disable Text to Speech Toggle */}
+                                    <motion.div
+                                        whileHover={{ scale: 1.01 }}
+                                        whileTap={{ scale: 0.99 }}
+                                        onClick={() => setSettings(prev => ({ ...prev, disableTextToSpeech: !prev.disableTextToSpeech }))}
+                                        style={{
+                                            padding: '12px',
+                                            background: settings.disableTextToSpeech
+                                                ? 'rgba(0, 255, 136, 0.15)'
+                                                : 'rgba(0, 20, 40, 0.7)',
+                                            border: settings.disableTextToSpeech
+                                                ? '2px solid rgba(0, 255, 136, 0.5)'
+                                                : '2px solid rgba(255, 255, 255, 0.1)',
+                                            borderRadius: '8px',
+                                            cursor: 'pointer',
+                                            transition: 'all 0.2s ease',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            gap: '8px',
+                                        }}
+                                    >
+                                        <div
+                                            style={{
+                                                width: '20px',
+                                                height: '20px',
+                                                borderRadius: '4px',
+                                                background: settings.disableTextToSpeech ? '#00ff88' : 'rgba(255, 255, 255, 0.1)',
+                                                border: '2px solid ' + (settings.disableTextToSpeech ? '#00ff88' : 'rgba(255, 255, 255, 0.3)'),
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                justifyContent: 'center',
+                                                flexShrink: 0,
+                                                transition: 'all 0.2s ease',
+                                            }}
+                                        >
+                                            {settings.disableTextToSpeech && (
+                                                <motion.span
+                                                    initial={{ scale: 0 }}
+                                                    animate={{ scale: 1 }}
+                                                    style={{
+                                                        color: '#002210',
+                                                        fontSize: '14px',
+                                                        fontWeight: 'bold',
+                                                    }}
+                                                >
+                                                    ✓
+                                                </motion.span>
+                                            )}
+                                        </div>
+                                        <span
+                                            style={{
+                                                color: settings.disableTextToSpeech ? '#00ff88' : 'rgba(255, 255, 255, 0.7)',
+                                                fontSize: '13px',
+                                                fontWeight: settings.disableTextToSpeech ? 'bold' : 'normal',
+                                            }}
+                                        >
+                                            Disable Text to Speech
+                                        </span>
+                                    </motion.div>
+
+                                    {/* Disable Emotion Images Toggle */}
+                                    <motion.div
+                                        whileHover={{ scale: 1.01 }}
+                                        whileTap={{ scale: 0.99 }}
+                                        onClick={() => setSettings(prev => ({ ...prev, disableEmotionImages: !prev.disableEmotionImages }))}
+                                        style={{
+                                            padding: '12px',
+                                            background: settings.disableEmotionImages
+                                                ? 'rgba(0, 255, 136, 0.15)'
+                                                : 'rgba(0, 20, 40, 0.7)',
+                                            border: settings.disableEmotionImages
+                                                ? '2px solid rgba(0, 255, 136, 0.5)'
+                                                : '2px solid rgba(255, 255, 255, 0.1)',
+                                            borderRadius: '8px',
+                                            cursor: 'pointer',
+                                            transition: 'all 0.2s ease',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            gap: '8px',
+                                        }}
+                                    >
+                                        <div
+                                            style={{
+                                                width: '20px',
+                                                height: '20px',
+                                                borderRadius: '4px',
+                                                background: settings.disableEmotionImages ? '#00ff88' : 'rgba(255, 255, 255, 0.1)',
+                                                border: '2px solid ' + (settings.disableEmotionImages ? '#00ff88' : 'rgba(255, 255, 255, 0.3)'),
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                justifyContent: 'center',
+                                                flexShrink: 0,
+                                                transition: 'all 0.2s ease',
+                                            }}
+                                        >
+                                            {settings.disableEmotionImages && (
+                                                <motion.span
+                                                    initial={{ scale: 0 }}
+                                                    animate={{ scale: 1 }}
+                                                    style={{
+                                                        color: '#002210',
+                                                        fontSize: '14px',
+                                                        fontWeight: 'bold',
+                                                    }}
+                                                >
+                                                    ✓
+                                                </motion.span>
+                                            )}
+                                        </div>
+                                        <span
+                                            style={{
+                                                color: settings.disableEmotionImages ? '#00ff88' : 'rgba(255, 255, 255, 0.7)',
+                                                fontSize: '13px',
+                                                fontWeight: settings.disableEmotionImages ? 'bold' : 'normal',
+                                            }}
+                                        >
+                                            Disable Emotion Images
+                                        </span>
+                                    </motion.div>
+                                </div>
                             </div>
 
                             {/* Toggle Grid */}

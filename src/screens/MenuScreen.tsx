@@ -260,7 +260,7 @@ export const MenuScreen: FC<MenuScreenProps> = ({ stage, setScreenType }) => {
                         fontSize: '12px',
                     }}
                 >
-                    v2025.30.11(beta) - I've broken something, so the stage is disabled until I fix it.
+                    v2025.01.12(beta) - I've broken something. Maybe don't play for a bit.
                 </motion.div>
             </motion.div>
             </div>
