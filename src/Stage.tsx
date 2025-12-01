@@ -446,6 +446,10 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
         }
     }
 
+    getGenerateAidePromise(): Promise<void> | undefined {
+        return this.generateAidePromise;
+    }
+
     async generateAide() {
         if (this.generateAidePromise) return this.generateAidePromise;
 

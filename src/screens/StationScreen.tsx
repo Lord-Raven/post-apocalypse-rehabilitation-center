@@ -307,17 +307,20 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType}) =>
         return () => window.removeEventListener('keydown', handleKeyDown);
     }, [setScreenType]);
 
-    // Wait for aide generation to complete (if in progress), then check for beginning skit
+    // Monitor the stage's aide promise to determine when initialization is complete
     React.useEffect(() => {
-        // Wait for the generateAide promise that was started during stage initialization
-        stage().generateAide().then(() => {
+        const stageInstance = stage();
+        const aidePromise = stageInstance.getGenerateAidePromise();
+        
+        if (aidePromise) {
+            // Aide is still being generated
+            setIsInitializing(true);
+        } else {
+            // Aide promise is null/undefined, meaning it completed
             setIsInitializing(false);
             checkAndStartBeginingSkit();
-        }).catch((error) => {
-            console.error('Error waiting for aide generation:', error);
-            setIsInitializing(false);
-        });
-    }, []);
+        }
+    }, [stage().getGenerateAidePromise(), stage().getSave().aide.actorId]);
 
     const checkAndStartBeginingSkit = () => {
         const save = stage().getSave();
