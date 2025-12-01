@@ -114,7 +114,7 @@ class Actor {
         const fallbackUrl = neutralUrl || this.avatarImageUrl || '';
 
         // Check if we need to generate the image
-        if (stage && (!emotionUrl || emotionUrl === this.avatarImageUrl || emotionUrl === this.emotionPack['base'] || (emotionKey !== 'neutral' && emotionUrl === neutralUrl))) {
+        if (stage && (emotion === 'neutral' || !stage.getSave().disableEmotionImages) && (!emotionUrl || emotionUrl === this.avatarImageUrl || emotionUrl === this.emotionPack['base'] || (emotionKey !== 'neutral' && emotionUrl === neutralUrl))) {
             // Kick off generation in the background (don't wait)
             generateEmotionImage(this, emotion as Emotion, stage);
         }
@@ -446,6 +446,9 @@ async function generateEmotionImage(actor: Actor, emotion: Emotion, stage: Stage
 export async function generateActorDecor(actor: Actor, module: Module, stage: Stage): Promise<string> {
     if (actor.decorImageUrls[module.type] && actor.decorImageUrls[module.type].length > 0 && actor.decorImageUrls[module.type] !== module.getAttribute('baseImageUrl')) {
         return actor.decorImageUrls[module.type];
+    }
+    if (stage.getSave().disableEmotionImages) {
+        return '';
     }
     console.log(`Generating decor image for actor ${actor.name} in module ${module.type}`);
     // Generate a decor image based on the module's description and the actor's description

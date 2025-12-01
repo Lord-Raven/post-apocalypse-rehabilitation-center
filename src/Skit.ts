@@ -137,15 +137,17 @@ function buildScriptLog(skit: SkitData): string {
  */
 function getCurrentActorsInScene(skit: SkitData, upToIndex: number = -1): Set<string> {
     const currentActors = new Set<string>(skit.initialActorIds || []);
-    const endIndex = Math.max(skit.script.length, upToIndex === -1 ? skit.script.length : upToIndex);
+    const endIndex = Math.min(skit.script.length, upToIndex === -1 ? skit.script.length : upToIndex);
     
     for (let i = 0; i < endIndex; i++) {
         const entry = skit.script[i];
-        if (entry.arrivals) {
-            entry.arrivals.forEach(actorId => currentActors.add(actorId));
-        }
-        if (entry.departures) {
-            entry.departures.forEach(actorId => currentActors.delete(actorId));
+        if (entry) {
+            if (entry.arrivals) {
+                entry.arrivals.forEach(actorId => currentActors.add(actorId));
+            }
+            if (entry.departures) {
+                entry.departures.forEach(actorId => currentActors.delete(actorId));
+            }
         }
     }
     
@@ -509,7 +511,7 @@ export async function generateSkitScript(skit: SkitData, stage: Stage): Promise<
                 const ttsPromises = scriptEntries.map(async (entry) => {
                     const actor = findBestNameMatch(entry.speaker, Object.values(stage.getSave().actors));
                     // Only TTS if entry.speaker matches an actor from stage().getSave().actors and entry.message includes dialogue in quotes.
-                    if (!actor || !entry.message.includes('"')) {
+                    if (!actor || !entry.message.includes('"') || stage.getSave().disableTextToSpeech) {
                         entry.speechUrl = '';
                         return;
                     }

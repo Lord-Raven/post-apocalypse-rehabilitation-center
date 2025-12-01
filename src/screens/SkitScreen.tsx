@@ -333,13 +333,11 @@ export const SkitScreen: FC<SkitScreenProps> = ({ stage, setScreenType }) => {
         }
     }, [skit]);
 
-    // speaker is set by index change
     useEffect(() => {
         if (skit.script && skit.script.length > 0) {
             const currentSpeakerName = skit.script[index]?.speaker?.trim() || '';
             const actors = Object.values(stage().getSave().actors);
             const matchingActor = findBestNameMatch(currentSpeakerName, actors);
-            console.log('SkitScreen: Finding speaker for', currentSpeakerName, 'Matched actor:', matchingActor ? matchingActor.name : 'None');
             
             // Check if this is the player speaking
             const playerName = stage().getSave().player.name;
@@ -349,7 +347,6 @@ export const SkitScreen: FC<SkitScreenProps> = ({ stage, setScreenType }) => {
             setDisplayName(matchingActor?.name || (isPlayerSpeaker ? playerName : ''));
             setDisplayMessage(formatMessage(skit.script[index]?.message || '', matchingActor));
             setFinishTyping(false); // Reset typing state when message changes
-            console.log('SkitScreen: Displaying message index', index, 'Speaker:', matchingActor ? matchingActor.name : (isPlayerSpeaker ? playerName : 'N/A'));
             if (currentAudioRef.current) {
                 // Stop any currently playing audio
                 currentAudioRef.current.pause();
@@ -606,14 +603,15 @@ export const SkitScreen: FC<SkitScreenProps> = ({ stage, setScreenType }) => {
                     <IconButton
                         onClick={() => setAudioEnabled(!audioEnabled)}
                         onMouseEnter={() => {
-                            setTooltip(audioEnabled ? 'Disable speech audio' : 'Enable speech audio', audioEnabled ? VolumeUp : VolumeOff);
+                            setTooltip(stage().getSave().disableTextToSpeech ? 'Speech generation is disabled' : (audioEnabled ? 'Disable speech audio' : 'Enable speech audio'), (stage().getSave().disableTextToSpeech || !audioEnabled) ? VolumeOff : VolumeUp);
                         }}
                         onMouseLeave={() => {
                             clearTooltip();
                         }}
+                        disabled={stage().getSave().disableTextToSpeech}
                         size="small"
                         sx={{
-                            color: audioEnabled ? '#00ff88' : '#ff6b6b',
+                            color: stage().getSave().disableTextToSpeech ? '#888888' : (audioEnabled ? '#00ff88' : '#ff6b6b'),
                             border: `1px solid ${audioEnabled ? 'rgba(0,255,136,0.2)' : 'rgba(255,107,107,0.2)'}`,
                             transition: 'all 0.3s ease',
                             '&:hover': {
@@ -622,7 +620,7 @@ export const SkitScreen: FC<SkitScreenProps> = ({ stage, setScreenType }) => {
                             }
                         }}
                     >
-                        {audioEnabled ? <VolumeUp fontSize="small" /> : <VolumeOff fontSize="small" />}
+                        {(stage().getSave().disableTextToSpeech || !audioEnabled) ? <VolumeOff fontSize="small" /> : <VolumeUp fontSize="small" />}
                     </IconButton>
 
                     {/* Re-roll button */}
