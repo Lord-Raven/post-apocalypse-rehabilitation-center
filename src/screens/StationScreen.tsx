@@ -303,7 +303,7 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType}) =>
     // Check if aide exists and generate if needed
     React.useEffect(() => {
         const save = stage().getSave();
-        if (!save.aide.actorId) {
+        if (!save.aide.actorId || !save.actors[save.aide.actorId]) {
             setIsGeneratingAide(true);
             stage().generateAide().then(() => {
                 setIsGeneratingAide(false);
@@ -703,7 +703,7 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType}) =>
     }
 
     // Show loading spinner if aide hasn't been generated yet
-    if (isGeneratingAide || !stage().getSave().aide.actorId || !stage().getSave().actors[stage().getSave().aide.actorId || '']) {
+    if (isGeneratingAide || !stage().getSave().aide.actorId) {
         return (
             <Box
                 sx={{
