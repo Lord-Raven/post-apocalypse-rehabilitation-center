@@ -339,6 +339,8 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType}) =>
                 context: {}
             });
             setScreenType(ScreenType.SKIT);
+        } else {
+            console.log('No beginning skit needed.');
         }
     };
 
