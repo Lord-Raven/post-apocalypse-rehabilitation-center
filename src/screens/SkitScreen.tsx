@@ -629,58 +629,60 @@ export const SkitScreen: FC<SkitScreenProps> = ({ stage, setScreenType }) => {
                         )}
                     </Box>
 
-                    {/* Audio toggle button */}
-                    <IconButton
-                        onClick={() => { if (stage().getSave().disableTextToSpeech) return; setAudioEnabled(!audioEnabled); }}
-                        onMouseEnter={() => {
-                            setTooltip(stage().getSave().disableTextToSpeech ? 'Speech generation is disabled in settings' : (audioEnabled ? 'Disable speech audio' : 'Enable speech audio'),
-                                (stage().getSave().disableTextToSpeech || !audioEnabled) ? VolumeOff : VolumeUp);
-                        }}
-                        onMouseLeave={() => {
-                            clearTooltip();
-                        }}
-                        size="small"
-                        sx={{
-                            color: stage().getSave().disableTextToSpeech ? '#888888' : (audioEnabled ? '#00ff88' : '#ff6b6b'),
-                            border: `1px solid ${audioEnabled ? 'rgba(0,255,136,0.2)' : 'rgba(255,107,107,0.2)'}`,
-                            transition: 'all 0.3s ease',
-                            '&:hover': {
-                                borderColor: audioEnabled ? 'rgba(0,255,136,0.4)' : 'rgba(255,107,107,0.4)',
-                                color: audioEnabled ? '#00ffaa' : '#ff5252',
-                            }
-                        }}
-                    >
-                        {(stage().getSave().disableTextToSpeech || !audioEnabled) ? <VolumeOff fontSize="small" /> : <VolumeUp fontSize="small" />}
-                    </IconButton>
+                    <Box sx={{ display: 'flex', gap: 1.5, alignItems: 'center' }}>
+                        {/* Audio toggle button */}
+                        <IconButton
+                            onClick={() => { if (stage().getSave().disableTextToSpeech) return; setAudioEnabled(!audioEnabled); }}
+                            onMouseEnter={() => {
+                                setTooltip(stage().getSave().disableTextToSpeech ? 'Speech generation is disabled in settings' : (audioEnabled ? 'Disable speech audio' : 'Enable speech audio'),
+                                    (stage().getSave().disableTextToSpeech || !audioEnabled) ? VolumeOff : VolumeUp);
+                            }}
+                            onMouseLeave={() => {
+                                clearTooltip();
+                            }}
+                            size="small"
+                            sx={{
+                                color: stage().getSave().disableTextToSpeech ? '#888888' : (audioEnabled ? '#00ff88' : '#ff6b6b'),
+                                border: `1px solid ${audioEnabled ? 'rgba(0,255,136,0.2)' : 'rgba(255,107,107,0.2)'}`,
+                                transition: 'all 0.3s ease',
+                                '&:hover': {
+                                    borderColor: audioEnabled ? 'rgba(0,255,136,0.4)' : 'rgba(255,107,107,0.4)',
+                                    color: audioEnabled ? '#00ffaa' : '#ff5252',
+                                }
+                            }}
+                        >
+                            {(stage().getSave().disableTextToSpeech || !audioEnabled) ? <VolumeOff fontSize="small" /> : <VolumeUp fontSize="small" />}
+                        </IconButton>
 
-                    {/* Re-roll button */}
-                    <IconButton
-                        onClick={() => {
-                            console.log('Re-roll clicked');
-                            handleReroll();
-                        }}
-                        onMouseEnter={() => {
-                            setTooltip('Re-generate events from this point', Casino);
-                        }}
-                        onMouseLeave={() => {
-                            clearTooltip();
-                        }}
-                        disabled={loading || sceneEnded}
-                        size="small"
-                        sx={{
-                            color: '#00ff88',
-                            border: '1px solid rgba(0,255,136,0.2)',
-                            transition: 'all 0.3s ease',
-                            '&:hover': {
-                                borderColor: 'rgba(0,255,136,0.4)',
-                                color: '#00ffaa',
-                                transform: 'rotate(180deg)',
-                            },
-                            '&:disabled': { color: 'rgba(255,255,255,0.3)' }
-                        }}
-                    >
-                        <Casino fontSize="small" />
-                    </IconButton>
+                        {/* Re-roll button */}
+                        <IconButton
+                            onClick={() => {
+                                console.log('Re-roll clicked');
+                                handleReroll();
+                            }}
+                            onMouseEnter={() => {
+                                setTooltip('Re-generate events from this point', Casino);
+                            }}
+                            onMouseLeave={() => {
+                                clearTooltip();
+                            }}
+                            disabled={loading || sceneEnded}
+                            size="small"
+                            sx={{
+                                color: '#00ff88',
+                                border: '1px solid rgba(0,255,136,0.2)',
+                                transition: 'all 0.3s ease',
+                                '&:hover': {
+                                    borderColor: 'rgba(0,255,136,0.4)',
+                                    color: '#00ffaa',
+                                    transform: 'rotate(180deg)',
+                                },
+                                '&:disabled': { color: 'rgba(255,255,255,0.3)' }
+                            }}
+                        >
+                            <Casino fontSize="small" />
+                        </IconButton>
+                    </Box>
                 </Box>
 
                 {/* Message content */}
