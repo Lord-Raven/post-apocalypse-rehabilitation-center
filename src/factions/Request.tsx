@@ -402,6 +402,12 @@ export class Request {
             // Just kick off the skit for the temporary assignment
             if (this.requirement.type === 'actor-with-stats' || this.requirement.type === 'specific-actor') {
                 const module = stage.getSave().layout.getModulesWhere(m => m.type === 'comms')[0];
+                // Remove other actors from comms:
+                Object.values(stage.getSave().actors).forEach(actor => {
+                    if (actor.locationId === module.id) {
+                        actor.locationId = '';
+                    }
+                });
                 const actor = stage.getSave().actors[actorId || ''];
                 if (actor) {
                     actor.locationId = module.id;
@@ -450,6 +456,13 @@ export class Request {
         if (this.requirement.type === 'actor-with-stats' || this.requirement.type === 'specific-actor') {
             const module = stage.getSave().layout.getModulesWhere(m => m.type === 'comms')[0];
             // Kick off a farewell skit.
+            // Remove other actors from comms:
+            Object.values(stage.getSave().actors).forEach(actor => {
+                if (actor.locationId === module.id) {
+                    actor.locationId = '';
+                }
+            });
+            
             // Move transferred actor to comms
             const actor = stage.getSave().actors[actorId || ''];
             if (actor) {

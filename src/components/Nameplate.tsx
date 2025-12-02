@@ -79,8 +79,9 @@ export const Nameplate: FC<NameplateProps> = ({
                 const textWidth = textRef.current.scrollWidth;
                 
                 if (textWidth > availableWidth && availableWidth > 0) {
-                    // Scale down, but not below 0.5 (50%) for readability
-                    const scale = Math.max(0.5, availableWidth / textWidth);
+                    // Scale down, but not below 0.4 (40%) for better fitting
+                    // Add a small buffer to prevent just-barely-too-wide text
+                    const scale = Math.max(0.4, (availableWidth * 0.98) / textWidth);
                     setFontScale(scale);
                 }
             });
@@ -95,7 +96,7 @@ export const Nameplate: FC<NameplateProps> = ({
         }
 
         return () => resizeObserver.disconnect();
-    }, [displayName, size]);
+    }, [displayName, displayRole, size, layout, role]);
 
     const renderLabel = () => {
         const nameStyle: React.CSSProperties = {
