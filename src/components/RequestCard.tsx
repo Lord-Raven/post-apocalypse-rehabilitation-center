@@ -238,7 +238,7 @@ export const RequestCard: FC<RequestCardProps> = ({
                 borderRadius: '8px',
                 background: 'rgba(0, 10, 20, 0.5)',
                 cursor: isInProgress ? 'default' : 'pointer',
-                overflow: 'hidden',
+                overflow: 'visible',
                 display: 'flex',
                 flexDirection: 'column',
                 padding: '12px',
@@ -405,18 +405,7 @@ export const RequestCard: FC<RequestCardProps> = ({
                     gap: '8px',
                     flexWrap: 'wrap',
                 }}>
-                    <span style={{
-                        fontSize: '1.2rem',
-                        color: canFulfill ? '#00ff88' : '#ff6b6b',
-                        fontWeight: 700,
-                        lineHeight: 1,
-                        textShadow: canFulfill 
-                            ? '0 0 8px #00ff88'
-                            : '0 0 8px #ff6b6b',
-                        flexShrink: 0,
-                    }}>
-                        {canFulfill ? '✓' : '✗'}
-                    </span>
+
                     
                     <div style={{
                         fontSize: '0.85rem',
@@ -428,6 +417,18 @@ export const RequestCard: FC<RequestCardProps> = ({
                         flexWrap: 'wrap',
                         gap: '8px',
                     }}>
+                        <span style={{
+                            fontSize: '1.2rem',
+                            color: canFulfill ? '#00ff88' : '#ff6b6b',
+                            fontWeight: 700,
+                            lineHeight: 1,
+                            textShadow: canFulfill 
+                                ? '0 0 8px #00ff88'
+                                : '0 0 8px #ff6b6b',
+                            flexShrink: 0,
+                        }}>
+                            {canFulfill ? '✓' : '✗'}
+                        </span>
                         <span>{requirementContent.text}</span>
                         {requirementContent.statElements.length > 0 && requirementContent.statElements.map((element, index) => (
                             <span key={index} style={{ display: 'flex', alignItems: 'center', gap: '0px' }}>
@@ -438,7 +439,7 @@ export const RequestCard: FC<RequestCardProps> = ({
                         {/* Display hourglass icons for timed requests */}
                         {(request.requirement.type === 'actor-with-stats' || request.requirement.type === 'specific-actor') && 
                          (request.requirement as ActorWithStatsRequirement | SpecificActorRequirement).timeInTurns && (
-                            <span style={{ display: 'flex', alignItems: 'center', gap: '4px', marginLeft: '8px' }}>
+                            <span style={{ display: 'flex', alignItems: 'center', gap: '2px', marginLeft: '8px' }}>
                                 {Array.from({ length: (request.requirement as ActorWithStatsRequirement | SpecificActorRequirement).timeInTurns! }).map((_, i) => (
                                     <HourglassEmpty key={i} style={{ fontSize: '1rem', color: '#ffa726' }} />
                                 ))}
