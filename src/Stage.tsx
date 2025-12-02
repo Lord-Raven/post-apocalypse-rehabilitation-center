@@ -349,7 +349,7 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
             } else {
                 // If actor didn't move anywhere in the last skit, put them in a random non-quarters module:
                 const previousSkit = (save.timeline && save.timeline.length > 0) ? save.timeline[save.timeline.length - 1].skit : undefined;
-                if (!previousSkit || previousSkit.script.every(entry => !entry.movements || !Object.keys(entry.movements).some(moverId => moverId === actor.id)) ) {
+                if ((!previousSkit || previousSkit.script.every(entry => !entry.movements || !Object.keys(entry.movements).some(moverId => moverId === actor.id))) && !actor.inProgressRequestId) {
                     actor.locationId = save.layout.getModulesWhere(m => m.type !== 'quarters' || m.ownerId == actorId).sort(() => Math.random() - 0.5)[0]?.id || '';
                 }
             }

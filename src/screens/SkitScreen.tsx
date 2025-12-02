@@ -324,7 +324,7 @@ export const SkitScreen: FC<SkitScreenProps> = ({ stage, setScreenType }) => {
         // Update actual actor locationIds in the save data
         Object.entries(currentLocations).forEach(([actorId, locationId]) => {
             const actor = stage().getSave().actors[actorId];
-            if (actor) {
+            if (actor && !actor.inProgressRequestId) {
                 actor.locationId = locationId;
             }
         });

@@ -131,7 +131,7 @@ const randomAction = (module: Module, stage: Stage, setScreenType: (type: Screen
             // If there are actors here, open a skit with them:
             if (Object.values(stage.getSave().actors).some(a => a.locationId === module.id)) {
                 // Maybe move the module's owner (if any) here:
-                if (module.ownerId && stage.getSave().actors[module.ownerId] && Math.random() < 0.5) {
+                if (module.ownerId && stage.getSave().actors[module.ownerId] && !stage.getSave().actors[module.ownerId].inProgressRequestId && Math.random() < 0.5) {
                     stage.getSave().actors[module.ownerId].locationId = module.id;
                 }
                 console.log("Opening skit.");
@@ -182,7 +182,7 @@ export const MODULE_DEFAULTS: Record<ModuleType, ModuleIntrinsic> = {
                 const faction = Object.values(stage.getSave().factions).find(a => a.representativeId && stage.getSave().actors[a.representativeId]?.locationId === module.id);
                 if (faction) {
                     // Move the module's owner (if any) here:
-                    if (module.ownerId && stage.getSave().actors[module.ownerId]) {
+                    if (module.ownerId && stage.getSave().actors[module.ownerId] && !stage.getSave().actors[module.ownerId].inProgressRequestId) {
                         stage.getSave().actors[module.ownerId].locationId = module.id;
                     }
                     // Introduce a new faction:
@@ -246,7 +246,7 @@ export const MODULE_DEFAULTS: Record<ModuleType, ModuleIntrinsic> = {
         cost: {Provision: 1},
         action: (module: Module, stage: Stage, setScreenType: (type: ScreenType) => void) => {
             // Open the skit screen to speak to occupants
-            if (module.ownerId) {
+            if (module.ownerId && !stage.getSave().actors[module.ownerId].inProgressRequestId) {
                 console.log("Opening skit.");
                 stage.getSave().actors[module.ownerId].locationId = module.id; // Ensure actor is in the module
                 stage.setSkit({

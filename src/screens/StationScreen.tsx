@@ -110,9 +110,9 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType}) =>
         setSelectedPosition(null);
         // Possibly kick off a skit about the new module, if no others exist in layout:
         const existingModules = stage().getLayout().getModulesWhere(m => m.type === moduleType);
-        if (existingModules.length === 1 && Object.values(stage().getSave().actors).filter(actor => !actor.remote).length > 0) { // New module is the only one of its type
+        if (existingModules.length === 1 && Object.values(stage().getSave().actors).filter(actor => !actor.remote && !actor.inProgressRequestId).length > 0) { // New module is the only one of its type
             // Grab a few random patients to pull to the new module for a skit:
-            let randomPatients = Object.values(stage().getSave().actors).filter(actor => !actor.remote)
+            let randomPatients = Object.values(stage().getSave().actors).filter(actor => !actor.remote && !actor.inProgressRequestId)
                 .filter(a => a.locationId !== newModule.id && !a.remote)
                 .sort(() => 0.5 - Math.random());
             randomPatients = randomPatients.slice(0, Math.min(Math.random() * 3 + 1, randomPatients.length));
@@ -219,7 +219,9 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType}) =>
                     if (currentQuarters && currentQuarters.type === 'quarters') {
                         // Swap: other actor gets current quarters
                         currentQuarters.ownerId = targetOwnerId;
-                        otherActor.locationId = currentQuartersId;
+                        if (!otherActor.inProgressRequestId) {
+                            otherActor.locationId = currentQuartersId;
+                        }
                     }
                 }
             } else {
@@ -233,7 +235,9 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType}) =>
 
             // Assign actor to target quarters
             targetModule.ownerId = actorId;
-            actor.locationId = targetModule.id;
+            if (!actor.inProgressRequestId) {
+                actor.locationId = targetModule.id;
+            }
             generateActorDecor(actor, targetModule, stage());
 
         } else {
@@ -250,7 +254,9 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType}) =>
 
             // Assign the actor to this module as their role
             targetModule.ownerId = actorId;
-            actor.locationId = targetModule.id;
+            if (!actor.inProgressRequestId) {
+                actor.locationId = targetModule.id;
+            }
             generateActorDecor(actor, targetModule, stage());
             const roleName: string = targetModule.getAttribute('role') || '';
             if (roleName && Object.keys(actor.heldRoles).indexOf(roleName) === -1) {

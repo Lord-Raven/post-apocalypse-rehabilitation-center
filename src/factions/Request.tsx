@@ -352,6 +352,7 @@ export class Request {
                     const actor = save.actors[actorId];
                     if (actor) {
                         actor.inProgressRequestId = this.id;
+                        actor.locationId = '';
                     }
                     console.log(`Started timed request ${this.id} with actor ${actorId} at day ${this.startDay}, turn ${this.startTurn}`);
                 } else {
@@ -413,7 +414,7 @@ export class Request {
                     actor.locationId = module.id;
                 }
                 const liaison = stage.getSave().actors[stage.getSave().layout.getModulesWhere(m => m.type === 'comms')[0].ownerId || ''];
-                if (liaison) {
+                if (liaison && !liaison.inProgressRequestId) {
                     liaison.locationId = module.id;
                 }
                 const factionRep = faction ? stage.getSave().actors[faction.representativeId || ''] : null;
@@ -470,7 +471,7 @@ export class Request {
             }
             // Get liaison to move to comms
             const liaison = stage.getSave().actors[stage.getSave().layout.getModulesWhere(m => m.type === 'comms')[0].ownerId || ''];
-            if (liaison) {
+            if (liaison && !liaison.inProgressRequestId) {
                 liaison.locationId = module.id;
             }
             // Get faction representative to move to comms
@@ -500,7 +501,7 @@ export class Request {
             if (factionRep) {
                 factionRep.locationId = module.id;
             }
-            if (liaison) {
+            if (liaison && !liaison.inProgressRequestId) {
                 liaison.locationId = module.id;
             }
             stage.setSkit({
