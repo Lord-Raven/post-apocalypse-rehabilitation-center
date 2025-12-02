@@ -855,6 +855,14 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
                                 requestId => this.getSave().requests[requestId].factionId === factionId
                             );
                             requestsToRemove.forEach(requestId => {
+                                const req = this.getSave().requests[requestId];
+                                if (req.inProgressActorId) {
+                                    const actor = this.getSave().actors[req.inProgressActorId];
+                                    if (actor) {
+                                        actor.inProgressRequestId = '';
+                                        actor.locationId = '';
+                                    }
+                                }
                                 delete this.getSave().requests[requestId];
                             });
                             
@@ -897,6 +905,11 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
                 // Look through existing requests and remove any with the same description or initial criteria:
                 for (const existingRequest of Object.values(save.requests)) {
                     if (existingRequest && save.currentSkit.requests.some(request => request.description === existingRequest.description || request.matchesCriteria(existingRequest))) {
+                        // If existing request is in progress, throw the new one out
+                        if (existingRequest.isInProgress()) {
+                            save.currentSkit.requests = save.currentSkit.requests.filter(request => request.description !== existingRequest.description && !request.matchesCriteria(existingRequest));
+                            continue;
+                        }
                         // Remove the existing request
                         delete save.requests[existingRequest.id];
                     }
@@ -905,7 +918,7 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
                 for (const request of save.currentSkit.requests) {
                     let factionRequestIds: string[] = [];
                     for (const existingRequest of Object.values(save.requests)) {
-                        if (existingRequest && existingRequest.factionId === request.factionId) {
+                        if (existingRequest && existingRequest.factionId === request.factionId && !existingRequest.isInProgress()) {
                             factionRequestIds.push(existingRequest.id);
                         }
                     }

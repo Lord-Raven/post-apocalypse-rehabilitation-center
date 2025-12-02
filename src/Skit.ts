@@ -722,23 +722,6 @@ export async function generateSkitScript(skit: SkitData, stage: Stage): Promise<
                                         if (matchedFaction && reputationChange !== 0) {
                                             if (!statChanges['FACTION']) statChanges['FACTION'] = {};
                                             statChanges['FACTION'][matchedFaction.id] = (statChanges['FACTION'][matchedFaction.id] || 0) + reputationChange;
-                                            matchedFaction.reputation = Math.max(0, Math.min(10, (matchedFaction.reputation || 5) + reputationChange));
-                                            console.log(`Faction reputation change detected: ${matchedFaction.name} ${reputationChange > 0 ? '+' : ''}${reputationChange}`);
-                                            // If reputation is 0, the faction will cut ties.
-                                            if (matchedFaction.reputation <= 0) {
-                                                console.log(`${matchedFaction.name} has cut ties with the PARC due to low reputation.`);
-                                                stage.getSave().timeline?.push({
-                                                    day: stage.getSave().day,
-                                                    turn: stage.getSave().turn,
-                                                    description: `The ${matchedFaction.name} has cut all ties with the PARC.`,
-                                                    skit: undefined
-                                                });
-                                                matchedFaction.active = false;
-                                                const requestsForRemoval = Object.values(stage.getSave().requests).filter(r => r.factionId === matchedFaction.id);
-                                                for (const req of requestsForRemoval) {
-                                                    delete stage.getSave().requests[req.id];
-                                                }
-                                            }
                                         }
                                     }
                                     continue;

@@ -1,7 +1,7 @@
 import React, { FC } from 'react';
 import { motion } from 'framer-motion';
 import { Paper, Typography, Box } from '@mui/material';
-import { TrendingUp, Handshake, TrendingDown, HourglassEmpty } from '@mui/icons-material';
+import { TrendingUp, Handshake, TrendingDown } from '@mui/icons-material';
 import Actor, { Stat, ACTOR_STAT_ICONS } from '../actors/Actor';
 import { StationStat, STATION_STAT_ICONS } from '../Module';
 import Nameplate from '../components/Nameplate';
@@ -9,7 +9,6 @@ import Faction from '../factions/Faction';
 import { scoreToGrade } from '../utils';
 import { SkitData } from '../Skit';
 import { Stage } from '../Stage';
-import { ActorWithStatsRequirement, SpecificActorRequirement } from '../factions/Request';
 
 interface StatChange {
     statName: string;
@@ -684,7 +683,7 @@ const SkitOutcomeDisplay: FC<SkitOutcomeDisplayProps> = ({ skitData, stage, layo
                 </div>
             ))}
 
-            {/* New Requests Section */}
+            {/* New or Updated Requests Notification */}
             {requests.length > 0 && (
                 <div>
                 <motion.div
@@ -700,8 +699,7 @@ const SkitOutcomeDisplay: FC<SkitOutcomeDisplayProps> = ({ skitData, stage, layo
                             borderRadius: 2,
                             p: 1.5,
                             backdropFilter: 'blur(12px)',
-                            textAlign: 'center',
-                            mb: 1.5
+                            textAlign: 'center'
                         }}
                     >
                         <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1 }}>
@@ -716,179 +714,10 @@ const SkitOutcomeDisplay: FC<SkitOutcomeDisplayProps> = ({ skitData, stage, layo
                                     textShadow: '0 2px 4px rgba(0,0,0,0.8)'
                                 }}
                             >
-                                New Requests
+                                New or Updated Requests!
                             </Typography>
                         </Box>
                     </Paper>
-
-                    {/* Request Cards */}
-                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
-                        {requests.map((request, requestIndex) => {
-                            const faction = stage.getSave().factions[request.factionId];
-                            
-                            return (
-                                <motion.div
-                                    key={request.id}
-                                    initial={{ opacity: 0, x: 20 }}
-                                    animate={{ opacity: 1, x: 0 }}
-                                    transition={{ duration: 0.3, delay: 0.6 + characterChanges.length * 0.2 + requestIndex * 0.15 }}
-                                >
-                                    <Paper
-                                        elevation={6}
-                                        sx={{
-                                            position: 'relative',
-                                            background: 'rgba(10,20,30,0.95)',
-                                            border: '2px solid rgba(100,149,237,0.3)',
-                                            borderRadius: 3,
-                                            p: 2,
-                                            backdropFilter: 'blur(8px)',
-                                            overflow: 'hidden'
-                                        }}
-                                    >
-                                        {/* Background Image */}
-                                        {faction?.backgroundImageUrl && (
-                                            <Box
-                                                sx={{
-                                                    position: 'absolute',
-                                                    top: 0,
-                                                    left: 0,
-                                                    right: 0,
-                                                    bottom: 0,
-                                                    backgroundImage: `url(${faction.backgroundImageUrl})`,
-                                                    backgroundSize: 'cover',
-                                                    backgroundPosition: 'center',
-                                                    opacity: 0.15,
-                                                    zIndex: 0
-                                                }}
-                                            />
-                                        )}
-
-                                        {/* Dark overlay for readability */}
-                                        <Box
-                                            sx={{
-                                                position: 'absolute',
-                                                top: 0,
-                                                left: 0,
-                                                right: 0,
-                                                bottom: 0,
-                                                background: 'rgba(0, 10, 20, 0.7)',
-                                                zIndex: 0
-                                            }}
-                                        />
-
-                                        {/* Content */}
-                                        <Box sx={{ position: 'relative', zIndex: 1 }}>
-                                            {/* Faction Nameplate */}
-                                            {faction && (
-                                                <Box sx={{ display: 'flex', justifyContent: 'center', mb: 1.5 }}>
-                                                    <Nameplate
-                                                        name={faction.name}
-                                                        size="medium"
-                                                        style={{
-                                                            background: faction.themeColor || '#4a5568',
-                                                            border: faction.themeColor ? `2px solid ${faction.themeColor}CC` : '2px solid #718096',
-                                                            fontFamily: faction.themeFont || 'Arial, sans-serif',
-                                                        }}
-                                                    />
-                                                </Box>
-                                            )}
-
-                                            {/* Description */}
-                                            <Typography
-                                                sx={{
-                                                    color: '#6495ed',
-                                                    fontSize: '0.95rem',
-                                                    lineHeight: 1.5,
-                                                    fontWeight: 600,
-                                                    mb: 1.5,
-                                                    textAlign: 'center',
-                                                    textShadow: '0 1px 2px rgba(0,0,0,0.8)'
-                                                }}
-                                            >
-                                                {request.description}
-                                            </Typography>
-
-                                            {/* Requirements */}
-                                            <Box
-                                                sx={{
-                                                    p: 1.5,
-                                                    background: 'rgba(0, 0, 0, 0.5)',
-                                                    borderRadius: 2,
-                                                    mb: 1.5
-                                                }}
-                                            >
-                                                <Typography
-                                                    sx={{
-                                                        fontSize: '0.75rem',
-                                                        color: '#888',
-                                                        textTransform: 'uppercase',
-                                                        letterSpacing: '0.5px',
-                                                        mb: 1
-                                                    }}
-                                                >
-                                                    Requirements
-                                                </Typography>
-                                                <Typography
-                                                    sx={{
-                                                        fontSize: '0.9rem',
-                                                        color: '#fff',
-                                                        fontWeight: 600,
-                                                        textShadow: '0 1px 0 rgba(0,0,0,0.6)',
-                                                        display: 'flex',
-                                                        alignItems: 'center',
-                                                        gap: 1
-                                                    }}
-                                                >
-                                                    {request.getRequirementText(stage)}
-                                                    {/* Display hourglass icons for timed requests */}
-                                                    {(request.requirement.type === 'actor-with-stats' || request.requirement.type === 'specific-actor') && 
-                                                     (request.requirement as ActorWithStatsRequirement | SpecificActorRequirement).timeInTurns && (
-                                                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, ml: 1 }}>
-                                                            {Array.from({ length: (request.requirement as ActorWithStatsRequirement | SpecificActorRequirement).timeInTurns! }).map((_, i) => (
-                                                                <HourglassEmpty key={i} sx={{ fontSize: '1rem', color: '#ffa726' }} />
-                                                            ))}
-                                                        </Box>
-                                                    )}
-                                                </Typography>
-                                            </Box>
-
-                                            {/* Rewards */}
-                                            <Box
-                                                sx={{
-                                                    p: 1.5,
-                                                    background: 'rgba(0, 255, 136, 0.1)',
-                                                    borderRadius: 2,
-                                                    border: '1px solid rgba(0, 255, 136, 0.3)'
-                                                }}
-                                            >
-                                                <Typography
-                                                    sx={{
-                                                        fontSize: '0.75rem',
-                                                        color: '#888',
-                                                        textTransform: 'uppercase',
-                                                        letterSpacing: '0.5px',
-                                                        mb: 1
-                                                    }}
-                                                >
-                                                    Rewards
-                                                </Typography>
-                                                <Typography
-                                                    sx={{
-                                                        fontSize: '0.9rem',
-                                                        color: '#00ff88',
-                                                        fontWeight: 700,
-                                                        textShadow: '0 1px 0 rgba(0,0,0,0.6)'
-                                                    }}
-                                                >
-                                                    {request.getRewardText()}
-                                                </Typography>
-                                            </Box>
-                                        </Box>
-                                    </Paper>
-                                </motion.div>
-                            );
-                        })}
-                    </Box>
                 </motion.div>
                 </div>
             )}
