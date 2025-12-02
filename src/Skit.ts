@@ -264,13 +264,14 @@ export function generateSkitPrompt(skit: SkitData, stage: Stage, historyLength: 
         (request ? `\n\nRequest Details:\n  Description: ${request.description}\n  Requirement: ${request.getRequirementText(stage)}\n  Reward: ${request.getRewardText()}\n` : '') +
         (faction ? `\n\n${faction.name} Details: ${faction.description}\n${faction.name} Aesthetic: ${faction.visualStyle}` : '') +
         (factionRepresentative ? `\n${faction?.name || 'The faction'}'s representative, ${factionRepresentative.name}, appears on-screen. Their description: ${factionRepresentative.description}` : 'They have no designated liaison for this communication; any characters introduced during this scene will be transient.') +
-        (faction ? `\nThis skit may explore the nature of this faction's relationship with and intentions for the Director, the PARC, or other characters present in the Comms module (if any). ` +
+        ((faction && !request) ? `\nThis skit may explore the nature of this faction's relationship with and intentions for the Director, the PARC, or other characters present in the Comms module (if any). ` +
             `However, this and other factions generally contact the PARC to express interest or make offers: ` +
-            `\n1) Most commonly, these are 'job' openings with certain character qualities (or limitations) in mind.` +
-            `\n2) Sometimes, these 'job' offers target a specific patient of the PARC.` +
+            `\n1) Most commonly, these are 'job' openings with certain character qualities (or limitations) in mind; this can be a temporary assignment, like a mission or project.` +
+            `\n2) Sometimes, these 'job' offers target a specific patient of the PARC; this can be a temporary assignment, like a mission or project.` +
             `\n3) Finally, some offers are for other Station resources or exchanges; these are informed by the PARC's core stats, but typically presented in a narrative or abstract fashion.` +
-            `\nAll requests come with some offer of compensation. Remember that a 'job' in this context may be something the Director can compel a patient into—not necessarily gainful employment. ` +
-            `Although deals and offers are discussed in this skit, they can only be finalized through a separate game mechanic, so the skit should leave the offer open without confirming anything.` : '') +
+            `\nAll requests come with some offer of compensation which will translate into station stat bonuses, perhaps abstractly (for instance, an exchange of information for arms may harm Systems but benefit Security). ` +
+            `Remember that a 'job' in this context may be something the Director can compel a patient into—not necessarily gainful employment. ` +
+            `Although deals and offers may be discussed in this skit, they can only be finalized through a separate game mechanic, so the script should leave the offer open and a little vague without confirming anything.` : '') +
         `\n\nKnown Factions: \n${Object.values(stage.getSave().factions).map(faction => `${faction.name}: ${faction.getReputationDescription()}`).join('\n')}` +
         (module ? (`\n\nModule Details:\n  This scene is set in ` +
             `${module.type === 'quarters' ? `${moduleOwner ? `${moduleOwner.name}'s` : 'a vacant'} quarters` : 
