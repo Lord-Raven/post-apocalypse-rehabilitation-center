@@ -109,12 +109,10 @@ export function generateSkitTypePrompt(skit: SkitData, stage: Stage, continuing:
                     `${actor?.name || 'The patient'} is about to leave the PARC to fulfill this arrangement. ${faction?.name || 'The faction'} ` +
                     `will keep its word and honor the agreement upon ${actor?.name || 'the patient'}'s completion of the assignment. The assignment will take around ${Math.ceil(request.requirement.timeInTurns / 4)} days.`;
             } else {
-                return !continuing ?
-                    `This scene depicts an exchange between the player and ${faction?.name || 'a faction'} regarding the fulfillment of their request for a patient: ${actor?.name || 'a patient'}. ` +
-                    `${actor?.name || 'The patient'} is departing the PARC, for perhaps the last time. ${faction?.name || 'The faction'} will keep its word and honor the agreement. ` +
-                    `The PARC will be required to do the same.` :
-                    `Continue this scene, exploring ${actor?.name || 'a patient'}'s feelings on their departure from the PARC—likely forever. ` +
-                    `${faction?.name || 'The faction'} will keep its word and honor the agreement. The PARC will be required to do the same.`;
+                return `This scene depicts an exchange between the player and ${faction?.name || 'a faction'} regarding the fulfillment of their request for a patient: ${actor?.name || 'a patient'}. ` +
+                    `${actor?.name || 'The patient'} is now departing the PARC for the last time. ${faction?.name || 'The faction'} will keep its word and honor the agreement. ` +
+                    `The PARC is now committed to sending the patient, whether they want to go or not. ` +
+                    `${actor?.name || 'The patient'} may be happy for an ideal placement with a well-suited faction or feel saddened or betrayed to be shipped off for unknown—or even nefarious—purposes.`;
             }
         case SkitType.RETURNING_FROM_REQUEST:
             return `This scene depicts an exchange between the player and ${faction?.name || 'a faction'} regarding the return of a patient from a completed request: ${actor?.name || 'a patient'}. ` +
@@ -605,6 +603,7 @@ export async function generateSkitScript(skit: SkitData, stage: Stage): Promise<
                             `[STATION: Security -1]` +
                             `\n\nFaction Requests:\n` +
                             `Identify any requests made by factions or faction representatives toward the player or station. ` +
+                            `If the preceding scene depicts the successful fulfillment of a deal, refrain from outputting that deal here. ` +
                             `For each request identified, output a line in the following format:\n` +
                             `[REQUEST: <factionName> | <description> | <requirement> -> <reward>]` +
                             `Where <factionName> is the name of the faction making the request, <description> is a brief summary of the request, ` +
@@ -631,7 +630,7 @@ export async function generateSkitScript(skit: SkitData, stage: Stage): Promise<
                             `   - Positive rewards should disinclude stats reduced by the requirements\n` +
                             `   - Example: Systems+2, Comfort+1\n` +
                             `Full Examples:\n` +
-                            `[REQUEST: Stellar Concord | We need a strong laborer | ACTOR brawn>=7, charm>=6 -> Systems+2, Comfort+1]\n` +
+                            `[REQUEST: Stellar Concord | We need a strong, permanent laborer | ACTOR brawn>=7, charm>=6 -> Systems+2, Comfort+1]\n` +
                             `[REQUEST: Shadow Syndicate | Send us our ideal operative | ACTOR-NAME Jane Doe -> Harmony+3]\n` +
                             `[REQUEST: Defense Coalition | Help us bolster our defenses | STATION Security-2, Harmony-1 -> Systems+2, Provision+2]\n` +
                             `[REQUEST: Trade Consortium | Resource exchange proposal | STATION Systems-3, Comfort-2 -> Provision+2, Wealth+2]\n` +
@@ -639,7 +638,8 @@ export async function generateSkitScript(skit: SkitData, stage: Stage): Promise<
                             `[REQUEST: Research Institute | Scholar exchange program | ACTOR-NAME Dr. Smith TIME:5 -> Systems+2, Wealth+1]` +
                             `\n\nThese tags must define specific requirements and rewards, even if the script did not contain precise details; ` +
                             `choose requirements and rewards that represent the concepts expressed within the script, taking care to avoid conflicting requirements/rewards. ` +
-                            `Typical TIME for temporary assignments should be between 4 and 10 turns, depending on the nature of the request. 4 turns is an in-game "day."  ` +
+                            `If the request is not a permanent actor placement, a TIME must be supplied. ` +
+                            `TIME should be between 4 and 12 turns, depending on the nature of the request. 4 turns is an in-game "day."  ` +
                             `Generally, requests with a time component are temporary assignments/missions/trainings where a character is sent off-station to fulfill the request, ` +
                             `returning after the specified duration. The reward for these requests should typically be smaller than those for permanent assignment—perhaps only a single stat bonus.` +
 
