@@ -279,23 +279,25 @@ export async function generateSkitScript(skit: SkitData, stage: Stage): Promise<
 
             const fullPrompt = generateSkitPrompt(skit, stage, 2 + retries,
                 `Example Script Format:\n` +
-                'System: CHARACTER NAME: They do actions in prose. "Their dialogue is in quotation marks."\nANOTHER CHARACTER NAME: [ANOTHER CHARACTER NAME EXPRESSES JOY][CHARACTER NAME EXPRESSES SURPRISE] "Dialogue in quotation marks."\nNARRATOR: [CHARACTER NAME EXPRESSES RELIEF] Descriptive content that is not attributed to a character.' +
+                'System: CHARACTER NAME: They do actions in prose. "Their dialogue is in quotation marks."\nANOTHER CHARACTER NAME: [ANOTHER CHARACTER NAME EXPRESSES JOY][CHARACTER NAME EXPRESSES SURPRISE] "Dialogue in quotation marks."\nNARRATOR: [CHARACTER NAME EXPRESSES RELIEF] Descriptive content that is not attributed to a character.\n[PAUSE]' +
                 `Example Character Movement Format:\n` +
-                'System: NARRATOR: [CHARACTER NAME moves to THIS MODULE NAME] CHARACTER NAME enters the room.\nNARRATOR: [CHARACTER NAME moves to OTHER CHARACTER\'s QUARTERS] CHARACTER NAME leaves the scene.' +
-                `\n\nExample Ending Script Format:\n` +
-                'System: CHARACTER NAME: [CHARACTER NAME EXPRESSES OPTIMISM] Action in prose. "Dialogue in quotation marks."\nNARRATOR: A moment of prose describing events.' +
-                (skit.script.length > 0 ? `\n[SUMMARY: CHARACTER NAME is hopeful about this demonstration.]` : '') +
+                'System: NARRATOR: [CHARACTER NAME moves to THIS MODULE NAME] CHARACTER NAME enters the room.\nNARRATOR: [CHARACTER NAME moves to OTHER CHARACTER\'s QUARTERS] CHARACTER NAME leaves the scene.\n[PAUSE]' +
+                (skit.script.length > 0 ? (`\n\nExample Ending Script Format:\n` +
+                    'System: CHARACTER NAME: [CHARACTER NAME EXPRESSES OPTIMISM] Action in prose. "Dialogue in quotation marks."\nNARRATOR: A moment of prose describing events.' +
+                    `\n[SUMMARY: CHARACTER NAME is hopeful about this demonstration.]`) : '') +
                 `\n\nCurrent Scene Script Log to Continue:\nSystem: ${buildScriptLog(skit)}` +
-                `\n\nPrimary Instruction:\nAt the "System:" prompt, ${skit.script.length == 0 ? 'generate a short scene script' : 'extend or conclude the current scene script'} based upon the Premise and the specified Scene Prompt, ` +
-                `involving the Present Characters (Absent Characters are listed for reference only). ` +
+                `\n\nPrimary Instruction:\nAt the "System:" prompt, ${skit.script.length == 0 ? 'generate an initial bit of scene script' : 'extend or conclude the current scene script'} with three or four entries, ` +
+                `based upon the Premise and the specified Scene Prompt. Primarily involve the Present Characters (Absent Characters are listed for reference). ` +
                 `The script should consider characters' stats, relationships, past events, and the station's stats—among other factors—to craft a compelling scene. ` +
+                `A [PAUSE] tag can be used to signal a conclusion to this excerpt without fully ending the scene. ` +
                 `\nFollow the structure of the strict Example Script formatting above: ` +
                 `actions are depicted in prose and character dialogue in quotation marks. Emotion tags (e.g. "[CHARACTER NAME EXPRESSES JOY]") should be used to indicate significant emotional shifts—` +
                 `these cues will be utilized by the game engine to visually display appropriate character emotions. ` +
                 `Character movement tags (e.g. "[CHARACTER NAME moves to MODULE NAME]") should be used to indicate when a character moves to a different module on the station. ` +
                 `MODULE NAME should be the name of a module type (e.g., 'comms', 'infirmary', 'lounge'), a character's quarters (e.g., 'Susan's quarters' or just 'quarters' for their own), or simply "Another module" to leave this area. ` +
-                `The game engine uses these tags to update character locations and visually display character presence in scenes. ` +
-                (skit.script.length > 0 ? (`A "[SUMMARY]" tag (e.g., "[SUMMARY: Brief summary of the scene's events.]") should be included when the scene has fulfilled the current Scene Prompt or reached a conclusive moment before continuing with the script. `) : '') +
+                `The game engine uses these tags to update character locations and visually display character presence in scenes. The scene itself cannot transition to a new area, but individual characters may come and go. ` +
+                (skit.script.length > 0 ? (`If a scene transition is desired, the current scene must first be summarized. ` +
+                    `A "[SUMMARY]" tag (e.g., "[SUMMARY: Brief summary of the scene's events.]") should be included when the scene has fulfilled the current Scene Prompt or reached a conclusive moment before continuing with the script. `) : '') +
                 `\nThis scene is a brief visual novel skit within a video game; as such, the scene avoids major developments which would fundamentally change the mechanics or nature of the game, ` +
                 `instead developing content within the existing mechanics. ` +
                 `Generally, focus upon interpersonal dynamics, character growth, faction relationships, and the state of the Station and its inhabitants.` +
@@ -307,8 +309,9 @@ export async function generateSkitScript(skit: SkitData, stage: Stage): Promise<
             const response = await stage.generator.textGen({
                 prompt: fullPrompt,
                 min_tokens: 10,
-                max_tokens: 400,
-                include_history: true
+                max_tokens: 500,
+                include_history: true,
+                stop: ['[PAUSE]']
             });
             if (response && response.result && response.result.trim().length > 0) {
                 // First, detect and parse any END tags and stat changes that may be embedded in the response.

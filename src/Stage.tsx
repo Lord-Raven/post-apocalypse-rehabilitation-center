@@ -266,7 +266,16 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
         // When incrementing phase, maybe move some actors around in the layout.
         for (const actorId in save.actors) {
             const actor = save.actors[actorId];
-            actor.locationId = actor.remote ? '' : (save.layout.getModulesWhere(m => m.type !== 'quarters' || m.ownerId == actorId).sort(() => Math.random() - 0.5)[0]?.id || '');
+            // Move remote actors to no location:
+            if (actor.remote) {
+                actor.locationId = '';
+            } else {
+                // If actor didn't move anywhere in the last skit, put them in a random non-quarters module:
+                const previousSkit = (save.timeline && save.timeline.length > 0) ? save.timeline[save.timeline.length - 1].skit : undefined;
+                if (!previousSkit || previousSkit.script.every(entry => !entry.movements || !Object.keys(entry.movements).some(moverId => moverId === actor.id)) ) {
+                    actor.locationId = save.layout.getModulesWhere(m => m.type !== 'quarters' || m.ownerId == actorId).sort(() => Math.random() - 0.5)[0]?.id || '';
+                }
+            }
             console.log(`Moved actor ${actor.name} to location ${actor.locationId}`);
             // If no patients exist, put the aide in the echo chamber:
             if (actor.id === save.aide.actorId && Object.values(save.actors).filter(a => !a.remote && a.id !== save.aide.actorId).length === 0) {
@@ -280,7 +289,8 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
         // Move a random faction rep to comms room, if any factions exist:
         const commsModule = save.layout.getModulesWhere(m => m.type === 'comms')[0];
         const eligibleFactions = Object.values(save.factions).filter(faction => faction.reputation > 0 && faction.representativeId && save.actors[faction.representativeId]);
-        if (eligibleFactions.length > 0 && commsModule) {
+        // If there are eligible factions and a comms module, and there is at least one non-remote actor other than the aide:
+        if (eligibleFactions.length > 0 && commsModule && Object.values(save.actors).filter(a => !a.remote && a.id !== save.aide.actorId).length > 0) {
             const randomFaction = eligibleFactions.sort(() => Math.random() - 0.5)[0];
             
             // Move the faction rep to the comms room, if available:
