@@ -589,48 +589,52 @@ export async function generateSkitScript(skit: SkitData, stage: Stage): Promise<
                             `Scene Script:\nSystem: ${buildScriptLog(skit)}` +
                             `\n\nPrimary Instruction:\nAnalyze the preceding scene script and output formatted tags in brackets, identifying the following categorical changes to be inorporated into the game. ` +
                             `\n\nCharacter Stat Changes:\nIdentify any changes to character stats implied by the scene. For each change, output a line in the following format:\n` +
-                            `"[CHARACTER NAME: <stat> +<value>(, ...)]"` +
+                            `[CHARACTER NAME: <stat> +<value>(, ...)]` +
                             `Where <stat> is the name of the stat to be changed, and <value> is the amount to increase or decrease the stat by (positive or negative). ` +
                             `Multiple stat changes can be included in a single tag, separated by commas. Similarly, multiple character tags can be provided in the output.` +
                             `Full Examples:\n` +
-                            `"[${Object.values(stage.getSave().actors)[0].name}: brawn +1, charm +2]"\n` +
-                            `"[${Object.values(stage.getSave().actors)[0].name}: lust -1]"\n` +
+                            `[${Object.values(stage.getSave().actors)[0].name}: brawn +1, charm +2]\n` +
+                            `[${Object.values(stage.getSave().actors)[0].name}: lust -1]\n` +
                             `\n\nStation Stat Changes:\nIdentify any changes to PARC station stats implied by the scene. For each change, output a line in the following format:\n` +
-                            `"[STATION: <stat> +<value>(, ...)]"` +
+                            `[STATION: <stat> +<value>(, ...)]` +
                             `Where <stat> is the name of the station stat to be changed, and <value> is the amount to increase or decrease the stat by (positive or negative). ` +
                             `Multiple stat changes can be included in a single tag, separated by commas.` +
                             `Full Examples:\n` +
-                            `"[STATION: Systems +2, Comfort +1]"\n` +
-                            `"[STATION: Security -1]"` +
+                            `[STATION: Systems +2, Comfort +1]\n` +
+                            `[STATION: Security -1]` +
                             `\n\nFaction Requests:\n` +
                             `Identify any requests made by factions or faction representatives toward the player or station. ` +
                             `For each request identified, output a line in the following format:\n` +
-                            `"[REQUEST: <factionName> | <description> | <requirement> -> <reward>]"` +
+                            `[REQUEST: <factionName> | <description> | <requirement> -> <reward>]` +
                             `Where <factionName> is the name of the faction making the request, <description> is a brief summary of the request, ` +
                             `<requirement> is what the player must do to fulfill the request, and <reward> is what the player will receive upon completion.\n` +
                             `Valid <requirement> formats:\n` +
-                            `"  ACTOR <stat><op><value>[, <stat><op><value>] [TIME:<turns>]" // Actor with one or more stat constraints\n` +
+                            `  ACTOR <stat><op><value>[, <stat><op><value>] [TIME:<turns>]\n` +
+                            `   - A patient with one or more stat constraints\n` +
                             `   - op can be: >= (min), <= (max)\n` +
                             `   - Optional TIME:<turns> specifies temporary assignment duration (omit for permanent)\n` +
                             `   - Example: ACTOR brawn>=7, charm>=5, lust<=3\n` +
                             `   - Example: ACTOR brawn>=8, vigilance>=7 TIME:3\n` +
-                            `"  ACTOR-NAME <actorName> [TIME:<turns>]" // Specific actor by name\n` +
+                            `  ACTOR-NAME <actorName> [TIME:<turns>]\n` +
+                            `   - A specific patient by name\n` +
                             `   - Optional TIME:<turns> specifies temporary assignment duration (omit for permanent)\n` +
                             `   - Example: ACTOR-NAME Jane Doe\n` +
                             `   - Example: ACTOR-NAME Dr. Smith TIME:5\n` +
-                            `"  STATION <stat>-<value>[, <stat>-<value>]" // Station stats to be reduced\n` +
-                            `   - Stats will be reduced by the specified amounts\n` +
+                            `  STATION <stat>-<value>[, <stat>-<value>]\n` +
+                            `   - A request based on station stats, generally with an exchange for other stat bonuses\n` +
+                            `   - Stats will be reduced by the required amounts and raised by the reward amounts\n` +
                             `   - Example: STATION Security-2, Harmony-1\n` +
-                            `Valid <reward> formats:\n` +
-                            `"  <stat>+<value>[, <stat>+<value>]" // Station stat bonuses\n` +
-                            `   - Positive rewards that disinclude stats reduced by the requirements\n` +
+                            `Valid <reward> formats (for all requests):\n` +
+                            `   <stat>+<value>[, <stat>+<value>]\n` +
+                            `   - <stat> is a station stat to be increased\n` +
+                            `   - Positive rewards should disinclude stats reduced by the requirements\n` +
                             `   - Example: Systems+2, Comfort+1\n` +
                             `Full Examples:\n` +
-                            `"[REQUEST: Stellar Concord | We need a strong laborer | ACTOR brawn>=7, charm>=6 -> Systems+2, Comfort+1]"\n` +
-                            `"[REQUEST: Shadow Syndicate | Return our missing operative | ACTOR-NAME Jane Doe -> Harmony+3]"\n` +
-                            `"[REQUEST: Defense Coalition | Help us bolster our defenses | STATION Security-2, Harmony-1 -> Systems+2, Provision+2]"\n` +
-                            `"[REQUEST: Mercenary Guild | Temporary security assignment | ACTOR brawn>=8, vigilance>=7 TIME:3 -> Systems+1, Security+2]"\n` +
-                            `"[REQUEST: Research Institute | Scholar exchange program | ACTOR-NAME Dr. Smith TIME:5 -> Systems+3, Comfort+1]"` +
+                            `[REQUEST: Stellar Concord | We need a strong laborer | ACTOR brawn>=7, charm>=6 -> Systems+2, Comfort+1]\n` +
+                            `[REQUEST: Shadow Syndicate | Return our missing operative | ACTOR-NAME Jane Doe -> Harmony+3]\n` +
+                            `[REQUEST: Defense Coalition | Help us bolster our defenses | STATION Security-2, Harmony-1 -> Systems+2, Provision+2]\n` +
+                            `[REQUEST: Mercenary Guild | Temporary security assignment | ACTOR brawn>=8, vigilance>=7 TIME:3 -> Systems+1, Security+2]\n` +
+                            `[REQUEST: Research Institute | Scholar exchange program | ACTOR-NAME Dr. Smith TIME:5 -> Systems+3, Comfort+1]` +
                             `\n\nThese tags must define specific requirements and rewards, even if the script did not contain precise details. ` +
                             `Typical TIME for temporary assignments should be between 4 and 10 turns, depending on the nature of the request. 4 turns is an in-game "day."  ` +
                             `Generally, requests with a time component are temporary assignments/missions/trainings where a character is sent off-station to fulfill the request, ` +
@@ -638,13 +642,13 @@ export async function generateSkitScript(skit: SkitData, stage: Stage): Promise<
 
                             `\n\nFaction Reputation Changes:\n` +
                             `Identify any changes to faction reputations implied by the scene. For each change, output a line in the following format:\n` +
-                            `"[FACTION: <factionName> +<value>]"` +
+                            `[FACTION: <factionName> +<value>]` +
                             `Where <factionName> is the name of the faction whose reputation is changing, and <value> is the amount to increase or decrease the reputation by (positive or negative). ` +
                             `Reputation is a value between 1 and 10, and changes are incremental. If the faction is cutting ties, provide a large negative value. ` +
                             `Multiple faction tags can be provided in the output if, for instance, improving the esteem of one faction inherently reduces the opinion of a rival.` +
                             `Full Examples:\n` +
-                            `"[FACTION: Stellar Concord +1]"\n` +
-                            `"[FACTION: Shadow Syndicate -2]"\n` +
+                            `[FACTION: Stellar Concord +1]\n` +
+                            `[FACTION: Shadow Syndicate -2]\n` +
 
                             (!summary ? 
                                 `\n\nSummarize Scene:\n` +
