@@ -631,11 +631,13 @@ export async function generateSkitScript(skit: SkitData, stage: Stage): Promise<
                             `   - Example: Systems+2, Comfort+1\n` +
                             `Full Examples:\n` +
                             `[REQUEST: Stellar Concord | We need a strong laborer | ACTOR brawn>=7, charm>=6 -> Systems+2, Comfort+1]\n` +
-                            `[REQUEST: Shadow Syndicate | Return our missing operative | ACTOR-NAME Jane Doe -> Harmony+3]\n` +
+                            `[REQUEST: Shadow Syndicate | Send us our ideal operative | ACTOR-NAME Jane Doe -> Harmony+3]\n` +
                             `[REQUEST: Defense Coalition | Help us bolster our defenses | STATION Security-2, Harmony-1 -> Systems+2, Provision+2]\n` +
-                            `[REQUEST: Mercenary Guild | Temporary security assignment | ACTOR brawn>=8, vigilance>=7 TIME:3 -> Systems+1, Security+2]\n` +
-                            `[REQUEST: Research Institute | Scholar exchange program | ACTOR-NAME Dr. Smith TIME:5 -> Systems+3, Comfort+1]` +
-                            `\n\nThese tags must define specific requirements and rewards, even if the script did not contain precise details. ` +
+                            `[REQUEST: Trade Consortium | Resource exchange proposal | STATION Systems-3, Comfort-2 -> Provision+2, Wealth+2]\n` +
+                            `[REQUEST: Mercenary Guild | Temporary security assignment | ACTOR brawn>=8, vigilance>=7 TIME:3 -> Security+2]\n` +
+                            `[REQUEST: Research Institute | Scholar exchange program | ACTOR-NAME Dr. Smith TIME:5 -> Systems+2, Wealth+1]` +
+                            `\n\nThese tags must define specific requirements and rewards, even if the script did not contain precise details; ` +
+                            `choose requirements and rewards that represent the concepts expressed within the script, taking care to avoid conflicting requirements/rewards. ` +
                             `Typical TIME for temporary assignments should be between 4 and 10 turns, depending on the nature of the request. 4 turns is an in-game "day."  ` +
                             `Generally, requests with a time component are temporary assignments/missions/trainings where a character is sent off-station to fulfill the request, ` +
                             `returning after the specified duration. The reward for these requests should typically be smaller than those for permanent assignment—perhaps only a single stat bonus.` +
