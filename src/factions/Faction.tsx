@@ -231,7 +231,8 @@ export async function loadReserveFaction(fullPath: string, stage: Stage): Promis
     const actorData = {
         name: newFaction.name,
         fullPath: fullPath,
-        description: `This is a representative for the ${newFaction.name}. ${newFaction.description}. ${newFaction.visualStyle}`,
+        description: `This is a representative for the ${newFaction.name}. ${newFaction.description}. ${newFaction.visualStyle}. The character should embody the values and style of the faction they represent. ` +
+            `They will be the primary contact for the PARC when dealing with this faction. Give them a suitable name, avoiding similarity to the following established character names: ${Object.values(stage.getSave().actors).map(a => a.name).join(', ')}.`,
         personality: ''
     }
     // retry a few times if it fails (or returns null):

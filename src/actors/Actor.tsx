@@ -417,7 +417,8 @@ export async function generateAdditionalActorImages(actor: Actor, stage: Stage):
     if (actor.emotionPack['neutral']) {
         // Generate in serial and not parallel as below:
         for (const emotion of Object.values(Emotion)) {
-            if (!actor.emotionPack[emotion]) {
+            // Only generate if the emotion image is missing, and only if the actor is in the save or currently in an echo slot
+            if (!actor.emotionPack[emotion] && (Object.keys(stage.getSave().actors).includes(actor.id) || stage.getEchoSlots().some(slot => slot?.id || '' === actor.id))) {
                 await generateEmotionImage(actor, emotion, stage);
             }
         }

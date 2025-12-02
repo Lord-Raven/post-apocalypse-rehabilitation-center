@@ -305,7 +305,6 @@ export async function generateSkitScript(skit: SkitData, stage: Stage): Promise<
                 `insert a "[SUMMARY: A brief synopsis of this scene's key events.]" tag, so the game engine can store the summary.${wrapupPrompt}`) : '')
             );
 
-
             const response = await stage.generator.textGen({
                 prompt: fullPrompt,
                 min_tokens: 10,

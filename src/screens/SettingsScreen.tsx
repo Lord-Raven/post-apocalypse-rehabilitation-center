@@ -84,8 +84,8 @@ export const SettingsScreen: FC<SettingsScreenProps> = ({ stage, onCancel, onCon
             `Your StationAide™ comes pre-programmed with a friendly and non-condescending demeanor that will leave you feeling empowered but never patronized; ` +
             `your bespoke projection comes with an industry-leading feminine form in a pleasing shade of default blue, but, as always, StationAide™ remains infinitely customizable to suit your tastes.\n\n` +
             `StationAide™. "When life gives you space stations..."`),
-        disableTextToSpeech: stage().getSave().disableTextToSpeech ?? true,
-        disableEmotionImages: stage().getSave().disableEmotionImages ?? true,
+        disableTextToSpeech: stage().getSave().disableTextToSpeech ?? false,
+        disableEmotionImages: stage().getSave().disableEmotionImages ?? false,
         // Tag toggles; disabling these can be used to filter undesired content. Load from save array, if one. Otherwise, default to true.
         tagToggles: stage().getSave().bannedTags ? Object.fromEntries(
             Object.keys(tagMap).map(key => [
