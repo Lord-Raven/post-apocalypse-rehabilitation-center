@@ -7,7 +7,7 @@ interface TooltipBarProps {
     message: string | null;
     Icon?: SvgIconComponent;
     visible?: boolean;
-    actionCost?: number; // Number of phases this action costs
+    actionCost?: number; // Number of turns this action costs
 }
 
 /**

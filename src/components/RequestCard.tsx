@@ -219,8 +219,8 @@ export const RequestCard: FC<RequestCardProps> = ({
     const requirementContent = getRequirementContent();
     const rewardContent = getRewardContent();
 
-    // Calculate remaining phases if in progress
-    const remainingPhases = isInProgress ? request.getRemainingTurns(stage.getSave().day, stage.getSave().phase) : -1;
+    // Calculate remaining turns if in progress
+    const remainingTurns = isInProgress ? request.getRemainingTurns(stage.getSave().day, stage.getSave().turn) : -1;
 
     return (
         <motion.div
@@ -359,7 +359,7 @@ export const RequestCard: FC<RequestCardProps> = ({
                         gap: '8px'
                     }}>
                         <HourglassEmpty style={{ fontSize: '1.2rem' }} />
-                        <span>IN PROGRESS - {remainingPhases} phase{remainingPhases !== 1 ? 's' : ''} remaining</span>
+                        <span>IN PROGRESS - {remainingTurns} turn{remainingTurns !== 1 ? 's' : ''} remaining</span>
                     </div>
                 )}
 

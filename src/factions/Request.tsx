@@ -348,7 +348,7 @@ export class Request {
                     // Set up timed request - don't complete yet
                     this.inProgressActorId = actorId;
                     this.startDay = save.day;
-                    this.startTurn = save.phase;
+                    this.startTurn = save.turn;
                     const actor = save.actors[actorId];
                     if (actor) {
                         actor.inProgressRequestId = this.id;
@@ -369,7 +369,7 @@ export class Request {
                     // Set up timed request - don't complete yet
                     this.inProgressActorId = actorId;
                     this.startDay = save.day;
-                    this.startTurn = save.phase;
+                    this.startTurn = save.turn;
                     const actor = save.actors[actorId];
                     if (actor) {
                         actor.inProgressRequestId = this.id;
@@ -550,7 +550,7 @@ export class Request {
             
             case 'specific-actor': {
                 const req = this.requirement as SpecificActorRequirement;
-                let text = `Specific patient: ${stage.getSave().actors[req.actorId]?.name || req.actorId})`;
+                let text = `Specific patient: ${stage.getSave().actors[req.actorId]?.name || req.actorId}`;
                 if (req.timeInTurns !== undefined) {
                     text += ` (${req.timeInTurns} turn${req.timeInTurns !== 1 ? 's' : ''})`;
                 }

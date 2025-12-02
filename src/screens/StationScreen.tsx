@@ -9,14 +9,14 @@ import ActorCard from '../components/ActorCard';
 import ModuleCard from '../components/ModuleCard';
 import FactionCard from '../components/FactionCard';
 import RequestCard from '../components/RequestCard';
-import { PhaseIndicator as SharedPhaseIndicator } from '../components/UIComponents';
+import { TurnIndicator as SharedTurnIndicator } from '../components/UIComponents';
 import { useTooltip } from '../contexts/TooltipContext';
 import { SwapHoriz, Home, Work, Menu } from '@mui/icons-material';
 import { SkitType } from '../Skit';
 import { generateActorDecor } from '../actors/Actor';
 import { scoreToGrade } from '../utils';
 
-// Styled components for the day/phase display
+// Styled components for the day/turn display
 const StyledDayCard = styled(Card)(({ theme }) => ({
     background: 'linear-gradient(135deg, rgba(0, 255, 136, 0.15) 0%, rgba(0, 200, 100, 0.08) 100%)',
     border: '2px solid #00ff88',
@@ -56,7 +56,7 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType}) =>
     const [expandedMenu, setExpandedMenu] = React.useState<string | null>('patients');
     const [previousExpandedMenu, setPreviousExpandedMenu] = React.useState<string | null>(null);
     const [day, setDay] = React.useState<number>(stage().getSave().day);
-    const [phase, setPhase] = React.useState<number>(stage().getSave().phase);
+    const [turn, setTurn] = React.useState<number>(stage().getSave().turn);
 
     const [layout, setLayout] = React.useState<Layout>(stage()?.getLayout());
     const hasCheckedBeginingSkit = React.useRef<boolean>(false);
@@ -128,7 +128,7 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType}) =>
             });
             setScreenType(ScreenType.SKIT);
         } else {
-            stage().incPhase(1, setScreenType);
+            stage().incTurn(1, setScreenType);
         }
     };
 
@@ -199,7 +199,7 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType}) =>
     const handleActorDropOnModule = (actorId: string, targetModule: Module) => {
         const actor = stage().getSave().actors[actorId];
         if (!actor) return;
-        let phaseCost = 0;
+        let turnCost = 0;
 
         if (targetModule.type === 'quarters') {
             // Handle quarters assignment with swapping
@@ -207,7 +207,7 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType}) =>
             const targetOwnerId = targetModule.ownerId;
 
             if (targetOwnerId !== actorId) {
-                phaseCost = 1;
+                turnCost = 1;
             }
 
             // If target quarters has an owner, swap them
@@ -238,7 +238,7 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType}) =>
 
         } else {
             if (targetModule.ownerId !== actorId) {
-                phaseCost = 1;
+                turnCost = 1;
             }
 
             // Clear any previous role assignment for this actor (non-quarters modules)
@@ -256,7 +256,7 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType}) =>
             if (roleName && Object.keys(actor.heldRoles).indexOf(roleName) === -1) {
                 // This character has never held this role before; initialize counter and also kick off a little skit about it.
                 actor.heldRoles[roleName] = 0;
-                phaseCost = 0; // The skit will advance the phase.
+                turnCost = 0; // The skit will advance the turn.
                 stage().setSkit({
                     type: SkitType.ROLE_ASSIGNMENT,
                     moduleId: targetModule.id,
@@ -276,12 +276,12 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType}) =>
         setLayout(stage().getLayout());
         setDraggedActor(null);
         setHoveredModuleId(null);
-        if (phaseCost > 0) {
-            stage().incPhase(phaseCost, setScreenType);
+        if (turnCost > 0) {
+            stage().incTurn(turnCost, setScreenType);
         }
     };
 
-    // Poll for changes to day/phase/layout
+    // Poll for changes to day/turn/layout
     React.useEffect(() => {
         const interval = setInterval(() => {
             const stageInstance = stage();
@@ -290,12 +290,12 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType}) =>
             
             // Update state if changed
             if (currentSave.day !== day) setDay(currentSave.day);
-            if (currentSave.phase !== phase) setPhase(currentSave.phase);
+            if (currentSave.turn !== turn) setTurn(currentSave.turn);
             if (currentLayout !== layout) setLayout(currentLayout);
         }, 100);
         
         return () => clearInterval(interval);
-    }, [day, phase, layout]);
+    }, [day, turn, layout]);
 
     // Check for beginning skit on mount
     React.useEffect(() => {
@@ -339,7 +339,7 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType}) =>
         }
     };
 
-    const renderDayPhaseDisplay = () => {
+    const renderDayTurnDisplay = () => {
         return (
             <motion.div
                 initial={{ opacity: 0, scale: 0.9 }}
@@ -371,8 +371,8 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType}) =>
                             </Typography>
                         </motion.div>
                         
-                        {/* Phase Indicator */}
-                        <SharedPhaseIndicator currentPhase={phase} totalPhases={4} />
+                        {/* Turn Indicator */}
+                        <SharedTurnIndicator currentTurn={turn} totalTurns={4} />
                     </CardContent>
                 </StyledDayCard>
             </motion.div>
@@ -903,8 +903,8 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType}) =>
                     overflow: 'hidden',
                 }}
             >
-                {/* Enhanced Day and Phase Display */}
-                {renderDayPhaseDisplay()}
+                {/* Enhanced Day and Turn Display */}
+                {renderDayTurnDisplay()}
 
                 {['Patients', 'Modules', 'Factions', 'Requests'].map(item => {
                     const itemKey = item.toLowerCase();

@@ -20,7 +20,7 @@ type ChatStateType = {
 
 type TimelineEvent = {
     day: number;
-    phase: number;
+    turn: number;
     description: string;
     skit?: SkitData;
 }
@@ -37,7 +37,7 @@ export type SaveType = {
     bannedTags?: string[];
     layout: Layout;
     day: number;
-    phase: number;
+    turn: number;
     timeline?: Timeline;
     currentSkit?: SkitData;
     stationStats?: {[key in StationStat]: number};
@@ -131,7 +131,7 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
                 description: `Your holographic assistant is acutely familiar with the technical details of your Post-Apocalypse Rehabilitation Center, so you don't have to be! ` +
                 `Your StationAide™ comes pre-programmed with a friendly and non-condescending demeanor that will leave you feeling empowered and never patronized; ` +
                 `your bespoke projection comes with an industry-leading feminine form in a pleasing shade of default blue, but, as always, StationAide™ remains infinitely customizable to suit your tastes.`}, 
-            echoes: [], actors: {}, factions: {}, requests: {}, layout: layout, day: 1, phase: 0, currentSkit: undefined };
+            echoes: [], actors: {}, factions: {}, requests: {}, layout: layout, day: 1, turn: 0, currentSkit: undefined };
 
         // ensure at least one save exists and has a layout
         if (!this.saves.length) {
@@ -255,7 +255,7 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
         for (const request of Object.values(save.requests)) {
             if (!request.isInProgress()) continue;
             
-            const remaining = request.getRemainingTurns(save.day, save.phase);
+            const remaining = request.getRemainingTurns(save.day, save.turn);
             if (remaining <= 0) {
                 // Time is up - complete the request
                 console.log(`Completing timed request ${request.id}`);
@@ -283,7 +283,7 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
                     // Add timeline entry for return
                     save.timeline?.push({
                         day: save.day,
-                        phase: save.phase,
+                        turn: save.turn,
                         description: `${actor.name} has returned from their assignment with ${faction?.name || 'a faction'}.`,
                         skit: undefined
                     });
@@ -316,15 +316,15 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
         }
     }
 
-    incPhase(numberOfPhases: number = 1, setScreenType: (type: ScreenType) => void) {
+    incTurn(numberOfTurns: number = 1, setScreenType: (type: ScreenType) => void) {
         const save = this.getSave();
-        save.phase += numberOfPhases;
+        save.turn += numberOfTurns;
         
         // Check for completed timed requests before processing day change
         this.checkAndCompleteTimedRequests();
         
-        if (save.phase >= 4) {
-            save.phase = 0;
+        if (save.turn >= 4) {
+            save.turn = 0;
             save.day += 1;
             // New day logic.
             // Increment actor role count
@@ -338,7 +338,7 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
             }
         }
 
-        // When incrementing phase, maybe move some actors around in the layout.
+        // When incrementing turn, maybe move some actors around in the layout.
         for (const actorId in save.actors) {
             const actor = save.actors[actorId];
             // Move remote actors to no location:
@@ -388,6 +388,10 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
     private rehydrateSave(save: any): SaveType {
         console.log('Rehydrating save:', save);
         
+        // Restore turn from old phase variable.
+        if (save['turn'] === undefined) {
+            save['turn'] = save['phase'] || 0;
+        }
         // Use smart rehydration to automatically detect and restore all nested objects
         return smartRehydrate(save) as SaveType;
     }
@@ -942,12 +946,12 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
             save.currentSkit.context = {...save.currentSkit.context, day: this.getSave().day};
             save.timeline.push({
                 day: save.day,
-                phase: save.phase,
+                turn: save.turn,
                 description: `${save.currentSkit.type} skit.`,
                 skit: save.currentSkit
             });
             save.currentSkit = undefined;
-            this.incPhase(1, setScreenType);
+            this.incTurn(1, setScreenType);
         }
     }
 

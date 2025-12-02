@@ -347,6 +347,11 @@ export async function generateSkitScript(skit: SkitData, stage: Stage): Promise<
                 let endScene = false;
                 let summary = undefined;
 
+                // Remove any initial "System:" prefix
+                if (text.toLowerCase().startsWith('system:')) {
+                    text = text.slice(7).trim();
+                }
+
                 // Parse response based on format "NAME: content"; content could be multi-line. We want to ensure that lines that don't start with a name are appended to the previous line.
                 const lines = text.split('\n');
                 const combinedLines: string[] = [];
@@ -724,7 +729,7 @@ export async function generateSkitScript(skit: SkitData, stage: Stage): Promise<
                                                 console.log(`${matchedFaction.name} has cut ties with the PARC due to low reputation.`);
                                                 stage.getSave().timeline?.push({
                                                     day: stage.getSave().day,
-                                                    phase: stage.getSave().phase,
+                                                    turn: stage.getSave().turn,
                                                     description: `The ${matchedFaction.name} has cut all ties with the PARC.`,
                                                     skit: undefined
                                                 });

@@ -127,16 +127,16 @@ export const GridOverlay: FC<GridOverlayProps> = ({ size = 60 }) => {
    PROGRESS INDICATORS
    =============================================== */
 
-interface PhaseIndicatorProps {
-	currentPhase: number;
-	totalPhases: number;
+interface TurnIndicatorProps {
+	currentTurn: number;
+	totalTurns: number;
 }
 
-export const PhaseIndicator: FC<PhaseIndicatorProps> = ({ currentPhase, totalPhases }) => {
+export const TurnIndicator: FC<TurnIndicatorProps> = ({ currentTurn, totalTurns }) => {
 	return (
-		<div className="phase-indicator">
-			{Array.from({ length: totalPhases }).map((_, index) => {
-				const isSpent = index < currentPhase;
+		<div className="turn-indicator">
+			{Array.from({ length: totalTurns }).map((_, index) => {
+				const isSpent = index < currentTurn;
 				// Strangely, HourglassTop looks like the sand is in the bottom and HourglassBottom looks like the sand is in the top (if the sand is the negative space)
 				const HourglassIcon = isSpent ? HourglassTop : HourglassBottom;
 				

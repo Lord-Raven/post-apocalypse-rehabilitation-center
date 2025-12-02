@@ -136,7 +136,7 @@ html, body, #root {
   .stat-label { font-size: 11px; }
 }
 
-/* Shimmer animation for active phase indicator */
+/* Shimmer animation for active turn indicator */
 @keyframes shimmer {
   0% {
     left: -100%;
@@ -146,7 +146,7 @@ html, body, #root {
   }
 }
 
-.phase-shimmer {
+.turn-shimmer {
   animation: shimmer 2s infinite;
 }
 
@@ -441,8 +441,8 @@ html, body, #root {
   }
 }
 
-/* Phase Progress Indicator */
-.phase-indicator {
+/* Turn Progress Indicator */
+.turn-indicator {
   display: flex;
   justify-content: center;
   align-items: center;
