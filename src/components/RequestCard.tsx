@@ -6,7 +6,7 @@ import { StationStat, STATION_STAT_ICONS } from '../Module';
 import { Stage } from '../Stage';
 import { Nameplate } from './Nameplate';
 import { useTooltip } from '../contexts/TooltipContext';
-import { SwapHoriz } from '@mui/icons-material';
+import { SwapHoriz, HourglassEmpty } from '@mui/icons-material';
 
 interface RequestCardProps {
     request: Request;
@@ -46,9 +46,17 @@ export const RequestCard: FC<RequestCardProps> = ({
     
     const canFulfill = request.canFulfill(stage);
     const faction = stage.getSave().factions[request.factionId];
+    const isInProgress = request.isInProgress();
 
     // Get qualified actors for specific-actor requirements (for background display)
     const getQualifiedActorsForBackground = () => {
+        // If in progress, show the fulfilling actor
+        if (isInProgress && request.inProgressActorId) {
+            const actor = stage.getSave().actors[request.inProgressActorId];
+            return actor ? [actor] : [];
+        }
+        
+        // Otherwise show qualifying actors
         if (request.requirement.type === 'specific-actor') {
             const req = request.requirement as SpecificActorRequirement;
             const actor = stage.getSave().actors[req.actorId];
@@ -210,6 +218,9 @@ export const RequestCard: FC<RequestCardProps> = ({
     const requirementContent = getRequirementContent();
     const rewardContent = getRewardContent();
 
+    // Calculate remaining phases if in progress
+    const remainingPhases = isInProgress ? request.getRemainingPhases(stage.getSave().day, stage.getSave().phase) : -1;
+
     return (
         <motion.div
             onClick={handleClick}
@@ -218,18 +229,20 @@ export const RequestCard: FC<RequestCardProps> = ({
             transition={{ duration: 0.2 }}
             animate={{ 
                 height: isExpanded ? 'auto' : 'fit-content',
-                minHeight: isExpanded ? 'auto' : '200px'
+                minHeight: isExpanded ? 'auto' : '200px',
+                opacity: isInProgress ? 0.6 : 1
             }}
             style={{
-                border: `3px solid ${canFulfill ? '#00ff88' : '#ff6b6b'}`,
+                border: `3px solid ${isInProgress ? '#ffa726' : (canFulfill ? '#00ff88' : '#ff6b6b')}`,
                 borderRadius: '8px',
                 background: 'rgba(0, 10, 20, 0.5)',
-                cursor: 'pointer',
+                cursor: isInProgress ? 'default' : 'pointer',
                 overflow: 'hidden',
                 display: 'flex',
                 flexDirection: 'column',
                 padding: '12px',
                 position: 'relative',
+                pointerEvents: isInProgress ? 'none' : 'auto',
                 ...style
             }}
             className={className}
@@ -326,6 +339,29 @@ export const RequestCard: FC<RequestCardProps> = ({
                     </div>
                 )}
 
+                {/* In-Progress Status */}
+                {isInProgress && (
+                    <div style={{
+                        fontSize: '0.9rem',
+                        color: '#ffa726',
+                        fontWeight: 700,
+                        marginBottom: '8px',
+                        padding: '8px',
+                        background: 'rgba(255, 167, 38, 0.2)',
+                        borderRadius: '4px',
+                        textAlign: 'center',
+                        textShadow: '0 0 8px #ffa726',
+                        border: '1px solid rgba(255, 167, 38, 0.5)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: '8px'
+                    }}>
+                        <HourglassEmpty style={{ fontSize: '1.2rem' }} />
+                        <span>IN PROGRESS - {remainingPhases} phase{remainingPhases !== 1 ? 's' : ''} remaining</span>
+                    </div>
+                )}
+
                 {/* Description (shown when expanded) */}
                 {isExpanded && (
                 <div style={{
@@ -398,6 +434,15 @@ export const RequestCard: FC<RequestCardProps> = ({
                                 {index < requirementContent.statElements.length - 1 && <span style={{ marginLeft: '4px' }}>,</span>}
                             </span>
                         ))}
+                        {/* Display hourglass icons for timed requests */}
+                        {(request.requirement.type === 'actor-with-stats' || request.requirement.type === 'specific-actor') && 
+                         (request.requirement as ActorWithStatsRequirement | SpecificActorRequirement).timeInPhases && (
+                            <span style={{ display: 'flex', alignItems: 'center', gap: '4px', marginLeft: '8px' }}>
+                                {Array.from({ length: (request.requirement as ActorWithStatsRequirement | SpecificActorRequirement).timeInPhases! }).map((_, i) => (
+                                    <HourglassEmpty key={i} style={{ fontSize: '1rem', color: '#ffa726' }} />
+                                ))}
+                            </span>
+                        )}
                         </div>
                     </div>
                 </div>

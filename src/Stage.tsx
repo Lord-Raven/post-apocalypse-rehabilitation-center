@@ -245,9 +245,69 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
         };
     }
 
+    /**
+     * Check for timed requests that have completed and finalize them
+     */
+    checkAndCompleteTimedRequests() {
+        const save = this.getSave();
+        const completedRequests: string[] = [];
+        
+        // Check all requests for completed timed assignments
+        for (const request of Object.values(save.requests)) {
+            if (!request.isInProgress()) continue;
+            
+            const remaining = request.getRemainingPhases(save.day, save.phase);
+            if (remaining <= 0) {
+                // Time is up - complete the request
+                console.log(`Completing timed request ${request.id}`);
+                
+                // Apply rewards
+                if (request.reward.type === 'station-stats' && save.stationStats) {
+                    for (const [stat, value] of Object.entries(request.reward.stats)) {
+                        const statKey = stat as StationStat;
+                        save.stationStats[statKey] = Math.max(1, Math.min(10, (save.stationStats[statKey] || 0) + value));
+                    }
+                }
+                
+                // Increase faction reputation
+                const faction = save.factions[request.factionId];
+                if (faction) {
+                    faction.reputation = Math.max(1, Math.min(10, faction.reputation + 1));
+                }
+                
+                // Clear actor's in-progress status
+                const actor = save.actors[request.inProgressActorId];
+                if (actor) {
+                    actor.inProgressRequestId = '';
+                    console.log(`Actor ${actor.name} is now available again`);
+                    
+                    // Add timeline entry for return
+                    save.timeline?.push({
+                        day: save.day,
+                        phase: save.phase,
+                        description: `${actor.name} has returned from their assignment with ${faction?.name || 'a faction'}.`,
+                        skit: undefined
+                    });
+                }
+                
+                // Mark request for removal
+                completedRequests.push(request.id);
+            }
+        }
+        
+        // Remove completed requests
+        for (const requestId of completedRequests) {
+            delete save.requests[requestId];
+        }
+    }
+
     incPhase(numberOfPhases: number = 1) {
         const save = this.getSave();
         save.phase += numberOfPhases;
+        
+        // Check for completed timed requests before processing day change
+        this.checkAndCompleteTimedRequests();
+        
         if (save.phase >= 4) {
             save.phase = 0;
             save.day += 1;

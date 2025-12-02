@@ -21,6 +21,7 @@ export interface ActorWithStatsRequirement {
     type: 'actor-with-stats';
     minStats?: Partial<Record<Stat, number>>;
     maxStats?: Partial<Record<Stat, number>>;
+    timeInPhases?: number; // Optional duration in phases (temporary assignment/loan)
 }
 
 /**
@@ -29,6 +30,7 @@ export interface ActorWithStatsRequirement {
 export interface SpecificActorRequirement {
     type: 'specific-actor';
     actorId: string;
+    timeInPhases?: number; // Optional duration in phases (temporary assignment/loan)
 }
 
 /**
@@ -62,6 +64,9 @@ export class Request {
     description: string;
     requirement: RequestRequirement;
     reward: RequestReward;
+    inProgressActorId: string = ''; // Set to the fulfilling ID of an actor, when the request is being fulfilled—applies to temporary assignments
+    startDay: number = -1; // Day when the request was started (for timed requests)
+    startPhase: number = -1; // Phase when the request was started (for timed requests)
 
     constructor(
         id: string,
@@ -84,6 +89,33 @@ export class Request {
         const request = Object.create(Request.prototype);
         Object.assign(request, savedRequest);
         return request;
+    }
+
+    /**
+     * Check if this request is currently in progress (for timed requests)
+     * @returns true if the request has an actor assigned and is in progress
+     */
+    isInProgress(): boolean {
+        return this.inProgressActorId !== '' && this.startDay >= 0;
+    }
+
+    /**
+     * Calculate remaining phases for a timed request
+     * @param currentDay Current game day
+     * @param currentPhase Current game phase
+     * @returns Number of phases remaining, or -1 if not applicable
+     */
+    getRemainingPhases(currentDay: number, currentPhase: number): number {
+        if (!this.isInProgress()) return -1;
+        
+        const timeInPhases = (this.requirement.type === 'actor-with-stats' || this.requirement.type === 'specific-actor')
+            ? (this.requirement as ActorWithStatsRequirement | SpecificActorRequirement).timeInPhases
+            : undefined;
+        
+        if (!timeInPhases) return -1;
+        
+        const elapsedPhases = (currentDay - this.startDay) * 4 + (currentPhase - this.startPhase);
+        return Math.max(0, timeInPhases - elapsedPhases);
     }
 
     /**
@@ -185,6 +217,11 @@ export class Request {
     canFulfill(stage: Stage): boolean {
         const save = stage.getSave();
 
+        // Cannot fulfill a request that is already in progress
+        if (this.isInProgress()) {
+            return false;
+        }
+
         switch (this.requirement.type) {
             case 'actor-with-stats':
                 return this.canFulfillActorWithStats(stage);
@@ -212,8 +249,8 @@ export class Request {
         const allActors = Object.values(save.actors);
 
         return allActors.some(actor => {
-            // Skip remote actors (not physically present on the station)
-            if (actor.remote) {
+            // Skip remote actors (not physically present on the station) or occupied actors
+            if (actor.remote || actor.inProgressRequestId) {
                 return false;
             }
 
@@ -249,8 +286,8 @@ export class Request {
         // Find actor by ID
         const actor = save.actors[requirement.actorId];
         
-        // Actor must exist and not be remote
-        return actor !== undefined && !actor.remote;
+        // Actor must exist and not be remote or occupied
+        return actor !== undefined && !actor.remote && !actor.inProgressRequestId;
     }
 
     /**
@@ -295,15 +332,31 @@ export class Request {
         const save = stage.getSave();
         const faction = save.factions[this.factionId];
 
-        // TODO: Implement requirement processing
+        // Check if this is a timed request
+        const isTimedRequest = (this.requirement.type === 'actor-with-stats' || this.requirement.type === 'specific-actor') &&
+            (this.requirement as ActorWithStatsRequirement | SpecificActorRequirement).timeInPhases !== undefined;
+
+        // Process requirement
         switch (this.requirement.type) {
             case 'actor-with-stats':
                 if (!actorId) {
                     console.warn('Actor ID required for actor-with-stats request');
                     return false;
                 }
-                // TODO: Process actor removal/placement
-                console.log(`Fulfilling actor-with-stats request with actor ${actorId}`);
+                if (isTimedRequest) {
+                    // Set up timed request - don't complete yet
+                    this.inProgressActorId = actorId;
+                    this.startDay = save.day;
+                    this.startPhase = save.phase;
+                    const actor = save.actors[actorId];
+                    if (actor) {
+                        actor.inProgressRequestId = this.id;
+                    }
+                    console.log(`Started timed request ${this.id} with actor ${actorId} at day ${this.startDay}, phase ${this.startPhase}`);
+                } else {
+                    // Permanent transfer - complete immediately
+                    console.log(`Fulfilling permanent actor-with-stats request with actor ${actorId}`);
+                }
                 break;
 
             case 'specific-actor':
@@ -311,14 +364,31 @@ export class Request {
                     console.warn('Actor ID required for specific-actor request');
                     return false;
                 }
-                // TODO: Process specific actor removal/placement
-                console.log(`Fulfilling specific-actor request with actor ${actorId}`);
+                if (isTimedRequest) {
+                    // Set up timed request - don't complete yet
+                    this.inProgressActorId = actorId;
+                    this.startDay = save.day;
+                    this.startPhase = save.phase;
+                    const actor = save.actors[actorId];
+                    if (actor) {
+                        actor.inProgressRequestId = this.id;
+                    }
+                    console.log(`Started timed request ${this.id} with actor ${actorId} at day ${this.startDay}, phase ${this.startPhase}`);
+                } else {
+                    // Permanent transfer - complete immediately
+                    console.log(`Fulfilling permanent specific-actor request with actor ${actorId}`);
+                }
                 break;
 
             case 'station-stats':
-                // TODO: Deduct station stats
+                // Deduct station stats immediately
                 const req = this.requirement as StationStatsRequirement;
-                console.log(`Fulfilling station-stats request, deducting:`, req.stats);
+                if (save.stationStats) {
+                    for (const [stat, value] of Object.entries(req.stats)) {
+                        save.stationStats[stat as StationStat] = Math.max(1, (save.stationStats[stat as StationStat] || 0) - value);
+                    }
+                }
+                console.log(`Deducted station stats for request:`, req.stats);
                 break;
 
             default:
@@ -326,20 +396,54 @@ export class Request {
                 return false;
         }
 
-        // TODO: Apply rewards
+        // For timed requests, only kick off the skit and don't apply rewards yet
+        if (isTimedRequest) {
+            // Just kick off the skit for the temporary assignment
+            if (this.requirement.type === 'actor-with-stats' || this.requirement.type === 'specific-actor') {
+                const module = stage.getSave().layout.getModulesWhere(m => m.type === 'comms')[0];
+                const actor = stage.getSave().actors[actorId || ''];
+                if (actor) {
+                    actor.locationId = module.id;
+                }
+                const liaison = stage.getSave().actors[stage.getSave().layout.getModulesWhere(m => m.type === 'comms')[0].ownerId || ''];
+                if (liaison) {
+                    liaison.locationId = module.id;
+                }
+                const factionRep = faction ? stage.getSave().actors[faction.representativeId || ''] : null;
+                if (factionRep) {
+                    factionRep.locationId = module.id;
+                }
+                stage.setSkit({
+                    type: SkitType.REQUEST_FILL_ACTOR,
+                    moduleId: module.id,
+                    script: [],
+                    generating: true,
+                    context: {
+                        factionId: this.factionId,
+                        requestId: this.id
+                    },
+                    actorId: actorId || ''
+                });
+                setScreenType(ScreenType.SKIT);
+            }
+            return true;
+        }
+
+        // For non-timed requests (permanent or station-stats), apply rewards immediately
         if (this.reward.type === 'station-stats' && save.stationStats) {
             const rew = this.reward as StationStatsReward;
-            console.log(`Applying station-stats rewards:`, rew.stats);
-            // Apply station stats rewards
             for (const [stat, value] of Object.entries(rew.stats)) {
                 save.stationStats[stat as StationStat] = Math.max(1, Math.min(10, (save.stationStats[stat as StationStat] || 0) + value));
             }
         }
 
-        // TODO: Remove request from active requests
-        // delete save.requests[this.id];
+        // Remove request from active requests, if no time component
+        if (!isTimedRequest) {
+            delete save.requests[this.id];
+        }
+        
 
-        // TODO: Increase faction reputation
+        // Increase faction reputation
         if (faction) {
             faction.reputation = Math.max(1, Math.min(10, faction.reputation + 1));
         }
@@ -427,12 +531,20 @@ export class Request {
                     parts.push(...maxParts);
                 }
                 
-                return `Patient with ${parts.join(', ')}`;
+                let text = `Patient with ${parts.join(', ')}`;
+                if (req.timeInPhases !== undefined) {
+                    text += ` (${req.timeInPhases} turn${req.timeInPhases !== 1 ? 's' : ''})`;
+                }
+                return text;
             }
             
             case 'specific-actor': {
                 const req = this.requirement as SpecificActorRequirement;
-                return `Specific patient: ${stage.getSave().actors[req.actorId]?.name || req.actorId})`;
+                let text = `Specific patient: ${stage.getSave().actors[req.actorId]?.name || req.actorId})`;
+                if (req.timeInPhases !== undefined) {
+                    text += ` (${req.timeInPhases} turn${req.timeInPhases !== 1 ? 's' : ''})`;
+                }
+                return text;
             }
             
             case 'station-stats': {
@@ -569,9 +681,18 @@ export class Request {
     private static parseRequirement(requirementStr: string, stage: Stage): RequestRequirement | null {
         const trimmed = requirementStr.trim();
 
+        // Check for optional TIME component at the end
+        let timeInPhases: number | undefined = undefined;
+        let requirementWithoutTime = trimmed;
+        const timeMatch = trimmed.match(/\s+TIME:(\d+)$/i);
+        if (timeMatch) {
+            timeInPhases = parseInt(timeMatch[1], 10);
+            requirementWithoutTime = trimmed.substring(0, trimmed.length - timeMatch[0].length).trim();
+        }
+
         // Check for ACTOR-NAME format
-        if (trimmed.startsWith('ACTOR-NAME')) {
-            const actorName = trimmed.substring('ACTOR-NAME'.length).trim();
+        if (requirementWithoutTime.startsWith('ACTOR-NAME')) {
+            const actorName = requirementWithoutTime.substring('ACTOR-NAME'.length).trim();
             if (!actorName) {
                 return null;
             }
@@ -587,19 +708,24 @@ export class Request {
             
             return {
                 type: 'specific-actor',
-                actorId: actor.id
+                actorId: actor.id,
+                timeInPhases
             };
         }
 
         // Check for ACTOR format (with stats)
-        if (trimmed.startsWith('ACTOR')) {
-            const statsStr = trimmed.substring('ACTOR'.length).trim();
-            return this.parseActorStatsRequirement(statsStr);
+        if (requirementWithoutTime.startsWith('ACTOR')) {
+            const statsStr = requirementWithoutTime.substring('ACTOR'.length).trim();
+            const actorStatsReq = this.parseActorStatsRequirement(statsStr);
+            if (actorStatsReq && timeInPhases !== undefined) {
+                actorStatsReq.timeInPhases = timeInPhases;
+            }
+            return actorStatsReq;
         }
 
         // Check for STATION format
-        if (trimmed.startsWith('STATION')) {
-            const statsStr = trimmed.substring('STATION'.length).trim();
+        if (requirementWithoutTime.startsWith('STATION')) {
+            const statsStr = requirementWithoutTime.substring('STATION'.length).trim();
             return this.parseStationStatsRequirement(statsStr);
         }
 

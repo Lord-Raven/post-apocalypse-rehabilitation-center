@@ -57,6 +57,7 @@ export const ActorCard: FC<ActorCardProps> = ({
 }) => {
     const currentSections = (isExpanded && expandedSections?.length > 0) ? expandedSections : collapsedSections;
     const clickable = !!onClick;
+    const isAway = !!actor.inProgressRequestId;
 
     // Default hover behavior
     const defaultWhileHover = {
@@ -68,7 +69,7 @@ export const ActorCard: FC<ActorCardProps> = ({
     const wrapperProps: any = {
         onClick: clickable ? onClick : undefined,
         animate: {
-            opacity: isDragging ? 0.4 : 1,
+            opacity: isDragging ? 0.4 : (isAway ? 0.5 : 1),
             scale: isDragging ? 0.95 : 1,
         },
         whileHover: whileHover || defaultWhileHover,
@@ -77,9 +78,9 @@ export const ActorCard: FC<ActorCardProps> = ({
         },
         style: {
             padding: '12px',
-            border: `3px solid #00ff88`,
+            border: `3px solid ${isAway ? '#ffa726' : '#00ff88'}`,
             borderRadius: '8px',
-            background: 'rgba(0, 10, 20, 0.5)',
+            background: isAway ? 'rgba(255, 167, 38, 0.1)' : 'rgba(0, 10, 20, 0.5)',
             cursor: isDragging ? 'grabbing' : (draggable ? 'grab' : (clickable ? 'pointer' : 'default')),
             ...style
         },
@@ -96,6 +97,24 @@ export const ActorCard: FC<ActorCardProps> = ({
     return (
         <motion.div {...wrapperProps}>
             <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+                {/* Away Status Indicator */}
+                {isAway && (
+                    <div style={{
+                        fontSize: '0.75rem',
+                        color: '#ffa726',
+                        fontWeight: 700,
+                        marginBottom: '8px',
+                        padding: '4px 8px',
+                        background: 'rgba(255, 167, 38, 0.2)',
+                        borderRadius: '4px',
+                        textAlign: 'center',
+                        textShadow: '0 0 8px #ffa726',
+                        border: '1px solid rgba(255, 167, 38, 0.5)',
+                    }}>
+                        ⏱ AWAY ON ASSIGNMENT
+                    </div>
+                )}
+                
                 {/* Nameplate at the top - takes minimum height needed */}
                 <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '8px', flexShrink: 0 }}>
                     <Nameplate 

@@ -1,7 +1,7 @@
 import React, { FC } from 'react';
 import { motion } from 'framer-motion';
 import { Paper, Typography, Box } from '@mui/material';
-import { TrendingUp, Handshake, TrendingDown } from '@mui/icons-material';
+import { TrendingUp, Handshake, TrendingDown, HourglassEmpty } from '@mui/icons-material';
 import Actor, { Stat, ACTOR_STAT_ICONS } from '../actors/Actor';
 import { StationStat, STATION_STAT_ICONS } from '../Module';
 import Nameplate from '../components/Nameplate';
@@ -9,6 +9,7 @@ import Faction from '../factions/Faction';
 import { scoreToGrade } from '../utils';
 import { SkitData } from '../Skit';
 import { Stage } from '../Stage';
+import { ActorWithStatsRequirement, SpecificActorRequirement } from '../factions/Request';
 
 interface StatChange {
     statName: string;
@@ -832,10 +833,22 @@ const SkitOutcomeDisplay: FC<SkitOutcomeDisplayProps> = ({ skitData, stage, layo
                                                         fontSize: '0.9rem',
                                                         color: '#fff',
                                                         fontWeight: 600,
-                                                        textShadow: '0 1px 0 rgba(0,0,0,0.6)'
+                                                        textShadow: '0 1px 0 rgba(0,0,0,0.6)',
+                                                        display: 'flex',
+                                                        alignItems: 'center',
+                                                        gap: 1
                                                     }}
                                                 >
                                                     {request.getRequirementText(stage)}
+                                                    {/* Display hourglass icons for timed requests */}
+                                                    {(request.requirement.type === 'actor-with-stats' || request.requirement.type === 'specific-actor') && 
+                                                     (request.requirement as ActorWithStatsRequirement | SpecificActorRequirement).timeInPhases && (
+                                                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, ml: 1 }}>
+                                                            {Array.from({ length: (request.requirement as ActorWithStatsRequirement | SpecificActorRequirement).timeInPhases! }).map((_, i) => (
+                                                                <HourglassEmpty key={i} sx={{ fontSize: '1rem', color: '#ffa726' }} />
+                                                            ))}
+                                                        </Box>
+                                                    )}
                                                 </Typography>
                                             </Box>
 

@@ -584,11 +584,15 @@ export async function generateSkitScript(skit: SkitData, stage: Stage): Promise<
                             `Where <factionName> is the name of the faction making the request, <description> is a brief summary of the request, ` +
                             `<requirement> is what the player must do to fulfill the request, and <reward> is what the player will receive upon completion.\n` +
                             `Valid <requirement> formats:\n` +
-                            `"  ACTOR <stat><op><value>[, <stat><op><value>]" // Actor with one or more stat constraints\n` +
+                            `"  ACTOR <stat><op><value>[, <stat><op><value>] [TIME:<turns>]" // Actor with one or more stat constraints\n` +
                             `   - op can be: >= (min), <= (max)\n` +
+                            `   - Optional TIME:<turns> specifies temporary assignment duration (omit for permanent)\n` +
                             `   - Example: ACTOR brawn>=7, charm>=5, lust<=3\n` +
-                            `"  ACTOR-NAME <actorName>" // Specific actor by name\n` +
+                            `   - Example: ACTOR brawn>=8, vigilance>=7 TIME:3\n` +
+                            `"  ACTOR-NAME <actorName> [TIME:<turns>]" // Specific actor by name\n` +
+                            `   - Optional TIME:<turns> specifies temporary assignment duration (omit for permanent)\n` +
                             `   - Example: ACTOR-NAME Jane Doe\n` +
+                            `   - Example: ACTOR-NAME Dr. Smith TIME:5\n` +
                             `"  STATION <stat>-<value>[, <stat>-<value>]" // Station stats to be reduced\n` +
                             `   - Stats will be reduced by the specified amounts\n` +
                             `   - Example: STATION Security-2, Harmony-1\n` +
@@ -599,7 +603,12 @@ export async function generateSkitScript(skit: SkitData, stage: Stage): Promise<
                             `Full Examples:\n` +
                             `"[REQUEST: Stellar Concord | We need a strong laborer | ACTOR brawn>=7, charm>=6 -> Systems+2, Comfort+1]"\n` +
                             `"[REQUEST: Shadow Syndicate | Return our missing operative | ACTOR-NAME Jane Doe -> Harmony+3]"\n` +
-                            `"[REQUEST: Defense Coalition | Help us bolster our defenses | STATION Security-2, Harmony-1 -> Systems+2, Provision+2]"` +
+                            `"[REQUEST: Defense Coalition | Help us bolster our defenses | STATION Security-2, Harmony-1 -> Systems+2, Provision+2]"\n` +
+                            `"[REQUEST: Mercenary Guild | Temporary security assignment | ACTOR brawn>=8, vigilance>=7 TIME:3 -> Systems+1, Security+2]"\n` +
+                            `"[REQUEST: Research Institute | Scholar exchange program | ACTOR-NAME Dr. Smith TIME:5 -> Systems+3, Comfort+1]"` +
+                            `\n\nTypical TIME for temporary assignments should be between 4 and 10 turns, depending on the nature of the request. 4 turns is an in-game "day."  ` +
+                            `Generally, requests with a time component are temporary assignments/missions/trainings where a character is sent off-station to fulfill the request, ` +
+                            `returning after the specified duration. The reward for these requests should be smaller than those for permanent assignment—perhaps only a single stat bonus.` +
 
                             `\n\nFaction Reputation Changes:\n` +
                             `Identify any changes to faction reputations implied by the scene. For each change, output a line in the following format:\n` +
