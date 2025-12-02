@@ -8,3 +8,19 @@ export function scoreToGrade(score: number): string {
     const scoreArray = ['F', 'D', 'C', 'C+', 'B-', 'B', 'B+', 'A-', 'A', 'A+'];
     return scoreArray[scoreClamped - 1];
 }
+
+export function gradeToScore(grade: string): number {
+    const gradeMap: { [key: string]: number } = {
+        'F': 1,
+        'D': 2,
+        'C': 3,
+        'C+': 4,
+        'B-': 5,
+        'B': 6,
+        'B+': 7,
+        'A-': 8,
+        'A': 9,
+        'A+': 10
+    };
+    return gradeMap[grade] || 1; // Default to 1 if grade not found
+}

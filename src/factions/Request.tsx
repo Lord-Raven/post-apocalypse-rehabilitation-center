@@ -3,7 +3,7 @@ import { StationStat } from "../Module";
 import { ScreenType } from "../screens/BaseScreen";
 import { SkitType } from "../Skit";
 import { Stage } from "../Stage";
-import { scoreToGrade } from "../utils";
+import { scoreToGrade, gradeToScore } from "../utils";
 import { v4 as generateUuid } from 'uuid';
 
 /**
@@ -744,28 +744,53 @@ export class Request {
         const constraints = statsStr.split(',').map(s => s.trim());
         
         for (const constraint of constraints) {
-            // Match pattern: <stat><op><value>
-            const match = constraint.match(/^(\w+)\s*(>=|<=)\s*(\d+)$/);
-            if (!match) {
-                console.warn(`Invalid actor stat constraint: ${constraint}`);
-                return null;
-            }
-
-            const [, statName, operator, valueStr] = match;
-            const value = parseInt(valueStr, 10);
-
-            // Validate stat name
-            const stat = statName.toLowerCase() as Stat;
-            if (!Object.values(Stat).includes(stat)) {
-                console.warn(`Unknown stat: ${statName}`);
-                return null;
-            }
-
-            // Add to appropriate stats object
-            if (operator === '>=') {
-                minStats[stat] = value;
-            } else if (operator === '<=') {
-                maxStats[stat] = value;
+            // Match pattern: <stat><op><value> where value can be a number or letter grade
+            // First try to match with a number
+            let match = constraint.match(/^(\w+)\s*(>=|<=)\s*(\d+)$/);
+            let value: number;
+            
+            if (match) {
+                // Numeric value found
+                const [, statName, operator, valueStr] = match;
+                value = parseInt(valueStr, 10);
+                
+                // Validate stat name
+                const stat = statName.toLowerCase() as Stat;
+                if (!Object.values(Stat).includes(stat)) {
+                    console.warn(`Unknown stat: ${statName}`);
+                    return null;
+                }
+                
+                // Add to appropriate stats object
+                if (operator === '>=') {
+                    minStats[stat] = value;
+                } else if (operator === '<=') {
+                    maxStats[stat] = value;
+                }
+            } else {
+                // Try to match with a letter grade (e.g., "B-", "A+", "C")
+                match = constraint.match(/^(\w+)\s*(>=|<=)\s*([A-F][+-]?)$/i);
+                if (!match) {
+                    console.warn(`Invalid actor stat constraint: ${constraint}`);
+                    return null;
+                }
+                
+                const [, statName, operator, grade] = match;
+                value = gradeToScore(grade.toUpperCase());
+                
+                // Validate stat name
+                const stat = statName.toLowerCase() as Stat;
+                if (!Object.values(Stat).includes(stat)) {
+                    console.warn(`Unknown stat: ${statName}`);
+                    return null;
+                }
+                
+                // Add to appropriate stats object
+                if (operator === '>=') {
+                    minStats[stat] = value;
+                } else if (operator === '<=') {
+                    maxStats[stat] = value;
+                }
             }
         }
 

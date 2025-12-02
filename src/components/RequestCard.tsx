@@ -7,6 +7,7 @@ import { Stage } from '../Stage';
 import { Nameplate } from './Nameplate';
 import { useTooltip } from '../contexts/TooltipContext';
 import { SwapHoriz, HourglassEmpty } from '@mui/icons-material';
+import { scoreToGrade } from '../utils';
 
 interface RequestCardProps {
     request: Request;
@@ -132,7 +133,7 @@ export const RequestCard: FC<RequestCardProps> = ({
                         statElements.push(
                             <React.Fragment key={`min-${stat}`}>
                                 {StatIcon && <StatIcon style={{ fontSize: '1.2rem', color: '#00ff88', marginRight: '4px' }} />}
-                                <span>{stat} ≥ {value}</span>
+                                <span>{stat} ≥ {scoreToGrade(value)}</span>
                             </React.Fragment>
                         );
                     });
@@ -144,14 +145,14 @@ export const RequestCard: FC<RequestCardProps> = ({
                         statElements.push(
                             <React.Fragment key={`max-${stat}`}>
                                 {StatIcon && <StatIcon style={{ fontSize: '1.2rem', color: '#ff6b6b', marginRight: '4px' }} />}
-                                <span>{stat} ≤ {value}</span>
+                                <span>{stat} ≤ {scoreToGrade(value)}</span>
                             </React.Fragment>
                         );
                     });
                 }
                 
                 return {
-                    text: 'Actor:',
+                    text: 'Patient:',
                     statElements,
                     image: null
                 };
@@ -161,7 +162,7 @@ export const RequestCard: FC<RequestCardProps> = ({
                 const req = request.requirement as SpecificActorRequirement;
                 const actor = stage.getSave().actors[req.actorId];
                 return {
-                    text: `Specific Actor: ${actor?.name || 'Unknown'}`,
+                    text: `Specific Patient: ${actor?.name || 'Unknown'}`,
                     statElements: [],
                     image: null // We'll show actors in background instead
                 };
