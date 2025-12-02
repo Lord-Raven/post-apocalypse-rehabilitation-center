@@ -880,7 +880,7 @@ export const SkitScreen: FC<SkitScreenProps> = ({ stage, setScreenType }) => {
     }
 
     function handleClose() {
-        stage().endSkit();
+        stage().endSkit(setScreenType);
         // Check if aide is still being generated
         if (stage().getGenerateAidePromise()) {
             setScreenType(ScreenType.LOADING);
