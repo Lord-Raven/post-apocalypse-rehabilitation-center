@@ -389,7 +389,7 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
         console.log('Rehydrating save:', save);
         
         // Restore turn from old phase variable.
-        if (save['turn'] === undefined) {
+        if (save && save['turn'] === undefined) {
             save['turn'] = save['phase'] || 0;
         }
         // Use smart rehydration to automatically detect and restore all nested objects

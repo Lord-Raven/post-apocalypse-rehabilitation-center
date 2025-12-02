@@ -29,7 +29,7 @@ import {
     ArrowBackIos,
     ArrowForwardIos,
     Send,
-    PlayArrow,
+    Forward,
     Close,
     Casino,
     Computer,
@@ -799,7 +799,7 @@ export const SkitScreen: FC<SkitScreenProps> = ({ stage, setScreenType }) => {
                         onClick={() => { if (sceneEnded) handleClose(); else handleSubmit(); }}
                         disabled={loading}
                         variant="contained"
-                        startIcon={sceneEnded ? <Close /> : (inputText.trim() ? <Send /> : <PlayArrow />)}
+                        startIcon={sceneEnded ? <Close /> : (inputText.trim() ? <Send /> : <Forward />)}
                         sx={{
                             background: sceneEnded 
                                 ? 'linear-gradient(90deg,#ff8c66,#ff5a3b)' 
