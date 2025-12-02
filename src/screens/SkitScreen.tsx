@@ -529,7 +529,7 @@ export const SkitScreen: FC<SkitScreenProps> = ({ stage, setScreenType }) => {
                     background: 'rgba(10,20,30,0.95)', 
                     border: '2px solid rgba(0,255,136,0.12)', 
                     borderRadius: 3,
-                    p: 3,
+                    p: 2,
                     color: '#e8fff0', 
                     zIndex: 2,
                     backdropFilter: 'blur(8px)'
