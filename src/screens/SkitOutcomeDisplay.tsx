@@ -842,9 +842,9 @@ const SkitOutcomeDisplay: FC<SkitOutcomeDisplayProps> = ({ skitData, stage, layo
                                                     {request.getRequirementText(stage)}
                                                     {/* Display hourglass icons for timed requests */}
                                                     {(request.requirement.type === 'actor-with-stats' || request.requirement.type === 'specific-actor') && 
-                                                     (request.requirement as ActorWithStatsRequirement | SpecificActorRequirement).timeInPhases && (
+                                                     (request.requirement as ActorWithStatsRequirement | SpecificActorRequirement).timeInTurns && (
                                                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, ml: 1 }}>
-                                                            {Array.from({ length: (request.requirement as ActorWithStatsRequirement | SpecificActorRequirement).timeInPhases! }).map((_, i) => (
+                                                            {Array.from({ length: (request.requirement as ActorWithStatsRequirement | SpecificActorRequirement).timeInTurns! }).map((_, i) => (
                                                                 <HourglassEmpty key={i} sx={{ fontSize: '1rem', color: '#ffa726' }} />
                                                             ))}
                                                         </Box>

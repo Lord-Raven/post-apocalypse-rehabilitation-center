@@ -128,7 +128,7 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType}) =>
             });
             setScreenType(ScreenType.SKIT);
         } else {
-            stage().incPhase(1);
+            stage().incPhase(1, setScreenType);
         }
     };
 
@@ -277,7 +277,7 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType}) =>
         setDraggedActor(null);
         setHoveredModuleId(null);
         if (phaseCost > 0) {
-            stage().incPhase(phaseCost);
+            stage().incPhase(phaseCost, setScreenType);
         }
     };
 

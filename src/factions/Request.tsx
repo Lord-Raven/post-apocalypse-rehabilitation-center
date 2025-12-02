@@ -21,7 +21,7 @@ export interface ActorWithStatsRequirement {
     type: 'actor-with-stats';
     minStats?: Partial<Record<Stat, number>>;
     maxStats?: Partial<Record<Stat, number>>;
-    timeInPhases?: number; // Optional duration in phases (temporary assignment/loan)
+    timeInTurns?: number; // Optional duration in turns (temporary assignment/loan)
 }
 
 /**
@@ -30,7 +30,7 @@ export interface ActorWithStatsRequirement {
 export interface SpecificActorRequirement {
     type: 'specific-actor';
     actorId: string;
-    timeInPhases?: number; // Optional duration in phases (temporary assignment/loan)
+    timeInTurns?: number; // Optional duration in turns (temporary assignment/loan)
 }
 
 /**
@@ -39,6 +39,7 @@ export interface SpecificActorRequirement {
 export interface StationStatsRequirement {
     type: 'station-stats';
     stats: Partial<Record<StationStat, number>>;
+    timeInTurns?: number; // Optional and unused by this type.
 }
 
 /**
@@ -66,7 +67,7 @@ export class Request {
     reward: RequestReward;
     inProgressActorId: string = ''; // Set to the fulfilling ID of an actor, when the request is being fulfilled—applies to temporary assignments
     startDay: number = -1; // Day when the request was started (for timed requests)
-    startPhase: number = -1; // Phase when the request was started (for timed requests)
+    startTurn: number = -1; // Turn when the request was started (for timed requests)
 
     constructor(
         id: string,
@@ -100,22 +101,22 @@ export class Request {
     }
 
     /**
-     * Calculate remaining phases for a timed request
+     * Calculate remaining turns for a timed request
      * @param currentDay Current game day
-     * @param currentPhase Current game phase
-     * @returns Number of phases remaining, or -1 if not applicable
+     * @param currentTurn Current game turn
+     * @returns Number of turns remaining, or -1 if not applicable
      */
-    getRemainingPhases(currentDay: number, currentPhase: number): number {
+    getRemainingTurns(currentDay: number, currentTurn: number): number {
         if (!this.isInProgress()) return -1;
         
-        const timeInPhases = (this.requirement.type === 'actor-with-stats' || this.requirement.type === 'specific-actor')
-            ? (this.requirement as ActorWithStatsRequirement | SpecificActorRequirement).timeInPhases
+        const timeInTurns = (this.requirement.type === 'actor-with-stats' || this.requirement.type === 'specific-actor')
+            ? (this.requirement as ActorWithStatsRequirement | SpecificActorRequirement).timeInTurns
             : undefined;
         
-        if (!timeInPhases) return -1;
+        if (!timeInTurns) return -1;
         
-        const elapsedPhases = (currentDay - this.startDay) * 4 + (currentPhase - this.startPhase);
-        return Math.max(0, timeInPhases - elapsedPhases);
+        const elapsedTurns = (currentDay - this.startDay) * 4 + (currentTurn - this.startTurn);
+        return Math.max(0, timeInTurns - elapsedTurns);
     }
 
     /**
@@ -334,7 +335,7 @@ export class Request {
 
         // Check if this is a timed request
         const isTimedRequest = (this.requirement.type === 'actor-with-stats' || this.requirement.type === 'specific-actor') &&
-            (this.requirement as ActorWithStatsRequirement | SpecificActorRequirement).timeInPhases !== undefined;
+            (this.requirement as ActorWithStatsRequirement | SpecificActorRequirement).timeInTurns !== undefined;
 
         // Process requirement
         switch (this.requirement.type) {
@@ -347,12 +348,12 @@ export class Request {
                     // Set up timed request - don't complete yet
                     this.inProgressActorId = actorId;
                     this.startDay = save.day;
-                    this.startPhase = save.phase;
+                    this.startTurn = save.phase;
                     const actor = save.actors[actorId];
                     if (actor) {
                         actor.inProgressRequestId = this.id;
                     }
-                    console.log(`Started timed request ${this.id} with actor ${actorId} at day ${this.startDay}, phase ${this.startPhase}`);
+                    console.log(`Started timed request ${this.id} with actor ${actorId} at day ${this.startDay}, turn ${this.startTurn}`);
                 } else {
                     // Permanent transfer - complete immediately
                     console.log(`Fulfilling permanent actor-with-stats request with actor ${actorId}`);
@@ -368,12 +369,12 @@ export class Request {
                     // Set up timed request - don't complete yet
                     this.inProgressActorId = actorId;
                     this.startDay = save.day;
-                    this.startPhase = save.phase;
+                    this.startTurn = save.phase;
                     const actor = save.actors[actorId];
                     if (actor) {
                         actor.inProgressRequestId = this.id;
                     }
-                    console.log(`Started timed request ${this.id} with actor ${actorId} at day ${this.startDay}, phase ${this.startPhase}`);
+                    console.log(`Started timed request ${this.id} with actor ${actorId} at day ${this.startDay}, turn ${this.startTurn}`);
                 } else {
                     // Permanent transfer - complete immediately
                     console.log(`Fulfilling permanent specific-actor request with actor ${actorId}`);
@@ -436,12 +437,8 @@ export class Request {
                 save.stationStats[stat as StationStat] = Math.max(1, Math.min(10, (save.stationStats[stat as StationStat] || 0) + value));
             }
         }
-
-        // Remove request from active requests, if no time component
-        if (!isTimedRequest) {
-            delete save.requests[this.id];
-        }
         
+        delete save.requests[this.id];
 
         // Increase faction reputation
         if (faction) {
@@ -532,8 +529,8 @@ export class Request {
                 }
                 
                 let text = `Patient with ${parts.join(', ')}`;
-                if (req.timeInPhases !== undefined) {
-                    text += ` (${req.timeInPhases} turn${req.timeInPhases !== 1 ? 's' : ''})`;
+                if (req.timeInTurns !== undefined) {
+                    text += ` (${req.timeInTurns} turn${req.timeInTurns !== 1 ? 's' : ''})`;
                 }
                 return text;
             }
@@ -541,8 +538,8 @@ export class Request {
             case 'specific-actor': {
                 const req = this.requirement as SpecificActorRequirement;
                 let text = `Specific patient: ${stage.getSave().actors[req.actorId]?.name || req.actorId})`;
-                if (req.timeInPhases !== undefined) {
-                    text += ` (${req.timeInPhases} turn${req.timeInPhases !== 1 ? 's' : ''})`;
+                if (req.timeInTurns !== undefined) {
+                    text += ` (${req.timeInTurns} turn${req.timeInTurns !== 1 ? 's' : ''})`;
                 }
                 return text;
             }
@@ -682,11 +679,11 @@ export class Request {
         const trimmed = requirementStr.trim();
 
         // Check for optional TIME component at the end
-        let timeInPhases: number | undefined = undefined;
+        let timeInTurns: number | undefined = undefined;
         let requirementWithoutTime = trimmed;
         const timeMatch = trimmed.match(/\s+TIME:(\d+)$/i);
         if (timeMatch) {
-            timeInPhases = parseInt(timeMatch[1], 10);
+            timeInTurns = parseInt(timeMatch[1], 10);
             requirementWithoutTime = trimmed.substring(0, trimmed.length - timeMatch[0].length).trim();
         }
 
@@ -709,7 +706,7 @@ export class Request {
             return {
                 type: 'specific-actor',
                 actorId: actor.id,
-                timeInPhases
+                timeInTurns: timeInTurns
             };
         }
 
@@ -717,8 +714,8 @@ export class Request {
         if (requirementWithoutTime.startsWith('ACTOR')) {
             const statsStr = requirementWithoutTime.substring('ACTOR'.length).trim();
             const actorStatsReq = this.parseActorStatsRequirement(statsStr);
-            if (actorStatsReq && timeInPhases !== undefined) {
-                actorStatsReq.timeInPhases = timeInPhases;
+            if (actorStatsReq && timeInTurns !== undefined) {
+                actorStatsReq.timeInTurns = timeInTurns;
             }
             return actorStatsReq;
         }

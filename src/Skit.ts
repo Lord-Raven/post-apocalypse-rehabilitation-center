@@ -13,6 +13,7 @@ export enum SkitType {
     FACTION_INTERACTION = 'FACTION INTERACTION',
     REQUEST_FILL_ACTOR = 'REQUEST FILL ACTOR',
     REQUEST_FILL_STATION = 'REQUEST FILL STATION',
+    RETURNING_FROM_REQUEST = 'RETURNING FROM REQUEST',
     NEW_MODULE = 'NEW MODULE',
     RANDOM_ENCOUNTER = 'RANDOM ENCOUNTER'
 }
@@ -44,6 +45,7 @@ export function generateSkitTypePrompt(skit: SkitData, stage: Stage, continuing:
     const module = stage.getSave().layout.getModuleById(skit.moduleId || '');
     const faction = stage.getSave().factions[skit.context.factionId || ''];
     const notHereText = 'This communication is being conducted via remote video link; no representative is physically present on the station. ';
+    const request = stage.getSave().requests[skit.context.requestId || ''];
     switch (skit.type) {
         case SkitType.BEGINNING:
             return !continuing ?
@@ -95,19 +97,30 @@ export function generateSkitTypePrompt(skit: SkitData, stage: Stage, continuing:
                 notHereText :
                 `Continue this scene between the Director and a representative for ${faction?.name || 'a secret organization'}'s. ` + 
                 notHereText);
-        case SkitType.REQUEST_FILL_ACTOR:
-            return !continuing ?
-                `This scene depicts an exchange between the player and ${faction?.name || 'a faction'} regarding the fulfillment of their request for a patient: ${actor?.name || 'a patient'}. ` +
-                `${actor?.name || 'The patient'} is departing the PARC, for perhaps the last time. ${faction?.name || 'The faction'} will keep its word and honor the agreement. ` +
-                `The PARC will be required to do the same.` :
-                `Continue this scene, exploring ${actor?.name || 'a patient'}'s feelings on their departure from the PARC—likely forever. ` +
-                `${faction?.name || 'The faction'} will keep its word and honor the agreement. The PARC will be required to do the same.`;
         case SkitType.REQUEST_FILL_STATION:
             return !continuing ?
                 `This scene depicts an exchange between the player and ${faction?.name || 'a faction'} regarding the fulfillment of a request. ` +
                 `${faction?.name || 'The faction'} will keep its word and honor the agreement. The PARC will be required to do the same.` :
                 `Continue this scene describing the outcome of this request. ` +
                 `${faction?.name || 'The faction'} will keep its word and honor the agreement. The PARC will be required to do the same.`;
+        case SkitType.REQUEST_FILL_ACTOR:
+            if (request?.requirement?.timeInTurns) {
+                return `This scene depicts an exchange between the player and ${faction?.name || 'a faction'} regarding the temporary fulfillment of their request for a patient: ${actor?.name || 'a patient'}. ` +
+                    `${actor?.name || 'The patient'} is about to leave the PARC to fulfill this arrangement. ${faction?.name || 'The faction'} ` +
+                    `will keep its word and honor the agreement upon ${actor?.name || 'the patient'}'s completion of the assignment. The assignment will take around ${Math.ceil(request.requirement.timeInTurns / 4)} days.`;
+            } else {
+                return !continuing ?
+                    `This scene depicts an exchange between the player and ${faction?.name || 'a faction'} regarding the fulfillment of their request for a patient: ${actor?.name || 'a patient'}. ` +
+                    `${actor?.name || 'The patient'} is departing the PARC, for perhaps the last time. ${faction?.name || 'The faction'} will keep its word and honor the agreement. ` +
+                    `The PARC will be required to do the same.` :
+                    `Continue this scene, exploring ${actor?.name || 'a patient'}'s feelings on their departure from the PARC—likely forever. ` +
+                    `${faction?.name || 'The faction'} will keep its word and honor the agreement. The PARC will be required to do the same.`;
+            }
+        case SkitType.RETURNING_FROM_REQUEST:
+            return `This scene depicts an exchange between the player and ${faction?.name || 'a faction'} regarding the return of a patient from a completed request: ${actor?.name || 'a patient'}. ` +
+                `${actor?.name || 'The patient'} is returning to the PARC after fulfilling their assignment. ${faction?.name || 'The faction'} will honor the agreed reward, ` +
+                `but it is possible that ${actor?.name || 'the patient'} suffered or changed during the assignment (maybe even for the better). ` +
+                `The PARC will reintegrate the patient accordingly.`;
         default:
             return '';
     }
@@ -176,7 +189,8 @@ export function generateSkitPrompt(skit: SkitData, stage: Stage, historyLength: 
     // Determine present and absent actors for this moment in the skit (as of the last entry in skit.script):
     const presentActorIds = getCurrentActorsInScene(skit, skit.moduleId, -1);
     const presentPatients = Object.values(stage.getSave().actors).filter(a => presentActorIds.has(a.id) && !a.remote);
-    const absentPatients = Object.values(stage.getSave().actors).filter(a => !presentActorIds.has(a.id) && !a.remote);
+    const absentPatients = Object.values(stage.getSave().actors).filter(a => !presentActorIds.has(a.id) && !a.remote && !a.inProgressRequestId);
+    const awayPatients = Object.values(stage.getSave().actors).filter(a => !presentActorIds.has(a.id) && a.inProgressRequestId);
 
     // Update participation counts if this is the start of the skit
     if (skit.script.length === 0) {
@@ -227,11 +241,22 @@ export function generateSkitPrompt(skit: SkitData, stage: Stage, historyLength: 
             `  Stats:\n    ${Object.entries(actor.stats).map(([stat, value]) => `${stat}: ${value}`).join('\n    ')}`}).join('\n')}` +
         // List non-present characters for reference; just need description and profile:
         `\n\nAbsent Characters:\n${absentPatients.map(actor => {
-            // Just role name and not full details.
+            // Roll name and current location
             const roleModule = stage.getLayout().getModulesWhere((m: any) => 
                 m && m.type !== 'quarters' && m.ownerId === actor.id
             )[0];
-            return `${actor.name}\n  Description: ${actor.description}\n  Profile: ${actor.profile}\n  Role: ${roleModule?.getAttribute('role') || 'Patient'}`;
+            const module = stage.getSave().layout.getModuleById(actor.locationId);
+            const locationString = module ? (module.type === 'quarters' ? (module.ownerId === actor.id ? ' Their Quarters' : (`${stage.getSave().actors[module.ownerId || ''] || 'Someone'}'s Quarters`)) : module.type) : 'Unknown'
+            return `${actor.name}\n  Description: ${actor.description}\n  Profile: ${actor.profile}\n  Role: ${roleModule?.getAttribute('role') || 'Patient'}\n  Location: ${locationString}`;
+        }).join('\n')}` +
+        // List away characters for reference; just need description and profile:
+        `\n\nAway Characters (Currently on Assignment):\n${awayPatients.map(actor => {
+            // Just role name and faction on loan to
+            const roleModule = stage.getLayout().getModulesWhere((m: any) => 
+                m && m.type !== 'quarters' && m.ownerId === actor.id
+            )[0];
+            const requestFaction = stage.getSave().factions[stage.getSave().requests[actor.inProgressRequestId].factionId || ''] || 'Unknown Faction';
+            return `${actor.name}\n  Description: ${actor.description}\n  Profile: ${actor.profile}\n  Role: ${roleModule?.getAttribute('role') || 'Patient'}\n  On Assignment to: ${requestFaction.name}`;
         }).join('\n')}` +
         // List stat meanings, for reference:
         `\n\nStats:\n${Object.values(Stat).map(stat => `${stat.toUpperCase()}: ${getStatDescription(stat)}`).join('\n')}` +
@@ -606,9 +631,10 @@ export async function generateSkitScript(skit: SkitData, stage: Stage): Promise<
                             `"[REQUEST: Defense Coalition | Help us bolster our defenses | STATION Security-2, Harmony-1 -> Systems+2, Provision+2]"\n` +
                             `"[REQUEST: Mercenary Guild | Temporary security assignment | ACTOR brawn>=8, vigilance>=7 TIME:3 -> Systems+1, Security+2]"\n` +
                             `"[REQUEST: Research Institute | Scholar exchange program | ACTOR-NAME Dr. Smith TIME:5 -> Systems+3, Comfort+1]"` +
-                            `\n\nTypical TIME for temporary assignments should be between 4 and 10 turns, depending on the nature of the request. 4 turns is an in-game "day."  ` +
+                            `\n\nThese tags must define specific requirements and rewards, even if the script did not contain precise details. ` +
+                            `Typical TIME for temporary assignments should be between 4 and 10 turns, depending on the nature of the request. 4 turns is an in-game "day."  ` +
                             `Generally, requests with a time component are temporary assignments/missions/trainings where a character is sent off-station to fulfill the request, ` +
-                            `returning after the specified duration. The reward for these requests should be smaller than those for permanent assignment—perhaps only a single stat bonus.` +
+                            `returning after the specified duration. The reward for these requests should typically be smaller than those for permanent assignment—perhaps only a single stat bonus.` +
 
                             `\n\nFaction Reputation Changes:\n` +
                             `Identify any changes to faction reputations implied by the scene. For each change, output a line in the following format:\n` +

@@ -4,7 +4,7 @@ import {LoadResponse} from "@chub-ai/stages-ts/dist/types/load";
 import Actor, { loadReserveActor, generatePrimaryActorImage, commitActorToEcho, Stat, generateAdditionalActorImages, loadReserveActorFromFullPath } from "./actors/Actor";
 import Faction, { loadReserveFaction } from "./factions/Faction";
 import { DEFAULT_GRID_SIZE, Layout, StationStat, createModule } from './Module';
-import { BaseScreen } from "./screens/BaseScreen";
+import { BaseScreen, ScreenType } from "./screens/BaseScreen";
 import { generateSkitScript, SkitData, SkitType } from "./Skit";
 import { smartRehydrate } from "./SaveRehydration";
 import { Emotion } from "./actors/Emotion";
@@ -250,13 +250,12 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
      */
     checkAndCompleteTimedRequests() {
         const save = this.getSave();
-        const completedRequests: string[] = [];
         
-        // Check all requests for completed timed assignments
+        // Check all requests for completed timed assignments, but only complete one per turn (they come with ending skits)
         for (const request of Object.values(save.requests)) {
             if (!request.isInProgress()) continue;
             
-            const remaining = request.getRemainingPhases(save.day, save.phase);
+            const remaining = request.getRemainingTurns(save.day, save.phase);
             if (remaining <= 0) {
                 // Time is up - complete the request
                 console.log(`Completing timed request ${request.id}`);
@@ -288,20 +287,36 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
                         description: `${actor.name} has returned from their assignment with ${faction?.name || 'a faction'}.`,
                         skit: undefined
                     });
+                    // Create a returning skit
+                    // Move this actor and faction rep to comms room
+                    const commsModule = save.layout.getModulesWhere(m => m.type === 'comms')[0];
+                    actor.locationId = commsModule?.id || '';
+                    const factionRep = save.actors[faction.representativeId || ''];
+                    factionRep.locationId = commsModule?.id || '';
+                    this.setSkit({
+                        type: SkitType.RETURNING_FROM_REQUEST,
+                        moduleId: commsModule?.id || '',
+                        context: {
+                            actorId: actor.id,
+                            factionId: faction.id,
+                            requestId: request.id
+                        },
+                        script: [],
+                        generating: true
+                    });
+
+                    // Remove request and break; only complete one per "turn"
+                    delete save.requests[request.id];
+                    break;
+                } else {
+                    // Weird case; actor not found. I guess just clear this request out; don't have to break because no skit will be generated.
+                    delete save.requests[request.id];
                 }
-                
-                // Mark request for removal
-                completedRequests.push(request.id);
             }
-        }
-        
-        // Remove completed requests
-        for (const requestId of completedRequests) {
-            delete save.requests[requestId];
         }
     }
 
-    incPhase(numberOfPhases: number = 1) {
+    incPhase(numberOfPhases: number = 1, setScreenType: (type: ScreenType) => void) {
         const save = this.getSave();
         save.phase += numberOfPhases;
         
@@ -357,8 +372,14 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
             const factionRep = save.actors[randomFaction.representativeId || ''];
             factionRep.locationId = commsModule.id;
         }
+
         this.currentSave = {...save}; // Update the current save slot with the modified save, ensuring a new object reference.
         this.saveGame();
+
+        if (save.currentSkit) {
+            // If there's still a current skit, then it hasn't even started. Change screens back to SkitScreen:
+            setScreenType(ScreenType.SKIT);
+        }
     }
 
     /**
@@ -797,7 +818,7 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
         save.currentSkit = skit;
     }
 
-    endSkit() {
+    endSkit(setScreenType: (type: ScreenType) => void) {
         const save = this.getSave();
         if (save.currentSkit) {
             if (!save.timeline) {
@@ -926,7 +947,7 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
                 skit: save.currentSkit
             });
             save.currentSkit = undefined;
-            this.incPhase();
+            this.incPhase(1, setScreenType);
         }
     }
 

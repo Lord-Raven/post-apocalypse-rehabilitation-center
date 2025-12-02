@@ -219,7 +219,7 @@ export const RequestCard: FC<RequestCardProps> = ({
     const rewardContent = getRewardContent();
 
     // Calculate remaining phases if in progress
-    const remainingPhases = isInProgress ? request.getRemainingPhases(stage.getSave().day, stage.getSave().phase) : -1;
+    const remainingPhases = isInProgress ? request.getRemainingTurns(stage.getSave().day, stage.getSave().phase) : -1;
 
     return (
         <motion.div
@@ -436,9 +436,9 @@ export const RequestCard: FC<RequestCardProps> = ({
                         ))}
                         {/* Display hourglass icons for timed requests */}
                         {(request.requirement.type === 'actor-with-stats' || request.requirement.type === 'specific-actor') && 
-                         (request.requirement as ActorWithStatsRequirement | SpecificActorRequirement).timeInPhases && (
+                         (request.requirement as ActorWithStatsRequirement | SpecificActorRequirement).timeInTurns && (
                             <span style={{ display: 'flex', alignItems: 'center', gap: '4px', marginLeft: '8px' }}>
-                                {Array.from({ length: (request.requirement as ActorWithStatsRequirement | SpecificActorRequirement).timeInPhases! }).map((_, i) => (
+                                {Array.from({ length: (request.requirement as ActorWithStatsRequirement | SpecificActorRequirement).timeInTurns! }).map((_, i) => (
                                     <HourglassEmpty key={i} style={{ fontSize: '1rem', color: '#ffa726' }} />
                                 ))}
                             </span>
