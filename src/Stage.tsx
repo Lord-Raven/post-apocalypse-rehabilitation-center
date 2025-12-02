@@ -278,6 +278,7 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
                 const actor = save.actors[request.inProgressActorId];
                 if (actor) {
                     actor.inProgressRequestId = '';
+                    actor.remote = false;
                     console.log(`Actor ${actor.name} is now available again`);
                     
                     // Add timeline entry for return
@@ -320,9 +321,6 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
         const save = this.getSave();
         save.turn += numberOfTurns;
         
-        // Check for completed timed requests before processing day change
-        this.checkAndCompleteTimedRequests();
-        
         if (save.turn >= 4) {
             save.turn = 0;
             save.day += 1;
@@ -337,6 +335,10 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
                 }
             }
         }
+
+        // Check for completed timed requests before processing day change
+        this.checkAndCompleteTimedRequests();
+        
 
         // When incrementing turn, maybe move some actors around in the layout.
         for (const actorId in save.actors) {
@@ -942,10 +944,10 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
                 }
             }
 
-            // If skit was an actor request fulfillment, remove the actor from the station (mark remote for now):
+            // If skit was a permanent (un-timed) actor request fulfillment, remove the actor from the station (mark remote for now):
             if (save.currentSkit.type === SkitType.REQUEST_FILL_ACTOR && save.currentSkit.actorId) {
                 const actor = save.actors[save.currentSkit.actorId];
-                if (actor) {
+                if (actor && !actor.inProgressRequestId) {
                     actor.remote = true;
                     actor.locationId = '';
                     // Remove from quarters or other modules
