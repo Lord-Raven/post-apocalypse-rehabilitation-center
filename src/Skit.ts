@@ -205,6 +205,11 @@ export function generateSkitPrompt(skit: SkitData, stage: Stage, historyLength: 
             `\n\nThe PARC's current stats and impacts:\n` +
             Object.values(StationStat).map(stat => `  ${stat.toUpperCase()} (${stage.getSave().stationStats?.[stat] || 3}): ${STATION_STAT_PROMPTS[stat][getStatRating(stage.getSave().stationStats?.[stat] || 3)]}`).join('\n')
         ) : '') +
+        (
+            // If module is a quarters, present it as "Owner's quarters" or "vacant quarters": module type otherwise.
+            `\n\nCurrent Modules (Rooms) on the PARC:\n` +
+            stage.getSave().layout.getModulesWhere(module => true).map(module => module.type == 'quarters' ? (module.ownerId ? `${stage.getSave().actors[module.ownerId]?.name || 'Unknown'}'s quarters` : 'vacant quarters') : module.type).join(', '
+        ) +
         (Object.values(stage.getSave().requests).length > 0 ? (
             `\n\nActive Requests:\n` +
             Object.values(stage.getSave().requests).map(request => `-${stage.getSave().factions[request.factionId]?.name || 'Unknown Faction'}: ${request.description} \n  Requirement: ${request.getRequirementText(stage)} \n  Reward: ${request.getRewardText()}`).join('\n')
