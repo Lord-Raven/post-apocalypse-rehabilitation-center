@@ -208,7 +208,7 @@ export function generateSkitPrompt(skit: SkitData, stage: Stage, historyLength: 
         (
             // If module is a quarters, present it as "Owner's quarters" or "vacant quarters": module type otherwise.
             `\n\nCurrent Modules (Rooms) on the PARC:\n` +
-            stage.getSave().layout.getModulesWhere(module => true).map(module => module.type == 'quarters' ? (module.ownerId ? `${stage.getSave().actors[module.ownerId]?.name || 'Unknown'}'s quarters` : 'vacant quarters') : module.type).join(', '
+            stage.getSave().layout.getModulesWhere(module => true).map(module => module.type == 'quarters' ? (module.ownerId ? `${stage.getSave().actors[module.ownerId]?.name || 'Unknown'}'s quarters` : 'vacant quarters') : module.type).join(', ')
         ) +
         (Object.values(stage.getSave().requests).length > 0 ? (
             `\n\nActive Requests:\n` +
