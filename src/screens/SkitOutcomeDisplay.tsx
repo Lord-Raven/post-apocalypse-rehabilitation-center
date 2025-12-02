@@ -189,8 +189,9 @@ const SkitOutcomeDisplay: FC<SkitOutcomeDisplayProps> = ({ skitData, stage, layo
                 sx={{
                     display: 'flex',
                     flexDirection: 'column',
-                    gap: '20px',
-                    minWidth: '400px',
+                    gap: '16px',
+                    width: '25vw',
+                    minWidth: '300px',
                     maxHeight: '100%',
                     overflowY: 'auto'
                 }}
@@ -203,7 +204,7 @@ const SkitOutcomeDisplay: FC<SkitOutcomeDisplayProps> = ({ skitData, stage, layo
                         background: 'linear-gradient(135deg, rgba(0,255,136,0.25) 0%, rgba(0,180,100,0.35) 50%, rgba(0,120,80,0.25) 100%)',
                         border: '2px solid rgba(0,255,136,0.4)',
                         borderRadius: 2,
-                        p: 2,
+                        p: 1.5,
                         backdropFilter: 'blur(12px)',
                         textAlign: 'center'
                     }}
@@ -240,7 +241,7 @@ const SkitOutcomeDisplay: FC<SkitOutcomeDisplayProps> = ({ skitData, stage, layo
                             background: 'rgba(10,20,30,0.95)',
                             border: '2px solid rgba(0,255,136,0.15)',
                             borderRadius: 3,
-                            p: 3,
+                            p: 2,
                             backdropFilter: 'blur(8px)',
                             textAlign: 'center'
                         }}
@@ -250,15 +251,15 @@ const SkitOutcomeDisplay: FC<SkitOutcomeDisplayProps> = ({ skitData, stage, layo
                             initial={{ scale: 0.8, opacity: 0 }}
                             animate={{ scale: 1, opacity: 1 }}
                             transition={{ duration: 0.5, delay: 0.6 + charIndex * 0.2 }}
-                            style={{ marginBottom: '16px' }}
+                            style={{ marginBottom: '12px' }}
                         >
                             <Box
                                 sx={{
                                     width: '100%',
-                                    height: '200px',
+                                    height: '150px',
                                     borderRadius: '12px',
                                     overflow: 'hidden',
-                                    border: '3px solid rgba(0,255,136,0.4)',
+                                    border: '2px solid rgba(0,255,136,0.4)',
                                     backgroundImage: `url(${charChange.actor === undefined ? "https://media.charhub.io/41b7b65d-839b-4d31-8c11-64ee50e817df/0fc1e223-ad07-41c4-bdae-c9545d5c5e34.png" : 
                                         charChange.actor.getEmotionImage(charChange.actor.getDefaultEmotion())})`,
                                     backgroundSize: 'cover',
@@ -279,7 +280,7 @@ const SkitOutcomeDisplay: FC<SkitOutcomeDisplayProps> = ({ skitData, stage, layo
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ duration: 0.4, delay: 0.7 + charIndex * 0.2 }}
-                            style={{ marginBottom: '20px' }}
+                            style={{ marginBottom: '12px' }}
                         >
                             {!charChange.actor ? (
                                 <Nameplate 
@@ -303,7 +304,7 @@ const SkitOutcomeDisplay: FC<SkitOutcomeDisplayProps> = ({ skitData, stage, layo
                         </motion.div>
 
                         {/* Stat changes */}
-                        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
+                        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
                             {charChange.statChanges.map((statChange, statIndex) => {
                                 const isIncrease = statChange.newValue > statChange.oldValue;
                                 const isDecrease = statChange.newValue < statChange.oldValue;
@@ -318,7 +319,7 @@ const SkitOutcomeDisplay: FC<SkitOutcomeDisplayProps> = ({ skitData, stage, layo
                                         display: 'flex',
                                         alignItems: 'center',
                                         justifyContent: 'space-between',
-                                        padding: '12px 4px',
+                                        padding: '8px 4px',
                                         background: isDecrease 
                                             ? 'rgba(255,80,80,0.08)' 
                                             : isIncrease 
@@ -440,7 +441,7 @@ const SkitOutcomeDisplay: FC<SkitOutcomeDisplayProps> = ({ skitData, stage, layo
                                 ? '2px solid rgba(0,255,136,0.15)'
                                 : '2px solid rgba(255,80,80,0.15)',
                             borderRadius: 3,
-                            p: 3,
+                            p: 2,
                             backdropFilter: 'blur(8px)',
                             textAlign: 'center',
                             position: 'relative',
@@ -485,9 +486,9 @@ const SkitOutcomeDisplay: FC<SkitOutcomeDisplayProps> = ({ skitData, stage, layo
                                 initial={{ scale: 0.8, opacity: 0 }}
                                 animate={{ scale: 1, opacity: 1 }}
                                 transition={{ duration: 0.5, delay: 0.6 + characterChanges.length * 0.2 + repIndex * 0.2 }}
-                                style={{ marginBottom: '16px' }}
+                                style={{ marginBottom: '12px' }}
                             >
-                                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1, mb: 2 }}>
+                                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1, mb: 1 }}>
                                     {repChange.newReputation <= 0 ? (
                                         <Handshake sx={{ color: '#888', fontSize: '2rem', transform: 'rotate(15deg)' }} />
                                     ) : repChange.newReputation > repChange.oldReputation ? (
@@ -515,7 +516,7 @@ const SkitOutcomeDisplay: FC<SkitOutcomeDisplayProps> = ({ skitData, stage, layo
                                 initial={{ opacity: 0, y: 20 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 transition={{ duration: 0.4, delay: 0.7 + characterChanges.length * 0.2 + repIndex * 0.2 }}
-                                style={{ marginBottom: '20px' }}
+                                style={{ marginBottom: '12px' }}
                             >
                                 <Nameplate
                                     name={repChange.faction.name}
@@ -536,7 +537,7 @@ const SkitOutcomeDisplay: FC<SkitOutcomeDisplayProps> = ({ skitData, stage, layo
                                     animate={{ opacity: 1, scale: 1 }}
                                     transition={{ duration: 0.5, delay: 0.8 + characterChanges.length * 0.2 + repIndex * 0.2 }}
                                     style={{
-                                        padding: '24px',
+                                        padding: '16px',
                                         background: 'rgba(80,80,80,0.15)',
                                         borderRadius: '12px',
                                         border: '2px solid rgba(150,150,150,0.3)'
@@ -575,7 +576,7 @@ const SkitOutcomeDisplay: FC<SkitOutcomeDisplayProps> = ({ skitData, stage, layo
                                         display: 'flex',
                                         alignItems: 'center',
                                         justifyContent: 'center',
-                                        padding: '16px',
+                                        padding: '12px',
                                         background: repChange.newReputation > repChange.oldReputation
                                             ? 'rgba(0,255,136,0.08)'
                                             : 'rgba(255,80,80,0.08)',
@@ -583,7 +584,7 @@ const SkitOutcomeDisplay: FC<SkitOutcomeDisplayProps> = ({ skitData, stage, layo
                                         border: repChange.newReputation > repChange.oldReputation
                                             ? '1px solid rgba(0,255,136,0.3)'
                                             : '1px solid rgba(255,80,80,0.3)',
-                                        gap: '24px'
+                                        gap: '16px'
                                     }}
                                 >
                                 {/* Old reputation */}
@@ -641,7 +642,7 @@ const SkitOutcomeDisplay: FC<SkitOutcomeDisplayProps> = ({ skitData, stage, layo
 
                             {/* Reputation scale indicator - only show if not cut ties */}
                             {repChange.newReputation > 0 && (
-                            <Box sx={{ mt: 2, px: 2 }}>
+                            <Box sx={{ mt: 1.5, px: 2 }}>
                                 <Box
                                     sx={{
                                         height: '8px',
@@ -696,10 +697,10 @@ const SkitOutcomeDisplay: FC<SkitOutcomeDisplayProps> = ({ skitData, stage, layo
                             background: 'linear-gradient(135deg, rgba(100,149,237,0.25) 0%, rgba(65,105,225,0.35) 50%, rgba(30,60,140,0.25) 100%)',
                             border: '2px solid rgba(100,149,237,0.4)',
                             borderRadius: 2,
-                            p: 2,
+                            p: 1.5,
                             backdropFilter: 'blur(12px)',
                             textAlign: 'center',
-                            mb: 2
+                            mb: 1.5
                         }}
                     >
                         <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1 }}>
@@ -720,7 +721,7 @@ const SkitOutcomeDisplay: FC<SkitOutcomeDisplayProps> = ({ skitData, stage, layo
                     </Paper>
 
                     {/* Request Cards */}
-                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
                         {requests.map((request, requestIndex) => {
                             const faction = stage.getSave().factions[request.factionId];
                             
@@ -738,7 +739,7 @@ const SkitOutcomeDisplay: FC<SkitOutcomeDisplayProps> = ({ skitData, stage, layo
                                             background: 'rgba(10,20,30,0.95)',
                                             border: '2px solid rgba(100,149,237,0.3)',
                                             borderRadius: 3,
-                                            p: 3,
+                                            p: 2,
                                             backdropFilter: 'blur(8px)',
                                             overflow: 'hidden'
                                         }}
@@ -778,7 +779,7 @@ const SkitOutcomeDisplay: FC<SkitOutcomeDisplayProps> = ({ skitData, stage, layo
                                         <Box sx={{ position: 'relative', zIndex: 1 }}>
                                             {/* Faction Nameplate */}
                                             {faction && (
-                                                <Box sx={{ display: 'flex', justifyContent: 'center', mb: 2 }}>
+                                                <Box sx={{ display: 'flex', justifyContent: 'center', mb: 1.5 }}>
                                                     <Nameplate
                                                         name={faction.name}
                                                         size="medium"
@@ -798,7 +799,7 @@ const SkitOutcomeDisplay: FC<SkitOutcomeDisplayProps> = ({ skitData, stage, layo
                                                     fontSize: '0.95rem',
                                                     lineHeight: 1.5,
                                                     fontWeight: 600,
-                                                    mb: 2,
+                                                    mb: 1.5,
                                                     textAlign: 'center',
                                                     textShadow: '0 1px 2px rgba(0,0,0,0.8)'
                                                 }}
@@ -809,10 +810,10 @@ const SkitOutcomeDisplay: FC<SkitOutcomeDisplayProps> = ({ skitData, stage, layo
                                             {/* Requirements */}
                                             <Box
                                                 sx={{
-                                                    p: 2,
+                                                    p: 1.5,
                                                     background: 'rgba(0, 0, 0, 0.5)',
                                                     borderRadius: 2,
-                                                    mb: 2
+                                                    mb: 1.5
                                                 }}
                                             >
                                                 <Typography
@@ -841,7 +842,7 @@ const SkitOutcomeDisplay: FC<SkitOutcomeDisplayProps> = ({ skitData, stage, layo
                                             {/* Rewards */}
                                             <Box
                                                 sx={{
-                                                    p: 2,
+                                                    p: 1.5,
                                                     background: 'rgba(0, 255, 136, 0.1)',
                                                     borderRadius: 2,
                                                     border: '1px solid rgba(0, 255, 136, 0.3)'
