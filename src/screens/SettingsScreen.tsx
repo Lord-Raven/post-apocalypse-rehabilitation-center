@@ -317,7 +317,7 @@ export const SettingsScreen: FC<SettingsScreenProps> = ({ stage, onCancel, onCon
                                 />
                             </div>
 
-                            {/* Accessibility Settings */}
+                            {/* Generation Settings */}
                             <div>
                                 <label 
                                     style={{
@@ -328,7 +328,7 @@ export const SettingsScreen: FC<SettingsScreenProps> = ({ stage, onCancel, onCon
                                         marginBottom: '12px',
                                     }}
                                 >
-                                    Accessibility Settings
+                                    Generation Settings
                                 </label>
                                 <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                                     {/* Disable Text to Speech Toggle */}
