@@ -61,7 +61,7 @@ export const RequestCard: FC<RequestCardProps> = ({
         if (request.requirement.type === 'specific-actor') {
             const req = request.requirement as SpecificActorRequirement;
             const actor = stage.getSave().actors[req.actorId];
-            return actor && !actor.remote ? [actor] : [];
+            return actor && !actor.factionId ? [actor] : [];
         }
         return [];
     };
@@ -78,8 +78,8 @@ export const RequestCard: FC<RequestCardProps> = ({
         const allActors = Object.values(save.actors);
 
         return allActors.filter(actor => {
-            // Skip remote actors (not physically present on the station)
-            if (actor.remote) {
+            // Skip faction actors (not physically present on the station)
+            if (actor.factionId) {
                 return false;
             }
 

@@ -250,8 +250,8 @@ export class Request {
         const allActors = Object.values(save.actors);
 
         return allActors.some(actor => {
-            // Skip remote actors (not physically present on the station) or occupied actors
-            if (actor.remote || actor.inProgressRequestId) {
+            // Skip faction actors (not physically present on the station) or occupied actors
+            if (actor.factionId || actor.inProgressRequestId) {
                 return false;
             }
 
@@ -287,8 +287,8 @@ export class Request {
         // Find actor by ID
         const actor = save.actors[requirement.actorId];
         
-        // Actor must exist and not be remote or occupied
-        return actor !== undefined && !actor.remote && !actor.inProgressRequestId;
+        // Actor must exist and not be faction or occupied
+        return actor !== undefined && !actor.factionId && !actor.inProgressRequestId;
     }
 
     /**

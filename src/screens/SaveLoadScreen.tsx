@@ -64,8 +64,8 @@ export const SaveLoadScreen: FC<SaveLoadScreenProps> = ({ stage, mode, onClose, 
         const isEmpty = !save;
         const isCurrentSlot = stage().getCurrentSlot() === slotIndex;
 
-        // Get non-remote actors
-        const actors = !isEmpty ? Object.values(save.actors).filter(actor => !actor.remote) : [];
+        // Get non-faction actors
+        const actors = !isEmpty ? Object.values(save.actors).filter(actor => !actor.factionId && save.aide.actorId !== actor.id) : [];
 
         return (
             <motion.div
