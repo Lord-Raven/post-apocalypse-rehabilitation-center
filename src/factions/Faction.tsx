@@ -228,10 +228,22 @@ export async function loadReserveFaction(fullPath: string, stage: Stage): Promis
     }).then((bgResponse) => {newFaction.backgroundImageUrl = bgResponse?.url || ''});
 
     // Generate a representative Actor:
+    await generateFactionRepresentative(newFaction, stage);
+
+    return newFaction;
+}
+
+export async function generateFactionRepresentative(faction: Faction, stage: Stage): Promise<Actor|null> {
+
+    const currentRep = stage.getSave().actors[faction.representativeId || ''];
+    if (currentRep) {
+        return currentRep;
+    }
+
     const actorData = {
-        name: newFaction.name,
-        fullPath: fullPath,
-        description: `This is a representative for the ${newFaction.name}. ${newFaction.description}. ${newFaction.visualStyle}. The character should embody the values and style of the faction they represent. ` +
+        name: faction.name,
+        fullPath: faction.fullPath,
+        description: `This is a representative for the ${faction.name}. ${faction.description}. ${faction.visualStyle}. The character should embody the values and style of the faction they represent. ` +
             `They will be the primary contact for the PARC when dealing with this faction. Give them a suitable name, avoiding similarity to the following established character names: ${Object.values(stage.getSave().actors).map(a => a.name).join(', ')}.`,
         personality: ''
     }
@@ -239,16 +251,15 @@ export async function loadReserveFaction(fullPath: string, stage: Stage): Promis
     for (let attempt = 0; attempt < 3; attempt++) {
         const repActor = await loadReserveActor(actorData, stage);
         if (repActor) {
-            repActor.factionId = newFaction.id;
-            repActor.locationId = newFaction.id; // place them "in" the faction for now
-            newFaction.representativeId = repActor.id;
+            repActor.factionId = faction.id;
+            repActor.locationId = faction.id; // place them "in" the faction for now
+            faction.representativeId = repActor.id;
             await generatePrimaryActorImage(repActor, stage);
             stage.getSave().actors[repActor.id] = repActor;
             break;
         }
     }
-
-    return newFaction;
+    return faction.representativeId ? stage.getSave().actors[faction.representativeId] : null;
 }
 
 export default Faction;

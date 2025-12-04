@@ -1,4 +1,4 @@
-import Actor, { getStatDescription, findBestNameMatch, Stat } from "./actors/Actor";
+import Actor, { getStatDescription, findBestNameMatch, Stat, namesMatch } from "./actors/Actor";
 import { Emotion, EMOTION_SYNONYMS } from "./actors/Emotion";
 import { getStatRating, STATION_STAT_PROMPTS, StationStat } from "./Module";
 import { Stage } from "./Stage";
@@ -38,6 +38,7 @@ export interface SkitData {
     requests?: Request[];
     summary?: string;
     endProperties?: { [actorId: string]: { [stat: string]: number } }; // Stat changes to apply when scene ends
+    endFactionChanges?: { [actorId: string]: string }; // Faction ID changes to apply when scene ends ('' for PARC)
 }
 
 export function generateSkitTypePrompt(skit: SkitData, stage: Stage, continuing: boolean): string {
@@ -433,7 +434,7 @@ export async function generateSkitScript(skit: SkitData, stage: Stage): Promise<
                                 } else {
                                     console.warn(`Could not find quarters owner: ${quartersOwnerName}`);
                                 }
-                            } else if (destinationName.toLowerCase() === 'quarters') {
+                            } else if (destinationName.toLowerCase().endsWith('quarters')) {
                                 // Character's own quarters (if they have any)
                                 const ownQuarters = stage.getLayout().getModulesWhere(m => 
                                     m.type === 'quarters' && m.ownerId === matched.id
@@ -445,16 +446,13 @@ export async function generateSkitScript(skit: SkitData, stage: Stage): Promise<
                                 }
                             } else {
                                 // Try to find a module by type name
-                                const normalizedDestination = destinationName.toLowerCase().trim();
-                                const targetModule = stage.getLayout().getModulesWhere(m => 
-                                    m.type.toLowerCase() === normalizedDestination
-                                )[0];
+                                const targetModule = stage.getLayout().getModulesWhere(m => namesMatch(destinationName, m.type))[0];
                                 if (targetModule) {
                                     destinationModuleId = targetModule.id;
                                 } else {
                                     // If no module found, check if it matches a faction name
                                     const matchingFaction = Object.values(stage.getSave().factions).find(faction =>
-                                        faction.name.toLowerCase() === normalizedDestination
+                                        namesMatch(destinationName, faction.name)
                                     );
                                     if (matchingFaction) {
                                         destinationModuleId = matchingFaction.id;
@@ -474,8 +472,7 @@ export async function generateSkitScript(skit: SkitData, stage: Stage): Promise<
                                 }
                             } else {
                                 // Invalid destination - set to empty string
-                                newMovements[matched.id] = '';
-                                console.log(`Movement detected: ${matched.name} moves to invalid location, clearing locationId`);
+                                delete newMovements[matched.id];
                             }
                             continue;
                         }
@@ -604,6 +601,7 @@ export async function generateSkitScript(skit: SkitData, stage: Stage): Promise<
                 });
 
                 const statChanges: { [actorId: string]: { [stat: string]: number } } = {};
+                const factionChanges: { [actorId: string]: string } = {};
                 const requests: Request[] = [];
                 // If this response contains an endScene, we will analyze the script for requests, stat changes, or other game mechanics to be applied. Add this to the ttsPromises to run in parallel.
                 if (endScene) {
@@ -672,13 +670,27 @@ export async function generateSkitScript(skit: SkitData, stage: Stage): Promise<
 
                             `\n\nFaction Reputation Changes:\n` +
                             `Identify any changes to faction reputations implied by the scene. For each change, output a line in the following format:\n` +
-                            `[FACTION: <factionName> +<value>]` +
+                            `[FACTION: <factionName> +<value>]\n` +
                             `Where <factionName> is the name of the faction whose reputation is changing, and <value> is the amount to increase or decrease the reputation by (positive or negative). ` +
                             `Reputation is a value between 1 and 10, and changes are incremental. If the faction is cutting ties, provide a large negative value. ` +
                             `Multiple faction tags can be provided in the output if, for instance, improving the esteem of one faction inherently reduces the opinion of a rival.` +
                             `Full Examples:\n` +
                             `[FACTION: Stellar Concord +1]\n` +
                             `[FACTION: Shadow Syndicate -2]\n` +
+
+                            `\n\nCharacter Faction Change:\n` +
+                            `If any character has changed their faction affiliation as a result of events in the scene, output a line in the following format:\n` +
+                            `[CHARACTER NAME: JOINED <factionName or PARC>]\n` +
+                            `Where <factionName or PARC> is the name of the faction the character has joined, or "PARC" if they have left a faction to join the station itself. ` +
+                            `Full Examples:\n` +
+                            `[${Object.values(stage.getSave().actors)[0].name}: JOINED Stellar Concord]\n` +
+                            `[${Object.values(stage.getSave().actors)[0].name}: JOINED PARC]` +
+                            `\n\nThese tags are uncommon; they indicate an official change in affiliation or ownership (not necessarily loyalty) for the named character—not for temporary visits. ` +
+                            `Consider this tag when the script depicts: ` +
+                            `\n - A patient taking a permanent position with a faction.` +
+                            `\n - A faction representative defecting to the PARC permanently.` +
+                            `\n - A character being formally recruited or dismissed.` +
+                            `\n - A character being sold to or imprisoned by a faction.` +
 
                             (!summary ? 
                                 `\n\nSummarize Scene:\n` +
@@ -749,6 +761,40 @@ export async function generateSkitScript(skit: SkitData, stage: Stage): Promise<
                                     continue;
                                 }
 
+                                // Process character faction change tags: [CHARACTER NAME: JOINED <factionName or PARC>]
+                                const joinedRegex = /\[(.+?):\s*JOINED\s+(.+?)\]/i;
+                                const joinedMatch = joinedRegex.exec(trimmed);
+                                if (joinedMatch) {
+                                    console.log('Processing JOINED tag:', trimmed);
+                                    const characterNameRaw = joinedMatch[1].trim();
+                                    const factionNameRaw = joinedMatch[2].trim();
+                                    
+                                    // Find matching actor using findBestNameMatch
+                                    const allActors = Object.values(stage.getSave().actors);
+                                    const matchedActor = findBestNameMatch(characterNameRaw, allActors);
+                                    
+                                    if (matchedActor) {
+                                        let newFactionId = '';
+                                        
+                                        // Check if joining PARC (empty factionId) or a specific faction
+                                        if (factionNameRaw.toUpperCase() === 'PARC') {
+                                            newFactionId = '';
+                                        } else {
+                                            // Find matching faction using findBestNameMatch
+                                            const allFactions = Object.values(stage.getSave().factions);
+                                            const matchedFaction = findBestNameMatch(factionNameRaw, allFactions);
+                                            
+                                            if (matchedFaction) {
+                                                newFactionId = matchedFaction.id;
+                                            }
+                                        }
+                                        
+                                        // Store the faction change in factionChanges
+                                        factionChanges[matchedActor.id] = newFactionId;
+                                    }
+                                    continue;
+                                }
+
                                 // Process stat change tags
                                 const statChangeRegex = /\[(.+?):\s*([^\]]+)\]/i;
                                 const match = statChangeRegex.exec(trimmed);
@@ -812,6 +858,7 @@ export async function generateSkitScript(skit: SkitData, stage: Stage): Promise<
                 }
 
                 skit.endProperties = statChanges;
+                skit.endFactionChanges = factionChanges;
                 skit.requests = requests;
                 skit.summary = summary;
 

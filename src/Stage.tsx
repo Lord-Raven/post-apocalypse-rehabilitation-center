@@ -2,7 +2,7 @@ import {ReactElement, useEffect, useState} from "react";
 import {StageBase, StageResponse, InitialData, Message, UpdateBuilder} from "@chub-ai/stages-ts";
 import {LoadResponse} from "@chub-ai/stages-ts/dist/types/load";
 import Actor, { loadReserveActor, generatePrimaryActorImage, commitActorToEcho, Stat, generateAdditionalActorImages, loadReserveActorFromFullPath } from "./actors/Actor";
-import Faction, { loadReserveFaction } from "./factions/Faction";
+import Faction, { generateFactionRepresentative, loadReserveFaction } from "./factions/Faction";
 import { DEFAULT_GRID_SIZE, Layout, StationStat, createModule } from './Module';
 import { BaseScreen, ScreenType } from "./screens/BaseScreen";
 import { generateSkitScript, SkitData, SkitType } from "./Skit";
@@ -849,6 +849,36 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
 
             // Apply endProperties to actors - find from the final entry with endScene=true
             let endProps: { [actorId: string]: { [stat: string]: number } } = save.currentSkit.endProperties || {};
+            let endFactionChanges: { [actorId: string]: string } = save.currentSkit.endFactionChanges || {};
+
+            // Apply faction changes to actors
+            for (const actorId in endFactionChanges) {
+                const actor = save.actors[actorId];
+                if (actor) {
+                    const newFactionId = endFactionChanges[actorId];
+                    console.log(`Changing ${actor.name}'s faction from ${actor.factionId || 'PARC'} to ${newFactionId || 'PARC'}`);
+                    actor.factionId = newFactionId;
+                    
+                    // If currently a faction rep and joining PARC (factionId = ''), need to generate a new faction rep:
+                    if (newFactionId === '') {
+
+                        const currentFaction = Object.values(save.factions).find(faction => faction.representativeId === actor.id);
+                        if (currentFaction) {
+                            console.log(`Generating new representative for faction ${currentFaction.name} as ${actor.name} is leaving.`);
+                            generateFactionRepresentative(currentFaction, this).then(() => {
+                                console.log(`Generated new faction representative for ${currentFaction.name}`);
+                            })
+                        }
+                        // Clear locationId if it was set to a faction
+                        if (actor.locationId && !save.layout.getModuleById(actor.locationId)) {
+                            actor.locationId = '';
+                        }
+                    } else {
+                        // If joining a faction, set locationId to the factionId
+                        actor.locationId = newFactionId;
+                    }
+                }
+            }
 
             for (const actorId in endProps) {
                 const actorChanges = endProps[actorId];
