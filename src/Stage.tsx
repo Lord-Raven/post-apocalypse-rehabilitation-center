@@ -524,6 +524,15 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
         Object.values(save.actors).filter(actor => actor.factionId && (!save.factions || !Object.values(save.factions).some(faction => faction.id === actor.factionId))).forEach(actor => {
             idsToRemove.push(actor.id);
         });
+        // Repair faction reps that don't have a factionId set:
+        Object.values(save.factions).forEach(faction => {
+            if (faction.representativeId && save.actors[faction.representativeId]) {
+                const repActor = save.actors[faction.representativeId];
+                if (repActor.factionId !== faction.id) {
+                    repActor.factionId = faction.id;
+                }
+            }
+        });
         idsToRemove.forEach(id => {
             delete save.actors[id];
         });
