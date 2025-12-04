@@ -345,11 +345,12 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
             const actor = save.actors[actorId];
             // Move faction actors to "in" their faction.
             if (actor.factionId) {
+                console.log(`Moving faction actor ${actor.name} to faction location ${actor.factionId}`);
                 actor.locationId = actor.factionId;
             } else if (actor.id == save.aide.actorId) {
                 // Aide goes nowhere by default.
                 actor.locationId = '';
-            } {
+            } else {
                 // If actor didn't move anywhere in the last skit, put them in a random non-quarters module:
                 const previousSkit = (save.timeline && save.timeline.length > 0) ? save.timeline[save.timeline.length - 1].skit : undefined;
                 if ((!previousSkit || previousSkit.script.every(entry => !entry.movements || !Object.keys(entry.movements).some(moverId => moverId === actor.id))) && !actor.inProgressRequestId) {
@@ -524,18 +525,21 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
         Object.values(save.actors).filter(actor => actor.factionId && (!save.factions || !Object.values(save.factions).some(faction => faction.id === actor.factionId))).forEach(actor => {
             idsToRemove.push(actor.id);
         });
+        idsToRemove.forEach(id => {
+            delete save.actors[id];
+        });
+
         // Repair faction reps that don't have a factionId set:
         Object.values(save.factions).forEach(faction => {
             if (faction.representativeId && save.actors[faction.representativeId]) {
                 const repActor = save.actors[faction.representativeId];
+                console.log("Check if rep needs repair:");
+                console.log(repActor);
                 if (repActor.factionId !== faction.id) {
                     console.log(`Repairing factionId for representative ${repActor.name} of faction ${faction.name}`);
                     repActor.factionId = faction.id;
                 }
             }
-        });
-        idsToRemove.forEach(id => {
-            delete save.actors[id];
         });
 
         // If any echo actors are missing primary images, kick those off now.
