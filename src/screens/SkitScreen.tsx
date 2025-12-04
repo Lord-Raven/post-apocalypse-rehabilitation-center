@@ -456,6 +456,7 @@ export const SkitScreen: FC<SkitScreenProps> = ({ stage, setScreenType }) => {
                     actor={actor}
                     emotion={emotion}
                     imageUrl={actor.getEmotionImage(emotion, stage())}
+                    hologram={actor.isHologram(stage().getSave())}
                     xPosition={xPosition}
                     yPosition={0}
                     zIndex={55 - Math.abs(xPosition)} // Higher zIndex for center positions}

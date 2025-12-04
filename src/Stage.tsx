@@ -249,7 +249,7 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
      * Check for timed requests that have completed and finalize them
      */
     checkAndCompleteTimedRequests() {
-        const save = this.getSave();
+        /*const save = this.getSave();
         
         // Check all requests for completed timed assignments, but only complete one per turn (they come with ending skits)
         for (const request of Object.values(save.requests)) {
@@ -314,7 +314,7 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
                     delete save.requests[request.id];
                 }
             }
-        }
+        }*/
     }
 
     incTurn(numberOfTurns: number = 1, setScreenType: (type: ScreenType) => void) {
@@ -326,7 +326,7 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
             save.day += 1;
             // New day logic.
             // Increment actor role count
-            for (let actor of Object.values(save.actors).filter(a => !a.remote)) {
+            for (let actor of Object.values(save.actors).filter(a => !a.factionId)) {
                 // Find non-quarters module assigned to this actor and increment held role count
                 const targetModule = save.layout.getModulesWhere(m => m.ownerId === actor.id && m.type !== 'quarters')[0];
                 const roleName: string = targetModule?.getAttribute('role') || '';
@@ -343,10 +343,13 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
         // When incrementing turn, maybe move some actors around in the layout.
         for (const actorId in save.actors) {
             const actor = save.actors[actorId];
-            // Move remote actors to no location:
-            if (actor.remote) {
+            // Move faction actors to "in" their faction.
+            if (actor.factionId) {
+                actor.locationId = actor.factionId;
+            } else if (actor.id == save.aide.actorId) {
+                // Aide goes nowhere by default.
                 actor.locationId = '';
-            } else {
+            } {
                 // If actor didn't move anywhere in the last skit, put them in a random non-quarters module:
                 const previousSkit = (save.timeline && save.timeline.length > 0) ? save.timeline[save.timeline.length - 1].skit : undefined;
                 if ((!previousSkit || previousSkit.script.every(entry => !entry.movements || !Object.keys(entry.movements).some(moverId => moverId === actor.id))) && !actor.inProgressRequestId) {
@@ -355,7 +358,7 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
             }
             console.log(`Moved actor ${actor.name} to location ${actor.locationId}`);
             // If no patients exist, put the aide in the echo chamber:
-            if (actor.id === save.aide.actorId && Object.values(save.actors).filter(a => !a.remote && a.id !== save.aide.actorId).length === 0) {
+            if (actor.id === save.aide.actorId && Object.values(save.actors).filter(a => !a.factionId && a.id !== save.aide.actorId).length === 0) {
                 const echoModule = save.layout.getModulesWhere(m => m.type === 'echo chamber')[0];
                 if (echoModule) {
                     actor.locationId = echoModule.id;
@@ -367,7 +370,7 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
         const commsModule = save.layout.getModulesWhere(m => m.type === 'comms')[0];
         const eligibleFactions = Object.values(save.factions).filter(faction => faction.reputation > 0 && faction.representativeId && save.actors[faction.representativeId]);
         // If there are eligible factions and a comms module, and there is at least one non-remote actor other than the aide:
-        if (eligibleFactions.length > 0 && commsModule && Object.values(save.actors).filter(a => !a.remote && a.id !== save.aide.actorId).length > 0) {
+        if (eligibleFactions.length > 0 && commsModule && Object.values(save.actors).filter(a => !a.factionId && a.id !== save.aide.actorId).length > 0) {
             const randomFaction = eligibleFactions.sort(() => Math.random() - 0.5)[0];
             
             // Move the faction rep to the comms room, if available:
@@ -518,7 +521,7 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
 
         // Clean out remote actors that aren't supported by current factions
         const idsToRemove: string[] = [];
-        Object.values(save.actors).filter(actor => actor.remote && (save.aide?.actorId || '') !== actor.id && (!save.factions || !Object.values(save.factions).some(faction => faction.representativeId === actor.id))).forEach(actor => {
+        Object.values(save.actors).filter(actor => actor.factionId && (!save.factions || !Object.values(save.factions).some(faction => faction.id === actor.factionId))).forEach(actor => {
             idsToRemove.push(actor.id);
         });
         idsToRemove.forEach(id => {
@@ -542,7 +545,7 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
                     this.saveGame();
                 });
                 break; // only do one at a time
-            } else if (!actor.remote && (!actor.emotionPack || Object.values(Emotion).some(emotion => emotion !== Emotion.neutral && (
+            } else if (!actor.factionId && (!actor.emotionPack || Object.values(Emotion).some(emotion => emotion !== Emotion.neutral && (
                     !actor.emotionPack[emotion] || 
                     actor.emotionPack[emotion] == actor.avatarImageUrl || 
                     actor.emotionPack[emotion] == actor.emotionPack[Emotion.neutral])))) {
@@ -581,7 +584,6 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
                         save.actors[aideActor.id] = aideActor;
                         aideActor.name = save.aide.name;
                         aideActor.profile = save.aide.description;
-                        aideActor.remote = true;
                         save.aide.actorId = aideActor.id;
                         save.actors[aideActor.id] = aideActor;
                         await generatePrimaryActorImage(aideActor, this);
@@ -945,7 +947,7 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
             }
 
             // If skit was a permanent (un-timed) actor request fulfillment, remove the actor from the station (mark remote for now):
-            if (save.currentSkit.type === SkitType.REQUEST_FILL_ACTOR && save.currentSkit.actorId) {
+            /*if (save.currentSkit.type === SkitType.REQUEST_FILL_ACTOR && save.currentSkit.actorId) {
                 const actor = save.actors[save.currentSkit.actorId];
                 if (actor && !actor.inProgressRequestId) {
                     actor.remote = true;
@@ -955,7 +957,7 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
                         module.ownerId = '';
                     });
                 }
-            }
+            }*/
 
             // Save skit to timeline
             save.currentSkit.context = {...save.currentSkit.context, day: this.getSave().day};

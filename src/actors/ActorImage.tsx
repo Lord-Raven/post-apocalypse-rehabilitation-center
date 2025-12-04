@@ -15,6 +15,7 @@ interface ActorImageProps {
     zIndex: number;
     // 'speaker' indicates whether this actor is currently speaking and should be emphasized
     speaker?: boolean;
+    hologram?: boolean;
     highlightColor: string;
     panX: number;
     panY: number;
@@ -30,6 +31,7 @@ const ActorImage: FC<ActorImageProps> = ({
     yPosition,
     zIndex,
     speaker,
+    hologram,
     highlightColor,
     panX,
     panY,
@@ -55,7 +57,7 @@ const ActorImage: FC<ActorImageProps> = ({
                 if (img.naturalWidth && img.naturalHeight) {
                     setAspectRatio(`${img.naturalWidth} / ${img.naturalHeight}`);
                 }
-            const result = multiplyImageByColor(img, actor.remote ? "#99ccff" : highlightColor);
+            const result = multiplyImageByColor(img, hologram ? "#99ccff" : highlightColor);
             if (result) {
                 setProcessedImageUrl(result);
             }
@@ -140,7 +142,7 @@ const ActorImage: FC<ActorImageProps> = ({
             </AnimatePresence>
             <AnimatePresence>
                 {/* Backing image layer - solid but blurry. */}
-                {processedImageUrl && !actor.remote && (
+                {processedImageUrl && !hologram && (
                     <motion.img
                         key={`${actor.id}_${imageUrl}_bg`}
                         src={processedImageUrl}
@@ -186,7 +188,7 @@ const ActorImage: FC<ActorImageProps> = ({
                 )}
             </AnimatePresence>
             {/* Rolling scanline effect for remote actors */}
-            {actor.remote && (
+            {hologram && (
                 <AnimatePresence>
                     {processedImageUrl && (
                         <motion.img

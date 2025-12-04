@@ -239,7 +239,8 @@ export async function loadReserveFaction(fullPath: string, stage: Stage): Promis
     for (let attempt = 0; attempt < 3; attempt++) {
         const repActor = await loadReserveActor(actorData, stage);
         if (repActor) {
-            repActor.remote = true;
+            repActor.factionId = newFaction.id;
+            repActor.locationId = newFaction.id; // place them "in" the faction for now
             newFaction.representativeId = repActor.id;
             await generatePrimaryActorImage(repActor, stage);
             stage.getSave().actors[repActor.id] = repActor;
