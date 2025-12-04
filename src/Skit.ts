@@ -45,7 +45,7 @@ export function generateSkitTypePrompt(skit: SkitData, stage: Stage, continuing:
     const module = stage.getSave().layout.getModuleById(skit.moduleId || '');
     const faction = stage.getSave().factions[skit.context.factionId || ''];
     const notHereText = 'This communication is being conducted via remote video link; no representative is physically present on the station. ';
-    const request = stage.getSave().requests[skit.context.requestId || ''];
+    //const request = stage.getSave().requests[skit.context.requestId || ''];
     switch (skit.type) {
         case SkitType.BEGINNING:
             return !continuing ?
@@ -97,7 +97,7 @@ export function generateSkitTypePrompt(skit: SkitData, stage: Stage, continuing:
                 notHereText :
                 `Continue this scene between the Director and a representative for ${faction?.name || 'a secret organization'}'s. ` + 
                 notHereText);
-        case SkitType.REQUEST_FILL_STATION:
+        /*case SkitType.REQUEST_FILL_STATION:
             return !continuing ?
                 `This scene depicts an exchange between the player and ${faction?.name || 'a faction'} regarding the fulfillment of a request. ` +
                 `${faction?.name || 'The faction'} will keep its word and honor the agreement. The PARC will be required to do the same.` :
@@ -118,7 +118,7 @@ export function generateSkitTypePrompt(skit: SkitData, stage: Stage, continuing:
             return `This scene depicts an exchange between the player and ${faction?.name || 'a faction'} regarding the return of a patient from a completed request: ${actor?.name || 'a patient'}. ` +
                 `${actor?.name || 'The patient'} is returning to the PARC after fulfilling their assignment. ${faction?.name || 'The faction'} will honor the agreed reward, ` +
                 `but it is possible that ${actor?.name || 'the patient'} suffered or changed during the assignment (maybe even for the better). ` +
-                `The PARC will reintegrate the patient accordingly.`;
+                `The PARC will reintegrate the patient accordingly.`;*/
         default:
             return '';
     }
@@ -175,20 +175,21 @@ function getCurrentActorsInScene(skit: SkitData, moduleId?: string, upToIndex: n
 
 export function generateSkitPrompt(skit: SkitData, stage: Stage, historyLength: number, instruction: string): string {
     const playerName = stage.getSave().player.name;
+    const save = stage.getSave();
 
     // Initialize skit with all actor locations if this is the first generation
     if (skit.script.length === 0) {
         skit.initialActorLocations = {};
-        Object.values(stage.getSave().actors).forEach(a => {
+        Object.values(save.actors).forEach(a => {
             skit.initialActorLocations![a.id] = a.locationId;
         });
     }
 
     // Determine present and absent actors for this moment in the skit (as of the last entry in skit.script):
     const presentActorIds = getCurrentActorsInScene(skit, skit.moduleId, -1);
-    const presentPatients = Object.values(stage.getSave().actors).filter(a => presentActorIds.has(a.id) && !a.remote);
-    const absentPatients = Object.values(stage.getSave().actors).filter(a => !presentActorIds.has(a.id) && !a.remote && !a.inProgressRequestId);
-    const awayPatients = Object.values(stage.getSave().actors).filter(a => !presentActorIds.has(a.id) && a.inProgressRequestId);
+    const presentPatients = Object.values(save.actors).filter(a => presentActorIds.has(a.id) && !a.factionId);
+    const absentPatients = Object.values(save.actors).filter(a => !presentActorIds.has(a.id) && !a.factionId && save.aide.actorId != a.id);
+    const awayPatients = Object.values(save.actors).filter(a => !a.factionId && a.isOffSite(save));
 
     // Update participation counts if this is the start of the skit
     if (skit.script.length === 0) {
@@ -198,42 +199,42 @@ export function generateSkitPrompt(skit: SkitData, stage: Stage, historyLength: 
         });
     }
 
-    let pastSkits = stage.getSave().timeline?.filter(event => event.skit).map(event => event.skit as SkitData) || []
+    let pastSkits = save.timeline?.filter(event => event.skit).map(event => event.skit as SkitData) || []
     pastSkits = pastSkits.filter((v, index) => index > (pastSkits.length || 0) - historyLength);
-    const module = stage.getSave().layout.getModuleById(skit.moduleId || '');
-    const moduleOwner = module?.ownerId ? stage.getSave().actors[module.ownerId] : null;
-    const faction = skit.context.factionId ? stage.getSave().factions[skit.context.factionId] : null;
-    const factionRepresentative = faction ? stage.getSave().actors[faction.representativeId || ''] : null;
-    const request = skit.context.requestId ? stage.getSave().requests[skit.context.requestId] : null;
-    const stationAide = stage.getSave().actors[stage.getSave().aide.actorId || ''];
+    const module = save.layout.getModuleById(skit.moduleId || '');
+    const moduleOwner = module?.ownerId ? save.actors[module.ownerId] : null;
+    const faction = skit.context.factionId ? save.factions[skit.context.factionId] : null;
+    const factionRepresentative = faction ? save.actors[faction.representativeId || ''] : null;
+    //const request = skit.context.requestId ? save.requests[skit.context.requestId] : null;
+    const stationAide = save.actors[save.aide.actorId || ''];
 
-    let fullPrompt = `{{messages}}\nPremise:\nThis is a sci-fi visual novel game set on a space station that resurrects and rehabilitates patients who died in a multiverse-wide apocalypse: ` +
+    let fullPrompt = `{{messages}}\nPremise:\nThis is a sci-fi visual novel game set on a space station that resurrects and rehabilitates patients who died in other universes' apocalypses: ` +
         `the Post-Apocalypse Rehabilitation Center. ` +
         `The thrust of the game positions the player character, ${playerName}, as the Director of the PARC station, interacting with patients and crew as they navigate this complex futuristic universe together. ` +
-        `The PARC is an isolated station near a black hole. It serves as both sanctuary and containment for its diverse inhabitants, who hail from various alternate realities. ` +
+        `The PARC is an isolated station near a black hole, from which it pulls and reconsitutes the echoes of apocalypse victims. It serves as both sanctuary and containment for its diverse inhabitants, who hail from various alternate realities. ` +
         `${playerName} is the only non-patient aboard the station (although they may hire patients on as crew or staff); as a result, the station may feel a bit lonely or alienating at times. ` +
-        `Much of the day-to-day maintenance and operation of the station is automated by the station's AI systems and various drones, enabling ${playerName} to focus on patient care and rehabilitation.` +
-        (stage.getSave().stationStats ? (
+        `Much of the day-to-day maintenance and operation of the station is automated by the station's AI, ${save.aide.name || 'StationAide™'}, and various drones, enabling ${playerName} to focus on patient care and rehabilitation.` +
+        (save.stationStats ? (
             `\n\nThe PARC's current stats and impacts:\n` +
-            Object.values(StationStat).map(stat => `  ${stat.toUpperCase()} (${stage.getSave().stationStats?.[stat] || 3}): ${STATION_STAT_PROMPTS[stat][getStatRating(stage.getSave().stationStats?.[stat] || 3)]}`).join('\n')
+            Object.values(StationStat).map(stat => `  ${stat.toUpperCase()} (${save.stationStats?.[stat] || 3}): ${STATION_STAT_PROMPTS[stat][getStatRating(save.stationStats?.[stat] || 3)]}`).join('\n')
         ) : '') +
         (
             // If module is a quarters, present it as "Owner's quarters" or "vacant quarters": module type otherwise.
             `\n\nCurrent Modules (Rooms) on the PARC:\n` +
-            stage.getSave().layout.getModulesWhere(module => true).map(module => module.type == 'quarters' ? (module.ownerId ? `${stage.getSave().actors[module.ownerId]?.name || 'Unknown'}'s quarters` : 'vacant quarters') : module.type).join(', ')
+            save.layout.getModulesWhere(module => true).map(module => module.type == 'quarters' ? (module.ownerId ? `${save.actors[module.ownerId]?.name || 'Unknown'}'s quarters` : 'vacant quarters') : module.type).join(', ')
         ) +
-        (Object.values(stage.getSave().requests).length > 0 ? (
+        /*(Object.values(save.requests).length > 0 ? (
             `\n\nActive Requests:\n` +
-            Object.values(stage.getSave().requests).map(request => `-${stage.getSave().factions[request.factionId]?.name || 'Unknown Faction'}: ${request.description} \n  Requirement: ${request.getRequirementText(stage)} \n  Reward: ${request.getRewardText()}`).join('\n')
-        ) : '') +
-        `\n\n${playerName}'s profile: ${stage.getSave().player.description}` +
+            Object.values(save.requests).map(request => `-${save.factions[request.factionId]?.name || 'Unknown Faction'}: ${request.description} \n  Requirement: ${request.getRequirementText(stage)} \n  Reward: ${request.getRewardText()}`).join('\n')
+        ) : '') +*/
+        `\n\n${playerName}'s profile: ${save.player.description}` +
         (stationAide ? (presentActorIds.has(stationAide.id) ? `\n\nThe holographic StationAide™ ${stationAide.name} is active in the scene. Profile: ${stationAide.profile}` : '\n\nThe holographic StationAide™ ${stationAide.name} remains absent from the scene unless summoned by the Director.') : '') +
         // List characters who are here, along with full stat details:
         `\n\nPresent Characters:\n${presentPatients.map(actor => {
             const roleModule = stage.getLayout().getModulesWhere((m: any) => 
                 m && m.type !== 'quarters' && m.ownerId === actor.id
             )[0];
-            return `${actor.name}\n  Description: ${actor.description}\n  Profile: ${actor.profile}\n  Days Aboard: ${stage.getSave().day - actor.birthDay}\n  Scene Participation: ${actor.participations}\n` +
+            return `${actor.name}\n  Description: ${actor.description}\n  Profile: ${actor.profile}\n  Days Aboard: ${save.day - actor.birthDay}\n  Scene Participation: ${actor.participations}\n` +
             (roleModule ? `  Role: ${roleModule.getAttribute('role') || 'Patient'} (${actor.heldRoles[roleModule.getAttribute('role') || 'Patient'] || 0} days)\n` : '') +
             `  Role Description: ${roleModule?.getAttribute('roleDescription') || 'This character has no assigned role aboard the PARC. They are to focus upon their own needs.'}\n` +
             `  Stats:\n    ${Object.entries(actor.stats).map(([stat, value]) => `${stat}: ${value}`).join('\n    ')}`}).join('\n')}` +
@@ -243,33 +244,38 @@ export function generateSkitPrompt(skit: SkitData, stage: Stage, historyLength: 
             const roleModule = stage.getLayout().getModulesWhere((m: any) => 
                 m && m.type !== 'quarters' && m.ownerId === actor.id
             )[0];
-            const module = stage.getSave().layout.getModuleById(actor.locationId);
-            const locationString = module ? (module.type === 'quarters' ? (module.ownerId === actor.id ? ' Their Quarters' : (`${stage.getSave().actors[module.ownerId || ''] || 'Someone'}'s Quarters`)) : module.type) : 'Unknown'
+            const module = save.layout.getModuleById(actor.locationId);
+            const locationString = module ? (module.type === 'quarters' ? (module.ownerId === actor.id ? ' Their Quarters' : (`${save.actors[module.ownerId || ''] || 'Someone'}'s Quarters`)) : module.type) : 'Unknown'
             return `${actor.name}\n  Description: ${actor.description}\n  Profile: ${actor.profile}\n  Role: ${roleModule?.getAttribute('role') || 'Patient'}\n  Location: ${locationString}`;
         }).join('\n')}` +
         // List away characters for reference; just need description and profile:
-        `\n\nAway Characters (Currently on Assignment):\n${awayPatients.map(actor => {
+        `\n\nOff-Station Characters:\n${awayPatients.map(actor => {
             // Just role name and faction on loan to
             const roleModule = stage.getLayout().getModulesWhere((m: any) => 
                 m && m.type !== 'quarters' && m.ownerId === actor.id
             )[0];
-            const requestFaction = stage.getSave().factions[stage.getSave().requests[actor.inProgressRequestId].factionId || ''] || 'Unknown Faction';
+            const requestFaction = save.factions[save.requests[actor.inProgressRequestId].factionId || ''] || 'Unknown Faction';
             return `${actor.name}\n  Description: ${actor.description}\n  Profile: ${actor.profile}\n  Role: ${roleModule?.getAttribute('role') || 'Patient'}\n  On Assignment to: ${requestFaction.name}`;
         }).join('\n')}` +
         // List stat meanings, for reference:
         `\n\nStats:\n${Object.values(Stat).map(stat => `${stat.toUpperCase()}: ${getStatDescription(stat)}`).join('\n')}` +
         `\n\nScene Prompt:\n${generateSkitTypePrompt(skit, stage, skit.script.length > 0)}` +
-        (request ? `\n\nRequest Details:\n  Description: ${request.description}\n  Requirement: ${request.getRequirementText(stage)}\n  Reward: ${request.getRewardText()}\n` : '') +
+        //(request ? `\n\nRequest Details:\n  Description: ${request.description}\n  Requirement: ${request.getRequirementText(stage)}\n  Reward: ${request.getRewardText()}\n` : '') +
         (faction ? `\n\n${faction.name} Details: ${faction.description}\n${faction.name} Aesthetic: ${faction.visualStyle}` : '') +
         (factionRepresentative ? `\n${faction?.name || 'The faction'}'s representative, ${factionRepresentative.name}, appears on-screen. Their description: ${factionRepresentative.description}` : 'They have no designated liaison for this communication; any characters introduced during this scene will be transient.') +
-        ((faction && !request) ? `\nThis skit may explore the nature of this faction's relationship with and intentions for the Director, the PARC, or other characters present in the Comms module (if any). ` +
+        (faction ? `\nThis skit may explore the nature of this faction's relationship with an intentions for the Director, the PARC, or its patients. ` +
+            `Typically, this and other faction contact the PARC to express interest in making offers for resources, information, or patients. ` +
+            `The faction could have a temporary job to offer a patient, or suggest an exchange of resources or favors. Or they could have a permanent role in mind for an ideal candidate patient. ` +
+            `If a patient is already on-loan to this faction, use this opportunity to update the Director on their status or wellbeing, or even depict the patient's return. ` +
+            `Remember to use appropriate tags when moving characters on- or off-station. ` : '') +
+        /*((faction && !request) ? `\nThis skit may explore the nature of this faction's relationship with and intentions for the Director, the PARC, or other characters present in the Comms module (if any). ` +
             `However, this and other factions generally contact the PARC to express interest or make offers: ` +
             `\n1) Most commonly, these are 'job' openings with certain character qualities (or limitations) in mind; this can be a temporary assignment, like a mission or project.` +
             `\n2) Sometimes, these 'job' offers target a specific patient of the PARC; this can be a temporary assignment, like a mission or project.` +
             `\n3) Finally, some offers are for other Station resources or exchanges; these are informed by the PARC's core stats, but typically presented in a narrative or abstract fashion.` +
             `\nAll requests come with some offer of compensation which will translate into station stat bonuses, perhaps abstractly (for instance, an exchange of information for arms may harm Systems but benefit Security). ` +
             `Remember that a 'job' in this context may be something the Director can compel a patient into—not necessarily gainful employment. ` +
-            `Although deals and offers may be discussed in this skit, they can only be finalized through a separate game mechanic, so the script should leave the offer open and a little vague without confirming anything.` : '') +
+            `Although deals and offers may be discussed in this skit, they can only be finalized through a separate game mechanic, so the script should leave the offer open and a little vague without confirming anything.` : '') +*/
         `\n\nKnown Factions: \n${Object.values(stage.getSave().factions).map(faction => `${faction.name}: ${faction.getReputationDescription()}`).join('\n')}` +
         (module ? (`\n\nModule Details:\n  This scene is set in ` +
             `${module.type === 'quarters' ? `${moduleOwner ? `${moduleOwner.name}'s` : 'a vacant'} quarters` : 
@@ -308,9 +314,11 @@ export async function generateSkitScript(skit: SkitData, stage: Stage): Promise<
 
             const fullPrompt = generateSkitPrompt(skit, stage, 2 + retries,
                 `Example Script Format:\n` +
-                'System: CHARACTER NAME: They do actions in prose. "Their dialogue is in quotation marks."\nANOTHER CHARACTER NAME: [ANOTHER CHARACTER NAME EXPRESSES JOY][CHARACTER NAME EXPRESSES SURPRISE] "Dialogue in quotation marks."\nNARRATOR: [CHARACTER NAME EXPRESSES RELIEF] Descriptive content that is not attributed to a character.\n[PAUSE]' +
+                'System: CHARACTER NAME: They do actions in prose. "Their dialogue is in quotation marks."\nANOTHER CHARACTER NAME: [ANOTHER CHARACTER NAME EXPRESSES JOY][CHARACTER NAME EXPRESSES SURPRISE] "Dialogue in quotation marks."\nNARRATOR: [CHARACTER NAME EXPRESSES RELIEF] Descriptive content that is not attributed to a character.\n[PAUSE]\n' +
                 `Example Character Movement Format:\n` +
-                'System: NARRATOR: [CHARACTER NAME moves to THIS MODULE NAME] CHARACTER NAME enters the room.\nNARRATOR: [CHARACTER NAME moves to OTHER CHARACTER\'s QUARTERS] CHARACTER NAME leaves the scene.\n[PAUSE]' +
+                'System: NARRATOR: [CHARACTER NAME moves to THIS MODULE NAME] CHARACTER NAME enters the room.\nNARRATOR: [CHARACTER NAME moves to OTHER CHARACTER\'s QUARTERS] CHARACTER NAME leaves the scene.\n[PAUSE]\n' +
+                `Example Character Departure Format:\n` +
+                `System: CHARACTER NAME: "Well, I suppose this is goodbye for now." They wave as they somberly step through the bulkhead.\nNARRATOR: [CHARACTER NAME moves to FACTION NAME] You watch on-screen as Character Name's shuttle detaches from the PARC and disappears into the stars.\n[SUMMARY: CHARACTER NAME has departed the PARC, on loan to FACTION NAME.]\n` +
                 (skit.script.length > 0 ? (`\n\nExample Ending Script Format:\n` +
                     'System: CHARACTER NAME: [CHARACTER NAME EXPRESSES OPTIMISM] Action in prose. "Dialogue in quotation marks."\nNARRATOR: A moment of prose describing events.' +
                     `\n[SUMMARY: CHARACTER NAME is hopeful about this demonstration.]`) : '') +
@@ -322,8 +330,9 @@ export async function generateSkitScript(skit: SkitData, stage: Stage): Promise<
                 `\nFollow the structure of the strict Example Script formatting above: ` +
                 `actions are depicted in prose and character dialogue in quotation marks. Emotion tags (e.g. "[CHARACTER NAME EXPRESSES JOY]") should be used to indicate significant emotional shifts—` +
                 `these cues will be utilized by the game engine to visually display appropriate character emotions. ` +
-                `Character movement tags (e.g. "[CHARACTER NAME moves to MODULE NAME]") should be used to indicate when a character moves to a different module on the station. ` +
+                `Character movement tags (e.g. "[CHARACTER NAME moves to MODULE NAME]" or "[CHARACTER NAME moves to FACTION NAME]") should be used to indicate when a character moves to a different module on the station OR to a different faction (this is done by faction name, without further granularity). ` +
                 `MODULE NAME should be the name of a module type (e.g., 'comms', 'infirmary', 'lounge'), a character's quarters (e.g., 'Susan's quarters' or just 'quarters' for their own), or simply "Another module" to leave this area. ` +
+                `A faction move is a more significant event, indicating a departure from the PARC itself. ` +
                 `The game engine uses these tags to update character locations and visually display character presence in scenes. The scene itself cannot transition to a new area, but individual characters may come and go. ` +
                 (skit.script.length > 0 ? (`If a scene transition is desired, the current scene must first be summarized. ` +
                     `A "[SUMMARY]" tag (e.g., "[SUMMARY: Brief summary of the scene's events.]") should be included when the scene has fulfilled the current Scene Prompt or reached a conclusive moment before continuing with the script. `) : '') +
@@ -443,14 +452,26 @@ export async function generateSkitScript(skit: SkitData, stage: Stage): Promise<
                                 if (targetModule) {
                                     destinationModuleId = targetModule.id;
                                 } else {
-                                    console.warn(`Could not find module matching: ${destinationName}`);
+                                    // If no module found, check if it matches a faction name
+                                    const matchingFaction = Object.values(stage.getSave().factions).find(faction =>
+                                        faction.name.toLowerCase() === normalizedDestination
+                                    );
+                                    if (matchingFaction) {
+                                        destinationModuleId = matchingFaction.id;
+                                        console.log(`Movement detected: ${matched.name} moves to faction ${matchingFaction.name} (${matchingFaction.id})`);
+                                    } else {
+                                        console.warn(`Could not find module or faction matching: ${destinationName}`);
+                                    }
                                 }
                             }
                             
                             // Track movement in the movements map
                             if (destinationModuleId) {
                                 newMovements[matched.id] = destinationModuleId;
-                                console.log(`Movement detected: ${matched.name} moves to ${destinationName} (${destinationModuleId})`);
+                                if (!stage.getSave().factions[destinationModuleId]) {
+                                    // Only log for modules, not factions (already logged above)
+                                    console.log(`Movement detected: ${matched.name} moves to ${destinationName} (${destinationModuleId})`);
+                                }
                             } else {
                                 // Invalid destination - set to empty string
                                 newMovements[matched.id] = '';
@@ -606,7 +627,8 @@ export async function generateSkitScript(skit: SkitData, stage: Stage): Promise<
                             `Full Examples:\n` +
                             `[STATION: Systems +2, Comfort +1]\n` +
                             `[STATION: Security -1]` +
-                            `\n\nFaction Requests:\n` +
+
+                            /*`\n\nFaction Requests:\n` +
                             `Identify any requests made by factions or faction representatives toward the player or station. ` +
                             `If the preceding scene depicts the successful fulfillment of a deal, refrain from outputting that deal here. ` +
                             `For each request identified, output a line in the following format:\n` +
@@ -646,7 +668,7 @@ export async function generateSkitScript(skit: SkitData, stage: Stage): Promise<
                             `If the request is not a permanent actor placement, a TIME must be supplied. ` +
                             `TIME should be between 4 and 12 turns, depending on the nature of the request. 4 turns is an in-game "day."  ` +
                             `Generally, requests with a time component are temporary assignments/missions/trainings where a character is sent off-station to fulfill the request, ` +
-                            `returning after the specified duration. The reward for these requests should typically be smaller than those for permanent assignment—perhaps only a single stat bonus.` +
+                            `returning after the specified duration. The reward for these requests should typically be smaller than those for permanent assignment—perhaps only a single stat bonus.` +*/
 
                             `\n\nFaction Reputation Changes:\n` +
                             `Identify any changes to faction reputations implied by the scene. For each change, output a line in the following format:\n` +
@@ -675,7 +697,7 @@ export async function generateSkitScript(skit: SkitData, stage: Stage): Promise<
                         const requestAnalysis = await stage.generator.textGen({
                             prompt: analysisPrompt,
                             min_tokens: 5,
-                            max_tokens: summary ? 250 : 400,
+                            max_tokens: summary ? 200 : 400,
                             include_history: true,
                             stop: ['[END]']
                         });

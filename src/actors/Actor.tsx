@@ -1,6 +1,6 @@
 import { Emotion, EMOTION_PROMPTS, EmotionPack } from "./Emotion";
 import { Module } from "../Module";
-import { Stage } from "../Stage";
+import { SaveType, Stage } from "../Stage";
 import { v4 as generateUuid } from 'uuid';
 import { AspectRatio } from "@chub-ai/stages-ts";
 import { FlashOn, Forum, 
@@ -37,7 +37,8 @@ class Actor {
     id: string;
     name: string;
     fullPath: string = '';
-    locationId: string = '';
+    locationId: string = ''; // If this is a module ID, the actor is currently present in that module; if it is a faction ID, the actor is temporarily located offstation with that faction
+    factionId: string = ''; // If this actor belongs to a faction, the ID of that faction; '' is the PARC or independent
     avatarImageUrl: string;
     description: string;
     profile: string;
@@ -53,7 +54,6 @@ class Actor {
     heldRoles: { [key: string]: number } = {}; // Roles ever held by this actor and the number of days spent in each
     decorImageUrls: {[key: string]: string} = {}; // ModuleType to decor image URL mapping
     stats: Record<Stat, number>;
-    remote: boolean = false; // Whether this actor is not present on the station.
 
     /**
      * Rehydrate an Actor from saved data
@@ -98,6 +98,18 @@ class Actor {
         if (joyValue > 5) return Emotion.approval;
         if (joyValue > 2) return Emotion.neutral;
         return Emotion.disappointment;
+    }
+    
+    resetLocation() {
+        this.locationId = this.factionId;
+    }
+
+    isHologram(save: SaveType): boolean {
+        return !!save.factions[this.locationId] || save.aide.actorId === this.id;
+    }
+
+    isOffSite(save: SaveType): boolean {
+        return Object.values(save.factions).some(faction => this.locationId === faction.id);
     }
 
     /**

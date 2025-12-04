@@ -110,10 +110,10 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType}) =>
         setSelectedPosition(null);
         // Possibly kick off a skit about the new module, if no others exist in layout:
         const existingModules = stage().getLayout().getModulesWhere(m => m.type === moduleType);
-        if (existingModules.length === 1 && Object.values(stage().getSave().actors).filter(actor => !actor.remote && !actor.inProgressRequestId).length > 0) { // New module is the only one of its type
+        if (existingModules.length === 1 && Object.values(stage().getSave().actors).filter(actor => !actor.factionId && !actor.isOffSite(save)).length > 0) { // New module is the only one of its type
             // Grab a few random patients to pull to the new module for a skit:
-            let randomPatients = Object.values(stage().getSave().actors).filter(actor => !actor.remote && !actor.inProgressRequestId)
-                .filter(a => a.locationId !== newModule.id && !a.remote)
+            let randomPatients = Object.values(stage().getSave().actors).filter(actor => !actor.factionId && !actor.isOffSite(save))
+                .filter(a => a.locationId !== newModule.id && !a.factionId)
                 .sort(() => 0.5 - Math.random());
             randomPatients = randomPatients.slice(0, Math.min(Math.random() * 3 + 1, randomPatients.length));
             randomPatients.forEach(p => {
@@ -642,7 +642,7 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType}) =>
                                                                 height: `calc(0.6 * ${cellSize})`,
                                                                 userSelect: 'none',
                                                                 pointerEvents: 'none',
-                                                                filter: actor.remote ? 'sepia(100%) hue-rotate(180deg) saturate(200%) brightness(1.2)' : undefined,
+                                                                filter: actor.isHologram(stage().getSave()) ? 'sepia(100%) hue-rotate(180deg) saturate(200%) brightness(1.2)' : undefined,
                                                             }}
                                                         />
                                                     ))}
@@ -912,7 +912,7 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType}) =>
                 {/* Enhanced Day and Turn Display */}
                 {renderDayTurnDisplay()}
 
-                {['Patients', 'Modules', 'Factions', 'Requests'].map(item => {
+                {['Patients', 'Modules', 'Factions'].map(item => {
                     const itemKey = item.toLowerCase();
                     const isExpanded = expandedMenu === itemKey;
                     const isContracting = previousExpandedMenu === itemKey && !isExpanded;
@@ -998,7 +998,7 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType}) =>
                                         {Object.values(stage().getSave().actors).length === 0 ? (
                                             <p style={{ color: '#00ff88', opacity: 0.5, fontStyle: 'italic', fontSize: '0.85rem', fontWeight: 700 }}>No patients currently on station</p>
                                         ) : (
-                                            Object.values(stage().getSave().actors).filter(actor => !actor.remote).map((actor: any) => (
+                                            Object.values(stage().getSave().actors).filter(actor => !actor.factionId && stage().getSave().aide.actorId != actor.id).map((actor: any) => (
                                                 <div 
                                                     key={actor.id}
                                                     onMouseEnter={() => setHoveredActorId(actor.id)}
