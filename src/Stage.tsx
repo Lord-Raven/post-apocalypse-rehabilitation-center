@@ -529,6 +529,7 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
             if (faction.representativeId && save.actors[faction.representativeId]) {
                 const repActor = save.actors[faction.representativeId];
                 if (repActor.factionId !== faction.id) {
+                    console.log(`Repairing factionId for representative ${repActor.name} of faction ${faction.name}`);
                     repActor.factionId = faction.id;
                 }
             }
