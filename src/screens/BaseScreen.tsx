@@ -61,7 +61,7 @@ const BaseScreenContent: FC<{ stage: () => Stage }> = ({ stage }) => {
             )}
             {screenType === ScreenType.ECHO && (
                 // Render echo screen
-                <EchoScreen stage={stage} setScreenType={setScreenType} />
+                <EchoScreen stage={stage} setScreenType={setScreenType} isVerticalLayout={isVerticalLayout} />
             )}
             {screenType === ScreenType.SKIT && (
                 // Render skit screen

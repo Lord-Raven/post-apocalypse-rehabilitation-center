@@ -18,9 +18,10 @@ import { Button } from '../components/UIComponents';
 interface EchoScreenProps {
 	stage: () => Stage;
 	setScreenType: (type: ScreenType) => void;
+	isVerticalLayout: boolean;
 }
 
-export const EchoScreen: FC<EchoScreenProps> = ({stage, setScreenType}) => {
+export const EchoScreen: FC<EchoScreenProps> = ({stage, setScreenType, isVerticalLayout}) => {
 
 	const [selectedSlotIndex, setSelectedSlotIndex] = React.useState<number | null>(null);
 	const [expandedCandidateId, setExpandedCandidateId] = React.useState<string | null>(null);
@@ -186,7 +187,7 @@ export const EchoScreen: FC<EchoScreenProps> = ({stage, setScreenType}) => {
 					style={{ 
 						display: 'inline-block',
 						position: 'relative',
-						width: isExpanded ? '32vh' : '16vh',
+						width: isExpanded ? '32vmin' : '16vmin',
 						transition: 'width 0.3s ease'
 					}}
 					animate={{
@@ -236,15 +237,25 @@ export const EchoScreen: FC<EchoScreenProps> = ({stage, setScreenType}) => {
 					</motion.div>
 				);})}
 			</div>
-		</div>			{/* Echo slots in center with buttons on sides */}
-			<div style={{ flex: '1 1 auto', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '40px', gap: '40px' }}>
-				{/* Cancel button on the left */}
-				<Button
-					variant="secondary"
-					onClick={cancel}
-				>
-					Cancel
-				</Button>
+		</div>			{/* Echo slots in center with buttons on sides or bottom */}
+			<div style={{ 
+				flex: '1 1 auto', 
+				display: 'flex', 
+				flexDirection: isVerticalLayout ? 'column' : 'row',
+				alignItems: 'center', 
+				justifyContent: 'center', 
+				padding: '40px', 
+				gap: isVerticalLayout ? '20px' : '40px'
+			}}>
+				{/* Cancel button on the left (or in button row below if vertical) */}
+				{!isVerticalLayout && (
+					<Button
+						variant="secondary"
+						onClick={cancel}
+					>
+						Cancel
+					</Button>
+				)}
 
 				{/* Echo slots container */}
 				<div style={{ display: 'flex', gap: 40, alignItems: 'flex-end', justifyContent: 'center', flex: 1 }}>
@@ -306,7 +317,7 @@ export const EchoScreen: FC<EchoScreenProps> = ({stage, setScreenType}) => {
 									animationDelay: `${slotIndex * 0.7}s`,
 									cursor: actor ? 'pointer' : 'default',
 									height: '65vh',
-									width: '18vw',
+									width: isVerticalLayout ? '30vw' : '18vw',
 									display: 'flex',
 									flexDirection: 'column',
 									justifyContent: actor ? 'flex-end' : 'center',
@@ -427,23 +438,53 @@ export const EchoScreen: FC<EchoScreenProps> = ({stage, setScreenType}) => {
 					})}
 				</div>
 
-				{/* Wake button on the right */}
-				<Button
-					variant="primary"
-					onClick={accept}
-					disabled={!acceptable}
-					style={{
-						background: acceptable ? 'var(--color-primary)' : 'rgba(255,255,255,0.06)',
-						color: acceptable ? '#002210' : '#9aa0a6'
-					}}
-				>
-					{availableRooms.length === 0 
-						? 'No Available Quarters' 
-						: selectedActor 
-							? (selectedActor.isPrimaryImageReady ? 'Wake Candidate' : 'Candidate Still Fusing')
-							: 'Select a Candidate'
-					}
-				</Button>
+				{/* Wake button on the right (or in button row below if vertical) */}
+				{!isVerticalLayout && (
+					<Button
+						variant="primary"
+						onClick={accept}
+						disabled={!acceptable}
+						style={{
+							background: acceptable ? 'var(--color-primary)' : 'rgba(255,255,255,0.06)',
+							color: acceptable ? '#002210' : '#9aa0a6'
+						}}
+					>
+						{availableRooms.length === 0 
+							? 'No Available Quarters' 
+							: selectedActor 
+								? (selectedActor.isPrimaryImageReady ? 'Wake Candidate' : 'Candidate Still Fusing')
+								: 'Select a Candidate'
+						}
+					</Button>
+				)}
+
+				{/* Button row for vertical layout */}
+				{isVerticalLayout && (
+					<div style={{ display: 'flex', gap: '20px', justifyContent: 'center', width: '100%' }}>
+						<Button
+							variant="secondary"
+							onClick={cancel}
+						>
+							Cancel
+						</Button>
+						<Button
+							variant="primary"
+							onClick={accept}
+							disabled={!acceptable}
+							style={{
+								background: acceptable ? 'var(--color-primary)' : 'rgba(255,255,255,0.06)',
+								color: acceptable ? '#002210' : '#9aa0a6'
+							}}
+						>
+							{availableRooms.length === 0 
+								? 'No Available Quarters' 
+								: selectedActor 
+									? (selectedActor.isPrimaryImageReady ? 'Wake Candidate' : 'Candidate Still Fusing')
+									: 'Select a Candidate'
+							}
+						</Button>
+					</div>
+				)}
 			</div>
 			</div>
 		</BlurredBackground>

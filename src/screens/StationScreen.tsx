@@ -68,7 +68,7 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType, isV
     const { setTooltip, clearTooltip } = useTooltip();
 
     const gridSize = 6;
-    const cellSize = isVerticalLayout ? '8vh' : '12vh';
+    const cellSize = isVerticalLayout ? '9vh' : '12vh';
     const gridEdgeSize = isVerticalLayout ? '5vh' : '0';
 
     const openModuleSelector = (x: number, y: number) => {
@@ -655,7 +655,7 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType, isV
                                                         textAlign: 'center',
                                                         pointerEvents: 'none',
                                                         zIndex: 2,
-                                                        fontSize: '14px',
+                                                        fontSize: isVerticalLayout ? '1.2vh' : '1.5vh',
                                                     }}
                                                 >{module.type}</div>
                                             </>
@@ -693,7 +693,7 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType, isV
                                     cursor: 'pointer',
                                 }}
                             >
-                                <div style={{ fontSize: 28, lineHeight: 1, fontWeight: 800 }}>+</div>
+                                <div style={{ fontSize: isVerticalLayout ? '2.5vh' : '3vh', lineHeight: 1, fontWeight: 800 }}>+</div>
                             </motion.div>
                         )}
                     </div>
