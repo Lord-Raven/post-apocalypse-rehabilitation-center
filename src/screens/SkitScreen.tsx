@@ -505,17 +505,8 @@ export const SkitScreen: FC<SkitScreenProps> = ({ stage, setScreenType }) => {
                     <ActorCard
                         actor={hoveredActor}
                         isAway={hoveredActor.isOffSite(stage().getSave())}
-                        role={(() => {
-                            const roleModules = stage().getSave().layout.getModulesWhere((m: any) => 
-                                m && m.type !== 'quarters' && m.ownerId === hoveredActor.id
-                            );
-                            if (roleModules.length > 0) {
-                                return roleModules[0].getAttribute('role');
-                            } else {
-                                const factionName = Object.values(stage().getSave().factions).find(faction => faction.representativeId === hoveredActor.id)?.name;
-                                return factionName ? `${factionName}` : undefined;
-                            }
-                        })()}
+
+                        role={hoveredActor.getRole(stage().getSave())}
                         collapsedSections={[ActorCardSection.STATS]}
                     />
                 </div>

@@ -219,6 +219,7 @@ export const EchoScreen: FC<EchoScreenProps> = ({stage, setScreenType}) => {
 						/>							
 						<ActorCard
 								actor={actor}
+								isAway={actor.isOffSite(stage().getSave())}
 								collapsedSections={[ActorCardSection.PORTRAIT]}
 								expandedSections={[ActorCardSection.PORTRAIT, ActorCardSection.STATS]}
 								isExpanded={isExpanded}

@@ -1006,12 +1006,7 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType}) =>
                                                     <ActorCard
                                                         actor={actor}
                                                         isAway={actor.isOffSite(stage().getSave())}
-                                                        role={(() => {
-                                                            const roleModules = layout.getModulesWhere((m: Module) => 
-                                                                m && m.type !== 'quarters' && m.ownerId === actor.id
-                                                            );
-                                                            return roleModules.length > 0 ? roleModules[0].getAttribute('role') : undefined;
-                                                        })()}
+                                                        role={actor.getCurrentRole(stage().getSave())}
                                                         isDragging={draggedActor?.id === actor.id}
                                                         draggable={true}
                                                         onDragStart={(e: React.DragEvent) => {
