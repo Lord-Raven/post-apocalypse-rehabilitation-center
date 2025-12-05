@@ -1,4 +1,4 @@
-import React, { FC } from 'react';
+import React, { act, FC } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Typography, Card, CardContent } from '@mui/material';
 import { styled } from '@mui/material/styles';
@@ -972,8 +972,8 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType, isV
                                         gap: '10px',
                                     }),
                                 }}>
-                                    {Object.values(stage().getSave().actors).length === 0 ? (
-                                        <p style={{ color: '#00ff88', opacity: 0.5, fontStyle: 'italic', fontSize: '0.85rem', fontWeight: 700, ...(isVerticalLayout && { gridColumn: '1 / -1' }) }}>No patients currently on station</p>
+                                    {Object.values(stage().getSave().actors).filter(actor => !actor.factionId && stage().getSave().aide.actorId != actor.id).length === 0 ? (
+                                        <p style={{ color: '#00ff88', opacity: 0.5, fontStyle: 'italic', fontSize: '0.85rem', fontWeight: 700, ...(isVerticalLayout && { gridColumn: '1 / -1' }) }}>Visit the Echo Chamber to bring on patients!</p>
                                     ) : (
                                         Object.values(stage().getSave().actors).filter(actor => !actor.factionId && stage().getSave().aide.actorId != actor.id).map((actor: any) => (
                                             <div 
