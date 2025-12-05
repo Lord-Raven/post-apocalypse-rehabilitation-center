@@ -48,7 +48,6 @@ class Actor {
     themeColor: string;
     themeFontFamily: string;
     voiceId: string;
-    inProgressRequestId: string = ''; // Set to the ID of a request when the actor is temporarily assigned to fulfill it
     birthDay: number = -1; // Day they were "born" into the game world
     participations: number = 0; // Number of skits they've participated in
     isImageLoadingComplete: boolean = false; // Whether all emotion pack images have been generated

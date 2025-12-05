@@ -130,9 +130,10 @@ export interface ModuleIntrinsic {
 const randomAction = (module: Module, stage: Stage, setScreenType: (type: ScreenType) => void) => {
             // If there are actors here, open a skit with them:
             if (Object.values(stage.getSave().actors).some(a => a.locationId === module.id)) {
-                // Maybe move the module's owner (if any) here:
-                if (module.ownerId && stage.getSave().actors[module.ownerId] && !stage.getSave().actors[module.ownerId].inProgressRequestId && Math.random() < 0.5) {
-                    stage.getSave().actors[module.ownerId].locationId = module.id;
+                // Maybe move the module's owner (if any) here (make sure they aren't located at a faction):
+                const owner = module.ownerId ? stage.getSave().actors[module.ownerId] : undefined;
+                if (owner && !owner.isOffSite(stage.getSave()) && Math.random() < 0.5) {
+                    owner.locationId = module.id;
                 }
                 console.log("Opening skit.");
 
@@ -182,8 +183,9 @@ export const MODULE_DEFAULTS: Record<ModuleType, ModuleIntrinsic> = {
                 const faction = Object.values(stage.getSave().factions).find(a => a.representativeId && stage.getSave().actors[a.representativeId]?.locationId === module.id);
                 if (faction) {
                     // Move the module's owner (if any) here:
-                    if (module.ownerId && stage.getSave().actors[module.ownerId] && !stage.getSave().actors[module.ownerId].inProgressRequestId) {
-                        stage.getSave().actors[module.ownerId].locationId = module.id;
+                    const owner = module.ownerId ? stage.getSave().actors[module.ownerId] : undefined;
+                    if (owner && !owner.isOffSite(stage.getSave())) {
+                        owner.locationId = module.id;
                     }
                     // Introduce a new faction:
                     if (!faction.active && faction?.reputation > 0) {
@@ -246,9 +248,10 @@ export const MODULE_DEFAULTS: Record<ModuleType, ModuleIntrinsic> = {
         cost: {Provision: 1},
         action: (module: Module, stage: Stage, setScreenType: (type: ScreenType) => void) => {
             // Open the skit screen to speak to occupants
-            if (module.ownerId && !stage.getSave().actors[module.ownerId].inProgressRequestId) {
+            const owner = module.ownerId ? stage.getSave().actors[module.ownerId] : undefined;
+            if (owner && !owner.isOffSite(stage.getSave())) {
                 console.log("Opening skit.");
-                stage.getSave().actors[module.ownerId].locationId = module.id; // Ensure actor is in the module
+                owner.locationId = module.id; // Ensure actor is in the module
                 stage.setSkit({
                     type: SkitType.VISIT_CHARACTER,
                     actorId: module.ownerId,

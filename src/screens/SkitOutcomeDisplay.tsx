@@ -1,7 +1,7 @@
 import React, { FC } from 'react';
 import { motion } from 'framer-motion';
 import { Paper, Typography, Box } from '@mui/material';
-import { TrendingUp, Handshake, TrendingDown } from '@mui/icons-material';
+import { TrendingUp, Handshake, TrendingDown, ContentCut } from '@mui/icons-material';
 import Actor, { Stat, ACTOR_STAT_ICONS } from '../actors/Actor';
 import { StationStat, STATION_STAT_ICONS } from '../Module';
 import Nameplate from '../components/Nameplate';
@@ -157,10 +157,9 @@ const SkitOutcomeDisplay: FC<SkitOutcomeDisplayProps> = ({ skitData, stage, layo
 
     const characterChanges = processStatChanges();
     const factionReputationChanges = processFactionReputationChanges();
-    const requests = skitData.requests || [];
 
     // Don't render if there's nothing to display
-    if (characterChanges.length === 0 && requests.length === 0 && factionReputationChanges.length === 0) {
+    if (characterChanges.length === 0 && factionReputationChanges.length === 0) {
         return null;
     }
 
@@ -490,7 +489,7 @@ const SkitOutcomeDisplay: FC<SkitOutcomeDisplayProps> = ({ skitData, stage, layo
                             >
                                 <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1, mb: 1 }}>
                                     {repChange.newReputation <= 0 ? (
-                                        <Handshake sx={{ color: '#888', fontSize: '2rem', transform: 'rotate(15deg)' }} />
+                                        <ContentCut sx={{ color: '#888', fontSize: '2rem', transform: 'rotate(15deg)' }} />
                                     ) : repChange.newReputation > repChange.oldReputation ? (
                                         <TrendingUp sx={{ color: '#00ff88', fontSize: '2rem' }} />
                                     ) : (
@@ -554,17 +553,6 @@ const SkitOutcomeDisplay: FC<SkitOutcomeDisplayProps> = ({ skitData, stage, layo
                                         }}
                                     >
                                         {repChange.faction.name} has severed all ties with the PARC.
-                                    </Typography>
-                                    <Typography
-                                        sx={{
-                                            fontSize: '0.9rem',
-                                            color: '#777',
-                                            textAlign: 'center',
-                                            mt: 1.5,
-                                            fontStyle: 'italic'
-                                        }}
-                                    >
-                                        All active requests have been withdrawn.
                                     </Typography>
                                 </motion.div>
                             ) : (
@@ -682,45 +670,6 @@ const SkitOutcomeDisplay: FC<SkitOutcomeDisplayProps> = ({ skitData, stage, layo
                 </motion.div>
                 </div>
             ))}
-
-            {/* New or Updated Requests Notification */}
-            {requests.length > 0 && (
-                <div>
-                <motion.div
-                    initial={{ opacity: 0, y: 30 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.4, delay: 0.5 + characterChanges.length * 0.2 }}
-                >
-                    <Paper
-                        elevation={8}
-                        sx={{
-                            background: 'linear-gradient(135deg, rgba(100,149,237,0.25) 0%, rgba(65,105,225,0.35) 50%, rgba(30,60,140,0.25) 100%)',
-                            border: '2px solid rgba(100,149,237,0.4)',
-                            borderRadius: 2,
-                            p: 1.5,
-                            backdropFilter: 'blur(12px)',
-                            textAlign: 'center'
-                        }}
-                    >
-                        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1 }}>
-                            <Handshake sx={{ color: '#6495ed', fontSize: '1.5rem' }} />
-                            <Typography
-                                variant="h6"
-                                sx={{
-                                    fontWeight: 800,
-                                    color: '#fff',
-                                    textTransform: 'uppercase',
-                                    letterSpacing: '1px',
-                                    textShadow: '0 2px 4px rgba(0,0,0,0.8)'
-                                }}
-                            >
-                                New or Updated Requests!
-                            </Typography>
-                        </Box>
-                    </Paper>
-                </motion.div>
-                </div>
-            )}
             </Box>
         </motion.div>
     );

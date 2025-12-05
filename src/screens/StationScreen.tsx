@@ -8,7 +8,6 @@ import { Stage } from '../Stage';
 import ActorCard from '../components/ActorCard';
 import ModuleCard from '../components/ModuleCard';
 import FactionCard from '../components/FactionCard';
-import RequestCard from '../components/RequestCard';
 import { TurnIndicator as SharedTurnIndicator } from '../components/UIComponents';
 import { useTooltip } from '../contexts/TooltipContext';
 import { SwapHoriz, Home, Work, Menu } from '@mui/icons-material';
@@ -219,7 +218,7 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType}) =>
                     if (currentQuarters && currentQuarters.type === 'quarters') {
                         // Swap: other actor gets current quarters
                         currentQuarters.ownerId = targetOwnerId;
-                        if (!otherActor.inProgressRequestId) {
+                        if (!otherActor.isOffSite(stage().getSave())) {
                             otherActor.locationId = currentQuartersId;
                         }
                     }
@@ -235,7 +234,7 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType}) =>
 
             // Assign actor to target quarters
             targetModule.ownerId = actorId;
-            if (!actor.inProgressRequestId) {
+            if (!actor.isOffSite(stage().getSave())) {
                 actor.locationId = targetModule.id;
             }
             generateActorDecor(actor, targetModule, stage());
@@ -254,7 +253,7 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType}) =>
 
             // Assign the actor to this module as their role
             targetModule.ownerId = actorId;
-            if (!actor.inProgressRequestId) {
+            if (!actor.isOffSite(stage().getSave())) {
                 actor.locationId = targetModule.id;
             }
             generateActorDecor(actor, targetModule, stage());
@@ -1099,49 +1098,6 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType}) =>
                                                 />
                                             ))
                                         )}
-                                    </div>
-                                )}
-                                {itemKey === 'requests' && (
-                                    <div style={{ 
-                                        padding: '15px', 
-                                        flex: '1 1 auto', 
-                                        overflowY: 'auto', 
-                                        minHeight: 0,
-                                        display: 'flex',
-                                        flexDirection: 'column',
-                                        gap: '10px',
-                                    }}>
-                                        {(() => {
-                                            // Gather all requests
-                                            const allRequests = Object.values(stage().getSave().requests);
-                                            
-                                            if (allRequests.length === 0) {
-                                                return (
-                                                    <p style={{ 
-                                                        color: '#00ff88', 
-                                                        opacity: 0.5, 
-                                                        fontStyle: 'italic', 
-                                                        fontSize: '0.85rem', 
-                                                        fontWeight: 700 
-                                                    }}>No active requests.</p>
-                                                );
-                                            }
-                                            
-                                            return allRequests.map((request) => (
-                                                <RequestCard
-                                                    key={request.id}
-                                                    request={request}
-                                                    stage={stage()}
-                                                    onClick={() => {
-                                                        console.log(`Clicked request ${request.id}`);
-                                                    }}
-                                                    onFulfill={(actorId) => request.fulfill(stage(), setScreenType, actorId)}
-                                                    style={{
-                                                        marginBottom: '15px',
-                                                    }}
-                                                />
-                                            ));
-                                        })()}
                                     </div>
                                 )}
                             </motion.div>

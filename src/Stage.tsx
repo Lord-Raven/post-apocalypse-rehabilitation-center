@@ -8,7 +8,6 @@ import { BaseScreen, ScreenType } from "./screens/BaseScreen";
 import { generateSkitScript, SkitData, SkitType } from "./Skit";
 import { smartRehydrate } from "./SaveRehydration";
 import { Emotion } from "./actors/Emotion";
-import { Request } from "./factions/Request";
 
 type MessageStateType = any;
 type ConfigType = any;
@@ -33,7 +32,6 @@ export type SaveType = {
     echoes: (Actor | null)[]; // actors currently in echo slots (can be null for empty slots)
     actors: {[key: string]: Actor};
     factions: {[key: string]: Faction};
-    requests: {[key: string]: Request};
     bannedTags?: string[];
     layout: Layout;
     day: number;
@@ -131,7 +129,7 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
                 description: `Your holographic assistant is acutely familiar with the technical details of your Post-Apocalypse Rehabilitation Center, so you don't have to be! ` +
                 `Your StationAide™ comes pre-programmed with a friendly and non-condescending demeanor that will leave you feeling empowered and never patronized; ` +
                 `your bespoke projection comes with an industry-leading feminine form in a pleasing shade of default blue, but, as always, StationAide™ remains infinitely customizable to suit your tastes.`}, 
-            echoes: [], actors: {}, factions: {}, requests: {}, layout: layout, day: 1, turn: 0, currentSkit: undefined };
+            echoes: [], actors: {}, factions: {}, layout: layout, day: 1, turn: 0, currentSkit: undefined };
 
         // ensure at least one save exists and has a layout
         if (!this.saves.length) {
@@ -187,23 +185,7 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
                 return { content: [{type: 'text', text: `Actor ${actor}'s stat ${stat} changed by ${change}.` }] };
             }
         );
-
-        this.mcp.registerTool('createRequest',
-            {
-                title: 'Create a Request',
-                description: 'Create a request for resources or actions on the station.',
-                inputSchema: {
-                    requestDescription: z.string().min(10).max(500),
-                },
-            },
-            async ({ requestDescription }): Promise<CallToolResult> => {
-                // Eventually, we will attach this to some sort of resolution content for the current skit, to be displayed in SkitScreen before the "Close" button becomes available, and executed when the skit ends.
-                // this.getSave().currentSkit ...
-                // For now, we're just testing that it works.
-                console.log(`Tool called: createRequest(${requestDescription})`);
-                return { content: [{type: 'text', text: `Request created: ${requestDescription}` }] };
-            }
-        )*/
+        */
     }
 
     async load(): Promise<Partial<LoadResponse<InitStateType, ChatStateType, MessageStateType>>> {
@@ -245,78 +227,6 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
         };
     }
 
-    /**
-     * Check for timed requests that have completed and finalize them
-     */
-    checkAndCompleteTimedRequests() {
-        /*const save = this.getSave();
-        
-        // Check all requests for completed timed assignments, but only complete one per turn (they come with ending skits)
-        for (const request of Object.values(save.requests)) {
-            if (!request.isInProgress()) continue;
-            
-            const remaining = request.getRemainingTurns(save.day, save.turn);
-            if (remaining <= 0) {
-                // Time is up - complete the request
-                console.log(`Completing timed request ${request.id}`);
-                
-                // Apply rewards
-                if (request.reward.type === 'station-stats' && save.stationStats) {
-                    for (const [stat, value] of Object.entries(request.reward.stats)) {
-                        const statKey = stat as StationStat;
-                        save.stationStats[statKey] = Math.max(1, Math.min(10, (save.stationStats[statKey] || 0) + value));
-                    }
-                }
-                
-                // Increase faction reputation
-                const faction = save.factions[request.factionId];
-                if (faction) {
-                    faction.reputation = Math.max(1, Math.min(10, faction.reputation + 1));
-                }
-                
-                // Clear actor's in-progress status
-                const actor = save.actors[request.inProgressActorId];
-                if (actor) {
-                    actor.inProgressRequestId = '';
-                    actor.remote = false;
-                    console.log(`Actor ${actor.name} is now available again`);
-                    
-                    // Add timeline entry for return
-                    save.timeline?.push({
-                        day: save.day,
-                        turn: save.turn,
-                        description: `${actor.name} has returned from their assignment with ${faction?.name || 'a faction'}.`,
-                        skit: undefined
-                    });
-                    // Create a returning skit
-                    // Move this actor and faction rep to comms room
-                    const commsModule = save.layout.getModulesWhere(m => m.type === 'comms')[0];
-                    actor.locationId = commsModule?.id || '';
-                    const factionRep = save.actors[faction.representativeId || ''];
-                    factionRep.locationId = commsModule?.id || '';
-                    this.setSkit({
-                        type: SkitType.RETURNING_FROM_REQUEST,
-                        moduleId: commsModule?.id || '',
-                        context: {
-                            actorId: actor.id,
-                            factionId: faction.id,
-                            requestId: request.id
-                        },
-                        script: [],
-                        generating: true
-                    });
-
-                    // Remove request and break; only complete one per "turn"
-                    delete save.requests[request.id];
-                    break;
-                } else {
-                    // Weird case; actor not found. I guess just clear this request out; don't have to break because no skit will be generated.
-                    delete save.requests[request.id];
-                }
-            }
-        }*/
-    }
-
     incTurn(numberOfTurns: number = 1, setScreenType: (type: ScreenType) => void) {
         const save = this.getSave();
         save.turn += numberOfTurns;
@@ -336,10 +246,6 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
             }
         }
 
-        // Check for completed timed requests before processing day change
-        this.checkAndCompleteTimedRequests();
-        
-
         // When incrementing turn, maybe move some actors around in the layout.
         for (const actorId in save.actors) {
             const actor = save.actors[actorId];
@@ -350,10 +256,11 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
             } else if (actor.id == save.aide.actorId) {
                 // Aide goes nowhere by default.
                 actor.locationId = '';
-            } else {
-                // If actor didn't move anywhere in the last skit, put them in a random non-quarters module:
+            } else if (!actor.locationId || save.layout.getModulesWhere(m => actor.locationId === m.id).length > 0) {
+                // If actor has no location or a location on the PARC (not away to a faction at the moment)
+                // Check if actor didn't move anywhere in the last skit, then put them in a random non-quarters module:
                 const previousSkit = (save.timeline && save.timeline.length > 0) ? save.timeline[save.timeline.length - 1].skit : undefined;
-                if ((!previousSkit || previousSkit.script.every(entry => !entry.movements || !Object.keys(entry.movements).some(moverId => moverId === actor.id))) && !actor.inProgressRequestId) {
+                if ((!previousSkit || previousSkit.script.every(entry => !entry.movements || !Object.keys(entry.movements).some(moverId => moverId === actor.id)))) {
                     actor.locationId = save.layout.getModulesWhere(m => m.type !== 'quarters' || m.ownerId == actorId).sort(() => Math.random() - 0.5)[0]?.id || '';
                 }
             }
@@ -516,10 +423,6 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
         }
         if (!save.factions) {
             save.factions = {};
-        }
-
-        if (!save.requests) {
-            save.requests = {};
         }
 
         // Clean out remote actors that aren't supported by current factions
@@ -900,29 +803,16 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
                         const newReputation = Math.max(0, Math.min(10, faction.reputation + change));
 
                         faction.reputation = newReputation;
-                        const hasCutTies = newReputation === 0;
                     
-                        // If reputation reaches 0, deactivate faction and remove all their requests
-                        if (hasCutTies) {
+                        // If reputation reaches 0, deactivate faction
+                        if (newReputation <= 0) {
                             faction.active = false;
-                            
-                            // Remove all requests from this faction
-                            const requestsToRemove = Object.keys(this.getSave().requests).filter(
-                                requestId => this.getSave().requests[requestId].factionId === factionId
-                            );
-                            requestsToRemove.forEach(requestId => {
-                                const req = this.getSave().requests[requestId];
-                                if (req.inProgressActorId) {
-                                    const actor = this.getSave().actors[req.inProgressActorId];
-                                    if (actor) {
-                                        actor.inProgressRequestId = '';
-                                        actor.locationId = '';
-                                    }
+                            // Remove any actors belonging to this faction from the PARC:
+                            Object.values(save.actors).forEach(actor => {
+                                if (actor.factionId === faction.id) {
+                                    actor.locationId = faction.id; // move to faction location
                                 }
-                                delete this.getSave().requests[requestId];
                             });
-                            
-                            console.log(`Faction ${faction.name} has cut ties with PARC. Removed ${requestsToRemove.length} requests.`);
                         }
                     });
                 // Handle special "STATION" id for station stat changes
@@ -955,61 +845,6 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
                     }
                 }
             }
-
-            // Process requests from skit
-            if (save.currentSkit.requests) {
-                // Look through existing requests and remove any with the same description or initial criteria:
-                for (const existingRequest of Object.values(save.requests)) {
-                    if (existingRequest && save.currentSkit.requests.some(request => request.description === existingRequest.description || request.matchesCriteria(existingRequest))) {
-                        // If existing request is in progress, throw the new one out
-                        if (existingRequest.isInProgress()) {
-                            save.currentSkit.requests = save.currentSkit.requests.filter(request => request.description !== existingRequest.description && !request.matchesCriteria(existingRequest));
-                            continue;
-                        }
-                        // Remove the existing request
-                        delete save.requests[existingRequest.id];
-                    }
-                }
-
-                for (const request of save.currentSkit.requests) {
-                    let factionRequestIds: string[] = [];
-                    for (const existingRequest of Object.values(save.requests)) {
-                        if (existingRequest && existingRequest.factionId === request.factionId && !existingRequest.isInProgress()) {
-                            factionRequestIds.push(existingRequest.id);
-                        }
-                    }
-                    // If there are already three requests from this faction, skip adding this one
-                    if (factionRequestIds.length >= 3) {
-                        // delete a random request 
-                        const randomIndex = Math.floor(Math.random() * factionRequestIds.length);
-                        delete save.requests[factionRequestIds[randomIndex]];
-                    }
-                    // Add new request
-                    save.requests[request.id] = request;
-                    // If faction wasn't met before, they should be now:
-                    const faction = save.factions[request.factionId];
-                    if (faction) {
-                        // Re-establish ties, I guess.
-                        if (faction.reputation <= 0) {
-                            faction.reputation = 1;
-                        }
-                        faction.active = true;
-                    }
-                }
-            }
-
-            // If skit was a permanent (un-timed) actor request fulfillment, remove the actor from the station (mark remote for now):
-            /*if (save.currentSkit.type === SkitType.REQUEST_FILL_ACTOR && save.currentSkit.actorId) {
-                const actor = save.actors[save.currentSkit.actorId];
-                if (actor && !actor.inProgressRequestId) {
-                    actor.remote = true;
-                    actor.locationId = '';
-                    // Remove from quarters or other modules
-                    save.layout.getModulesWhere(m => m.ownerId === actor.id).forEach(module => {
-                        module.ownerId = '';
-                    });
-                }
-            }*/
 
             // Save skit to timeline
             save.currentSkit.context = {...save.currentSkit.context, day: this.getSave().day};

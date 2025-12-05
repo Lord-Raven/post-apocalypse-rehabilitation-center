@@ -2,7 +2,6 @@ import Actor, { getStatDescription, findBestNameMatch, Stat, namesMatch } from "
 import { Emotion, EMOTION_SYNONYMS } from "./actors/Emotion";
 import { getStatRating, STATION_STAT_PROMPTS, StationStat } from "./Module";
 import { Stage } from "./Stage";
-import { Request } from "./factions/Request";
 
 export enum SkitType {
     BEGINNING = 'BEGINNING',
@@ -11,9 +10,6 @@ export enum SkitType {
     ROLE_ASSIGNMENT = 'ROLE ASSIGNMENT',
     FACTION_INTRODUCTION = 'FACTION INTRODUCTION',
     FACTION_INTERACTION = 'FACTION INTERACTION',
-    REQUEST_FILL_ACTOR = 'REQUEST FILL ACTOR',
-    REQUEST_FILL_STATION = 'REQUEST FILL STATION',
-    RETURNING_FROM_REQUEST = 'RETURNING FROM REQUEST',
     NEW_MODULE = 'NEW MODULE',
     RANDOM_ENCOUNTER = 'RANDOM ENCOUNTER'
 }
@@ -35,7 +31,6 @@ export interface SkitData {
     script: ScriptEntry[];
     generating?: boolean;
     context: any;
-    requests?: Request[];
     summary?: string;
     endProperties?: { [actorId: string]: { [stat: string]: number } }; // Stat changes to apply when scene ends
     endFactionChanges?: { [actorId: string]: string }; // Faction ID changes to apply when scene ends ('' for PARC)
@@ -46,7 +41,6 @@ export function generateSkitTypePrompt(skit: SkitData, stage: Stage, continuing:
     const module = stage.getSave().layout.getModuleById(skit.moduleId || '');
     const faction = stage.getSave().factions[skit.context.factionId || ''];
     const notHereText = 'This communication is being conducted via remote video link; no representative is physically present on the station. ';
-    //const request = stage.getSave().requests[skit.context.requestId || ''];
     switch (skit.type) {
         case SkitType.BEGINNING:
             return !continuing ?
@@ -98,28 +92,6 @@ export function generateSkitTypePrompt(skit: SkitData, stage: Stage, continuing:
                 notHereText :
                 `Continue this scene between the Director and a representative for ${faction?.name || 'a secret organization'}'s. ` + 
                 notHereText);
-        /*case SkitType.REQUEST_FILL_STATION:
-            return !continuing ?
-                `This scene depicts an exchange between the player and ${faction?.name || 'a faction'} regarding the fulfillment of a request. ` +
-                `${faction?.name || 'The faction'} will keep its word and honor the agreement. The PARC will be required to do the same.` :
-                `Continue this scene describing the outcome of this request. ` +
-                `${faction?.name || 'The faction'} will keep its word and honor the agreement. The PARC will be required to do the same.`;
-        case SkitType.REQUEST_FILL_ACTOR:
-            if (request?.requirement?.timeInTurns) {
-                return `This scene depicts an exchange between the player and ${faction?.name || 'a faction'} regarding the temporary fulfillment of their request for a patient: ${actor?.name || 'a patient'}. ` +
-                    `${actor?.name || 'The patient'} is about to leave the PARC to fulfill this arrangement. ${faction?.name || 'The faction'} ` +
-                    `will keep its word and honor the agreement upon ${actor?.name || 'the patient'}'s completion of the assignment. The assignment will take around ${Math.ceil(request.requirement.timeInTurns / 4)} days.`;
-            } else {
-                return `This scene depicts an exchange between the player and ${faction?.name || 'a faction'} regarding the fulfillment of their request for a patient: ${actor?.name || 'a patient'}. ` +
-                    `${actor?.name || 'The patient'} is now departing the PARC for the last time. ${faction?.name || 'The faction'} will keep its word and honor the agreement. ` +
-                    `The PARC is now committed to sending the patient, whether they want to go or not. ` +
-                    `${actor?.name || 'The patient'} may be happy for an ideal placement with a well-suited faction or feel saddened or betrayed to be shipped off for unknown—or even nefarious—purposes.`;
-            }
-        case SkitType.RETURNING_FROM_REQUEST:
-            return `This scene depicts an exchange between the player and ${faction?.name || 'a faction'} regarding the return of a patient from a completed request: ${actor?.name || 'a patient'}. ` +
-                `${actor?.name || 'The patient'} is returning to the PARC after fulfilling their assignment. ${faction?.name || 'The faction'} will honor the agreed reward, ` +
-                `but it is possible that ${actor?.name || 'the patient'} suffered or changed during the assignment (maybe even for the better). ` +
-                `The PARC will reintegrate the patient accordingly.`;*/
         default:
             return '';
     }
@@ -206,7 +178,6 @@ export function generateSkitPrompt(skit: SkitData, stage: Stage, historyLength: 
     const moduleOwner = module?.ownerId ? save.actors[module.ownerId] : null;
     const faction = skit.context.factionId ? save.factions[skit.context.factionId] : null;
     const factionRepresentative = faction ? save.actors[faction.representativeId || ''] : null;
-    //const request = skit.context.requestId ? save.requests[skit.context.requestId] : null;
     const stationAide = save.actors[save.aide.actorId || ''];
 
     let fullPrompt = `{{messages}}\nPremise:\nThis is a sci-fi visual novel game set on a space station that resurrects and rehabilitates patients who died in other universes' apocalypses: ` +
@@ -224,10 +195,6 @@ export function generateSkitPrompt(skit: SkitData, stage: Stage, historyLength: 
             `\n\nCurrent Modules (Rooms) on the PARC:\n` +
             save.layout.getModulesWhere(module => true).map(module => module.type == 'quarters' ? (module.ownerId ? `${save.actors[module.ownerId]?.name || 'Unknown'}'s quarters` : 'vacant quarters') : module.type).join(', ')
         ) +
-        /*(Object.values(save.requests).length > 0 ? (
-            `\n\nActive Requests:\n` +
-            Object.values(save.requests).map(request => `-${save.factions[request.factionId]?.name || 'Unknown Faction'}: ${request.description} \n  Requirement: ${request.getRequirementText(stage)} \n  Reward: ${request.getRewardText()}`).join('\n')
-        ) : '') +*/
         `\n\n${playerName}'s profile: ${save.player.description}` +
         (stationAide ? (presentActorIds.has(stationAide.id) ? `\n\nThe holographic StationAide™ ${stationAide.name} is active in the scene. Profile: ${stationAide.profile}` : '\n\nThe holographic StationAide™ ${stationAide.name} remains absent from the scene unless summoned by the Director.') : '') +
         // List characters who are here, along with full stat details:
@@ -255,28 +222,19 @@ export function generateSkitPrompt(skit: SkitData, stage: Stage, historyLength: 
             const roleModule = stage.getLayout().getModulesWhere((m: any) => 
                 m && m.type !== 'quarters' && m.ownerId === actor.id
             )[0];
-            const requestFaction = save.factions[save.requests[actor.inProgressRequestId].factionId || ''] || 'Unknown Faction';
-            return `${actor.name}\n  Description: ${actor.description}\n  Profile: ${actor.profile}\n  Role: ${roleModule?.getAttribute('role') || 'Patient'}\n  On Assignment to: ${requestFaction.name}`;
+            const atFaction = save.factions[actor.locationId];
+            return `${actor.name}\n  Description: ${actor.description}\n  Profile: ${actor.profile}\n  Role: ${roleModule?.getAttribute('role') || 'Patient'}\n  On Assignment to: ${atFaction?.name || 'Unknown Faction'}`;
         }).join('\n')}` +
         // List stat meanings, for reference:
         `\n\nStats:\n${Object.values(Stat).map(stat => `${stat.toUpperCase()}: ${getStatDescription(stat)}`).join('\n')}` +
         `\n\nScene Prompt:\n${generateSkitTypePrompt(skit, stage, skit.script.length > 0)}` +
-        //(request ? `\n\nRequest Details:\n  Description: ${request.description}\n  Requirement: ${request.getRequirementText(stage)}\n  Reward: ${request.getRewardText()}\n` : '') +
         (faction ? `\n\n${faction.name} Details: ${faction.description}\n${faction.name} Aesthetic: ${faction.visualStyle}` : '') +
         (factionRepresentative ? `\n${faction?.name || 'The faction'}'s representative, ${factionRepresentative.name}, appears on-screen. Their description: ${factionRepresentative.description}` : 'They have no designated liaison for this communication; any characters introduced during this scene will be transient.') +
         (faction ? `\nThis skit may explore the nature of this faction's relationship with an intentions for the Director, the PARC, or its patients. ` +
             `Typically, this and other faction contact the PARC to express interest in making offers for resources, information, or patients. ` +
             `The faction could have a temporary job to offer a patient, or suggest an exchange of resources or favors. Or they could have a permanent role in mind for an ideal candidate patient. ` +
-            `If a patient is already on-loan to this faction, use this opportunity to update the Director on their status or wellbeing, or even depict the patient's return. ` +
+            `If a patient is already on-loan to this faction, use this opportunity to update the Director on their status, depict the patient's return, or convert them to a permanent placement with the faction. ` +
             `Remember to use appropriate tags when moving characters on- or off-station. ` : '') +
-        /*((faction && !request) ? `\nThis skit may explore the nature of this faction's relationship with and intentions for the Director, the PARC, or other characters present in the Comms module (if any). ` +
-            `However, this and other factions generally contact the PARC to express interest or make offers: ` +
-            `\n1) Most commonly, these are 'job' openings with certain character qualities (or limitations) in mind; this can be a temporary assignment, like a mission or project.` +
-            `\n2) Sometimes, these 'job' offers target a specific patient of the PARC; this can be a temporary assignment, like a mission or project.` +
-            `\n3) Finally, some offers are for other Station resources or exchanges; these are informed by the PARC's core stats, but typically presented in a narrative or abstract fashion.` +
-            `\nAll requests come with some offer of compensation which will translate into station stat bonuses, perhaps abstractly (for instance, an exchange of information for arms may harm Systems but benefit Security). ` +
-            `Remember that a 'job' in this context may be something the Director can compel a patient into—not necessarily gainful employment. ` +
-            `Although deals and offers may be discussed in this skit, they can only be finalized through a separate game mechanic, so the script should leave the offer open and a little vague without confirming anything.` : '') +*/
         `\n\nKnown Factions: \n${Object.values(stage.getSave().factions).map(faction => `${faction.name}: ${faction.getReputationDescription()}`).join('\n')}` +
         (module ? (`\n\nModule Details:\n  This scene is set in ` +
             `${module.type === 'quarters' ? `${moduleOwner ? `${moduleOwner.name}'s` : 'a vacant'} quarters` : 
@@ -295,7 +253,7 @@ export function generateSkitPrompt(skit: SkitData, stage: Stage, historyLength: 
     return fullPrompt;
 }
 
-export async function generateSkitScript(skit: SkitData, stage: Stage): Promise<{ entries: ScriptEntry[]; endScene: boolean; statChanges: { [actorId: string]: { [stat: string]: number } }; requests: Request[] }> {
+export async function generateSkitScript(skit: SkitData, stage: Stage): Promise<{ entries: ScriptEntry[]; endScene: boolean; statChanges: { [actorId: string]: { [stat: string]: number } } }> {
 
     // There are two optional phrases for gently/more firmly prodding the model toward wrapping up the scene, and then we calculate one to show based on the skit.script.length and some randomness:
     const wrapUpPhrases = [
@@ -602,10 +560,9 @@ export async function generateSkitScript(skit: SkitData, stage: Stage): Promise<
 
                 const statChanges: { [actorId: string]: { [stat: string]: number } } = {};
                 const factionChanges: { [actorId: string]: string } = {};
-                const requests: Request[] = [];
-                // If this response contains an endScene, we will analyze the script for requests, stat changes, or other game mechanics to be applied. Add this to the ttsPromises to run in parallel.
+                // If this response contains an endScene, we will analyze the script for stat changes or other game mechanics to be applied. Add this to the ttsPromises to run in parallel.
                 if (endScene) {
-                    console.log('Scene end predicted; preparing to analyze for requests and stat changes.');
+                    console.log('Scene end predicted; preparing to analyze for stat changes.');
 
                     ttsPromises.push((async () => {
                         const analysisPrompt = generateSkitPrompt(skit, stage, 0,
@@ -678,22 +635,11 @@ export async function generateSkitScript(skit: SkitData, stage: Stage): Promise<
                         if (requestAnalysis && requestAnalysis.result) {
                             const analysisText = requestAnalysis.result;
 
-                            // Process analysisText for stat changes and requests
+                            // Process analysisText for stat changes
                             const lines = analysisText.split('\n');
                             for (const line of lines) {
                                 const trimmed = line.trim();
                                 if (!trimmed || !trimmed.startsWith('[')) continue;
-
-                                // If it's a request tag (starts with REQUEST:), call Request.createFromTag and add to stage.requests
-                                if (trimmed.toUpperCase().startsWith('[REQUEST:')) {
-                                    console.log('Processing request tag:', trimmed);
-                                    const request = Request.parseFromTag(trimmed, stage);
-                                    if (request) {
-                                        console.log('Added new request from tag:', request);
-                                        requests.push(request);
-                                    }
-                                    continue;
-                                }
 
                                 if (trimmed.toUpperCase().startsWith('[SUMMARY:')) {
                                     const summaryMatch = /\[SUMMARY:\s*([^\]]+)\]/i.exec(trimmed);
@@ -820,17 +766,16 @@ export async function generateSkitScript(skit: SkitData, stage: Stage): Promise<
 
                 skit.endProperties = statChanges;
                 skit.endFactionChanges = factionChanges;
-                skit.requests = requests;
                 skit.summary = summary;
 
-                return { entries: scriptEntries, endScene: endScene, statChanges: statChanges, requests: requests };
+                return { entries: scriptEntries, endScene: endScene, statChanges: statChanges };
             }
         } catch (error) {
             console.error('Error generating skit script:', error);
         }
         retries--;
     }
-    return { entries: [], endScene: false, statChanges: {}, requests: [] };
+    return { entries: [], endScene: false, statChanges: {} };
 }
 
 
