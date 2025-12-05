@@ -252,6 +252,7 @@ export async function generateFactionRepresentative(faction: Faction, stage: Sta
         const repActor = await loadReserveActor(actorData, stage);
         if (repActor) {
             repActor.factionId = faction.id;
+            repActor.origin = 'faction';
             repActor.locationId = faction.id; // place them "in" the faction for now
             faction.representativeId = repActor.id;
             await generatePrimaryActorImage(repActor, stage);

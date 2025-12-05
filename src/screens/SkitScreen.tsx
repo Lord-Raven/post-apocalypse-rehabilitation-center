@@ -862,6 +862,10 @@ export const SkitScreen: FC<SkitScreenProps> = ({ stage, setScreenType }) => {
         
         if (inputText.trim()) {
             stageSkit.script.push({ speaker: stage().getSave().player.name.toUpperCase(), message: inputText, speechUrl: '' });
+        } else if (index < stageSkit.script.length - 1) {
+            // If input is blank and we're not at the end, just treat as next()
+            next();
+            return;
         }
         setSkit({...stageSkit as SkitData});
         setLoading(true);

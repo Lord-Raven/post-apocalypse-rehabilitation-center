@@ -40,6 +40,7 @@ class Actor {
     locationId: string = ''; // If this is a module ID, the actor is currently present in that module; if it is a faction ID, the actor is temporarily located offstation with that faction
     factionId: string = ''; // If this actor belongs to a faction, the ID of that faction; '' is the PARC or independent
     avatarImageUrl: string;
+    origin: 'patient' | 'faction' | 'aide' = 'patient';
     description: string;
     profile: string;
     style: string;

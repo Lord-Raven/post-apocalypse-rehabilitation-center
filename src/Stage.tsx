@@ -494,6 +494,8 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
 
         if (!this.getSave().actors[this.getSave().aide.actorId || '']) {
             this.getSave().aide.actorId = undefined;
+        } else {
+            this.getSave().actors[this.getSave().aide.actorId || ''].origin = 'aide';
         }
 
         this.loadReserveActors();
@@ -533,6 +535,7 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
         Object.values(save.factions).forEach(faction => {
             if (faction.representativeId && save.actors[faction.representativeId]) {
                 const repActor = save.actors[faction.representativeId];
+                repActor.origin = 'faction';
                 console.log("Check if rep needs repair:");
                 console.log(repActor);
                 if (repActor.factionId !== faction.id) {
@@ -597,6 +600,7 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
                         save = this.getSave();
                         save.actors[aideActor.id] = aideActor;
                         aideActor.name = save.aide.name;
+                        aideActor.origin = 'aide';
                         aideActor.profile = save.aide.description;
                         save.aide.actorId = aideActor.id;
                         save.actors[aideActor.id] = aideActor;
@@ -876,6 +880,10 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
                     } else {
                         // If joining a faction, set locationId to the factionId
                         actor.locationId = newFactionId;
+                        // Free up rooms owned by this actor
+                        save.layout.getModulesWhere(m => m.ownerId === actor.id).forEach(module => {
+                            module.ownerId = '';
+                        });
                     }
                 }
             }
