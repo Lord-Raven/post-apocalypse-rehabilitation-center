@@ -112,7 +112,7 @@ export const ActorCard: FC<ActorCardProps> = ({
                         textShadow: '0 0 8px #ffa726',
                         border: '1px solid rgba(255, 167, 38, 0.5)',
                     }}>
-                        ⏱ AWAY ON ASSIGNMENT
+                        ⏱ OFF-STATION
                     </div>
                 )}
                 
