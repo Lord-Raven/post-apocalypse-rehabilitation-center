@@ -174,7 +174,7 @@ export const EchoScreen: FC<EchoScreenProps> = ({stage, setScreenType, isVertica
 			>
 				<div style={{ 
 					display: 'flex', 
-					gap: '1.2vh', 
+					gap: '1.2vmin', 
 					justifyContent: 'center', 
 					flexWrap: 'wrap',
 					maxHeight: '25vh',
@@ -187,7 +187,7 @@ export const EchoScreen: FC<EchoScreenProps> = ({stage, setScreenType, isVertica
 					style={{ 
 						display: 'inline-block',
 						position: 'relative',
-						width: isExpanded ? '32vmin' : '16vmin',
+						width: isExpanded ? '32vmin' : (expandedCandidateId ? '12vmin' : '16vmin'),
 						transition: 'width 0.3s ease'
 					}}
 					animate={{
@@ -258,7 +258,7 @@ export const EchoScreen: FC<EchoScreenProps> = ({stage, setScreenType, isVertica
 				)}
 
 				{/* Echo slots container */}
-				<div style={{ display: 'flex', gap: 40, alignItems: 'flex-end', justifyContent: 'center', flex: 1 }}>
+				<div style={{ display: 'flex', gap: isVerticalLayout ? '20px' : '40px', alignItems: 'flex-end', justifyContent: 'center', flex: 1 }}>
 					{echoSlots.map((actor, slotIndex) => {
 						const isSelected = selectedSlotIndex === slotIndex;
 
@@ -317,7 +317,7 @@ export const EchoScreen: FC<EchoScreenProps> = ({stage, setScreenType, isVertica
 									animationDelay: `${slotIndex * 0.7}s`,
 									cursor: actor ? 'pointer' : 'default',
 									height: '65vh',
-									width: isVerticalLayout ? '30vw' : '18vw',
+									width: isVerticalLayout ? '28vw' : '18vw',
 									display: 'flex',
 									flexDirection: 'column',
 									justifyContent: actor ? 'flex-end' : 'center',
