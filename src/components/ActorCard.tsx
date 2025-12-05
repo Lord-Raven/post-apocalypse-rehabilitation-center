@@ -12,6 +12,7 @@ export enum ActorCardSection {
 
 interface ActorCardProps {
     actor: Actor;
+    isAway: boolean;
     role?: string;
     collapsedSections?: ActorCardSection[];
     expandedSections?: ActorCardSection[];
@@ -41,6 +42,7 @@ interface ActorCardProps {
  */
 export const ActorCard: FC<ActorCardProps> = ({
     actor,
+    isAway,
     role,
     collapsedSections = [ActorCardSection.STATS, ActorCardSection.PORTRAIT],
     expandedSections = [],
@@ -57,7 +59,6 @@ export const ActorCard: FC<ActorCardProps> = ({
 }) => {
     const currentSections = (isExpanded && expandedSections?.length > 0) ? expandedSections : collapsedSections;
     const clickable = !!onClick;
-    const isAway = !!actor.inProgressRequestId;
 
     // Default hover behavior
     const defaultWhileHover = {

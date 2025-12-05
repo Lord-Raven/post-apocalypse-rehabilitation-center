@@ -324,7 +324,7 @@ export const SkitScreen: FC<SkitScreenProps> = ({ stage, setScreenType }) => {
         // Update actual actor locationIds in the save data
         Object.entries(currentLocations).forEach(([actorId, locationId]) => {
             const actor = stage().getSave().actors[actorId];
-            if (actor && !actor.inProgressRequestId) {
+            if (actor && !actor.isOffSite(stage().getSave())) {
                 actor.locationId = locationId;
             }
         });
@@ -504,6 +504,7 @@ export const SkitScreen: FC<SkitScreenProps> = ({ stage, setScreenType }) => {
                 }}>
                     <ActorCard
                         actor={hoveredActor}
+                        isAway={hoveredActor.isOffSite(stage().getSave())}
                         role={(() => {
                             const roleModules = stage().getSave().layout.getModulesWhere((m: any) => 
                                 m && m.type !== 'quarters' && m.ownerId === hoveredActor.id
