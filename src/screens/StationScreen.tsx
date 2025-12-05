@@ -49,9 +49,10 @@ const StyledDayCard = styled(Card)(({ theme }) => ({
 interface StationScreenProps {
     stage: () => Stage;
     setScreenType: (type: ScreenType) => void;
+    isVerticalLayout: boolean;
 }
 
-export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType}) => {
+export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType, isVerticalLayout}) => {
     const [expandedMenu, setExpandedMenu] = React.useState<string | null>('patients');
     const [previousExpandedMenu, setPreviousExpandedMenu] = React.useState<string | null>(null);
     const [day, setDay] = React.useState<number>(stage().getSave().day);
@@ -75,7 +76,8 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType}) =>
     const { setTooltip, clearTooltip } = useTooltip();
 
     const gridSize = 6;
-    const cellSize = '12vh';
+    const cellSize = isVerticalLayout ? '10vh' : '12vh';
+    const gridEdgeSize = isVerticalLayout ? '5vh' : '0';
 
     const openModuleSelector = (x: number, y: number) => {
         setSelectedPosition({x, y});
@@ -710,12 +712,19 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType}) =>
     }
 
     return (
-        <div className="station-screen" style={{ display: 'flex', height: '100vh', width: '100vw', overflow: 'hidden' }}>
-            {/* Main Grid Area - 80% left side */}
+        <div className="station-screen" style={{ 
+            display: 'flex', 
+            flexDirection: isVerticalLayout ? 'column' : 'row',
+            height: '100vh', 
+            width: '100vw', 
+            overflow: 'hidden' 
+        }}>
+            {/* Main Grid Area */}
             <div
                 className="station-grid-container"
                 style={{
-                    width: '80vw',
+                    width: isVerticalLayout ? '100vw' : '80vw',
+                    height: isVerticalLayout ? '70vh' : '100vh',
                     boxSizing: 'border-box',
                     background: 'linear-gradient(45deg, #001122 0%, #002244 100%)',
                     position: 'relative',
@@ -733,6 +742,7 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType}) =>
                         left: '20px',
                         right: '80px', // Leave space for menu button
                         display: 'flex',
+                        flexWrap: 'wrap',
                         gap: '20px',
                         padding: '15px 25px',
                         background: 'linear-gradient(135deg, rgba(0, 30, 60, 0.85) 0%, rgba(0, 20, 40, 0.85) 100%)',
@@ -855,9 +865,9 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType}) =>
                         right: '20px',
                         zIndex: 100,
                         background: 'rgba(0, 20, 40, 0.9)',
-                        border: '3px solid #00ff88',
+                        border: '2px solid #00ff88',
                         borderRadius: '12px',
-                        padding: '12px',
+                        padding: '15px',
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
@@ -875,9 +885,9 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType}) =>
                     className="station-modules"
                     style={{
                         position: 'absolute',
-                        top: '50%',
+                        top: isVerticalLayout ? `calc(${gridEdgeSize} + 50%)` : '50%',
                         left: '50%',
-                        transform: 'translate(-50%, -50%)',
+                        transform: isVerticalLayout ? 'translate(-50%, calc(-50% + 2.5vh))' : 'translate(-50%, -50%)',
                         width: `calc(${gridSize} * ${cellSize})`,
                         height: `calc(${gridSize} * ${cellSize})`,
                         // move the subtle grid onto the centered modules container so lines align with cells
@@ -893,74 +903,226 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType}) =>
                 </div>
             </div>
 
-            {/* Side Menu - 20vw right side */}
+            {/* Side Menu (right side for horizontal, bottom for vertical) */}
             <div
                 className="station-menu"
                 style={{
-                    width: '20vw',
+                    width: isVerticalLayout ? '100vw' : '20vw',
+                    height: isVerticalLayout ? '30vh' : '100vh',
                     boxSizing: 'border-box',
                     background: 'rgba(0, 20, 40, 0.9)',
-                    borderLeft: '2px solid #00ff88',
-                    padding: '20px',
+                    borderLeft: isVerticalLayout ? 'none' : '2px solid #00ff88',
+                    borderTop: isVerticalLayout ? '2px solid #00ff88' : 'none',
+                    padding: isVerticalLayout ? '10px' : '20px',
                     display: 'flex',
                     flexDirection: 'column',
-                    height: '100vh',
                     overflow: 'hidden',
                 }}
             >
-                {/* Enhanced Day and Turn Display */}
-                {renderDayTurnDisplay()}
+                {/* Enhanced Day and Turn Display - hide in vertical layout */}
+                {!isVerticalLayout && renderDayTurnDisplay()}
 
-                {['Patients', 'Modules', 'Factions'].map(item => {
-                    const itemKey = item.toLowerCase();
-                    const isExpanded = expandedMenu === itemKey;
-                    const isContracting = previousExpandedMenu === itemKey && !isExpanded;
-                    const [isHeaderHovered, setIsHeaderHovered] = React.useState(false);
-                    
-                    return (
-                        <div 
-                            key={item} 
-                            style={{ 
-                                margin: '10px 0',
-                                flex: isExpanded ? '1 1 auto' : '0 0 auto',
-                                display: 'flex',
-                                flexDirection: 'column',
-                                minHeight: 0,
-                            }}
-                        >
-                            <motion.button
-                                onClick={() => {
-                                    setPreviousExpandedMenu(expandedMenu);
-                                    setExpandedMenu(isExpanded ? null : itemKey);
-                                }}
-                                onMouseEnter={() => setIsHeaderHovered(true)}
-                                onMouseLeave={() => setIsHeaderHovered(false)}
-                                animate={{ x: isHeaderHovered ? 10 : 0 }}
-                                transition={{ x: { duration: 0.2, ease: 'easeOut' } }}
-                                whileTap={{ scale: 0.95 }}
-                                className="section-header"
-                                style={{
+                {isVerticalLayout ? (
+                    // Vertical layout: Tabbed interface
+                    <>
+                        {/* Tab buttons at top */}
+                        <div style={{ 
+                            display: 'flex', 
+                            gap: '10px',
+                            marginBottom: '10px',
+                            borderBottom: '2px solid #00ff88',
+                            paddingBottom: '10px'
+                        }}>
+                            {['Patients', 'Modules', 'Factions'].map(item => {
+                                const itemKey = item.toLowerCase();
+                                const isActive = expandedMenu === itemKey;
+                                return (
+                                    <motion.button
+                                        key={item}
+                                        onClick={() => setExpandedMenu(itemKey)}
+                                        whileTap={{ scale: 0.95 }}
+                                        style={{
+                                            flex: 1,
+                                            padding: '10px',
+                                            background: isActive
+                                                ? 'rgba(0, 255, 136, 0.3)'
+                                                : 'rgba(0, 255, 136, 0.1)',
+                                            border: isActive ? '3px solid #00ff88' : '2px solid rgba(0, 255, 136, 0.5)',
+                                            borderRadius: '8px',
+                                            cursor: 'pointer',
+                                            fontSize: '0.9rem',
+                                            fontWeight: 700,
+                                            color: '#00ff88',
+                                            letterSpacing: '0.05em',
+                                        }}
+                                    >
+                                        {item}
+                                    </motion.button>
+                                );
+                            })}
+                        </div>
+                        {/* Tab content */}
+                        <div style={{ 
+                            flex: '1 1 auto',
+                            overflowY: 'auto',
+                            minHeight: 0,
+                        }}>
+                            {expandedMenu === 'patients' && (
+                                <div style={{ padding: '10px' }}>
+                                    {Object.values(stage().getSave().actors).length === 0 ? (
+                                        <p style={{ color: '#00ff88', opacity: 0.5, fontStyle: 'italic', fontSize: '0.85rem', fontWeight: 700 }}>No patients currently on station</p>
+                                    ) : (
+                                        Object.values(stage().getSave().actors).filter(actor => !actor.factionId && stage().getSave().aide.actorId != actor.id).map((actor: any) => (
+                                            <div 
+                                                key={actor.id}
+                                                onMouseEnter={() => setHoveredActorId(actor.id)}
+                                                onMouseLeave={() => setHoveredActorId(null)}
+                                            >
+                                                <ActorCard
+                                                    actor={actor}
+                                                    isAway={actor.isOffSite(stage().getSave())}
+                                                    role={actor.getCurrentRole(stage().getSave())}
+                                                    isDragging={draggedActor?.id === actor.id}
+                                                    draggable={true}
+                                                    onDragStart={(e: React.DragEvent) => {
+                                                        setDraggedActor(actor);
+                                                        setHoveredActorId(null);
+                                                        e.dataTransfer.effectAllowed = 'move';
+                                                    }}
+                                                    onDragEnd={() => {
+                                                        setDraggedActor(null);
+                                                        setHoveredModuleId(null);
+                                                        setHoveredActorId(null);
+                                                        clearTooltip();
+                                                    }}
+                                                    whileHover={{
+                                                        backgroundColor: 'rgba(0, 255, 136, 0.15)',
+                                                        borderColor: 'rgba(0, 255, 136, 0.5)',
+                                                        x: 10
+                                                    }}
+                                                    style={{
+                                                        marginBottom: '10px',
+                                                    }}
+                                                />
+                                            </div>
+                                        ))
+                                    )}
+                                </div>
+                            )}
+                            {expandedMenu === 'modules' && (
+                                <div style={{ padding: '10px' }}>
+                                    {layout.getModulesWhere(m => true).length === 0 ? (
+                                        <p style={{ 
+                                            color: '#00ff88', 
+                                            opacity: 0.5, 
+                                            fontStyle: 'italic', 
+                                            fontSize: '0.85rem', 
+                                            fontWeight: 700,
+                                        }}>No modules currently on station</p>
+                                    ) : (
+                                        layout.getModulesWhere(m => true)
+                                            .sort((a: Module, b: Module) => a.type.localeCompare(b.type))
+                                            .map((module: Module) => (
+                                                <ModuleCard
+                                                    key={module.id}
+                                                    module={module}
+                                                    stage={stage()}
+                                                    onClick={() => {
+                                                        console.log(`Clicked module ${module.id} of type ${module.type}`);
+                                                        const action = module.getAction();
+                                                        if (action) {
+                                                            action(module, stage(), setScreenType);
+                                                        }
+                                                    }}
+                                                    style={{
+                                                        marginBottom: '10px',
+                                                    }}
+                                                />
+                                            ))
+                                    )}
+                                </div>
+                            )}
+                            {expandedMenu === 'factions' && (
+                                <div style={{ padding: '10px' }}>
+                                    {Object.values(stage().getSave().factions).filter(f => f.active).length === 0 ? (
+                                        <p style={{ 
+                                            color: '#00ff88', 
+                                            opacity: 0.5, 
+                                            fontStyle: 'italic', 
+                                            fontSize: '0.85rem', 
+                                            fontWeight: 700 
+                                        }}>No factions in contact.</p>
+                                    ) : (
+                                        Object.values(stage().getSave().factions).filter(f => f.active).map((faction) => (
+                                            <FactionCard
+                                                key={faction.id}
+                                                faction={faction}
+                                                representative={stage().getSave().actors[faction.representativeId || '']}
+                                                onClick={() => {
+                                                    console.log(`Clicked faction ${faction.name}`);
+                                                }}
+                                                style={{
+                                                    marginBottom: '10px',
+                                                }}
+                                            />
+                                        ))
+                                    )}
+                                </div>
+                            )}
+                        </div>
+                    </>
+                ) : (
+                    // Horizontal layout: Original expandable sections
+                    ['Patients', 'Modules', 'Factions'].map(item => {
+                        const itemKey = item.toLowerCase();
+                        const isExpanded = expandedMenu === itemKey;
+                        const isContracting = previousExpandedMenu === itemKey && !isExpanded;
+                        const [isHeaderHovered, setIsHeaderHovered] = React.useState(false);
+                        
+                        return (
+                            <div 
+                                key={item} 
+                                style={{ 
+                                    margin: '10px 0',
+                                    flex: isExpanded ? '1 1 auto' : '0 0 auto',
                                     display: 'flex',
-                                    alignItems: 'center',
-                                    justifyContent: 'space-between',
-                                    width: '100%',
-                                    padding: '15px',
-                                    background: isExpanded
-                                        ? 'rgba(0, 255, 136, 0.2)'
-                                        : 'transparent',
-                                    border: '3px solid #00ff88',
-                                    borderRadius: '5px',
-                                    cursor: 'pointer',
-                                    textAlign: 'left',
-                                    fontSize: '1rem',
+                                    flexDirection: 'column',
+                                    minHeight: 0,
                                 }}
                             >
-                                <span style={{ fontWeight: 700, letterSpacing: '0.08em' }}>{item}</span>
-                                <span style={{ 
-                                    transform: isExpanded ? 'rotate(180deg)' : 'rotate(0deg)',
-                                    transition: 'transform 0.2s ease'
-                                }}>▼</span>
-                            </motion.button>
+                                <motion.button
+                                    onClick={() => {
+                                        setPreviousExpandedMenu(expandedMenu);
+                                        setExpandedMenu(isExpanded ? null : itemKey);
+                                    }}
+                                    onMouseEnter={() => setIsHeaderHovered(true)}
+                                    onMouseLeave={() => setIsHeaderHovered(false)}
+                                    animate={{ x: isHeaderHovered ? 10 : 0 }}
+                                    transition={{ x: { duration: 0.2, ease: 'easeOut' } }}
+                                    whileTap={{ scale: 0.95 }}
+                                    className="section-header"
+                                    style={{
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'space-between',
+                                        width: '100%',
+                                        padding: '15px',
+                                        background: isExpanded
+                                            ? 'rgba(0, 255, 136, 0.2)'
+                                            : 'transparent',
+                                        border: '3px solid #00ff88',
+                                        borderRadius: '5px',
+                                        cursor: 'pointer',
+                                        textAlign: 'left',
+                                        fontSize: '1rem',
+                                    }}
+                                >
+                                    <span style={{ fontWeight: 700, letterSpacing: '0.08em' }}>{item}</span>
+                                    <span style={{ 
+                                        transform: isExpanded ? 'rotate(180deg)' : 'rotate(0deg)',
+                                        transition: 'transform 0.2s ease'
+                                    }}>▼</span>
+                                </motion.button>
                             
                             {/* Expandable content */}
                             <motion.div
@@ -1099,7 +1261,8 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType}) =>
                             </motion.div>
                         </div>
                     );
-                })}
+                })
+                )}
 
                 
             </div>

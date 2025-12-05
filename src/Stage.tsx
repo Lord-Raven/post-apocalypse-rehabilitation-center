@@ -875,6 +875,12 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
     }
 
 
+    isVerticalLayout(): boolean {
+        // Determine if the layout should be vertical based on window aspect ratio
+        // Vertical layout when height > width (portrait orientation)
+        return window.innerHeight > window.innerWidth;
+    }
+
     render(): ReactElement {
 
         return <BaseScreen stage={() => this}/>;

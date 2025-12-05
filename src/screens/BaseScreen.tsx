@@ -28,7 +28,17 @@ interface BaseScreenProps {
 const BaseScreenContent: FC<{ stage: () => Stage }> = ({ stage }) => {
     const [errorMessage, setErrorMessage] = React.useState<string | null>(null);
     const [screenType, setScreenType] = React.useState<ScreenType>(ScreenType.MENU);
+    const [isVerticalLayout, setIsVerticalLayout] = React.useState<boolean>(stage().isVerticalLayout());
     const { message, icon, actionCost, clearTooltip } = useTooltip();
+
+    // Update layout orientation on resize
+    React.useEffect(() => {
+        const handleResize = () => {
+            setIsVerticalLayout(stage().isVerticalLayout());
+        };
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
 
     // Clear tooltip whenever screen type changes
     React.useEffect(() => {
@@ -47,7 +57,7 @@ const BaseScreenContent: FC<{ stage: () => Stage }> = ({ stage }) => {
             )}
             {screenType === ScreenType.STATION && (
                 // Render station screen
-                <StationScreen stage={stage} setScreenType={setScreenType} />
+                <StationScreen stage={stage} setScreenType={setScreenType} isVerticalLayout={isVerticalLayout} />
             )}
             {screenType === ScreenType.ECHO && (
                 // Render echo screen
