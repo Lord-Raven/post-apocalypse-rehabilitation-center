@@ -611,7 +611,8 @@ export async function generateSkitScript(skit: SkitData, stage: Stage): Promise<
                         const analysisPrompt = generateSkitPrompt(skit, stage, 0,
                             `Scene Script:\nSystem: ${buildScriptLog(skit)}` +
                             `\n\nPrimary Instruction:\nAnalyze the preceding scene script and output formatted tags in brackets, identifying the following categorical changes to be inorporated into the game. ` +
-                            `\n\nCharacter Stat Changes:\nIdentify any changes to character stats implied by the scene. For each change, output a line in the following format:\n` +
+                            `\n\n---` +
+                            `\nCharacter Stat Changes:\nIdentify any changes to character stats implied by the scene. For each change, output a line in the following format:\n` +
                             `[CHARACTER NAME: <stat> +<value>(, ...)]` +
                             `Where <stat> is the name of the stat to be changed, and <value> is the amount to increase or decrease the stat by (positive or negative). ` +
                             `Multiple stat changes can be included in a single tag, separated by commas. Similarly, multiple character tags can be provided in the output.` +
@@ -626,49 +627,8 @@ export async function generateSkitScript(skit: SkitData, stage: Stage): Promise<
                             `[STATION: Systems +2, Comfort +1]\n` +
                             `[STATION: Security -1]` +
 
-                            /*`\n\nFaction Requests:\n` +
-                            `Identify any requests made by factions or faction representatives toward the player or station. ` +
-                            `If the preceding scene depicts the successful fulfillment of a deal, refrain from outputting that deal here. ` +
-                            `For each request identified, output a line in the following format:\n` +
-                            `[REQUEST: <factionName> | <description> | <requirement> -> <reward>]` +
-                            `Where <factionName> is the name of the faction making the request, <description> is a brief summary of the request, ` +
-                            `<requirement> is what the player must do to fulfill the request, and <reward> is what the player will receive upon completion.\n` +
-                            `Valid <requirement> formats:\n` +
-                            `  ACTOR <stat><op><value>[, <stat><op><value>] [TIME:<turns>]\n` +
-                            `   - A patient with one or more stat constraints\n` +
-                            `   - op can be: >= (min), <= (max)\n` +
-                            `   - Optional TIME:<turns> specifies temporary assignment duration (omit for permanent)\n` +
-                            `   - Example: ACTOR brawn>=7, charm>=5, lust<=3\n` +
-                            `   - Example: ACTOR brawn>=8, vigilance>=7 TIME:3\n` +
-                            `  ACTOR-NAME <actorName> [TIME:<turns>]\n` +
-                            `   - A specific patient by name\n` +
-                            `   - Optional TIME:<turns> specifies temporary assignment duration (omit for permanent)\n` +
-                            `   - Example: ACTOR-NAME Jane Doe\n` +
-                            `   - Example: ACTOR-NAME Dr. Smith TIME:5\n` +
-                            `  STATION <stat>-<value>[, <stat>-<value>]\n` +
-                            `   - A request based on station stats, generally with an exchange for other stat bonuses\n` +
-                            `   - Stats will be reduced by the required amounts and raised by the reward amounts\n` +
-                            `   - Example: STATION Security-2, Harmony-1\n` +
-                            `Valid <reward> formats (for all requests):\n` +
-                            `   <stat>+<value>[, <stat>+<value>]\n` +
-                            `   - <stat> is a station stat to be increased\n` +
-                            `   - Positive rewards should disinclude stats reduced by the requirements\n` +
-                            `   - Example: Systems+2, Comfort+1\n` +
-                            `Full Examples:\n` +
-                            `[REQUEST: Stellar Concord | We need a strong, permanent laborer | ACTOR brawn>=7, charm>=6 -> Systems+2, Comfort+1]\n` +
-                            `[REQUEST: Shadow Syndicate | Send us our ideal operative | ACTOR-NAME Jane Doe -> Harmony+3]\n` +
-                            `[REQUEST: Defense Coalition | Help us bolster our defenses | STATION Security-2, Harmony-1 -> Systems+2, Provision+2]\n` +
-                            `[REQUEST: Trade Consortium | Resource exchange proposal | STATION Systems-3, Comfort-2 -> Provision+2, Wealth+2]\n` +
-                            `[REQUEST: Mercenary Guild | Temporary security assignment | ACTOR brawn>=8, vigilance>=7 TIME:3 -> Security+2]\n` +
-                            `[REQUEST: Research Institute | Scholar exchange program | ACTOR-NAME Dr. Smith TIME:5 -> Systems+2, Wealth+1]` +
-                            `\n\nThese tags must define specific requirements and rewards, even if the script did not contain precise details; ` +
-                            `choose requirements and rewards that represent the concepts expressed within the script, taking care to avoid conflicting requirements/rewards. ` +
-                            `If the request is not a permanent actor placement, a TIME must be supplied. ` +
-                            `TIME should be between 4 and 12 turns, depending on the nature of the request. 4 turns is an in-game "day."  ` +
-                            `Generally, requests with a time component are temporary assignments/missions/trainings where a character is sent off-station to fulfill the request, ` +
-                            `returning after the specified duration. The reward for these requests should typically be smaller than those for permanent assignment—perhaps only a single stat bonus.` +*/
-
-                            `\n\nFaction Reputation Changes:\n` +
+                            `\n---` +
+                            `\nFaction Reputation Changes:\n` +
                             `Identify any changes to faction reputations implied by the scene. For each change, output a line in the following format:\n` +
                             `[FACTION: <factionName> +<value>]\n` +
                             `Where <factionName> is the name of the faction whose reputation is changing, and <value> is the amount to increase or decrease the reputation by (positive or negative). ` +
@@ -678,24 +638,25 @@ export async function generateSkitScript(skit: SkitData, stage: Stage): Promise<
                             `[FACTION: Stellar Concord +1]\n` +
                             `[FACTION: Shadow Syndicate -2]\n` +
 
-                            `\n\nCharacter Faction Change:\n` +
-                            `If any character has changed their faction affiliation as a result of events in the scene, output a line in the following format:\n` +
+                            `\n---` +
+                            `\nCharacter Faction Change:\n` +
+                            `If a character has changed faction affiliations in the scene, output a line in the following format:\n` +
                             `[CHARACTER NAME: JOINED <factionName or PARC>]\n` +
                             `Where <factionName or PARC> is the name of the faction the character has joined, or "PARC" if they have left a faction to join the station itself. ` +
                             `Full Examples:\n` +
                             `[${Object.values(stage.getSave().actors)[0].name}: JOINED Stellar Concord]\n` +
                             `[${Object.values(stage.getSave().actors)[0].name}: JOINED PARC]` +
-                            `\n\nThese tags are uncommon; they indicate an official change in affiliation or ownership (not necessarily loyalty) for the named character—not for temporary visits. ` +
+                            `\n\nThis tag indicates an official change in allegiance or ownership/possession of the named character. ` +
                             `Consider this tag when the script depicts: ` +
                             `\n - A patient taking a permanent position with a faction.` +
-                            `\n - A faction representative defecting to the PARC permanently.` +
+                            `\n - A faction representative defecting to the PARC.` +
                             `\n - A character being formally recruited or dismissed.` +
                             `\n - A character being sold to or imprisoned by a faction.` +
 
                             (!summary ? 
-                                `\n\nSummarize Scene:\n` +
+                                `\n---\nSummarize Scene:\n` +
                                 `"[SUMMARY: A brief synopsis of this scene's key events.]"` +
-                                `The Summary tag must be used to describe the scene's key events.`
+                                `The essential Summary tag must be used to describe the scene's key events.`
                                 : ''
                             ) +
 
@@ -704,7 +665,7 @@ export async function generateSkitScript(skit: SkitData, stage: Stage): Promise<
                             `Bear in mind the somewhat abstract meaning of character and station stats when determining reasonable changes and goals. ` +
                             `All stats (station and character) exist on a scale of 1-10, with 1 being the lowest and 10 being the highest possible value; ` +
                             `typically, these changes should be minor (+/- 1 or 2) at a time, unless something incredibly dramatic occurs. ` +
-                            `If there is little or no change, or all relevant changes have been presented, the response may be ended early with [END]. \n\n`
+                            `If there is little or no change, or all relevant tags have been presented, the response may be ended early with [END]. \n\n`
                         );
                         const requestAnalysis = await stage.generator.textGen({
                             prompt: analysisPrompt,
