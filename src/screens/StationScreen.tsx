@@ -768,7 +768,8 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType, isV
                                     flexDirection: 'column',
                                     alignItems: 'center',
                                     gap: '4px',
-                                    flex: 1,
+                                    flex: '1 1 calc(33.333% - 14px)',
+                                    minWidth: '140px',
                                     userSelect: 'none',
                                 }}
                             >
@@ -908,7 +909,7 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType, isV
                 className="station-menu"
                 style={{
                     width: isVerticalLayout ? '100vw' : '20vw',
-                    height: isVerticalLayout ? '30vh' : '100vh',
+                    height: isVerticalLayout ? '25vh' : '100vh',
                     boxSizing: 'border-box',
                     background: 'rgba(0, 20, 40, 0.9)',
                     borderLeft: isVerticalLayout ? 'none' : '2px solid #00ff88',
@@ -968,9 +969,16 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType, isV
                             minHeight: 0,
                         }}>
                             {expandedMenu === 'patients' && (
-                                <div style={{ padding: '10px' }}>
+                                <div style={{ 
+                                    padding: '10px',
+                                    ...(isVerticalLayout && {
+                                        display: 'grid',
+                                        gridTemplateColumns: 'repeat(2, 1fr)',
+                                        gap: '10px',
+                                    }),
+                                }}>
                                     {Object.values(stage().getSave().actors).length === 0 ? (
-                                        <p style={{ color: '#00ff88', opacity: 0.5, fontStyle: 'italic', fontSize: '0.85rem', fontWeight: 700 }}>No patients currently on station</p>
+                                        <p style={{ color: '#00ff88', opacity: 0.5, fontStyle: 'italic', fontSize: '0.85rem', fontWeight: 700, ...(isVerticalLayout && { gridColumn: '1 / -1' }) }}>No patients currently on station</p>
                                     ) : (
                                         Object.values(stage().getSave().actors).filter(actor => !actor.factionId && stage().getSave().aide.actorId != actor.id).map((actor: any) => (
                                             <div 
@@ -1001,7 +1009,7 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType, isV
                                                         x: 10
                                                     }}
                                                     style={{
-                                                        marginBottom: '10px',
+                                                        marginBottom: '0',
                                                     }}
                                                 />
                                             </div>
@@ -1010,7 +1018,14 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType, isV
                                 </div>
                             )}
                             {expandedMenu === 'modules' && (
-                                <div style={{ padding: '10px' }}>
+                                <div style={{ 
+                                    padding: '10px',
+                                    ...(isVerticalLayout && {
+                                        display: 'grid',
+                                        gridTemplateColumns: 'repeat(2, 1fr)',
+                                        gap: '10px',
+                                    }),
+                                }}>
                                     {layout.getModulesWhere(m => true).length === 0 ? (
                                         <p style={{ 
                                             color: '#00ff88', 
@@ -1018,6 +1033,7 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType, isV
                                             fontStyle: 'italic', 
                                             fontSize: '0.85rem', 
                                             fontWeight: 700,
+                                            ...(isVerticalLayout && { gridColumn: '1 / -1' }),
                                         }}>No modules currently on station</p>
                                     ) : (
                                         layout.getModulesWhere(m => true)
@@ -1035,7 +1051,7 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType, isV
                                                         }
                                                     }}
                                                     style={{
-                                                        marginBottom: '10px',
+                                                        marginBottom: '0',
                                                     }}
                                                 />
                                             ))
@@ -1043,14 +1059,22 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType, isV
                                 </div>
                             )}
                             {expandedMenu === 'factions' && (
-                                <div style={{ padding: '10px' }}>
+                                <div style={{ 
+                                    padding: '10px',
+                                    ...(isVerticalLayout && {
+                                        display: 'grid',
+                                        gridTemplateColumns: 'repeat(2, 1fr)',
+                                        gap: '10px',
+                                    }),
+                                }}>
                                     {Object.values(stage().getSave().factions).filter(f => f.active).length === 0 ? (
                                         <p style={{ 
                                             color: '#00ff88', 
                                             opacity: 0.5, 
                                             fontStyle: 'italic', 
                                             fontSize: '0.85rem', 
-                                            fontWeight: 700 
+                                            fontWeight: 700,
+                                            ...(isVerticalLayout && { gridColumn: '1 / -1' }),
                                         }}>No factions in contact.</p>
                                     ) : (
                                         Object.values(stage().getSave().factions).filter(f => f.active).map((faction) => (
@@ -1062,7 +1086,7 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType, isV
                                                     console.log(`Clicked faction ${faction.name}`);
                                                 }}
                                                 style={{
-                                                    marginBottom: '10px',
+                                                    marginBottom: '0',
                                                 }}
                                             />
                                         ))
@@ -1204,8 +1228,7 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType, isV
                                                 opacity: 0.5, 
                                                 fontStyle: 'italic', 
                                                 fontSize: '0.85rem', 
-                                                fontWeight: 700,
-                                                gridColumn: '1 / -1'
+                                                fontWeight: 700
                                             }}>No modules currently on station</p>
                                         ) : (
                                             layout.getModulesWhere(m => true)
