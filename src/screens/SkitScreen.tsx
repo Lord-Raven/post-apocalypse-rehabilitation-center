@@ -851,16 +851,17 @@ export const SkitScreen: FC<SkitScreenProps> = ({ stage, setScreenType, isVertic
         const stageSkit = stage().getSave().currentSkit;
         if (!stageSkit) return;
         
-        // Truncate script to current index (removes all messages after current position)
-        stageSkit.script = stageSkit.script.slice(0, index + 1);
-        
-        if (inputText.trim()) {
-            stageSkit.script.push({ speaker: stage().getSave().player.name.toUpperCase(), message: inputText, speechUrl: '' });
-        } else if (index < stageSkit.script.length - 1) {
-            // If input is blank and we're not at the end, just treat as next()
+        if (!inputText.trim() && index < stageSkit.script.length - 1) {
             next();
             return;
         }
+
+        // Truncate script to current index (removes all messages after current position)
+        stageSkit.script = stageSkit.script.slice(0, index + 1);
+        if (inputText.trim()) {
+            stageSkit.script.push({ speaker: stage().getSave().player.name.toUpperCase(), message: inputText, speechUrl: '' });
+        }
+        
         setSkit({...stageSkit as SkitData});
         setLoading(true);
         setIndex(stageSkit.script.length - 1);
