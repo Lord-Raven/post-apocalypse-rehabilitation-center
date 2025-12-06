@@ -433,7 +433,7 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType, isV
                             width: cellSize,
                             height: cellSize,
                             boxSizing: 'border-box',
-                            padding: 6,
+                            padding: 3,
                             zIndex: draggedModule?.module.id === module?.id ? 1000 : 1,
                         }}
                     >
@@ -730,12 +730,12 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType, isV
                     transition={{ duration: 0.6, delay: 0.3 }}
                     style={{
                         position: 'absolute',
-                        top: '20px',
-                        left: '20px',
-                        right: '20px',
+                        top: '1vh',
+                        left: '1vh',
+                        right: '1vh',
                         display: 'flex',
                         gap: '0',
-                        padding: '15px 25px',
+                        padding: '1vh 1.5vh',
                         background: 'linear-gradient(135deg, rgba(0, 30, 60, 0.85) 0%, rgba(0, 20, 40, 0.85) 100%)',
                         border: '2px solid #00ff88',
                         borderRadius: '12px',
@@ -878,7 +878,7 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType, isV
                             cursor: 'pointer',
                             color: '#00ff88',
                             minWidth: '40px',
-                            marginLeft: '15px',
+                            marginLeft: '0.8vh',
                         }}
                         onMouseEnter={() => setTooltip('Open Menu', Menu)}
                         onMouseLeave={() => clearTooltip()}
@@ -934,10 +934,10 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType, isV
                         {/* Tab buttons at top */}
                         <div style={{ 
                             display: 'flex', 
-                            gap: '10px',
-                            marginBottom: '10px',
+                            gap: '0.5vh',
+                            marginBottom: '0.5vh',
                             borderBottom: '2px solid #00ff88',
-                            paddingBottom: '10px'
+                            paddingBottom: '0.5vh'
                         }}>
                             {['Patients', 'Modules', 'Factions'].map(item => {
                                 const itemKey = item.toLowerCase();
@@ -949,7 +949,7 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType, isV
                                         whileTap={{ scale: 0.95 }}
                                         style={{
                                             flex: 1,
-                                            padding: '10px',
+                                            padding: '0.8vh',
                                             background: isActive
                                                 ? 'rgba(0, 255, 136, 0.3)'
                                                 : 'rgba(0, 255, 136, 0.1)',
@@ -975,11 +975,11 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType, isV
                         }}>
                             {expandedMenu === 'patients' && (
                                 <div style={{ 
-                                    padding: '10px',
+                                    padding: '0.5vh',
                                     ...(isVerticalLayout && {
                                         display: 'grid',
                                         gridTemplateColumns: 'repeat(2, 1fr)',
-                                        gap: '10px',
+                                        gap: '0.5vh',
                                     }),
                                 }}>
                                     {Object.values(stage().getSave().actors).filter(actor => !actor.factionId && stage().getSave().aide.actorId != actor.id).length === 0 ? (
@@ -1024,11 +1024,11 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType, isV
                             )}
                             {expandedMenu === 'modules' && (
                                 <div style={{ 
-                                    padding: '10px',
+                                    padding: '0.5vh',
                                     ...(isVerticalLayout && {
                                         display: 'grid',
                                         gridTemplateColumns: 'repeat(2, 1fr)',
-                                        gap: '10px',
+                                        gap: '0.5vh',
                                     }),
                                 }}>
                                     {layout.getModulesWhere(m => true).length === 0 ? (
@@ -1065,11 +1065,11 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType, isV
                             )}
                             {expandedMenu === 'factions' && (
                                 <div style={{ 
-                                    padding: '10px',
+                                    padding: '0.5vh',
                                     ...(isVerticalLayout && {
                                         display: 'grid',
                                         gridTemplateColumns: 'repeat(2, 1fr)',
-                                        gap: '10px',
+                                        gap: '0.5vh',
                                     }),
                                 }}>
                                     {Object.values(stage().getSave().factions).filter(f => f.active).length === 0 ? (
