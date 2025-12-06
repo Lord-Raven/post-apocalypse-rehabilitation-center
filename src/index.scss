@@ -86,7 +86,6 @@ html, body, #root {
 }
 
 .stat-label {
-  font-size: 1.2vh;
   color: var(--color-primary);
   text-shadow: 0 0 10px var(--color-primary-50);
   z-index: 1;
@@ -105,15 +104,15 @@ html, body, #root {
 .stat-grade {
   /* big, bold, skewed/rotated letter with a crisp drop shadow */
   font-weight: 900;
-  font-size: 4vh;
+  /* font-size now set inline for responsive sizing */
   line-height: 1;
   display: inline-block;
-  padding: 0 4px;
+  padding: 0 0.2vmin;
   border-radius: 2px;
   /* slight stroke to help separation */
   -webkit-text-stroke: 0.6px rgba(0,0,0,0.85);
   /* crisp drop-shadow (no blur) for a sharp cutout look */
-  text-shadow: 6px 6px 0 rgba(0,0,0,0.88);
+  text-shadow: 0.6vmin 0.6vmin 0 rgba(0,0,0,0.88);
   /* jaunty tilt */
   transform: skewX(-12deg) rotate(-8deg);
   transform-origin: 50% 50%;
@@ -130,11 +129,7 @@ html, body, #root {
 .stat-grade[data-grade^="D"] { color: #ffb47a; }
 .stat-grade[data-grade^="F"] { color: #ff6b6b; }
 
-/* reduce size a bit on small screens */
-@media (max-width: 420px) {
-  .stat-grade { font-size: 2.4rem; transform: skewX(-10deg) rotate(-6deg); }
-  .stat-label { font-size: 11px; }
-}
+/* Media query no longer needed - using responsive viewport units */
 
 /* Shimmer animation for active turn indicator */
 @keyframes shimmer {

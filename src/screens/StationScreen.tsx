@@ -748,8 +748,9 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType, isV
                     <div style={{
                         flex: '1',
                         display: 'flex',
-                        flexWrap: 'wrap',
-                        gap: '20px',
+                        flexWrap: isVerticalLayout ? 'wrap' : 'nowrap',
+                        gap: '0.5vmin',
+                        alignItems: 'flex-start',
                     }}>
                         {Object.values(StationStat).map((statName) => {
                             const statValue = stage().getSave().stationStats?.[statName] || 5;
@@ -765,9 +766,10 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType, isV
                                         display: 'flex',
                                         flexDirection: 'column',
                                         alignItems: 'center',
-                                        gap: '4px',
-                                        flex: '1 1 calc(33.333% - 14px)',
-                                        minWidth: '140px',
+                                        gap: '0.3vmin',
+                                        width: isVerticalLayout ? 'calc(33.333% - 0.4vmin)' : 'calc(16.666% - 0.5vmin)',
+                                        padding: '0.5vmin',
+                                        boxSizing: 'border-box',
                                         userSelect: 'none',
                                     }}
                                 >
@@ -775,18 +777,24 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType, isV
                                     <div style={{
                                         display: 'flex',
                                         alignItems: 'center',
-                                        gap: '8px',
+                                        justifyContent: 'center',
+                                        gap: '0.3vmin',
+                                        width: '100%',
                                     }}>
                                         {/* Stat Icon */}
                                         <StatIcon style={{ 
-                                            fontSize: '1.2rem',
+                                            fontSize: isVerticalLayout ? '2vmin' : '1.5vmin',
                                             color: '#00ff88',
+                                            flexShrink: 0,
                                         }} />
                                         
                                         <span
                                             className="stat-label"
                                             style={{
-                                                fontSize: '0.9rem',
+                                                fontSize: isVerticalLayout ? '1.5vmin' : '1.1vmin',
+                                                whiteSpace: 'nowrap',
+                                                overflow: 'hidden',
+                                                textOverflow: 'ellipsis',
                                             }}
                                         >
                                             {statName}
@@ -797,10 +805,11 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType, isV
                                             className="stat-grade"
                                             data-grade={grade}
                                             style={{
-                                                fontSize: '1.8rem',
+                                                fontSize: isVerticalLayout ? '3vmin' : '2.2vmin',
                                                 fontWeight: 900,
                                                 textShadow: '0 2px 8px rgba(0, 0, 0, 0.8), 0 0 20px currentColor',
                                                 lineHeight: 1,
+                                                flexShrink: 0,
                                             }}
                                         >
                                             {grade}
@@ -810,7 +819,7 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType, isV
                                     {/* Ten-pip bar */}
                                     <div style={{
                                         display: 'flex',
-                                        gap: '2px',
+                                        gap: '0.1vmin',
                                         width: '100%',
                                     }}>
                                         {Array.from({ length: 10 }, (_, i) => {
@@ -831,8 +840,9 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType, isV
                                                     transition={{ delay: 0.5 + (i * 0.05) }}
                                                     style={{
                                                         flex: 1,
-                                                        height: '4px',
-                                                        borderRadius: '2px',
+                                                        height: isVerticalLayout ? '0.6vmin' : '0.4vmin',
+                                                        minHeight: '2px',
+                                                        borderRadius: '1px',
                                                         background: isLit 
                                                             ? pipColor
                                                             : 'rgba(255, 255, 255, 0.1)',
