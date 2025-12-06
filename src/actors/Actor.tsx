@@ -105,7 +105,7 @@ class Actor {
     }
 
     isHologram(save: SaveType): boolean {
-        return (save.factions[this.locationId] !== undefined) || save.aide.actorId === this.id;
+        return (!!this.factionId) || (save.factions[this.locationId] !== undefined) || save.aide.actorId === this.id;
     }
 
     isOffSite(save: SaveType): boolean {
