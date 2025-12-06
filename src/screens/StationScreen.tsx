@@ -1,6 +1,6 @@
 import React, { act, FC } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Typography, Card, CardContent } from '@mui/material';
+import { Typography, Card, CardContent, Tabs, Tab, Box } from '@mui/material';
 import { styled } from '@mui/material/styles';
 import { ScreenType } from './BaseScreen';
 import { Layout, Module, createModule, ModuleType, MODULE_DEFAULTS, StationStat, STATION_STAT_DESCRIPTIONS, STATION_STAT_ICONS } from '../Module';
@@ -735,7 +735,7 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType, isV
                         right: '1vh',
                         display: 'flex',
                         gap: '0',
-                        padding: '1vh 1.5vh',
+                        padding: '0.5vmin 0.5vmin',
                         background: 'linear-gradient(135deg, rgba(0, 30, 60, 0.85) 0%, rgba(0, 20, 40, 0.85) 100%)',
                         border: '2px solid #00ff88',
                         borderRadius: '12px',
@@ -931,42 +931,36 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType, isV
                 {isVerticalLayout ? (
                     // Vertical layout: Tabbed interface
                     <>
-                        {/* Tab buttons at top */}
-                        <div style={{ 
-                            display: 'flex', 
-                            gap: '0.5vh',
-                            marginBottom: '0.5vh',
-                            borderBottom: '2px solid #00ff88',
-                            paddingBottom: '0.5vh'
-                        }}>
-                            {['Patients', 'Modules', 'Factions'].map(item => {
-                                const itemKey = item.toLowerCase();
-                                const isActive = expandedMenu === itemKey;
-                                return (
-                                    <motion.button
-                                        key={item}
-                                        onClick={() => setExpandedMenu(itemKey)}
-                                        whileTap={{ scale: 0.95 }}
-                                        style={{
-                                            flex: 1,
-                                            padding: '0.8vh',
-                                            background: isActive
-                                                ? 'rgba(0, 255, 136, 0.3)'
-                                                : 'rgba(0, 255, 136, 0.1)',
-                                            border: isActive ? '3px solid #00ff88' : '2px solid rgba(0, 255, 136, 0.5)',
-                                            borderRadius: '8px',
-                                            cursor: 'pointer',
-                                            fontSize: '0.9rem',
-                                            fontWeight: 700,
-                                            color: '#00ff88',
-                                            letterSpacing: '0.05em',
-                                        }}
-                                    >
-                                        {item}
-                                    </motion.button>
-                                );
-                            })}
-                        </div>
+                        {/* Material UI Tabs */}
+                        <Tabs
+                            value={expandedMenu || 'patients'}
+                            onChange={(e, newValue) => setExpandedMenu(newValue)}
+                            variant="fullWidth"
+                            sx={{
+                                minHeight: 'auto',
+                                borderBottom: '2px solid #00ff88',
+                                '& .MuiTab-root': {
+                                    minHeight: 'auto',
+                                    padding: '0.8vh 1vh',
+                                    fontSize: '0.9rem',
+                                    fontWeight: 700,
+                                    color: '#00ff88',
+                                    letterSpacing: '0.05em',
+                                    textTransform: 'uppercase',
+                                    '&.Mui-selected': {
+                                        color: '#00ff88',
+                                    },
+                                },
+                                '& .MuiTabs-indicator': {
+                                    backgroundColor: '#00ff88',
+                                    height: '3px',
+                                },
+                            }}
+                        >
+                            <Tab label="Patients" value="patients" />
+                            <Tab label="Modules" value="modules" />
+                            <Tab label="Factions" value="factions" />
+                        </Tabs>
                         {/* Tab content */}
                         <div style={{ 
                             flex: '1 1 auto',
