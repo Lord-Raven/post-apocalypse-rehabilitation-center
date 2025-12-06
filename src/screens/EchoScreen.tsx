@@ -210,7 +210,7 @@ export const EchoScreen: FC<EchoScreenProps> = ({stage, setScreenType, isVertica
 							damping: 15
 						}
 					}}
-					whileTap={{ scale: 0.98 }}
+					whileTap={{ scale: 0.99 }}
 					>
 						<RemoveButton
 							onClick={(e: React.MouseEvent) => removeReserveActor(actor.id, e)}
@@ -269,7 +269,7 @@ export const EchoScreen: FC<EchoScreenProps> = ({stage, setScreenType, isVertica
 								onDrop={(e) => handleDropOnEchoSlot(e, slotIndex)}
 								onDragOver={handleDragOver}
 								animate={{
-									scale: (actor && isSelected) ? 1.1 : 1,
+									scale: (actor && isSelected) ? 1.05 : 1,
 									y: [0, -3, -1, -4, 0],
 									x: [0, 1, -1, 0.5, 0],
 									rotate: [0, 0.5, -0.3, 0.2, 0],
@@ -300,7 +300,7 @@ export const EchoScreen: FC<EchoScreenProps> = ({stage, setScreenType, isVertica
 									}
 								}}
 								whileHover={{ 
-									scale: actor ? (isSelected ? 1.15 : 1.05) : 1,
+									scale: actor ? (isSelected ? 1.1 : 1.05) : 1,
 									filter: 'brightness(1.1)',
 									transition: {
 										type: "spring",
