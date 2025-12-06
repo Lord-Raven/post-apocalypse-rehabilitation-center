@@ -65,7 +65,7 @@ const BaseScreenContent: FC<{ stage: () => Stage }> = ({ stage }) => {
             )}
             {screenType === ScreenType.SKIT && (
                 // Render skit screen
-                <SkitScreen stage={stage} setScreenType={setScreenType} />
+                <SkitScreen stage={stage} setScreenType={setScreenType} isVerticalLayout={isVerticalLayout} />
             )}
             
             {/* Unified tooltip bar that renders over all screens */}

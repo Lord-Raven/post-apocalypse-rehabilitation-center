@@ -13,6 +13,7 @@ interface ActorImageProps {
     xPosition: number;
     yPosition: number;
     zIndex: number;
+    heightMultiplier: number;
     // 'speaker' indicates whether this actor is currently speaking and should be emphasized
     speaker?: boolean;
     hologram?: boolean;
@@ -30,6 +31,7 @@ const ActorImage: FC<ActorImageProps> = ({
     xPosition,
     yPosition,
     zIndex,
+    heightMultiplier,
     speaker,
     hologram,
     highlightColor,
@@ -93,7 +95,7 @@ const ActorImage: FC<ActorImageProps> = ({
             opacity: 1,
             x: `${baseX}vw`,
             bottom: `${baseY}vh`,
-            height: `${SPEAKING_HEIGHT}vh`,
+            height: `${(SPEAKING_HEIGHT * heightMultiplier)}vh`,
             filter: 'brightness(1)',
             transition: { x: { ease: easeIn, duration: 0.3 }, bottom: { duration: 0.3 }, opacity: { ease: easeOut, duration: 0.3 } }
         },
@@ -101,11 +103,11 @@ const ActorImage: FC<ActorImageProps> = ({
             opacity: 1,
             x: `${baseX}vw`,
             bottom: `${baseY}vh`,
-            height: `${IDLE_HEIGHT - yPosition * 2}vh`,
+            height: `${(IDLE_HEIGHT * heightMultiplier) - yPosition * 2}vh`,
             filter: 'brightness(0.8)',
             transition: { x: { ease: easeIn, duration: 0.3 }, bottom: { duration: 0.3 }, opacity: { ease: easeOut, duration: 0.3 } }
         }
-    }), [baseX, baseY, yPosition, zIndex]);
+    }), [baseX, baseY, yPosition, zIndex, heightMultiplier]);
 
     return processedImageUrl ? (
         <motion.div

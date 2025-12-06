@@ -262,7 +262,7 @@ export const MenuScreen: FC<MenuScreenProps> = ({ stage, setScreenType }) => {
                         fontSize: '12px',
                     }}
                 >
-                    v2025.12.05(beta) - Mostly stable. Could be some weirdness surrounding characters moving to/from factions.
+                    v2025.12.05(beta) - Pretty stable. Working on vertical layout.
                 </motion.div>
             </motion.div>
             </div>

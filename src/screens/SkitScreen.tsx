@@ -250,6 +250,7 @@ const formatInlineStyles = (text: string): JSX.Element => {
 interface SkitScreenProps {
     stage: () => Stage;
     setScreenType: (type: ScreenType) => void;
+	isVerticalLayout: boolean;
 }
 
 /**
@@ -281,7 +282,7 @@ const getActorsAtIndex = (skit: SkitData, scriptIndex: number, allActors: {[key:
     return actorsAtModule;
 };
 
-export const SkitScreen: FC<SkitScreenProps> = ({ stage, setScreenType }) => {
+export const SkitScreen: FC<SkitScreenProps> = ({ stage, setScreenType, isVerticalLayout }) => {
     const { setTooltip, clearTooltip } = useTooltip();
     const [index, setIndex] = React.useState<number>(0);
     const [inputText, setInputText] = React.useState<string>('');
@@ -460,6 +461,7 @@ export const SkitScreen: FC<SkitScreenProps> = ({ stage, setScreenType }) => {
                     xPosition={xPosition}
                     yPosition={0}
                     zIndex={55 - Math.abs(xPosition)} // Higher zIndex for center positions}
+                    heightMultiplier ={isVerticalLayout ? (isSpeaking ? 0.9 : 0.6) : 1.0}
                     speaker={isSpeaking}
                     highlightColor={isHovered ? "rgba(255,255,255,0.2)" : "rgba(255,255,255,0)"}
                     panX={0}
@@ -497,8 +499,8 @@ export const SkitScreen: FC<SkitScreenProps> = ({ stage, setScreenType }) => {
                 <div style={{
                     position: 'absolute',
                     top: '5%',
-                    right: '5%',
-                    width: '15vw',
+                    right: isVerticalLayout ? '2%' : '5%',
+                    width: isVerticalLayout ? '25vw' : '15vw',
                     height: '30vh',
                     zIndex: 3
                 }}>
@@ -517,9 +519,9 @@ export const SkitScreen: FC<SkitScreenProps> = ({ stage, setScreenType }) => {
                 elevation={8}
                 sx={{ 
                     position: 'absolute', 
-                    left: '5%', 
-                    right: '5%',
-                    bottom: '4%', 
+                    left: isVerticalLayout ? '2%' : '5%', 
+                    right: isVerticalLayout ? '2%' : '5%',
+                    bottom: isVerticalLayout ? '1%' : '4%', 
                     background: 'rgba(10,20,30,0.95)', 
                     border: '2px solid rgba(0,255,136,0.12)', 
                     borderRadius: 3,
