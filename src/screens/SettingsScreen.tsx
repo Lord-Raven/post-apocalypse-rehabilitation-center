@@ -275,7 +275,7 @@ export const SettingsScreen: FC<SettingsScreenProps> = ({ stage, onCancel, onCon
                                         marginBottom: '8px',
                                     }}
                                 >
-                                    StationAide™ Name (Unused as yet)
+                                    StationAide™ Name
                                 </label>
                                 <TextInput
                                     id="aide-name"

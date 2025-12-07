@@ -533,8 +533,8 @@ export const SkitScreen: FC<SkitScreenProps> = ({ stage, setScreenType, isVertic
                 }}
             >
                 {/* Navigation and speaker section */}
-                <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-                    <Box sx={{ display: 'flex', gap: 1.5, alignItems: 'center', flex: 1 }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', mb: isVerticalLayout ? 1 : 2 }}>
+                    <Box sx={{ display: 'flex', gap: isVerticalLayout ? 0.5 : 1.5, alignItems: 'center', flex: 1 }}>
                         <IconButton 
                             onClick={prev} 
                             disabled={index === 0 || loading}
@@ -542,16 +542,18 @@ export const SkitScreen: FC<SkitScreenProps> = ({ stage, setScreenType, isVertic
                             sx={{ 
                                 color: '#cfe', 
                                 border: '1px solid rgba(255,255,255,0.08)',
+                                padding: isVerticalLayout ? '4px' : undefined,
+                                minWidth: isVerticalLayout ? '28px' : undefined,
                                 '&:disabled': { color: 'rgba(255,255,255,0.3)' }
                             }}
                         >
-                            <ArrowBackIos fontSize="small" />
+                            <ArrowBackIos fontSize={isVerticalLayout ? 'inherit' : 'small'} sx={{ fontSize: isVerticalLayout ? '14px' : undefined }} />
                         </IconButton>
 
                         {/* Progress indicator */}
                         <Chip
                             label={loading ? 
-                                <CircularProgress size={16} sx={{ color: '#bfffd0' }} 
+                                <CircularProgress size={isVerticalLayout ? 12 : 16} sx={{ color: '#bfffd0' }} 
                                     onMouseEnter={() => {
                                         setTooltip('Awaiting content from LLM', Computer);
                                     }}
@@ -559,12 +561,12 @@ export const SkitScreen: FC<SkitScreenProps> = ({ stage, setScreenType, isVertic
                                         clearTooltip();
                                     }}
                                 /> : 
-                                <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                <span style={{ display: 'flex', alignItems: 'center', gap: isVerticalLayout ? '2px' : '4px' }}>
                                     {index + 1 < skit.script.length && inputText.length > 0 && (
                                         <span 
                                             style={{ 
                                                 color: '#ffaa00',
-                                                fontSize: '1.1em',
+                                                fontSize: isVerticalLayout ? '0.9em' : '1.1em',
                                                 fontWeight: 900
                                             }}
                                             title="Sending input will replace subsequent messages"
@@ -576,7 +578,9 @@ export const SkitScreen: FC<SkitScreenProps> = ({ stage, setScreenType, isVertic
                                 </span>
                             }
                             sx={{ 
-                                minWidth: 80,
+                                minWidth: isVerticalLayout ? 55 : 80,
+                                height: isVerticalLayout ? '24px' : undefined,
+                                fontSize: isVerticalLayout ? '0.7rem' : undefined,
                                 fontWeight: 700, 
                                 color: (index + 1 < skit.script.length && inputText.length > 0) ? '#ffdd99' : '#bfffd0', 
                                 background: (index + 1 < skit.script.length && inputText.length > 0) ? 'rgba(255,170,0,0.08)' : 'rgba(255,255,255,0.02)', 
@@ -585,7 +589,8 @@ export const SkitScreen: FC<SkitScreenProps> = ({ stage, setScreenType, isVertic
                                 '& .MuiChip-label': {
                                     display: 'flex',
                                     alignItems: 'center',
-                                    gap: 0.5
+                                    gap: isVerticalLayout ? 0.25 : 0.5,
+                                    padding: isVerticalLayout ? '0 6px' : undefined
                                 }
                             }}
                         />
@@ -597,17 +602,19 @@ export const SkitScreen: FC<SkitScreenProps> = ({ stage, setScreenType, isVertic
                             sx={{ 
                                 color: '#cfe', 
                                 border: '1px solid rgba(255,255,255,0.08)',
+                                padding: isVerticalLayout ? '4px' : undefined,
+                                minWidth: isVerticalLayout ? '28px' : undefined,
                                 '&:disabled': { color: 'rgba(255,255,255,0.3)' }
                             }}
                         >
-                            <ArrowForwardIos fontSize="small" />
+                            <ArrowForwardIos fontSize={isVerticalLayout ? 'inherit' : 'small'} sx={{ fontSize: isVerticalLayout ? '14px' : undefined }} />
                         </IconButton>
 
                         {/* Speaker name */}
                         {displayName && speaker && (
                             <Nameplate 
                                 actor={speaker} 
-                                size="large"
+                                size={isVerticalLayout ? "medium" : "large"}
                                 role={(() => {
                                     const roleModules = stage().getSave().layout.getModulesWhere((m: any) => 
                                         m && m.type !== 'quarters' && m.ownerId === speaker.id
@@ -620,13 +627,13 @@ export const SkitScreen: FC<SkitScreenProps> = ({ stage, setScreenType, isVertic
                         {displayName && !speaker && (
                             <Nameplate 
                                 name={displayName}
-                                size="large"
+                                size={isVerticalLayout ? "medium" : "large"}
                                 layout="inline"
                             />
                         )}
                     </Box>
 
-                    <Box sx={{ display: 'flex', gap: 1.5, alignItems: 'center' }}>
+                    <Box sx={{ display: 'flex', gap: isVerticalLayout ? 0.5 : 1.5, alignItems: 'center' }}>
                         {/* Audio toggle button */}
                         <IconButton
                             onClick={() => { if (stage().getSave().disableTextToSpeech) return; setAudioEnabled(!audioEnabled); }}
@@ -641,6 +648,8 @@ export const SkitScreen: FC<SkitScreenProps> = ({ stage, setScreenType, isVertic
                             sx={{
                                 color: stage().getSave().disableTextToSpeech ? '#888888' : (audioEnabled ? '#00ff88' : '#ff6b6b'),
                                 border: `1px solid ${audioEnabled ? 'rgba(0,255,136,0.2)' : 'rgba(255,107,107,0.2)'}`,
+                                padding: isVerticalLayout ? '4px' : undefined,
+                                minWidth: isVerticalLayout ? '28px' : undefined,
                                 transition: 'all 0.3s ease',
                                 '&:hover': {
                                     borderColor: audioEnabled ? 'rgba(0,255,136,0.4)' : 'rgba(255,107,107,0.4)',
@@ -648,7 +657,7 @@ export const SkitScreen: FC<SkitScreenProps> = ({ stage, setScreenType, isVertic
                                 }
                             }}
                         >
-                            {(stage().getSave().disableTextToSpeech || !audioEnabled) ? <VolumeOff fontSize="small" /> : <VolumeUp fontSize="small" />}
+                            {(stage().getSave().disableTextToSpeech || !audioEnabled) ? <VolumeOff fontSize={isVerticalLayout ? 'inherit' : 'small'} sx={{ fontSize: isVerticalLayout ? '16px' : undefined }} /> : <VolumeUp fontSize={isVerticalLayout ? 'inherit' : 'small'} sx={{ fontSize: isVerticalLayout ? '16px' : undefined }} />}
                         </IconButton>
 
                         {/* Re-roll button */}
@@ -668,6 +677,8 @@ export const SkitScreen: FC<SkitScreenProps> = ({ stage, setScreenType, isVertic
                             sx={{
                                 color: '#00ff88',
                                 border: '1px solid rgba(0,255,136,0.2)',
+                                padding: isVerticalLayout ? '4px' : undefined,
+                                minWidth: isVerticalLayout ? '28px' : undefined,
                                 transition: 'all 0.3s ease',
                                 '&:hover': {
                                     borderColor: 'rgba(0,255,136,0.4)',
@@ -677,7 +688,7 @@ export const SkitScreen: FC<SkitScreenProps> = ({ stage, setScreenType, isVertic
                                 '&:disabled': { color: 'rgba(255,255,255,0.3)' }
                             }}
                         >
-                            <Casino fontSize="small" />
+                            <Casino fontSize={isVerticalLayout ? 'inherit' : 'small'} sx={{ fontSize: isVerticalLayout ? '16px' : undefined }} />
                         </IconButton>
                     </Box>
                 </Box>
