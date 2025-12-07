@@ -192,7 +192,7 @@ export const EchoScreen: FC<EchoScreenProps> = ({stage, setScreenType, isVertica
 					gap: '1.2vmin', 
 					justifyContent: 'flex-start',
 					minWidth: 'min-content',
-					height: isVerticalLayout ? '35vh' : '25vh',
+					height: isVerticalLayout ? '32vh' : '22vh',
 					paddingBottom: '0.5vh'
 				}}>
 				{reserveActors.map((actor, index) => {

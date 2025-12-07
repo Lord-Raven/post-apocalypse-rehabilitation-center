@@ -459,7 +459,7 @@ export const SkitScreen: FC<SkitScreenProps> = ({ stage, setScreenType, isVertic
                     imageUrl={actor.getEmotionImage(emotion, stage())}
                     hologram={actor.isHologram(stage().getSave())}
                     xPosition={xPosition}
-                    yPosition={0}
+                    yPosition={isVerticalLayout ? 20 : 0}
                     zIndex={55 - Math.abs(xPosition)} // Higher zIndex for center positions}
                     heightMultiplier ={isVerticalLayout ? (isSpeaking ? 0.9 : 0.7) : 1.0}
                     speaker={isSpeaking}
@@ -498,9 +498,9 @@ export const SkitScreen: FC<SkitScreenProps> = ({ stage, setScreenType, isVertic
             {hoveredActor && !(sceneEnded && index === skit.script.length - 1) && (
                 <div style={{
                     position: 'absolute',
-                    top: '5%',
+                    top: isVerticalLayout ? '2%' : '5%',
                     right: isVerticalLayout ? '2%' : '5%',
-                    width: isVerticalLayout ? '25vw' : '15vw',
+                    width: isVerticalLayout ? '35vw' : '15vw',
                     height: '30vh',
                     zIndex: 3
                 }}>
@@ -528,7 +528,8 @@ export const SkitScreen: FC<SkitScreenProps> = ({ stage, setScreenType, isVertic
                     p: 2,
                     color: '#e8fff0', 
                     zIndex: 2,
-                    backdropFilter: 'blur(8px)'
+                    backdropFilter: 'blur(8px)',
+                    minHeight: isVerticalLayout ? '20vh' : undefined
                 }}
             >
                 {/* Navigation and speaker section */}
@@ -708,7 +709,7 @@ export const SkitScreen: FC<SkitScreenProps> = ({ stage, setScreenType, isVertic
                     <Typography
                         variant="body1"
                         sx={{
-                            fontSize: '1.18rem',
+                            fontSize: isVerticalLayout ? '0.75rem' : '1.18rem',
                             lineHeight: 1.55,
                             fontFamily: 'Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial',
                             color: '#e9fff7',

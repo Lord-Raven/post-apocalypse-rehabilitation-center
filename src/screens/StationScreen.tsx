@@ -971,15 +971,17 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType, isV
                             onChange={(e, newValue) => setExpandedMenu(newValue)}
                             variant="fullWidth"
                             sx={{
-                                minHeight: 'auto',
+                                minHeight: '48px',
                                 '& .MuiTab-root': {
-                                    minHeight: 'auto',
-                                    padding: '0.8vh 1vh',
+                                    minHeight: '48px',
+                                    height: '48px',
+                                    padding: '12px 16px',
                                     fontSize: '0.9rem',
                                     fontWeight: 700,
                                     color: '#00ff88',
                                     letterSpacing: '0.05em',
                                     textTransform: 'uppercase',
+                                    lineHeight: 1,
                                     '&.Mui-selected': {
                                         color: '#00ff88',
                                     },
