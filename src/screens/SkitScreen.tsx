@@ -726,7 +726,7 @@ export const SkitScreen: FC<SkitScreenProps> = ({ stage, setScreenType, isVertic
                     <Typography
                         variant="body1"
                         sx={{
-                            fontSize: isVerticalLayout ? '0.75rem' : '1.18rem',
+                            fontSize: isVerticalLayout ? 'clamp(0.75rem, 2vw, 1.18rem)' : '1.18rem',
                             lineHeight: 1.55,
                             fontFamily: 'Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial',
                             color: '#e9fff7',
