@@ -71,8 +71,8 @@ html, body, #root {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
-  height: 3vh;
+  gap: clamp(4px, 1vw, 12px);
+  height: 12.5%;
   position: relative;
   overflow: visible;
 }
@@ -86,6 +86,7 @@ html, body, #root {
 }
 
 .stat-label {
+  font-size: clamp(0.6rem, 1.5vmin, 0.9rem);
   color: var(--color-primary);
   text-shadow: 0 0 10px var(--color-primary-50);
   z-index: 1;
@@ -104,7 +105,7 @@ html, body, #root {
 .stat-grade {
   /* big, bold, skewed/rotated letter with a crisp drop shadow */
   font-weight: 900;
-  /* font-size now set inline for responsive sizing */
+  font-size: clamp(1rem, 2.5vmin, 1.8rem);
   line-height: 1;
   display: inline-block;
   padding: 0 0.2vmin;
@@ -112,7 +113,7 @@ html, body, #root {
   /* slight stroke to help separation */
   -webkit-text-stroke: 0.6px rgba(0,0,0,0.85);
   /* crisp drop-shadow (no blur) for a sharp cutout look */
-  text-shadow: 0.6vmin 0.6vmin 0 rgba(0,0,0,0.88);
+  text-shadow: clamp(2px, 0.6vmin, 4px) clamp(2px, 0.6vmin, 4px) 0 rgba(0,0,0,0.88);
   /* jaunty tilt */
   transform: skewX(-12deg) rotate(-8deg);
   transform-origin: 50% 50%;

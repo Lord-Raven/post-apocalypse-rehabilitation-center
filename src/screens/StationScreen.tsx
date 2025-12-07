@@ -10,7 +10,7 @@ import ModuleCard from '../components/ModuleCard';
 import FactionCard from '../components/FactionCard';
 import { TurnIndicator as SharedTurnIndicator } from '../components/UIComponents';
 import { useTooltip } from '../contexts/TooltipContext';
-import { SwapHoriz, Home, Work, Menu, HourglassEmpty, HourglassFull } from '@mui/icons-material';
+import { SwapHoriz, Home, Work, Menu, HourglassBottom, HourglassTop } from '@mui/icons-material';
 import { SkitType } from '../Skit';
 import { generateActorDecor } from '../actors/Actor';
 import { scoreToGrade } from '../utils';
@@ -68,7 +68,7 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType, isV
     const { setTooltip, clearTooltip } = useTooltip();
 
     const gridSize = 6;
-    const cellSize = isVerticalLayout ? '9vh' : '12vh';
+    const cellSize = isVerticalLayout ? '8.5vh' : '12vh';
     const gridEdgeSize = isVerticalLayout ? '5vh' : '0';
 
     const openModuleSelector = (x: number, y: number) => {
@@ -891,9 +891,9 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType, isV
                     className="station-modules"
                     style={{
                         position: 'absolute',
-                        top: isVerticalLayout ? `calc(${gridEdgeSize} + 50%)` : '50%',
+                        top: isVerticalLayout ? `${gridEdgeSize}` : '50%',
                         left: '50%',
-                        transform: isVerticalLayout ? 'translate(-50%, calc(-50% + 2.5vh))' : 'translate(-50%, -50%)',
+                        transform: isVerticalLayout ? 'translate(-50%, 0)' : 'translate(-50%, -50%)',
                         width: `calc(${gridSize} * ${cellSize})`,
                         height: `calc(${gridSize} * ${cellSize})`,
                         // move the subtle grid onto the centered modules container so lines align with cells
@@ -914,7 +914,7 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType, isV
                 className="station-menu"
                 style={{
                     width: isVerticalLayout ? '100vw' : '20vw',
-                    height: isVerticalLayout ? '30vh' : '100vh',
+                    height: isVerticalLayout ? '40vh' : '100vh',
                     boxSizing: 'border-box',
                     background: 'rgba(0, 20, 40, 0.9)',
                     borderLeft: isVerticalLayout ? 'none' : '2px solid #00ff88',
@@ -952,7 +952,7 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType, isV
                                 Day {day}
                             </Typography>
                             <div style={{ display: 'flex', gap: '2px' }}>
-                                {Array.from({ length: 4 }, (_, i) => {const Icon = i < turn ? HourglassEmpty : HourglassFull; return (
+                                {Array.from({ length: 4 }, (_, i) => {const Icon = i < turn ? HourglassBottom : HourglassTop; return (
                                     <Icon
                                         key={i}
                                         sx={{
@@ -1003,6 +1003,7 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType, isV
                             {expandedMenu === 'patients' && (
                                 <div style={{ 
                                     padding: '0.5vh',
+                                    alignItems: 'flex-start',
                                     ...(isVerticalLayout && {
                                         display: 'grid',
                                         gridTemplateColumns: 'repeat(2, 1fr)',
@@ -1010,7 +1011,7 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType, isV
                                     }),
                                 }}>
                                     {Object.values(stage().getSave().actors).filter(actor => !actor.factionId && stage().getSave().aide.actorId != actor.id).length === 0 ? (
-                                        <p style={{ color: '#00ff88', opacity: 0.5, fontStyle: 'italic', fontSize: '0.85rem', fontWeight: 700, ...(isVerticalLayout && { gridColumn: '1 / -1' }) }}>Visit the Echo Chamber to bring on patients!</p>
+                                        <p style={{ color: '#00ff88', opacity: 0.5, fontStyle: 'italic', fontSize: '0.85rem', fontWeight: 700, margin: 0, ...(isVerticalLayout && { gridColumn: '1 / -1' }) }}>Visit the Echo Chamber to bring on patients!</p>
                                     ) : (
                                         Object.values(stage().getSave().actors).filter(actor => !actor.factionId && stage().getSave().aide.actorId != actor.id).map((actor: any) => (
                                             <div 
@@ -1052,6 +1053,7 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType, isV
                             {expandedMenu === 'modules' && (
                                 <div style={{ 
                                     padding: '0.5vh',
+                                    alignItems: 'flex-start',
                                     ...(isVerticalLayout && {
                                         display: 'grid',
                                         gridTemplateColumns: 'repeat(2, 1fr)',
@@ -1065,6 +1067,7 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType, isV
                                             fontStyle: 'italic', 
                                             fontSize: '0.85rem', 
                                             fontWeight: 700,
+                                            margin: 0,
                                             ...(isVerticalLayout && { gridColumn: '1 / -1' }),
                                         }}>No modules currently on station</p>
                                     ) : (
@@ -1093,6 +1096,7 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType, isV
                             {expandedMenu === 'factions' && (
                                 <div style={{ 
                                     padding: '0.5vh',
+                                    alignItems: 'flex-start',
                                     ...(isVerticalLayout && {
                                         display: 'grid',
                                         gridTemplateColumns: 'repeat(2, 1fr)',
@@ -1106,6 +1110,7 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType, isV
                                             fontStyle: 'italic', 
                                             fontSize: '0.85rem', 
                                             fontWeight: 700,
+                                            margin: 0,
                                             ...(isVerticalLayout && { gridColumn: '1 / -1' }),
                                         }}>No factions in contact.</p>
                                     ) : (

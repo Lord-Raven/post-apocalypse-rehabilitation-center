@@ -34,21 +34,21 @@ export const Nameplate: FC<NameplateProps> = ({
         switch (size) {
             case 'small':
                 return {
-                    fontSize: '0.9rem',
-                    roleFontSize: '0.7rem',
-                    borderWidth: '2px',
+                    fontSize: 'clamp(0.7rem, 1.8vmin, 1rem)',
+                    roleFontSize: 'clamp(0.55rem, 1.4vmin, 0.8rem)',
+                    borderWidth: 'clamp(1.5px, 0.3vmin, 2.5px)',
                 };
             case 'large':
                 return {
-                    fontSize: '1.6rem',
-                    roleFontSize: '1.1rem',
-                    borderWidth: '4px',
+                    fontSize: 'clamp(1.2rem, 3vmin, 1.8rem)',
+                    roleFontSize: 'clamp(0.85rem, 2vmin, 1.2rem)',
+                    borderWidth: 'clamp(3px, 0.6vmin, 5px)',
                 };
             default: // medium
                 return {
-                    fontSize: '1.2rem',
-                    roleFontSize: '0.9rem',
-                    borderWidth: '3px',
+                    fontSize: 'clamp(0.9rem, 2.2vmin, 1.4rem)',
+                    roleFontSize: 'clamp(0.7rem, 1.6vmin, 1rem)',
+                    borderWidth: 'clamp(2px, 0.4vmin, 4px)',
                 };
         }
     };

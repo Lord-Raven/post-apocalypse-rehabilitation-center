@@ -398,26 +398,26 @@ export const EchoScreen: FC<EchoScreenProps> = ({stage, setScreenType, isVertica
 										})()}
 										layout="stacked"
 										style={{
-											padding: '12px 16px',
-											fontSize: 18,
+											padding: 'clamp(8px, 1.5vmin, 16px) clamp(10px, 2vmin, 20px)',
+											fontSize: 'clamp(14px, 2.2vmin, 20px)',
 											position: 'relative',
 											zIndex: 2
 										}}
 									/>
-									{/* Stats */}
-									<div className="stat-list" style={{ padding: '8px 12px', background: 'rgba(0,0,0,0.8)', flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'space-evenly', position: 'relative', zIndex: 2 }}>
+								{/* Stats */}
+								<div className="stat-list" style={{ padding: 'clamp(6px, 1vmin, 10px) clamp(8px, 1.5vmin, 14px)', background: 'rgba(0,0,0,0.8)', flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'space-evenly', position: 'relative', zIndex: 2 }}>
 										{Object.values(Stat).map((stat) => {
 											const grade = scoreToGrade(actor.stats[stat]);
 											const StatIcon = ACTOR_STAT_ICONS[stat];
 											return (
 												<div className="stat-row" key={`${actor.id}_${stat}`} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-													<div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-														{StatIcon && <StatIcon style={{ fontSize: '1.1rem', opacity: 0.8, flexShrink: 0 }} />}
+													<div style={{ display: 'flex', alignItems: 'center', gap: 'clamp(4px, 0.8vmin, 8px)' }}>
+														{StatIcon && <StatIcon style={{ fontSize: 'clamp(0.8rem, 2vmin, 1.2rem)', opacity: 0.8, flexShrink: 0 }} />}
 														<span className="stat-label">{stat}</span>
 													</div>
 													<span className="stat-grade" data-grade={grade}>{grade}</span>
 												</div>
-											);
+												);
 										})}
 										{/* Author link */}
 										<AuthorLink actor={actor} />
@@ -426,9 +426,9 @@ export const EchoScreen: FC<EchoScreenProps> = ({stage, setScreenType, isVertica
 							) : (
 								<div style={{ 
 									color: 'rgba(0,255,136,0.7)', 
-									fontSize: '18px', 
+									fontSize: 'clamp(14px, 2.2vmin, 20px)', 
 									textAlign: 'center',
-									padding: '20px'
+									padding: 'clamp(12px, 2.5vmin, 24px)'
 								}}>
 									Drop an echo here to initiate the echofusion process.
 								</div>

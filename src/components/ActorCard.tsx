@@ -101,7 +101,7 @@ export const ActorCard: FC<ActorCardProps> = ({
                 {/* Away Status Indicator */}
                 {isAway && (
                     <div style={{
-                        fontSize: '0.75rem',
+                        fontSize: 'clamp(0.65rem, 1.8vmin, 0.85rem)',
                         color: '#ffa726',
                         fontWeight: 700,
                         marginBottom: '8px',
@@ -156,21 +156,16 @@ export const ActorCard: FC<ActorCardProps> = ({
                                             }}>
                                                 {StatIcon && (
                                                     <StatIcon style={{
-                                                        fontSize: '1rem',
+                                                        fontSize: 'clamp(0.7rem, 1.8vmin, 1rem)',
                                                         opacity: 0.8,
                                                         flexShrink: 0
                                                     }} />
                                                 )}
                                                 <span className="stat-label" style={{
-                                                    fontSize: '80%',
-                                                    textShadow: '2px 2px 0 rgba(0,0,0,0.88)',
+                                                    textShadow: 'clamp(1px, 0.3vmin, 2px) clamp(1px, 0.3vmin, 2px) 0 rgba(0,0,0,0.88)',
                                                     flex: '1'
                                                 }}>{stat}</span>
-                                                <span className="stat-grade" data-grade={grade} style={{
-                                                    fontSize: '150%',
-                                                    textShadow: '3px 3px 0 rgba(0,0,0,0.88)',
-                                                    transform: 'skewX(-8deg) rotate(-4deg)'
-                                                }}>{grade}</span>
+                                                <span className="stat-grade" data-grade={grade}>{grade}</span>
                                             </div>
                                         );
                                     })}
