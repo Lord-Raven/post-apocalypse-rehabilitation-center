@@ -87,7 +87,7 @@ const ActorImage: FC<ActorImageProps> = ({
             opacity: 0,
             x: `150vw`,
             bottom: `${baseY}vh`,
-            height: `${IDLE_HEIGHT - yPosition * 2}vh`,
+            height: `${IDLE_HEIGHT * heightMultiplier}vh`,
             filter: 'brightness(0.8)',
             transition: { x: { ease: easeIn, duration: 0.5 }, bottom: { duration: 0.5 }, opacity: { ease: easeOut, duration: 0.5 } }
         },
@@ -103,7 +103,7 @@ const ActorImage: FC<ActorImageProps> = ({
             opacity: 1,
             x: `${baseX}vw`,
             bottom: `${baseY}vh`,
-            height: `${(IDLE_HEIGHT * heightMultiplier) - yPosition * 2}vh`,
+            height: `${(IDLE_HEIGHT * heightMultiplier)}vh`,
             filter: 'brightness(0.8)',
             transition: { x: { ease: easeIn, duration: 0.3 }, bottom: { duration: 0.3 }, opacity: { ease: easeOut, duration: 0.3 } }
         }
