@@ -741,7 +741,7 @@ export const SkitScreen: FC<SkitScreenProps> = ({ stage, setScreenType, isVertic
                 </Box>
 
                 {/* Chat input */}
-                <Box sx={{ display: 'flex', gap: 1.5, alignItems: 'center' }}>
+                <Box sx={{ display: 'flex', gap: isVerticalLayout ? 0.5 : 1.5, alignItems: 'center' }}>
                     <TextField
                         fullWidth
                         value={inputText}
@@ -772,6 +772,7 @@ export const SkitScreen: FC<SkitScreenProps> = ({ stage, setScreenType, isVertic
                             '& .MuiOutlinedInput-root': {
                                 background: 'linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01))',
                                 color: '#eafff2',
+                                fontSize: isVerticalLayout ? '0.75rem' : undefined,
                                 '& fieldset': {
                                     borderColor: 'rgba(255,255,255,0.08)',
                                 },
@@ -788,9 +789,13 @@ export const SkitScreen: FC<SkitScreenProps> = ({ stage, setScreenType, isVertic
                                     },
                                 },
                             },
+                            '& .MuiInputBase-input': {
+                                padding: isVerticalLayout ? '6px 8px' : undefined,
+                            },
                             '& .MuiInputBase-input::placeholder': {
                                 color: 'rgba(255,255,255,0.5)',
                                 opacity: 1,
+                                fontSize: isVerticalLayout ? '0.75rem' : undefined,
                             },
                             '& .MuiInputBase-input.Mui-disabled::placeholder': {
                                 color: 'rgba(255,255,255,0.4)',
@@ -806,7 +811,7 @@ export const SkitScreen: FC<SkitScreenProps> = ({ stage, setScreenType, isVertic
                         onClick={() => { if (sceneEnded) handleClose(); else handleSubmit(); }}
                         disabled={loading}
                         variant="contained"
-                        startIcon={sceneEnded ? <Close /> : (inputText.trim() ? <Send /> : <Forward />)}
+                        startIcon={sceneEnded ? <Close fontSize={isVerticalLayout ? 'small' : undefined} /> : (inputText.trim() ? <Send fontSize={isVerticalLayout ? 'small' : undefined} /> : <Forward fontSize={isVerticalLayout ? 'small' : undefined} />)}
                         sx={{
                             background: sceneEnded 
                                 ? 'linear-gradient(90deg,#ff8c66,#ff5a3b)' 
@@ -815,7 +820,9 @@ export const SkitScreen: FC<SkitScreenProps> = ({ stage, setScreenType, isVertic
                                     : 'rgba(255,255,255,0.04)',
                             color: sceneEnded ? '#fff' : '#00221a',
                             fontWeight: 800,
-                            minWidth: 100,
+                            minWidth: isVerticalLayout ? 70 : 100,
+                            fontSize: isVerticalLayout ? '0.7rem' : undefined,
+                            padding: isVerticalLayout ? '4px 10px' : undefined,
                             '&:hover': {
                                 background: sceneEnded 
                                     ? 'linear-gradient(90deg,#ff7a52,#ff4621)' 
