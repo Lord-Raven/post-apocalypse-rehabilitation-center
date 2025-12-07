@@ -40,6 +40,7 @@ export const FactionCard: FC<FactionCardProps> = ({
     
     const reputation = faction.reputation || 1;
     const grade = scoreToGrade(reputation);
+    const hasCutTies = reputation < 1;
 
     const handleClick = () => {
         if (controlledExpanded === undefined) {
@@ -61,11 +62,14 @@ export const FactionCard: FC<FactionCardProps> = ({
             whileHover={whileHover || defaultWhileHover}
             whileTap={{ scale: 0.98 }}
             transition={{ duration: 0.2 }}
-            animate={{ height: isExpanded ? 'auto' : '140px' }}
+            animate={{ 
+                height: isExpanded ? 'auto' : '140px',
+                opacity: hasCutTies ? 0.5 : 1
+            }}
             style={{
-                border: '3px solid #00ff88',
+                border: `3px solid ${hasCutTies ? '#ff6b6b' : '#00ff88'}`,
                 borderRadius: '8px',
-                background: 'rgba(0, 10, 20, 0.5)',
+                background: hasCutTies ? 'rgba(255, 107, 107, 0.1)' : 'rgba(0, 10, 20, 0.5)',
                 cursor: 'pointer',
                 overflow: 'hidden',
                 display: 'flex',
@@ -77,6 +81,24 @@ export const FactionCard: FC<FactionCardProps> = ({
             {isExpanded ? (
                 // EXPANDED STATE: Two-column layout
                 <>
+                    {/* Cut Ties Status Indicator */}
+                    {hasCutTies && (
+                        <div style={{
+                            fontSize: 'clamp(0.65rem, 1.8vmin, 0.85rem)',
+                            color: '#ff6b6b',
+                            fontWeight: 700,
+                            marginBottom: '8px',
+                            padding: '4px 8px',
+                            background: 'rgba(255, 107, 107, 0.2)',
+                            borderRadius: '4px',
+                            textAlign: 'center',
+                            textShadow: '0 0 8px #ff6b6b',
+                            border: '1px solid rgba(255, 107, 107, 0.5)',
+                        }}>
+                            ✂ CUT TIES
+                        </div>
+                    )}
+
                     {/* Nameplate at the top */}
                     <div style={{ 
                         padding: '8px 12px', 
@@ -272,6 +294,28 @@ export const FactionCard: FC<FactionCardProps> = ({
                         overflow: 'hidden',
                     }}
                 >
+                    {/* Cut Ties Status Indicator */}
+                    {hasCutTies && (
+                        <div style={{
+                            position: 'absolute',
+                            top: '8px',
+                            left: '50%',
+                            transform: 'translateX(-50%)',
+                            fontSize: 'clamp(0.65rem, 1.8vmin, 0.85rem)',
+                            color: '#ff6b6b',
+                            fontWeight: 700,
+                            padding: '4px 12px',
+                            background: 'rgba(255, 107, 107, 0.3)',
+                            borderRadius: '4px',
+                            textAlign: 'center',
+                            textShadow: '0 0 8px #ff6b6b',
+                            border: '1px solid rgba(255, 107, 107, 0.5)',
+                            zIndex: 3,
+                        }}>
+                            ✂ CUT TIES
+                        </div>
+                    )}
+
                     {/* Faction background image */}
                     <div
                         style={{
@@ -304,7 +348,7 @@ export const FactionCard: FC<FactionCardProps> = ({
                     {/* Nameplate overlay at the top */}
                     <div style={{ 
                         position: 'absolute',
-                        top: '8px',
+                        top: hasCutTies ? '38px' : '8px',
                         left: '12px',
                         right: '12px',
                         display: 'flex', 
