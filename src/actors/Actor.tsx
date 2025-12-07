@@ -33,7 +33,7 @@ export const ACTOR_STAT_ICONS: Record<Stat, any> = {
     [Stat.Trust]: Handshake,
 };
 
-export type ArtStyle = 'original' | 'anime' | 'chibi' | 'comic' | 'pixel art' | 'hyper-realistic' | 'realistic';
+export type ArtStyle = 'original' | 'anime' | 'chibi' | 'comic' | 'pixel art' | 'hyper-realistic' | 'realistic' | 'specific artist';
 
 const ART_PROMPT: {[key in ArtStyle]: string} = {
     'original': 'A professional upper-body portrait of this character',
@@ -42,7 +42,8 @@ const ART_PROMPT: {[key in ArtStyle]: string} = {
     'comic': 'Render this character in a comic book style with dynamic poses, bold lines, and vibrant colors; use halftone shading and dramatic lighting',
     'pixel art': 'Render this character in a pixel art style reminiscent of classic 16-bit video games, with a limited color palette and blocky, pixelated details',
     'hyper-realistic': 'Render this character in a hyper-realistic style with intricate details, lifelike textures, and dramatic lighting to create a striking and immersive image',
-    'realistic': 'Picture this character in a realistic style with natural proportions, detailed textures, and subtle lighting to create a believable and lifelike appearance'
+    'realistic': 'Picture this character in a realistic style with natural proportions, detailed textures, and subtle lighting to create a believable and lifelike appearance',
+    'specific artist': 'Render this character in the style of {{ARTIST}}, capturing their unique artistic techniques, color palettes, and overall aesthetic'
 };
 
 class Actor {
@@ -425,7 +426,9 @@ export async function generatePrimaryActorImage(actor: Actor, stage: Stage): Pro
             console.log(`Generating new image for actor ${actor.name} from description`);
             // Use stage.makeImage to create a neutral expression based on the description
             imageUrl = await stage.makeImage({
-                prompt: `: ${actor.description}\nThe character should have a neutral expression Maintain a margin of negative space over their head/hair.`,
+                prompt: (`${(stage.getSave().characterArtStyle || 'original' === 'original') ? 'Illustrate this character in a hyperrealistic anime visual novel style' : ART_PROMPT[stage.getSave().characterArtStyle || 'original']}: ` +
+                    `${actor.description}\nThe character should have a neutral expression Maintain a margin of negative space over their head/hair.`)
+                    .replace('{{ARTIST}}', stage.getSave().characterArtist || 'some professional'),
                 aspect_ratio: AspectRatio.PHOTO_VERTICAL
             }, '');
             actor.avatarImageUrl = imageUrl || '';
@@ -434,7 +437,8 @@ export async function generatePrimaryActorImage(actor: Actor, stage: Stage): Pro
         // Use stage.makeImageFromImage to create a base image.
         imageUrl = await stage.makeImageFromImage({
             image: imageUrl || actor.avatarImageUrl,
-            prompt: `${ART_PROMPT[stage.getSave().characterArtStyle || 'original']}. Create a waist-up portrait of this character (${actor.description}) with a neutral expression and pose. Maintain a margin of negative space over their head/hair.`,
+            prompt: `${ART_PROMPT[stage.getSave().characterArtStyle || 'original']}. Create a waist-up portrait of this character (${actor.description}) with a neutral expression and pose. Maintain a margin of negative space over their head/hair.`
+                .replace('{{ARTIST}}', stage.getSave().characterArtist || 'some professional'),
             remove_background: true,
             transfer_type: 'edit'
         }, '');
@@ -443,8 +447,8 @@ export async function generatePrimaryActorImage(actor: Actor, stage: Stage): Pro
         
         actor.emotionPack['base'] = imageUrl || '';
 
-        // Now create the neutral expression from the base image
-        await generateEmotionImage(actor, Emotion.neutral, stage);
+        // Now create the neutral expression from the base image, but don't wait up.
+        generateEmotionImage(actor, Emotion.neutral, stage);
     }
 }
 

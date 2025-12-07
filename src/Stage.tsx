@@ -43,6 +43,7 @@ export type SaveType = {
     disableTextToSpeech?: boolean;
     disableEmotionImages?: boolean;
     characterArtStyle?: ArtStyle;
+    characterArtist?: string;
 }
 
 export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateType, ConfigType> {

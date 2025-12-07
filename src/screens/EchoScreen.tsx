@@ -190,7 +190,7 @@ export const EchoScreen: FC<EchoScreenProps> = ({stage, setScreenType, isVertica
 				<div style={{ 
 					display: 'flex', 
 					gap: '1.2vmin', 
-					justifyContent: 'flex-start',
+					justifyContent: 'center',
 					minWidth: 'min-content',
 					height: isVerticalLayout ? '32vh' : '22vh',
 					paddingBottom: '0.5vh'

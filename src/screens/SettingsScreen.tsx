@@ -20,6 +20,7 @@ interface SettingsData {
     disableTextToSpeech: boolean;
     disableEmotionImages: boolean;
     characterArtStyle: ArtStyle;
+    characterArtist: string;
     tagToggles: { [key: string]: boolean };
 }
 
@@ -89,6 +90,7 @@ export const SettingsScreen: FC<SettingsScreenProps> = ({ stage, onCancel, onCon
         disableTextToSpeech: stage().getSave().disableTextToSpeech ?? false,
         disableEmotionImages: stage().getSave().disableEmotionImages ?? false,
         characterArtStyle: stage().getSave().characterArtStyle ?? 'original',
+        characterArtist: stage().getSave().characterArtist ?? '',
         // Tag toggles; disabling these can be used to filter undesired content. Load from save array, if one. Otherwise, default to true.
         tagToggles: stage().getSave().bannedTags ? Object.fromEntries(
             Object.keys(tagMap).map(key => [
@@ -114,6 +116,7 @@ export const SettingsScreen: FC<SettingsScreenProps> = ({ stage, onCancel, onCon
         save.disableTextToSpeech = settings.disableTextToSpeech;
         save.disableEmotionImages = settings.disableEmotionImages;
         save.characterArtStyle = settings.characterArtStyle;
+        save.characterArtist = settings.characterArtist;
 
         stage().saveGame();
         onConfirm();
@@ -497,8 +500,41 @@ export const SettingsScreen: FC<SettingsScreenProps> = ({ stage, onCancel, onCon
                                             <option value="pixel art" style={{ background: '#001520', color: '#00ff88' }}>Pixel Art</option>
                                             <option value="hyper-realistic" style={{ background: '#001520', color: '#00ff88' }}>Hyper-Realistic</option>
                                             <option value="realistic" style={{ background: '#001520', color: '#00ff88' }}>Realistic</option>
+                                            <option value="specific artist" style={{ background: '#001520', color: '#00ff88' }}>Specific Artist</option>
                                         </select>
                                     </div>
+
+                                    {/* Specific Artist Textbox - Only shown when "specific artist" is selected */}
+                                    <AnimatePresence>
+                                        {settings.characterArtStyle === 'specific artist' && (
+                                            <motion.div
+                                                initial={{ opacity: 0, height: 0 }}
+                                                animate={{ opacity: 1, height: 'auto' }}
+                                                exit={{ opacity: 0, height: 0 }}
+                                                transition={{ duration: 0.2 }}
+                                                style={{ display: 'flex', flexDirection: 'column', gap: '6px', overflow: 'hidden' }}
+                                            >
+                                                <label
+                                                    htmlFor="specific-artist"
+                                                    style={{
+                                                        color: 'rgba(255, 255, 255, 0.8)',
+                                                        fontSize: '12px',
+                                                        fontWeight: 'bold',
+                                                    }}
+                                                >
+                                                    Artist Name
+                                                </label>
+                                                <TextInput
+                                                    id="specific-artist"
+                                                    fullWidth
+                                                    value={settings.characterArtist}
+                                                    onChange={(e) => setSettings(prev => ({ ...prev, characterArtist: e.target.value }))}
+                                                    placeholder="Enter artist name"
+                                                    style={{ fontSize: '13px' }}
+                                                />
+                                            </motion.div>
+                                        )}
+                                    </AnimatePresence>
                                 </div>
                             </div>
 
