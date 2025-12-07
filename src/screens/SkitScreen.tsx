@@ -334,16 +334,20 @@ export const SkitScreen: FC<SkitScreenProps> = ({ stage, setScreenType, isVertic
     // Handle arrow key navigation globally (when input is not focused or is empty)
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
-            const target = e.target as HTMLElement;
-            const isInputFocused = target.tagName === 'INPUT' || target.tagName === 'TEXTAREA';
-            
-            // Only handle arrow keys if input is not focused OR input is empty
-            if (e.key === 'ArrowLeft' && (!isInputFocused || inputText.trim() === '')) {
-                e.preventDefault();
-                prev();
-            } else if (e.key === 'ArrowRight' && (!isInputFocused || inputText.trim() === '')) {
-                e.preventDefault();
-                next();
+            try {
+                const target = e.target as HTMLElement;
+                const isInputFocused = target.tagName === 'INPUT' || target.tagName === 'TEXTAREA';
+                
+                // Only handle arrow keys if input is not focused OR input is empty
+                if (e.key === 'ArrowLeft' && (!isInputFocused || inputText.trim() === '')) {
+                    e.preventDefault();
+                    prev();
+                } else if (e.key === 'ArrowRight' && (!isInputFocused || inputText.trim() === '')) {
+                    e.preventDefault();
+                    next();
+                }
+            } catch (error) {
+                console.error('Error in keydown handler:', error);
             }
         };
 
@@ -529,7 +533,10 @@ export const SkitScreen: FC<SkitScreenProps> = ({ stage, setScreenType, isVertic
                     color: '#e8fff0', 
                     zIndex: 2,
                     backdropFilter: 'blur(8px)',
-                    minHeight: isVerticalLayout ? '20vh' : undefined
+                    minHeight: isVerticalLayout ? '20vh' : undefined,
+                    display: 'flex',
+                    flexDirection: 'column',
+                    justifyContent: 'space-between'
                 }}
             >
                 {/* Navigation and speaker section */}
@@ -697,7 +704,6 @@ export const SkitScreen: FC<SkitScreenProps> = ({ stage, setScreenType, isVertic
                 <Box 
                     sx={{ 
                         minHeight: '4rem', 
-                        mb: 2, 
                         cursor: 'pointer',
                         borderRadius: 1,
                         transition: 'background-color 0.2s ease',
@@ -821,7 +827,7 @@ export const SkitScreen: FC<SkitScreenProps> = ({ stage, setScreenType, isVertic
                             color: sceneEnded ? '#fff' : '#00221a',
                             fontWeight: 800,
                             minWidth: isVerticalLayout ? 70 : 100,
-                            fontSize: isVerticalLayout ? '0.7rem' : undefined,
+                            fontSize: isVerticalLayout ? 'clamp(0.6rem, 2vw, 0.875rem)' : undefined,
                             padding: isVerticalLayout ? '4px 10px' : undefined,
                             '&:hover': {
                                 background: sceneEnded 
