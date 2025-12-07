@@ -482,7 +482,7 @@ async function generateEmotionImage(actor: Actor, emotion: Emotion, stage: Stage
 }
 
 export async function generateActorDecor(actor: Actor, module: Module, stage: Stage): Promise<string> {
-    if (actor.decorImageUrls[module.type] && actor.decorImageUrls[module.type].length > 0 && actor.decorImageUrls[module.type] !== module.getAttribute('baseImageUrl')) {
+    if (Object.keys(stage.imageGenerationPromises).includes(`actor/decor/${actor.id}/${module.type}`) || (actor.decorImageUrls[module.type].length > 0 && actor.decorImageUrls[module.type] !== module.getAttribute('baseImageUrl'))) {
         return actor.decorImageUrls[module.type];
     }
     if (stage.getSave().disableEmotionImages) {
@@ -490,13 +490,16 @@ export async function generateActorDecor(actor: Actor, module: Module, stage: St
     }
     console.log(`Generating decor image for actor ${actor.name} in module ${module.type}`);
     // Generate a decor image based on the module's description and the actor's description
-    const decorImageUrl = await stage.makeImageFromImage({
+    stage.imageGenerationPromises[`actor/decor/${actor.id}/${module.type}`] = stage.makeImageFromImage({
         image: module.getAttribute('baseImageUrl') || '',
         prompt: `This is sci-fi ${module.type}: ${module.getAttribute('imagePrompt') || ''}. Give this image a clean, visual novel look, ` +
                 `redecorating the space with furnishings or details to suit this style: ${actor.style}`,
         remove_background: false,
         transfer_type: 'edit'
     }, module.getAttribute('baseImageUrl') || '');
+    
+    const decorImageUrl = await stage.imageGenerationPromises[`actor/decor/${actor.id}/${module.type}`];
+    delete stage.imageGenerationPromises[`actor/decor/${actor.id}/${module.type}`];
     console.log(`Generated decor image for actor ${actor.name} and ${module.type}: ${decorImageUrl || ''}`);
     actor.decorImageUrls[module.type] = decorImageUrl || '';
     return decorImageUrl || '';

@@ -1,7 +1,7 @@
 import {ReactElement, useEffect, useState} from "react";
 import {StageBase, StageResponse, InitialData, Message, UpdateBuilder} from "@chub-ai/stages-ts";
 import {LoadResponse} from "@chub-ai/stages-ts/dist/types/load";
-import Actor, { loadReserveActor, generatePrimaryActorImage, commitActorToEcho, Stat, generateAdditionalActorImages, loadReserveActorFromFullPath, ArtStyle } from "./actors/Actor";
+import Actor, { loadReserveActor, generatePrimaryActorImage, commitActorToEcho, Stat, generateAdditionalActorImages, loadReserveActorFromFullPath, ArtStyle, generateActorDecor } from "./actors/Actor";
 import Faction, { generateFactionRepresentative, loadReserveFaction } from "./factions/Faction";
 import { DEFAULT_GRID_SIZE, Layout, StationStat, createModule } from './Module';
 import { BaseScreen, ScreenType } from "./screens/BaseScreen";
@@ -748,6 +748,10 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
     }
 
     setSkit(skit: SkitData) {
+        const module = this.getSave().layout.getModuleById(skit.moduleId);
+        if (module && module.ownerId) {
+            generateActorDecor(this.getSave().actors[module.ownerId], module, this);
+        }
         const save = this.getSave() as any;
         save.currentSkit = skit;
     }
