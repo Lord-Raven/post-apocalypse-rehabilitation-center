@@ -194,8 +194,12 @@ export const MenuScreen: FC<MenuScreenProps> = ({ stage, setScreenType }) => {
                 transition={{ duration: 0.6, ease: 'easeOut' }}
                 className="glass-panel-bright"
                 style={{
-                    padding: '40px',
+                    padding: 'clamp(20px, 5vh, 40px) clamp(20px, 5vw, 40px)',
                     minWidth: '300px',
+                    maxWidth: '90vw',
+                    maxHeight: '90vh',
+                    overflow: 'auto',
+                    boxSizing: 'border-box',
                 }}
             >
                 {/* Title */}
@@ -204,13 +208,13 @@ export const MenuScreen: FC<MenuScreenProps> = ({ stage, setScreenType }) => {
                     animate={{ opacity: 1 }}
                     transition={{ delay: 0.3, duration: 0.5 }}
                 >
-                    <Title variant="glow" style={{ textAlign: 'center', marginBottom: '40px', fontSize: '28px' }}>
+                    <Title variant="glow" style={{ textAlign: 'center', marginBottom: 'clamp(20px, 5vh, 40px)', fontSize: 'clamp(18px, 5vw, 28px)' }}>
                         Post-Apocalypse Rehabilitation Center
                     </Title>
                 </motion.div>
 
                 {/* Menu buttons */}
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 'clamp(10px, 2vh, 15px)' }}>
                     {menuButtons.map((button, index) => (
                         <motion.div
                             key={button.key}
@@ -239,6 +243,8 @@ export const MenuScreen: FC<MenuScreenProps> = ({ stage, setScreenType }) => {
                                 disabled={!button.enabled}
                                 style={{
                                     width: '100%',
+                                    fontSize: 'clamp(12px, 2.5vw, 16px)',
+                                    padding: 'clamp(8px, 1.5vh, 12px) clamp(16px, 3vw, 24px)',
                                     background: button.enabled && hoveredButton === button.key 
                                         ? 'rgba(0, 255, 136, 0.2)' 
                                         : button.enabled ? 'transparent' : 'rgba(0, 20, 40, 0.5)'
@@ -257,9 +263,9 @@ export const MenuScreen: FC<MenuScreenProps> = ({ stage, setScreenType }) => {
                     transition={{ delay: 0.8, duration: 0.5 }}
                     style={{
                         textAlign: 'center',
-                        marginTop: '30px',
+                        marginTop: 'clamp(20px, 4vh, 30px)',
                         color: 'rgba(0, 255, 136, 0.6)',
-                        fontSize: '12px',
+                        fontSize: 'clamp(10px, 1.5vw, 12px)',
                     }}
                 >
                     v2025.12.05(beta) - Pretty stable. Working on vertical layout.
