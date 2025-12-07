@@ -69,7 +69,7 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType, isV
 
     const gridSize = 6;
     const cellSize = isVerticalLayout ? '8.5vh' : '12vh';
-    const gridEdgeSize = isVerticalLayout ? '5vh' : '0';
+    const gridEdgeSize = isVerticalLayout ? '10vh' : '0';
 
     const openModuleSelector = (x: number, y: number) => {
         setSelectedPosition({x, y});
@@ -952,12 +952,12 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType, isV
                                 Day {day}
                             </Typography>
                             <div style={{ display: 'flex', gap: '2px' }}>
-                                {Array.from({ length: 4 }, (_, i) => {const Icon = i < turn ? HourglassBottom : HourglassTop; return (
+                                {Array.from({ length: 4 }, (_, i) => {const Icon = i < turn ? HourglassTop : HourglassBottom; return (
                                     <Icon
                                         key={i}
                                         sx={{
                                             fontSize: '0.9rem',
-                                            color: i < turn ? '#00ff88' : 'rgba(0, 255, 136, 0.3)',
+                                            color: i < turn ? 'rgba(0, 255, 136, 0.3)' : '#00ff88',
                                             transition: 'color 0.3s ease',
                                         }}
                                     />
