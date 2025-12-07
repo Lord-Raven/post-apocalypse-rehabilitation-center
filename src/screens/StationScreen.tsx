@@ -1041,7 +1041,7 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType, isV
                                                     whileHover={{
                                                         backgroundColor: 'rgba(0, 255, 136, 0.15)',
                                                         borderColor: 'rgba(0, 255, 136, 0.5)',
-                                                        x: 10
+                                                        x: isVerticalLayout ? 5 : 10
                                                     }}
                                                     style={{
                                                         marginBottom: '0',
@@ -1143,7 +1143,7 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType, isV
                         const [isHeaderHovered, setIsHeaderHovered] = React.useState(false);
                         
                         return (
-                            <div 
+                            <motion.div 
                                 key={item} 
                                 style={{ 
                                     margin: '10px 0',
@@ -1152,6 +1152,8 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType, isV
                                     flexDirection: 'column',
                                     minHeight: 0,
                                 }}
+                                animate={{ x: (isHeaderHovered && isExpanded) ? 10 : 0 }}
+                                transition={{ x: { duration: 0.2, ease: 'easeOut' } }}
                             >
                                 <motion.button
                                     onClick={() => {
@@ -1160,7 +1162,7 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType, isV
                                     }}
                                     onMouseEnter={() => setIsHeaderHovered(true)}
                                     onMouseLeave={() => setIsHeaderHovered(false)}
-                                    animate={{ x: isHeaderHovered ? 10 : 0 }}
+                                    animate={{ x: (isHeaderHovered && !isExpanded) ? 10 : 0 }}
                                     transition={{ x: { duration: 0.2, ease: 'easeOut' } }}
                                     whileTap={{ scale: 0.95 }}
                                     className="section-header"
@@ -1321,7 +1323,7 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType, isV
                                     </div>
                                 )}
                             </motion.div>
-                        </div>
+                        </motion.div>
                     );
                 })
                 )}

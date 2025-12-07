@@ -189,7 +189,7 @@ const SkitOutcomeDisplay: FC<SkitOutcomeDisplayProps> = ({ skitData, stage, layo
                     display: 'flex',
                     flexDirection: 'column',
                     gap: '16px',
-                    width: '25vw',
+                    width: '30vmin',
                     minWidth: '300px',
                     maxHeight: '100%',
                     overflowY: 'auto'
