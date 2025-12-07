@@ -273,15 +273,22 @@ export async function generateSkitScript(skit: SkitData, stage: Stage): Promise<
 
             const fullPrompt = generateSkitPrompt(skit, stage, 2 + retries,
                 `Example Script Format:\n` +
-                'System: CHARACTER NAME: They do actions in prose. "Their dialogue is in quotation marks."\nANOTHER CHARACTER NAME: [ANOTHER CHARACTER NAME EXPRESSES JOY][CHARACTER NAME EXPRESSES SURPRISE] "Dialogue in quotation marks."\nNARRATOR: [CHARACTER NAME EXPRESSES RELIEF] Descriptive content that is not attributed to a character.\n[PAUSE]\n' +
+                    `System: CHARACTER NAME: The character does some actions in prose. They say, "My dialogue is in quotation marks."\n` +
+                    `ANOTHER CHARACTER NAME: [ANOTHER CHARACTER NAME EXPRESSES JOY][CHARACTER NAME EXPRESSES SURPRISE] "Even if my entire input is dialogue, it should be in quotation marks."\n` +
+                    `NARRATOR: [CHARACTER NAME EXPRESSES RELIEF] Descriptive content that is not attributed to a character.\n[PAUSE]\n` +
                 `Example Character Movement Format:\n` +
-                'System: NARRATOR: [CHARACTER NAME moves to THIS MODULE NAME] CHARACTER NAME enters the room.\nNARRATOR: [CHARACTER NAME moves to OTHER CHARACTER\'s QUARTERS] CHARACTER NAME leaves the scene.\n[PAUSE]\n' +
-                `Example Character Departure Format:\n` +
-                `System: CHARACTER NAME: "Well, I suppose this is goodbye for now." They wave as they somberly step through the bulkhead.\nNARRATOR: [CHARACTER NAME moves to FACTION NAME] You watch on-screen as Character Name's shuttle detaches from the PARC and disappears into the stars.\n[SUMMARY: CHARACTER NAME has departed the PARC, on loan to FACTION NAME.]\n` +
-                (skit.script.length > 0 ? (`\n\nExample Ending Script Format:\n` +
-                    'System: CHARACTER NAME: [CHARACTER NAME EXPRESSES OPTIMISM] Action in prose. "Dialogue in quotation marks."\nNARRATOR: A moment of prose describing events.' +
-                    `\n[SUMMARY: CHARACTER NAME is hopeful about this demonstration.]`) : '') +
-                `\n\nCurrent Scene Script Log to Continue:\nSystem: ${buildScriptLog(skit)}` +
+                    `System: NARRATOR: [CHARACTER NAME moves to THIS MODULE NAME] Character Name enters the room.\n` +
+                    `CHARACTER NAME: Character Name waves, "Hey; just checking in. I'll be next door if you need anything."\n` +
+                    `NARRATOR: [CHARACTER NAME moves to OTHER CHARACTER\'s QUARTERS] Character Name ducks out with a smile. You hear their boots fade away down the corridor beyond.\n[PAUSE]\n` +
+                `Example Character Departure from PARC Format:\n` +
+                    `System: CHARACTER NAME: They sigh profoundly. "Well, I suppose this is goodbye for now." They wave as they somberly step through the bulkhead.\n` +
+                    `NARRATOR: [CHARACTER NAME moves to FACTION NAME] You watch on-screen as Character Name's shuttle detaches from the PARC and disappears into the stars.\n` +
+                    `[SUMMARY: Character Name has departed the PARC, on loan to FACTION NAME for (mission description here).]\n` +
+                (skit.script.length > 0 ? (`Example Summary Script Format:\n` +
+                    `System: CHARACTER NAME: [CHARACTER NAME EXPRESSES OPTIMISM] Character Name smiles at you. "I think we made real progress here today. Thanks!"\n` +
+                    `NARRATOR: There's a moment of real connection there. Something the PARC could use more of.\n` +
+                    `[SUMMARY: This moment of shared commaraderie has left Character Name hopeful about their future aboard the PARC.]\n`) : '') +
+                `\nCurrent Scene Script Log to Continue:\nSystem: ${buildScriptLog(skit)}` +
                 `\n\nPrimary Instruction:\nAt the "System:" prompt, ${skit.script.length == 0 ? 'generate an initial bit of scene script' : 'extend or conclude the current scene script'} with three or four entries, ` +
                 `based upon the Premise and the specified Scene Prompt. Primarily involve the Present Characters (Absent Characters are listed for reference). ` +
                 `The script should consider characters' stats, relationships, past events, and the station's stats—among other factors—to craft a compelling scene. ` +
@@ -722,6 +729,7 @@ export async function generateSkitScript(skit: SkitData, stage: Stage): Promise<
                                             let statKey = statNameRaw.toLowerCase().trim();
                                             const enumMatch = Object.values(Stat).find(s => s.toLowerCase() === statKey || s.toLowerCase().includes(statKey) || statKey.includes(s.toLowerCase()));
                                             if (enumMatch) statKey = enumMatch;
+                                            else continue; // Invalid station stat
 
                                             if (!statChanges['STATION']) statChanges['STATION'] = {};
                                             statChanges['STATION'][statKey] = (statChanges['STATION'][statKey] || 0) + num;
@@ -744,6 +752,7 @@ export async function generateSkitScript(skit: SkitData, stage: Stage): Promise<
                                             let statKey = statNameRaw.toLowerCase().trim();
                                             const enumMatch = Object.values(Stat).find(s => s.toLowerCase() === statKey || s.toLowerCase().includes(statKey) || statKey.includes(s.toLowerCase()));
                                             if (enumMatch) statKey = enumMatch;
+                                            else continue; // Invalid character stat
 
                                             if (!statChanges[matched.id]) statChanges[matched.id] = {};
                                             statChanges[matched.id][statKey] = (statChanges[matched.id][statKey] || 0) + num;
