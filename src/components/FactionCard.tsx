@@ -41,6 +41,7 @@ export const FactionCard: FC<FactionCardProps> = ({
     const reputation = faction.reputation || 1;
     const grade = scoreToGrade(reputation);
     const hasCutTies = reputation < 1;
+    const isUnmet = !faction.active && !hasCutTies;
 
     const handleClick = () => {
         if (controlledExpanded === undefined) {
@@ -64,12 +65,12 @@ export const FactionCard: FC<FactionCardProps> = ({
             transition={{ duration: 0.2 }}
             animate={{ 
                 height: isExpanded ? 'auto' : '140px',
-                opacity: hasCutTies ? 0.5 : 1
+                opacity: (hasCutTies || isUnmet) ? 0.5 : 1
             }}
             style={{
-                border: `3px solid ${hasCutTies ? '#ff6b6b' : '#00ff88'}`,
+                border: `3px solid ${hasCutTies ? '#ff6b6b' : (isUnmet ? '#888888' : '#00ff88')}`,
                 borderRadius: '8px',
-                background: hasCutTies ? 'rgba(255, 107, 107, 0.1)' : 'rgba(0, 10, 20, 0.5)',
+                background: hasCutTies ? 'rgba(255, 107, 107, 0.1)' : (isUnmet ? 'rgba(128, 128, 128, 0.1)' : 'rgba(0, 10, 20, 0.5)'),
                 cursor: 'pointer',
                 overflow: 'hidden',
                 display: 'flex',
@@ -96,6 +97,24 @@ export const FactionCard: FC<FactionCardProps> = ({
                             border: '1px solid rgba(255, 107, 107, 0.5)',
                         }}>
                             ✂ CUT TIES
+                        </div>
+                    )}
+
+                    {/* Unmet Status Indicator */}
+                    {isUnmet && (
+                        <div style={{
+                            fontSize: 'clamp(0.65rem, 1.8vmin, 0.85rem)',
+                            color: '#888888',
+                            fontWeight: 700,
+                            marginBottom: '8px',
+                            padding: '4px 8px',
+                            background: 'rgba(128, 128, 128, 0.2)',
+                            borderRadius: '4px',
+                            textAlign: 'center',
+                            textShadow: '0 0 8px #888888',
+                            border: '1px solid rgba(128, 128, 128, 0.5)',
+                        }}>
+                            ? UNMET
                         </div>
                     )}
 
@@ -316,6 +335,28 @@ export const FactionCard: FC<FactionCardProps> = ({
                         </div>
                     )}
 
+                    {/* Unmet Status Indicator */}
+                    {isUnmet && (
+                        <div style={{
+                            position: 'absolute',
+                            top: '8px',
+                            left: '50%',
+                            transform: 'translateX(-50%)',
+                            fontSize: 'clamp(0.65rem, 1.8vmin, 0.85rem)',
+                            color: '#888888',
+                            fontWeight: 700,
+                            padding: '4px 12px',
+                            background: 'rgba(128, 128, 128, 0.3)',
+                            borderRadius: '4px',
+                            textAlign: 'center',
+                            textShadow: '0 0 8px #888888',
+                            border: '1px solid rgba(128, 128, 128, 0.5)',
+                            zIndex: 3,
+                        }}>
+                            ? UNMET
+                        </div>
+                    )}
+
                     {/* Faction background image */}
                     <div
                         style={{
@@ -348,7 +389,7 @@ export const FactionCard: FC<FactionCardProps> = ({
                     {/* Nameplate overlay at the top */}
                     <div style={{ 
                         position: 'absolute',
-                        top: hasCutTies ? '38px' : '8px',
+                        top: (hasCutTies || isUnmet) ? '38px' : '8px',
                         left: '12px',
                         right: '12px',
                         display: 'flex', 
