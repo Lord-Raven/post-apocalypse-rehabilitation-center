@@ -10,7 +10,7 @@ import ModuleCard from '../components/ModuleCard';
 import FactionCard from '../components/FactionCard';
 import { TurnIndicator as SharedTurnIndicator } from '../components/UIComponents';
 import { useTooltip } from '../contexts/TooltipContext';
-import { SwapHoriz, Home, Work, Menu } from '@mui/icons-material';
+import { SwapHoriz, Home, Work, Menu, HourglassEmpty, HourglassFull } from '@mui/icons-material';
 import { SkitType } from '../Skit';
 import { generateActorDecor } from '../actors/Actor';
 import { scoreToGrade } from '../utils';
@@ -914,7 +914,7 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType, isV
                 className="station-menu"
                 style={{
                     width: isVerticalLayout ? '100vw' : '20vw',
-                    height: isVerticalLayout ? '25vh' : '100vh',
+                    height: isVerticalLayout ? '30vh' : '100vh',
                     boxSizing: 'border-box',
                     background: 'rgba(0, 20, 40, 0.9)',
                     borderLeft: isVerticalLayout ? 'none' : '2px solid #00ff88',
@@ -931,6 +931,40 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType, isV
                 {isVerticalLayout ? (
                     // Vertical layout: Tabbed interface
                     <>
+                        {/* Compact Day/Turn Display for Vertical Layout */}
+                        <div style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            gap: '8px',
+                            padding: '0.8vh 1vh',
+                            borderBottom: '1px solid rgba(0, 255, 136, 0.3)',
+                        }}>
+                            <Typography
+                                sx={{
+                                    fontSize: '0.9rem',
+                                    fontWeight: 700,
+                                    color: '#00ff88',
+                                    letterSpacing: '0.05em',
+                                    textTransform: 'uppercase',
+                                }}
+                            >
+                                Day {day}
+                            </Typography>
+                            <div style={{ display: 'flex', gap: '2px' }}>
+                                {Array.from({ length: 4 }, (_, i) => {const Icon = i < turn ? HourglassEmpty : HourglassFull; return (
+                                    <Icon
+                                        key={i}
+                                        sx={{
+                                            fontSize: '0.9rem',
+                                            color: i < turn ? '#00ff88' : 'rgba(0, 255, 136, 0.3)',
+                                            transition: 'color 0.3s ease',
+                                        }}
+                                    />
+                                )})}
+                            </div>
+                        </div>
+                        
                         {/* Material UI Tabs */}
                         <Tabs
                             value={expandedMenu || 'patients'}
@@ -938,7 +972,6 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType, isV
                             variant="fullWidth"
                             sx={{
                                 minHeight: 'auto',
-                                borderBottom: '2px solid #00ff88',
                                 '& .MuiTab-root': {
                                     minHeight: 'auto',
                                     padding: '0.8vh 1vh',
@@ -957,9 +990,9 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType, isV
                                 },
                             }}
                         >
-                            <Tab label="Patients" value="patients" />
-                            <Tab label="Modules" value="modules" />
-                            <Tab label="Factions" value="factions" />
+                            <Tab label="PATIENTS" value="patients" />
+                            <Tab label="MODULES" value="modules" />
+                            <Tab label="FACTIONS" value="factions" />
                         </Tabs>
                         {/* Tab content */}
                         <div style={{ 
