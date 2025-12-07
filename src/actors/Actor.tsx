@@ -486,10 +486,10 @@ async function generateEmotionImage(actor: Actor, emotion: Emotion, stage: Stage
 }
 
 export async function generateActorDecor(actor: Actor, module: Module, stage: Stage): Promise<string> {
-    if (Object.keys(stage.imageGenerationPromises).includes(`actor/decor/${actor.id}/${module.type}`) || (actor.decorImageUrls[module.type].length > 0 && actor.decorImageUrls[module.type] !== module.getAttribute('baseImageUrl'))) {
+    if ((Object.keys(actor.decorImageUrls).includes(module.type) && actor.decorImageUrls[module.type] && actor.decorImageUrls[module.type] !== module.getAttribute('baseImageUrl'))) {
         return actor.decorImageUrls[module.type];
     }
-    if (stage.getSave().disableEmotionImages) {
+    if (Object.keys(stage.imageGenerationPromises).includes(`actor/decor/${actor.id}/${module.type}`) || stage.getSave().disableEmotionImages) {
         return '';
     }
     console.log(`Generating decor image for actor ${actor.name} in module ${module.type}`);
