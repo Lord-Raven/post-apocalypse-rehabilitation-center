@@ -33,6 +33,20 @@ export const EchoScreen: FC<EchoScreenProps> = ({stage, setScreenType, isVertica
 		setScreenType(ScreenType.STATION);
 	};
 
+	// Handle Escape key to close the screen
+	React.useEffect(() => {
+		const handleKeyDown = (e: KeyboardEvent) => {
+			if (e.key === 'Escape') {
+				cancel();
+			}
+		};
+
+		window.addEventListener('keydown', handleKeyDown);
+		return () => {
+			window.removeEventListener('keydown', handleKeyDown);
+		};
+	}, []);
+
 	const removeReserveActor = (actorId: string, e: React.MouseEvent) => {
 		e.stopPropagation();
 		e.preventDefault();
@@ -167,7 +181,8 @@ export const EchoScreen: FC<EchoScreenProps> = ({stage, setScreenType, isVertica
 					padding: '1vh', 
 					borderBottom: '2px solid rgba(0,255,136,0.2)',
 					background: 'rgba(0,0,0,0.3)',
-					overflow: 'visible'
+					overflowX: 'auto',
+					overflowY: 'hidden'
 				}}
 				onDrop={handleDropOnReserve}
 				onDragOver={handleDragOver}
@@ -175,9 +190,10 @@ export const EchoScreen: FC<EchoScreenProps> = ({stage, setScreenType, isVertica
 				<div style={{ 
 					display: 'flex', 
 					gap: '1.2vmin', 
-					justifyContent: 'center', 
-					flexWrap: 'wrap',
-					maxHeight: '25vh',
+					justifyContent: 'flex-start',
+					minWidth: 'min-content',
+					height: isVerticalLayout ? '35vh' : '25vh',
+					paddingBottom: '0.5vh'
 				}}>
 				{reserveActors.map((actor, index) => {
 					const isExpanded = expandedCandidateId === actor.id;
@@ -187,7 +203,7 @@ export const EchoScreen: FC<EchoScreenProps> = ({stage, setScreenType, isVertica
 					style={{ 
 						display: 'inline-block',
 						position: 'relative',
-						width: isExpanded ? '32vmin' : (expandedCandidateId ? '12vmin' : '16vmin'),
+						width: isVerticalLayout ? (isExpanded ? '48vmin' : (expandedCandidateId ? '24vmin' : '32vmin')) : (isExpanded ? '32vmin' : (expandedCandidateId ? '12vmin' : '16vmin')),
 						transition: 'width 0.3s ease'
 					}}
 					animate={{
@@ -228,7 +244,7 @@ export const EchoScreen: FC<EchoScreenProps> = ({stage, setScreenType, isVertica
 								draggable
 								onDragStart={(e) => handleDragStart(e, actor, 'reserve')}
 							style={{
-								height: '20vh',
+								height: isVerticalLayout ? '30vh' : '20vh',
 								boxShadow: `0 6px 18px rgba(0,0,0,0.4), 0 0 20px ${actor.themeColor ? actor.themeColor + '66' : 'rgba(0, 255, 136, 0.4)'}`,
 								padding: '8px',
 								overflow: 'hidden'
@@ -244,7 +260,7 @@ export const EchoScreen: FC<EchoScreenProps> = ({stage, setScreenType, isVertica
 				flexDirection: isVerticalLayout ? 'column' : 'row',
 				alignItems: 'center', 
 				justifyContent: 'center', 
-				padding: '40px', 
+				padding: isVerticalLayout ? '20px' : '40px',
 				gap: isVerticalLayout ? '20px' : '40px'
 			}}>
 				{/* Cancel button on the left (or in button row below if vertical) */}
@@ -316,7 +332,7 @@ export const EchoScreen: FC<EchoScreenProps> = ({stage, setScreenType, isVertica
 									} as React.CSSProperties),
 									animationDelay: `${slotIndex * 0.7}s`,
 									cursor: actor ? 'pointer' : 'default',
-									height: '65vh',
+									height: isVerticalLayout ? '50vh' : '65vh',
 									width: isVerticalLayout ? '28vw' : '18vw',
 									display: 'flex',
 									flexDirection: 'column',

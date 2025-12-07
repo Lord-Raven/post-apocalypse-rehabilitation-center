@@ -66,7 +66,7 @@ export const Nameplate: FC<NameplateProps> = ({
             const parentWidth = chipRef.current.parentElement?.offsetWidth || chipRef.current.offsetWidth;
             
             // Account for padding (2 * 16px from px: 2)
-            const horizontalPadding = 32;
+            const horizontalPadding = 16;
             const availableWidth = parentWidth - horizontalPadding;
             
             // Reset scale to measure at full size

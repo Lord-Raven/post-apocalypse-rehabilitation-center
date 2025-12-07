@@ -24,6 +24,12 @@ type TimelineEvent = {
     skit?: SkitData;
 }
 
+export type ArtStyle = 'original' | 'anime' | 'chibi' | 'comic' | 'pixel art' | 'hyper-realistic' | 'realistic';
+
+/*export const ArtPrompt: {[key in ArtStyle]: string} = {
+    'original': ''
+*/
+
 type Timeline = TimelineEvent[];
 
 export type SaveType = {
@@ -42,6 +48,7 @@ export type SaveType = {
     timestamp?: number; // Unix timestamp (milliseconds) when save was last updated
     disableTextToSpeech?: boolean;
     disableEmotionImages?: boolean;
+    //characterArtStyle?: ArtStyle;
 }
 
 export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateType, ConfigType> {
@@ -404,6 +411,10 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
         } else {
             this.getSave().actors[this.getSave().aide.actorId || ''].origin = 'aide';
         }
+
+        /*if (!this.getSave().characterArtStyle) {
+            this.getSave().characterArtStyle = 'cyberpunk';
+        }*/
 
         this.loadReserveActors();
         this.loadReserveFactions();
