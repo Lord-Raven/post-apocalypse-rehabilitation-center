@@ -1,6 +1,6 @@
 import React, { act, FC } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Typography, Card, CardContent, Tabs, Tab, Box } from '@mui/material';
+import { Typography, Card, CardContent, Tabs, Tab } from '@mui/material';
 import { styled } from '@mui/material/styles';
 import { ScreenType } from './BaseScreen';
 import { Layout, Module, createModule, ModuleType, MODULE_DEFAULTS, StationStat, STATION_STAT_DESCRIPTIONS, STATION_STAT_ICONS } from '../Module';

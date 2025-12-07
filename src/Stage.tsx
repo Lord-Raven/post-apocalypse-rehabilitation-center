@@ -1,7 +1,7 @@
 import {ReactElement, useEffect, useState} from "react";
 import {StageBase, StageResponse, InitialData, Message, UpdateBuilder} from "@chub-ai/stages-ts";
 import {LoadResponse} from "@chub-ai/stages-ts/dist/types/load";
-import Actor, { loadReserveActor, generatePrimaryActorImage, commitActorToEcho, Stat, generateAdditionalActorImages, loadReserveActorFromFullPath } from "./actors/Actor";
+import Actor, { loadReserveActor, generatePrimaryActorImage, commitActorToEcho, Stat, generateAdditionalActorImages, loadReserveActorFromFullPath, ArtStyle } from "./actors/Actor";
 import Faction, { generateFactionRepresentative, loadReserveFaction } from "./factions/Faction";
 import { DEFAULT_GRID_SIZE, Layout, StationStat, createModule } from './Module';
 import { BaseScreen, ScreenType } from "./screens/BaseScreen";
@@ -24,12 +24,6 @@ type TimelineEvent = {
     skit?: SkitData;
 }
 
-export type ArtStyle = 'original' | 'anime' | 'chibi' | 'comic' | 'pixel art' | 'hyper-realistic' | 'realistic';
-
-/*export const ArtPrompt: {[key in ArtStyle]: string} = {
-    'original': ''
-*/
-
 type Timeline = TimelineEvent[];
 
 export type SaveType = {
@@ -48,7 +42,7 @@ export type SaveType = {
     timestamp?: number; // Unix timestamp (milliseconds) when save was last updated
     disableTextToSpeech?: boolean;
     disableEmotionImages?: boolean;
-    //characterArtStyle?: ArtStyle;
+    characterArtStyle?: ArtStyle;
 }
 
 export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateType, ConfigType> {
@@ -412,9 +406,9 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
             this.getSave().actors[this.getSave().aide.actorId || ''].origin = 'aide';
         }
 
-        /*if (!this.getSave().characterArtStyle) {
-            this.getSave().characterArtStyle = 'cyberpunk';
-        }*/
+        if (!this.getSave().characterArtStyle) {
+            this.getSave().characterArtStyle = 'original';
+        }
 
         this.loadReserveActors();
         this.loadReserveFactions();

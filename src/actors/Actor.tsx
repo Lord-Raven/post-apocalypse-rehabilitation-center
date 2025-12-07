@@ -33,6 +33,18 @@ export const ACTOR_STAT_ICONS: Record<Stat, any> = {
     [Stat.Trust]: Handshake,
 };
 
+export type ArtStyle = 'original' | 'anime' | 'chibi' | 'comic' | 'pixel art' | 'hyper-realistic' | 'realistic';
+
+const ART_PROMPT: {[key in ArtStyle]: string} = {
+    'original': 'A professional upper-body portrait of this character',
+    'anime': 'Render this character in a classic visual novel, anime style with vibrant colors, expressive features, inks, and cel shading',
+    'chibi': 'Render this character in a chibi style with exaggerated proportions, large eyes, and a cute, playful appearance; use bright colors and a bold white outline',
+    'comic': 'Render this character in a comic book style with dynamic poses, bold lines, and vibrant colors; use halftone shading and dramatic lighting',
+    'pixel art': 'Render this character in a pixel art style reminiscent of classic 16-bit video games, with a limited color palette and blocky, pixelated details',
+    'hyper-realistic': 'Render this character in a hyper-realistic style with intricate details, lifelike textures, and dramatic lighting to create a striking and immersive image',
+    'realistic': 'Picture this character in a realistic style with natural proportions, detailed textures, and subtle lighting to create a believable and lifelike appearance'
+};
+
 class Actor {
     id: string;
     name: string;
@@ -413,7 +425,7 @@ export async function generatePrimaryActorImage(actor: Actor, stage: Stage): Pro
             console.log(`Generating new image for actor ${actor.name} from description`);
             // Use stage.makeImage to create a neutral expression based on the description
             imageUrl = await stage.makeImage({
-                prompt: `A professional upper-body portrait of an anime character with the following description: ${actor.description}\nThe character should have a neutral expression Maintain a margin of negative space over their head/hair.`,
+                prompt: `: ${actor.description}\nThe character should have a neutral expression Maintain a margin of negative space over their head/hair.`,
                 aspect_ratio: AspectRatio.PHOTO_VERTICAL
             }, '');
             actor.avatarImageUrl = imageUrl || '';
@@ -422,7 +434,7 @@ export async function generatePrimaryActorImage(actor: Actor, stage: Stage): Pro
         // Use stage.makeImageFromImage to create a base image.
         imageUrl = await stage.makeImageFromImage({
             image: imageUrl || actor.avatarImageUrl,
-            prompt: `Create a waist-up portrait of this character (${actor.description}) with a neutral expression and pose. Maintain a margin of negative space over their head/hair.`,
+            prompt: `${ART_PROMPT[stage.getSave().characterArtStyle || 'original']}. Create a waist-up portrait of this character (${actor.description}) with a neutral expression and pose. Maintain a margin of negative space over their head/hair.`,
             remove_background: true,
             transfer_type: 'edit'
         }, '');

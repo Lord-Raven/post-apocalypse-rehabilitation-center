@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Stage } from '../Stage';
 import { GlassPanel, Title, Button, TextInput } from '../components/UIComponents';
 import { Close } from '@mui/icons-material';
+import { ArtStyle } from '../actors/Actor';
 
 interface SettingsScreenProps {
     stage: () => Stage;
@@ -18,6 +19,7 @@ interface SettingsData {
     aideDescription: string;
     disableTextToSpeech: boolean;
     disableEmotionImages: boolean;
+    characterArtStyle: ArtStyle;
     tagToggles: { [key: string]: boolean };
 }
 
@@ -86,6 +88,7 @@ export const SettingsScreen: FC<SettingsScreenProps> = ({ stage, onCancel, onCon
             `StationAide™. "When life gives you space stations..."`),
         disableTextToSpeech: stage().getSave().disableTextToSpeech ?? false,
         disableEmotionImages: stage().getSave().disableEmotionImages ?? false,
+        characterArtStyle: stage().getSave().characterArtStyle ?? 'original',
         // Tag toggles; disabling these can be used to filter undesired content. Load from save array, if one. Otherwise, default to true.
         tagToggles: stage().getSave().bannedTags ? Object.fromEntries(
             Object.keys(tagMap).map(key => [
@@ -110,6 +113,7 @@ export const SettingsScreen: FC<SettingsScreenProps> = ({ stage, onCancel, onCon
         save.bannedTags = Object.keys(settings.tagToggles).filter(key => !settings.tagToggles[key]).map(key => tagMap[key] ? tagMap[key] : [key]).flat();
         save.disableTextToSpeech = settings.disableTextToSpeech;
         save.disableEmotionImages = settings.disableEmotionImages;
+        save.characterArtStyle = settings.characterArtStyle;
 
         stage().saveGame();
         onConfirm();
@@ -450,6 +454,51 @@ export const SettingsScreen: FC<SettingsScreenProps> = ({ stage, onCancel, onCon
                                             Disable Emotion Images
                                         </span>
                                     </motion.div>
+
+                                    {/* Art Style Dropdown */}
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                                        <label
+                                            style={{
+                                                color: 'rgba(255, 255, 255, 0.8)',
+                                                fontSize: '12px',
+                                                fontWeight: 'bold',
+                                            }}
+                                        >
+                                            Character Art Style
+                                        </label>
+                                        <select
+                                            value={settings.characterArtStyle}
+                                            onChange={(e) => setSettings(prev => ({ ...prev, characterArtStyle: e.target.value as ArtStyle }))}
+                                            style={{
+                                                padding: '10px',
+                                                background: 'rgba(0, 20, 40, 0.7)',
+                                                border: '2px solid rgba(0, 255, 136, 0.3)',
+                                                borderRadius: '8px',
+                                                color: '#00ff88',
+                                                fontSize: '13px',
+                                                fontWeight: 'bold',
+                                                cursor: 'pointer',
+                                                outline: 'none',
+                                                transition: 'all 0.2s ease',
+                                            }}
+                                            onMouseEnter={(e) => {
+                                                e.currentTarget.style.borderColor = 'rgba(0, 255, 136, 0.5)';
+                                                e.currentTarget.style.background = 'rgba(0, 255, 136, 0.1)';
+                                            }}
+                                            onMouseLeave={(e) => {
+                                                e.currentTarget.style.borderColor = 'rgba(0, 255, 136, 0.3)';
+                                                e.currentTarget.style.background = 'rgba(0, 20, 40, 0.7)';
+                                            }}
+                                        >
+                                            <option value="original" style={{ background: '#001520', color: '#00ff88' }}>Original</option>
+                                            <option value="anime" style={{ background: '#001520', color: '#00ff88' }}>Anime</option>
+                                            <option value="chibi" style={{ background: '#001520', color: '#00ff88' }}>Chibi</option>
+                                            <option value="comic" style={{ background: '#001520', color: '#00ff88' }}>Comic</option>
+                                            <option value="pixel art" style={{ background: '#001520', color: '#00ff88' }}>Pixel Art</option>
+                                            <option value="hyper-realistic" style={{ background: '#001520', color: '#00ff88' }}>Hyper-Realistic</option>
+                                            <option value="realistic" style={{ background: '#001520', color: '#00ff88' }}>Realistic</option>
+                                        </select>
+                                    </div>
                                 </div>
                             </div>
 
