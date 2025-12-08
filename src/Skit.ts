@@ -766,7 +766,7 @@ export async function generateSkitScript(skit: SkitData, stage: Stage): Promise<
 
                                             // Normalize stat name to possible Stat enum value if possible
                                             let statKey = statNameRaw.toLowerCase().trim();
-                                            const enumMatch = Object.values(Stat).find(s => s.toLowerCase() === statKey || s.toLowerCase().includes(statKey) || statKey.includes(s.toLowerCase()));
+                                            const enumMatch = Object.values(StationStat).find(s => s.toLowerCase() === statKey || s.toLowerCase().includes(statKey) || statKey.includes(s.toLowerCase()));
                                             if (enumMatch) statKey = enumMatch;
                                             else continue; // Invalid station stat
 
