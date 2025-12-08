@@ -34,6 +34,7 @@ export interface SkitData {
     summary?: string;
     endProperties?: { [actorId: string]: { [stat: string]: number } }; // Stat changes to apply when scene ends
     endFactionChanges?: { [actorId: string]: string }; // Faction ID changes to apply when scene ends ('' for PARC)
+    endRoleChanges?: { [actorId: string]: string }; // Role changes to apply when scene ends (role name or '' for None)
 }
 
 export function generateSkitTypePrompt(skit: SkitData, stage: Stage, continuing: boolean): string {
@@ -192,8 +193,10 @@ export function generateSkitPrompt(skit: SkitData, stage: Stage, historyLength: 
         ) : '') +
         (
             // If module is a quarters, present it as "Owner's quarters" or "vacant quarters": module type otherwise.
-            `\n\nCurrent Modules (Rooms) on the PARC:\n` +
-            save.layout.getModulesWhere(module => true).map(module => module.type == 'quarters' ? (module.ownerId ? `${save.actors[module.ownerId]?.name || 'Unknown'}'s quarters` : 'vacant quarters') : module.type).join(', ')
+            `\n\nThe PARC's Current Modules (Rooms) and associated crew roles:\n` +
+            save.layout.getModulesWhere(module => true).map(module => module.type == 'quarters' ? 
+                (module.ownerId ? `${save.actors[module.ownerId]?.name || 'Unknown'}'s quarters` : 'vacant quarters') : 
+                `${module.type} (Role: ${module.getAttribute('role') || 'None'})`).join(', ')
         ) +
         `\n\n${playerName}'s profile: ${save.player.description}` +
         (stationAide ? (presentActorIds.has(stationAide.id) ? `\n\nThe holographic StationAide™ ${stationAide.name} is active in the scene. Profile: ${stationAide.profile}` : '\n\nThe holographic StationAide™ ${stationAide.name} remains absent from the scene unless summoned by the Director.') : '') +
@@ -573,6 +576,7 @@ export async function generateSkitScript(skit: SkitData, stage: Stage): Promise<
 
                 const statChanges: { [actorId: string]: { [stat: string]: number } } = {};
                 const factionChanges: { [actorId: string]: string } = {};
+                const roleChanges: { [actorId: string]: string } = {};
                 // If this response contains an endScene, we will analyze the script for stat changes or other game mechanics to be applied. Add this to the ttsPromises to run in parallel.
                 if (endScene) {
                     console.log('Scene end predicted; preparing to analyze for stat changes.');
@@ -623,6 +627,15 @@ export async function generateSkitScript(skit: SkitData, stage: Stage): Promise<
                             `\n - A character being formally recruited or dismissed.` +
                             `\n - A character being sold to or imprisoned by a faction.` +
 
+                            `\n---\nCharacter Role Change:\n` +
+                            `If a character's role on the station changes as a result of this scene (e.g., a patient has been assigned to a staff position), output a line in the following format:\n` +
+                            `[CHARACTER NAME: ROLE <roleName>]\n` +
+                            `Where <roleName> is the name of the new role assigned to the character. ` +
+                            `Full Example:\n` +
+                            `[${Object.values(stage.getSave().actors)[0].name}: ROLE Liaison]\n` +
+                            `[${Object.values(stage.getSave().actors)[0].name}: ROLE None]\n` +
+                            `The role name must directly match an existing role defined by the station's current modules (or "None," if a character's role is being removed by this tag).` +
+
                             (!summary ? 
                                 `\n---\nSummarize Scene:\n` +
                                 `"[SUMMARY: A brief synopsis of this scene's key events.]"` +
@@ -631,16 +644,16 @@ export async function generateSkitScript(skit: SkitData, stage: Stage): Promise<
                             ) +
 
                             `\n\nFinal Instruction:\n` +
-                            `All suitable tags should be output in this response. Stat changes should be a fair reflection of the scene's direct or implied events. ` +
-                            `Bear in mind the somewhat abstract meaning of character and station stats when determining reasonable changes and goals. ` +
+                            `Closely analyze the scene and output all suitable tags in this response. Stat changes should be a fair reflection of the scene's direct or implied events. ` +
+                            `Bear in mind the somewhat abstract nature of character and station stats when determining reasonable changes. ` +
                             `All stats (station and character) exist on a scale of 1-10, with 1 being the lowest and 10 being the highest possible value; ` +
                             `typically, these changes should be minor (+/- 1 or 2) at a time, unless something incredibly dramatic occurs. ` +
                             `If there is little or no change, or all relevant tags have been presented, the response may be ended early with [END]. \n\n`
                         );
                         const requestAnalysis = await stage.generator.textGen({
                             prompt: analysisPrompt,
-                            min_tokens: 5,
-                            max_tokens: summary ? 200 : 400,
+                            min_tokens: 50,
+                            max_tokens: summary ? 300 : 500,
                             include_history: true,
                             stop: ['[END]']
                         });
@@ -715,6 +728,26 @@ export async function generateSkitScript(skit: SkitData, stage: Stage): Promise<
                                     continue;
                                 }
 
+                                // Process character role change tags: [CHARACTER NAME: ROLE <roleName>]
+                                const roleRegex = /\[(.+?):\s*ROLE\s+(.+?)\]/i;
+                                const roleMatch = roleRegex.exec(trimmed);
+                                if (roleMatch) {
+                                    console.log('Processing ROLE tag:', trimmed);
+                                    const characterNameRaw = roleMatch[1].trim();
+                                    const roleNameRaw = roleMatch[2].trim();
+                                    
+                                    // Find matching actor using findBestNameMatch
+                                    const allActors = Object.values(stage.getSave().actors);
+                                    const matchedActor = findBestNameMatch(characterNameRaw, allActors);
+                                    
+                                    if (matchedActor) {
+                                        // Store the role name (or empty string for 'None')
+                                        const newRole = roleNameRaw.toUpperCase() === 'NONE' ? '' : roleNameRaw;
+                                        roleChanges[matchedActor.id] = newRole;
+                                    }
+                                    continue;
+                                }
+
                                 // Process stat change tags
                                 const statChangeRegex = /\[(.+?):\s*([^\]]+)\]/i;
                                 const match = statChangeRegex.exec(trimmed);
@@ -781,6 +814,7 @@ export async function generateSkitScript(skit: SkitData, stage: Stage): Promise<
 
                 skit.endProperties = statChanges;
                 skit.endFactionChanges = factionChanges;
+                skit.endRoleChanges = roleChanges;
                 skit.summary = summary;
 
                 return { entries: scriptEntries, endScene: endScene, statChanges: statChanges };

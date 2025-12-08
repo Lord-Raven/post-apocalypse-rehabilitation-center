@@ -27,6 +27,12 @@ interface FactionReputationChange {
     newReputation: number;
 }
 
+interface RoleChange {
+    actor: Actor;
+    oldRole: string;
+    newRole: string;
+}
+
 interface SkitOutcomeDisplayProps {
     skitData: SkitData;
     stage: Stage;
@@ -155,11 +161,40 @@ const SkitOutcomeDisplay: FC<SkitOutcomeDisplayProps> = ({ skitData, stage, layo
         return factionChanges;
     };
 
+    const processRoleChanges = (): RoleChange[] => {
+        if (!skitData.endRoleChanges) return [];
+
+        const roleChanges: RoleChange[] = [];
+
+        Object.entries(skitData.endRoleChanges).forEach(([actorId, newRole]) => {
+            const actor = stage.getSave().actors[actorId];
+            if (!actor) return;
+
+            // Find the current role for this actor
+            const roleModule = layout?.getModulesWhere((m: any) => 
+                m && m.type !== 'quarters' && m.ownerId === actor.id
+            )?.[0];
+            const oldRole = roleModule?.getAttribute('role') || '';
+
+            // Only add if there's actually a change
+            if (newRole !== oldRole) {
+                roleChanges.push({
+                    actor: actor,
+                    oldRole: oldRole || 'None',
+                    newRole: newRole || 'None'
+                });
+            }
+        });
+
+        return roleChanges;
+    };
+
     const characterChanges = processStatChanges();
     const factionReputationChanges = processFactionReputationChanges();
+    const roleChanges = processRoleChanges();
 
     // Don't render if there's nothing to display
-    if (characterChanges.length === 0 && factionReputationChanges.length === 0) {
+    if (characterChanges.length === 0 && factionReputationChanges.length === 0 && roleChanges.length === 0) {
         return null;
     }
 
@@ -666,6 +701,167 @@ const SkitOutcomeDisplay: FC<SkitOutcomeDisplayProps> = ({ skitData, stage, layo
                             </Box>
                             )}
                         </Box>
+                    </Paper>
+                </motion.div>
+                </div>
+            ))}
+
+            {/* Role Changes */}
+            {roleChanges.map((roleChange, roleIndex) => (
+                <div key={`role_${roleChange.actor.id}`}>
+                <motion.div
+                    initial={{ opacity: 0, y: 30 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.4, delay: 0.5 + characterChanges.length * 0.2 + factionReputationChanges.length * 0.2 + roleIndex * 0.2 }}
+                >
+                    <Paper
+                        elevation={6}
+                        sx={{
+                            background: 'rgba(10,20,30,0.95)',
+                            border: '2px solid rgba(100,180,255,0.3)',
+                            borderRadius: 3,
+                            p: 2,
+                            backdropFilter: 'blur(8px)',
+                            textAlign: 'center'
+                        }}
+                    >
+                        {/* Large Character Portrait */}
+                        <motion.div
+                            initial={{ scale: 0.8, opacity: 0 }}
+                            animate={{ scale: 1, opacity: 1 }}
+                            transition={{ duration: 0.5, delay: 0.6 + characterChanges.length * 0.2 + factionReputationChanges.length * 0.2 + roleIndex * 0.2 }}
+                            style={{ marginBottom: '12px' }}
+                        >
+                            <Box
+                                sx={{
+                                    width: '100%',
+                                    height: '150px',
+                                    borderRadius: '12px',
+                                    overflow: 'hidden',
+                                    border: '2px solid rgba(100,180,255,0.4)',
+                                    backgroundImage: `url(${roleChange.actor.getEmotionImage(roleChange.actor.getDefaultEmotion())})`,
+                                    backgroundSize: 'cover',
+                                    backgroundPosition: '50% -5%',
+                                    backgroundRepeat: 'no-repeat',
+                                    filter: 'brightness(1.1)',
+                                    boxShadow: '0 8px 24px rgba(0,0,0,0.6)',
+                                    '&:hover': {
+                                        transform: 'scale(1.02)',
+                                        transition: 'transform 0.2s ease-in-out'
+                                    }
+                                }}
+                            />
+                        </motion.div>
+
+                        {/* Character Nameplate */}
+                        <motion.div
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ duration: 0.4, delay: 0.7 + characterChanges.length * 0.2 + factionReputationChanges.length * 0.2 + roleIndex * 0.2 }}
+                            style={{ marginBottom: '12px' }}
+                        >
+                            <Nameplate 
+                                actor={roleChange.actor} 
+                                size="large"
+                                layout="inline"
+                            />
+                        </motion.div>
+
+                        {/* Role Change Header */}
+                        <motion.div
+                            initial={{ scale: 0.8, opacity: 0 }}
+                            animate={{ scale: 1, opacity: 1 }}
+                            transition={{ duration: 0.5, delay: 0.8 + characterChanges.length * 0.2 + factionReputationChanges.length * 0.2 + roleIndex * 0.2 }}
+                            style={{ marginBottom: '16px' }}
+                        >
+                            <Typography
+                                variant="h6"
+                                sx={{
+                                    fontWeight: 800,
+                                    color: '#64b4ff',
+                                    textTransform: 'uppercase',
+                                    letterSpacing: '1px',
+                                    textShadow: '0 2px 4px rgba(0,0,0,0.8)',
+                                    mb: 1
+                                }}
+                            >
+                                Role Changed
+                            </Typography>
+                        </motion.div>
+
+                        {/* Role transition display */}
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.8 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            transition={{ duration: 0.5, delay: 0.9 + characterChanges.length * 0.2 + factionReputationChanges.length * 0.2 + roleIndex * 0.2 }}
+                            style={{
+                                padding: '16px',
+                                background: 'rgba(100,180,255,0.1)',
+                                borderRadius: '12px',
+                                border: '2px solid rgba(100,180,255,0.2)'
+                            }}
+                        >
+                            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 2 }}>
+                                {/* Old Role */}
+                                <Box sx={{ textAlign: 'center', flex: 1 }}>
+                                    <Typography
+                                        sx={{
+                                            fontSize: '0.8rem',
+                                            color: '#888',
+                                            textTransform: 'uppercase',
+                                            mb: 0.5
+                                        }}
+                                    >
+                                        Previous
+                                    </Typography>
+                                    <Typography
+                                        sx={{
+                                            fontSize: '1.2rem',
+                                            fontWeight: 700,
+                                            color: '#aaa',
+                                            textDecoration: 'line-through'
+                                        }}
+                                    >
+                                        {roleChange.oldRole}
+                                    </Typography>
+                                </Box>
+
+                                {/* Arrow */}
+                                <Typography
+                                    sx={{
+                                        fontSize: '2rem',
+                                        color: '#64b4ff',
+                                        fontWeight: 900
+                                    }}
+                                >
+                                    →
+                                </Typography>
+
+                                {/* New Role */}
+                                <Box sx={{ textAlign: 'center', flex: 1 }}>
+                                    <Typography
+                                        sx={{
+                                            fontSize: '0.8rem',
+                                            color: '#64b4ff',
+                                            textTransform: 'uppercase',
+                                            mb: 0.5
+                                        }}
+                                    >
+                                        New
+                                    </Typography>
+                                    <Typography
+                                        sx={{
+                                            fontSize: '1.4rem',
+                                            fontWeight: 900,
+                                            color: '#64b4ff',
+                                            textShadow: '0 2px 4px rgba(100,180,255,0.6)'
+                                        }}
+                                    >
+                                        {roleChange.newRole}
+                                    </Typography>
+                                </Box>
+                            </Box>
+                        </motion.div>
                     </Paper>
                 </motion.div>
                 </div>
