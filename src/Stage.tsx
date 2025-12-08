@@ -251,28 +251,32 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
         // When incrementing turn, maybe move some actors around in the layout.
         for (const actorId in save.actors) {
             const actor = save.actors[actorId];
-            // Move faction actors to "in" their faction.
-            if (actor.factionId) {
-                console.log(`Moving faction actor ${actor.name} to faction location ${actor.factionId}`);
-                actor.locationId = actor.factionId;
-            } else if (actor.id == save.aide.actorId) {
-                // Aide goes nowhere by default.
-                actor.locationId = '';
-            } else if (!actor.locationId || save.layout.getModulesWhere(m => actor.locationId === m.id).length > 0) {
-                // If actor has no location or a location on the PARC (not away to a faction at the moment)
-                // Check if actor didn't move anywhere in the last skit, then put them in a random non-quarters module:
-                const previousSkit = (save.timeline && save.timeline.length > 0) ? save.timeline[save.timeline.length - 1].skit : undefined;
-                if ((!previousSkit || previousSkit.script.every(entry => !entry.movements || !Object.keys(entry.movements).some(moverId => moverId === actor.id)))) {
-                    actor.locationId = save.layout.getModulesWhere(m => m.type !== 'quarters' || m.ownerId == actorId).sort(() => Math.random() - 0.5)[0]?.id || '';
+            try {
+                // Move faction actors to "in" their faction.
+                if (actor.factionId) {
+                    console.log(`Moving faction actor ${actor.name} to faction location ${actor.factionId}`);
+                    actor.locationId = actor.factionId;
+                } else if (actor.id == save.aide.actorId) {
+                    // Aide goes nowhere by default.
+                    actor.locationId = '';
+                } else if (!actor.locationId || save.layout.getModulesWhere(m => actor.locationId === m.id).length > 0) {
+                    // If actor has no location or a location on the PARC (not away to a faction at the moment)
+                    // Check if actor didn't move anywhere in the last skit, then put them in a random non-quarters module:
+                    const previousSkit = (save.timeline && save.timeline.length > 0) ? save.timeline[save.timeline.length - 1].skit : undefined;
+                    if ((!previousSkit || previousSkit.script.every(entry => !entry.movements || !Object.keys(entry.movements).some(moverId => moverId === actor.id)))) {
+                        actor.locationId = save.layout.getModulesWhere(m => m.type !== 'quarters' || m.ownerId == actorId).sort(() => Math.random() - 0.5)[0]?.id || '';
+                    }
                 }
-            }
-            console.log(`Moved actor ${actor.name} to location ${actor.locationId}`);
-            // If no patients exist, put the aide in the echo chamber:
-            if (actor.id === save.aide.actorId && Object.values(save.actors).filter(a => !a.factionId && a.id !== save.aide.actorId).length === 0) {
-                const echoModule = save.layout.getModulesWhere(m => m.type === 'echo chamber')[0];
-                if (echoModule) {
-                    actor.locationId = echoModule.id;
+                console.log(`Moved actor ${actor.name} to location ${actor.locationId}`);
+                // If no patients exist, put the aide in the echo chamber:
+                if (actor.id === save.aide.actorId && Object.values(save.actors).filter(a => !a.factionId && a.id !== save.aide.actorId).length === 0) {
+                    const echoModule = save.layout.getModulesWhere(m => m.type === 'echo chamber')[0];
+                    if (echoModule) {
+                        actor.locationId = echoModule.id;
+                    }
                 }
+            } catch (e) {
+                console.error(`Error updating actor ${actor.name}:`, e);
             }
         }
 

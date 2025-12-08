@@ -38,7 +38,7 @@ export const FactionCard: FC<FactionCardProps> = ({
     const [internalExpanded, setInternalExpanded] = useState(false);
     const isExpanded = controlledExpanded !== undefined ? controlledExpanded : internalExpanded;
     
-    const reputation = faction.reputation || 1;
+    const reputation = faction.reputation;
     const grade = scoreToGrade(reputation);
     const hasCutTies = reputation < 1;
     const isUnmet = !faction.active && !hasCutTies;
