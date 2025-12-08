@@ -39,7 +39,7 @@ class Faction {
         roles: string[],
         themeColor: string,
         themeFont: string,
-        reputation: number = 1,
+        reputation: number = 3,
         active: boolean = false
     ) {
         this.id = id;
@@ -60,6 +60,8 @@ class Faction {
     getReputationDescription(): string {
         if (this.reputation <= 0) {
             return 'They have cut ties with the PARC.';
+        } else if (this.reputation <= 1) {
+            return 'They have a very poor opinion of the PARC; if pushed, they will cut ties with the PARC entirely.';
         } else if (this.reputation <= 2) {
             return 'They have a low opinion of the PARC and consider the relationship strained.';
         } else if (this.reputation <= 4) {
@@ -195,7 +197,7 @@ export async function loadReserveFaction(fullPath: string, stage: Stage): Promis
         parsedData['roles'] ? parsedData['roles'].split(',').map((role: string) => role.trim()) : [],
         themeColor,
         parsedData['font'] || 'Arial, sans-serif',
-        1 // Start with reputation of 1
+        3 // Start with reputation of 3
     );
     
     console.log(`Loaded new faction: ${newFaction.name} (ID: ${newFaction.id})`);

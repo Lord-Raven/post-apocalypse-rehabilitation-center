@@ -245,12 +245,15 @@ export function generateSkitPrompt(skit: SkitData, stage: Stage, historyLength: 
 
         ((historyLength > 0 && pastSkits.length) ? 
             // Include last few skit scripts for context and style reference; use summary except for most recent skit or if no summary.
-            '\n\nRecent Scenes for additional context:' + pastSkits.map((v, index) => 
-            ((!v.summary || index == pastSkits.length - 1) ?
-                (`\n\n  Script of Scene in ${stage.getSave().layout.getModuleById(v.moduleId || '')?.type || 'Unknown'} (${stage.getSave().day - v.context.day}) days ago:\n` +
+            '\n\nRecent Scenes for additional context:' + pastSkits.map((v, index) =>  {
+            const module = stage.getSave().layout.getModuleById(v.moduleId || '');
+            const moduleOwner = module?.ownerId ? stage.getSave().actors[module.ownerId] : null;
+            const moduleDescription = module ? (module.type === 'quarters' && moduleOwner ? `${moduleOwner.name}'s quarters` : `the ${module.type}`) : 'an unknown location';
+            return ((!v.summary || index == pastSkits.length - 1) ?
+                (`\n\n  Script of Scene in ${moduleDescription} (${stage.getSave().day - v.context.day}) days ago:\n` +
                 `System: ${buildScriptLog(v)}`) :
-                (`\n\n  Summary of scene in ${stage.getSave().layout.getModuleById(v.moduleId || '')?.type || 'Unknown'} (${stage.getSave().day - v.context.day}) days ago:\n` + v.summary)
-                )).join('') :
+                (`\n\n  Summary of scene in ${moduleDescription} (${stage.getSave().day - v.context.day}) days ago:\n` + v.summary)
+                )}).join('') :
             '') +
         `\n\n${instruction}`;
     return fullPrompt;
@@ -260,21 +263,20 @@ export async function generateSkitScript(skit: SkitData, stage: Stage): Promise<
 
     // There are two optional phrases for gently/more firmly prodding the model toward wrapping up the scene, and then we calculate one to show based on the skit.script.length and some randomness:
     const wrapUpPhrases = [
-        `\n\nPriority Instruction: Consider whether the scene has reached or can reach a natural stopping point or suspended moment where it might employ a "[SUMMARY]" tag.`, // Gently prod toward and ending.
+        `\n\nPriority Instruction: Consider whether the scene can reach a natural stopping point or suspended moment where it might employ a "[SUMMARY]" tag.`, // Gently prod toward and ending.
         `\n\nCritical Instruction: This scene is running long and needs a summary. Finish the immediate beat and include a "[SUMMARY]" tag.` // Firmer prod
     ];
 
-    // Use script length + random(1, 10) > 12 for gentle or > 24 for firm.
-    const scriptLengthFactor = skit.script.length > 0 ? (skit.script.length + Math.floor(Math.random() * 10) + 1) : 0;
-    const wrapupPrompt = scriptLengthFactor > 24 ? wrapUpPhrases[1] : (scriptLengthFactor > 12 ? wrapUpPhrases[0] : '');
+    // Use script length + random(1, 8) > 16 for gentle or > 26 for firm.
+    const scriptLengthFactor = skit.script.length > 0 ? (skit.script.length + Math.floor(Math.random() * 8) + 1) : 0;
+    const wrapupPrompt = scriptLengthFactor > 26 ? wrapUpPhrases[1] : (scriptLengthFactor > 16 ? wrapUpPhrases[0] : '');
 
 
     // Retry logic if response is null or response.result is empty
     let retries = 3;
     while (retries > 0) {
         try {
-
-            const fullPrompt = generateSkitPrompt(skit, stage, 2 + retries,
+            const fullPrompt = generateSkitPrompt(skit, stage, 2 + retries * 2, // 8 history entries on first try, reducing by two each iteration.
                 `Example Script Format:\n` +
                     `System: CHARACTER NAME: The character does some actions in prose. They say, "My dialogue is in quotation marks."\n` +
                     `ANOTHER CHARACTER NAME: [ANOTHER CHARACTER NAME EXPRESSES JOY][CHARACTER NAME EXPRESSES SURPRISE] "Even if my entire input is dialogue, it should be in quotation marks."\n` +
@@ -307,7 +309,7 @@ export async function generateSkitScript(skit: SkitData, stage: Stage): Promise<
                 `A faction move is a more significant event, indicating a departure from the PARC itself. ` +
                 `The game engine uses these tags to update character locations and visually display character presence in scenes. The scene itself cannot transition to a new area, but individual characters may come and go. ` +
                 (skit.script.length > 0 ? (`If a scene transition is desired, the current scene must first be summarized. ` +
-                    `A "[SUMMARY]" tag (e.g., "[SUMMARY: Brief summary of the scene's events.]") should be included when the scene has fulfilled the current Scene Prompt or reached a conclusive moment. `) : '') +
+                    `A "[SUMMARY]" tag (e.g., "[SUMMARY: Brief summary of the scene's events with key details.]") should be included when the scene has fulfilled the current Scene Prompt or reached a conclusive moment. `) : '') +
                 `\nThis scene is a brief visual novel skit within a video game; as such, the scene avoids major developments which would fundamentally alter the mechanics or nature of the game, ` +
                 `instead developing content within the existing rules. ` +
                 `Generally, focus upon interpersonal dynamics, character growth, faction relationships, and the state of the Station and its inhabitants.` +
