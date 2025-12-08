@@ -638,7 +638,7 @@ export function findBestNameMatch<T extends { name: string }>(
 
     let bestMatch: T | null = null;
     let bestScore = 0;
-    const threshold = 0.4; // Minimum similarity threshold
+    const threshold = 0.5; // Minimum similarity threshold
 
     for (const candidate of candidates) {
         const score = getNameSimilarity(candidate.name, searchName);

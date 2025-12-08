@@ -289,24 +289,27 @@ export async function generateSkitScript(skit: SkitData, stage: Stage): Promise<
                     `NARRATOR: There's a moment of real connection there. Something the PARC could use more of.\n` +
                     `[SUMMARY: This moment of shared commaraderie has left Character Name hopeful about their future aboard the PARC.]\n`) : '') +
                 `\nCurrent Scene Script Log to Continue:\nSystem: ${buildScriptLog(skit)}` +
-                `\n\nPrimary Instruction:\nAt the "System:" prompt, ${skit.script.length == 0 ? 'generate an initial bit of scene script' : 'extend or conclude the current scene script'} with three or four entries, ` +
-                `based upon the Premise and the specified Scene Prompt. Primarily involve the Present Characters (Absent Characters are listed for reference). ` +
+                `\n\nPrimary Instruction:\n` +
+                `At the "System:" prompt, ${skit.script.length == 0 ? 'produce the initial moments of a scene (perhaps implied in medias res)' : 'extend or conclude the current scene script'} with three or four entries, ` +
+                `based upon the Premise and the specified Scene Prompt. Primarily involve the Present Characters, although Absent Characters may be moved to this location using appropriate tags. ` +
                 `The script should consider characters' stats, relationships, past events, and the station's stats—among other factors—to craft a compelling scene. ` +
-                `A [PAUSE] tag can be used to signal a conclusion to this excerpt without fully ending the scene. ` +
                 `\nFollow the structure of the strict Example Script formatting above: ` +
-                `actions are depicted in prose and character dialogue in quotation marks. Emotion tags (e.g. "[CHARACTER NAME EXPRESSES JOY]") should be used to indicate significant emotional shifts—` +
-                `these cues will be utilized by the game engine to visually display appropriate character emotions. ` +
-                `Character movement tags (e.g. "[CHARACTER NAME moves to MODULE NAME]" or "[CHARACTER NAME moves to FACTION NAME]") should be used to indicate when a character moves to a different module on the station OR to a different faction (this is done by faction name, without further granularity). ` +
-                `MODULE NAME should be the name of a module type (e.g., 'comms', 'infirmary', 'lounge'), a character's quarters (e.g., 'Susan's quarters' or just 'quarters' for their own), or simply "Another module" to leave this area. ` +
+                `actions are depicted in prose and character dialogue in quotation marks. Character's present their own actions and dialogue, while events within the scene are attributed to a NARRATOR. ` +
+                `While a loose script format is employed, the actual content should be professionally edited narrative prose.\n` +
+                `Embedded within this script, you may employ special tags to trigger various game mechanics. ` +
+                `Emotion tags (e.g., "[CHARACTER NAME EXPRESSES JOY]") should be used to indicate visible emotional shifts in a character's appearance. ` +
+                `A [PAUSE] tag can be used to signal a suspension of this excerpt without fully ending the scene, in case the three- or four-entry quota has already been met. ` +
+                `Character movement tags (e.g., "[CHARACTER NAME moves to MODULE NAME]" or "[CHARACTER NAME moves to FACTION NAME]") should be used to indicate when a character moves to a different module on the station OR to a different faction (this is done by faction name, without further granularity). ` +
+                `MODULE NAME should be the name of a module type (e.g., 'comms', 'infirmary', 'lounge'), a character's quarters (e.g., 'Susan's quarters' or just 'quarters' for their own), or simply "Here" to move to the scene's location or "Another module" to leave this area. ` +
                 `A faction move is a more significant event, indicating a departure from the PARC itself. ` +
                 `The game engine uses these tags to update character locations and visually display character presence in scenes. The scene itself cannot transition to a new area, but individual characters may come and go. ` +
                 (skit.script.length > 0 ? (`If a scene transition is desired, the current scene must first be summarized. ` +
-                    `A "[SUMMARY]" tag (e.g., "[SUMMARY: Brief summary of the scene's events.]") should be included when the scene has fulfilled the current Scene Prompt or reached a conclusive moment before continuing with the script. `) : '') +
-                `\nThis scene is a brief visual novel skit within a video game; as such, the scene avoids major developments which would fundamentally change the mechanics or nature of the game, ` +
-                `instead developing content within the existing mechanics. ` +
+                    `A "[SUMMARY]" tag (e.g., "[SUMMARY: Brief summary of the scene's events.]") should be included when the scene has fulfilled the current Scene Prompt or reached a conclusive moment. `) : '') +
+                `\nThis scene is a brief visual novel skit within a video game; as such, the scene avoids major developments which would fundamentally alter the mechanics or nature of the game, ` +
+                `instead developing content within the existing rules. ` +
                 `Generally, focus upon interpersonal dynamics, character growth, faction relationships, and the state of the Station and its inhabitants.` +
-                (skit.script.length > 0 ? (`\nWhen the script completes a full story beat, indicates a scene change, or includes an implied closure—or if the current script has already achieved a significant moment—, ` +
-                `insert a "[SUMMARY: A brief synopsis of this scene's key events.]" tag, so the game engine can store the summary.${wrapupPrompt}`) : '')
+                (skit.script.length > 0 ? (`\nWhen the script completes a full story beat, indicates a scene change, or includes an implied closure, ` +
+                `remember to insert a "[SUMMARY: A brief synopsis of this scene's key events.]" tag, so the game engine can store the summary.${wrapupPrompt}`) : '')
             );
 
             const response = await stage.generator.textGen({
@@ -317,7 +320,7 @@ export async function generateSkitScript(skit: SkitData, stage: Stage): Promise<
                 stop: ['[PAUSE]']
             });
             if (response && response.result && response.result.trim().length > 0) {
-                // First, detect and parse any END tags and stat changes that may be embedded in the response.
+                // First, detect and parse any tags that may be embedded in the response.
                 let text = response.result;
                 let endScene = false;
                 let summary = undefined;
@@ -409,6 +412,9 @@ export async function generateSkitScript(skit: SkitData, stage: Stage): Promise<
                                 } else {
                                     console.warn(`${matched.name} has no quarters assigned`);
                                 }
+                            } else if (['here', 'this module', 'this location', 'this area', 'current module'].includes(destinationName.toLowerCase())) {
+                                // Move to current skit module
+                                destinationModuleId = skit.moduleId || '';
                             } else {
                                 // Try to find a module by type name
                                 const targetModule = stage.getLayout().getModulesWhere(m => namesMatch(destinationName, m.type))[0];
