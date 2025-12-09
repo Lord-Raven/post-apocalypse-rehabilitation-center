@@ -278,9 +278,10 @@ export async function generateSkitScript(skit: SkitData, stage: Stage): Promise<
         try {
             const fullPrompt = generateSkitPrompt(skit, stage, 2 + retries * 2, // 8 history entries on first try, reducing by two each iteration.
                 `Example Script Format:\n` +
-                    `System: CHARACTER NAME: The character does some actions in prose. They say, "My dialogue is in quotation marks."\n` +
+                    `System: CHARACTER NAME: Character Name does some actions in prose. They say, "My dialogue is in quotation marks."\n` +
                     `ANOTHER CHARACTER NAME: [ANOTHER CHARACTER NAME EXPRESSES JOY][CHARACTER NAME EXPRESSES SURPRISE] "Even if my entire input is dialogue, it should be in quotation marks."\n` +
-                    `NARRATOR: [CHARACTER NAME EXPRESSES RELIEF] Descriptive content that is not attributed to a character.\n[PAUSE]\n` +
+                    `NARRATOR: [CHARACTER NAME EXPRESSES RELIEF] Descriptive content or other scene events occurring around you, the user, can be attributed to a narrator.\n` +
+                    `${stage.getSave().player.name.toUpperCase()}: I'm the player, and my entries use first-person narrative voice, while other skit narration uses second-person to refer to me.\n[PAUSE]\n` +
                 `Example Character Movement Format:\n` +
                     `System: NARRATOR: [CHARACTER NAME moves to THIS MODULE NAME] Character Name enters the room.\n` +
                     `CHARACTER NAME: Character Name waves, "Hey; just checking in. I'll be next door if you need anything."\n` +
@@ -672,6 +673,7 @@ export async function generateSkitScript(skit: SkitData, stage: Stage): Promise<
                                 if (trimmed.toUpperCase().startsWith('[SUMMARY:')) {
                                     const summaryMatch = /\[SUMMARY:\s*([^\]]+)\]/i.exec(trimmed);
                                     summary = summaryMatch ? summaryMatch[1].trim() : undefined;
+                                    console.log('Extracted summary from analysis:', summary);
                                     continue;
                                 }
 
@@ -691,6 +693,7 @@ export async function generateSkitScript(skit: SkitData, stage: Stage): Promise<
                                         if (matchedFaction && reputationChange !== 0) {
                                             if (!statChanges['FACTION']) statChanges['FACTION'] = {};
                                             statChanges['FACTION'][matchedFaction.id] = (statChanges['FACTION'][matchedFaction.id] || 0) + reputationChange;
+                                            console.log(`Adding faction reputation change for ${matchedFaction.name}: ${reputationChange > 0 ? '+' : ''}${reputationChange}`);
                                         }
                                     }
                                     continue;
@@ -726,6 +729,7 @@ export async function generateSkitScript(skit: SkitData, stage: Stage): Promise<
                                         
                                         // Store the faction change in factionChanges
                                         factionChanges[matchedActor.id] = newFactionId;
+                                        console.log(`Adding faction change for ${matchedActor?.name}: ${newFactionId}`);
                                     }
                                     continue;
                                 }
@@ -745,6 +749,7 @@ export async function generateSkitScript(skit: SkitData, stage: Stage): Promise<
                                     if (matchedActor) {
                                         // Store the role name (or empty string for 'None')
                                         const newRole = roleNameRaw.toUpperCase() === 'NONE' ? '' : roleNameRaw;
+                                        console.log(`Adding role change for ${matchedActor?.name}: ${newRole}`);
                                         roleChanges[matchedActor.id] = newRole;
                                     }
                                     continue;
@@ -760,6 +765,7 @@ export async function generateSkitScript(skit: SkitData, stage: Stage): Promise<
                                     if (target.toUpperCase() === 'STATION') {
                                         // Station stat changes
                                         const adjustments = payload.split(',').map(p => p.trim());
+
                                         for (const adj of adjustments) {
                                             const m = adj.match(/([A-Za-z\s]+)\s*([+-]\s*\d+)/i);
                                             if (!m) continue;
@@ -773,6 +779,7 @@ export async function generateSkitScript(skit: SkitData, stage: Stage): Promise<
                                             else continue; // Invalid station stat
 
                                             if (!statChanges['STATION']) statChanges['STATION'] = {};
+                                            console.log(`Adding station stat change: ${statKey} ${num > 0 ? '+' : ''}${num}`);
                                             statChanges['STATION'][statKey] = (statChanges['STATION'][statKey] || 0) + num;
                                         }
                                     } else {
@@ -796,6 +803,7 @@ export async function generateSkitScript(skit: SkitData, stage: Stage): Promise<
                                             else continue; // Invalid character stat
 
                                             if (!statChanges[matched.id]) statChanges[matched.id] = {};
+                                            console.log(`Adding stat change for ${matched.name}: ${statKey} ${num > 0 ? '+' : ''}${num}`);
                                             statChanges[matched.id][statKey] = (statChanges[matched.id][statKey] || 0) + num;
                                         }
                                     }
