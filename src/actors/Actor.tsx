@@ -269,6 +269,24 @@ export async function loadReserveActor(data: any, stage: Stage): Promise<Actor|n
         return null;
     }
 
+    // Fetch the avatar image to inspect properties; if it's too small, discard this actor.
+    try {
+        const imgResponse = await fetch(data.avatar);
+        const imgBlob = await imgResponse.blob();
+        const imgBitmap = await createImageBitmap(imgBlob);
+        if (imgBitmap.width < 400 || imgBitmap.height < 400) {
+            console.log(`Discarding actor due to small avatar image: ${data.name} (${imgBitmap.width}x${imgBitmap.height})`);
+            return null;
+        } else if (imgBitmap.width / imgBitmap.height < 0.3 || imgBitmap.width / imgBitmap.height > 1.2) {
+            console.log(`Discarding actor due to extreme avatar aspect ratio: ${data.name} (${imgBitmap.width}x${imgBitmap.height})`);
+            return null;
+        }
+    } catch (error) {
+        // Failed to fetch avatar image.
+        console.log(`Discarding actor due to failed avatar image fetch: ${data.name}`);
+        return null;
+    }
+
     // Take this data and use text generation to get an updated distillation of this character, including a physical description.
     const generatedResponse = await stage.generator.textGen({
         prompt: `{{messages}}This is preparatory request for structured and formatted game content.` +

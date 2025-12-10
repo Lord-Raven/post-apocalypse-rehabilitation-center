@@ -147,6 +147,96 @@ function getCurrentActorsInScene(skit: SkitData, moduleId?: string, upToIndex: n
     return presentActors;
 }
 
+/**
+ * Process a movement tag and return the destination module/faction ID if valid.
+ * @param rawTag - The raw tag content (without brackets)
+ * @param stage - The Stage object for accessing save data and layout
+ * @param skit - The current skit data
+ * @returns An object with actorId and destinationId, or null if invalid
+ */
+function processMovementTag(rawTag: string, stage: Stage, skit: SkitData): { actorId: string; destinationId: string } | null {
+    // Look for movement tags: [Character Name moves to Module Name]
+    const movementRegex = /^([^[\]]+?)\s+moves\s+to\s+(.+)$/i;
+    const movementMatch = movementRegex.exec(rawTag);
+    if (!movementMatch) return null;
+    
+    const characterName = movementMatch[1].trim();
+    const destinationName = movementMatch[2].trim();
+    
+    // Find matching actor using findBestNameMatch
+    const allActors: Actor[] = Object.values(stage.getSave().actors);
+    const matched = findBestNameMatch(characterName, allActors);
+    if (!matched) {
+        console.warn(`Could not find actor matching: ${characterName}`);
+        return null;
+    }
+    
+    // Resolve destination module
+    let destinationModuleId = '';
+    
+    // Check if it's a quarters reference (e.g., "Susan's quarters" or "quarters")
+    const quartersMatch = /^(.+?)'s\s+quarters$/i.exec(destinationName);
+    if (quartersMatch) {
+        // Specific character's quarters
+        const quartersOwnerName = quartersMatch[1].trim();
+        const quartersOwner = findBestNameMatch(quartersOwnerName, allActors);
+        if (quartersOwner) {
+            // Find the quarters module owned by this actor
+            const quartersModule = stage.getLayout().getModulesWhere(m => 
+                m.type === 'quarters' && m.ownerId === quartersOwner.id
+            )[0];
+            if (quartersModule) {
+                destinationModuleId = quartersModule.id;
+            } else {
+                console.warn(`${quartersOwner.name} has no quarters assigned`);
+            }
+        } else {
+            console.warn(`Could not find quarters owner: ${quartersOwnerName}`);
+        }
+    } else if (destinationName.toLowerCase().endsWith('quarters')) {
+        // Character's own quarters (if they have any)
+        const ownQuarters = stage.getLayout().getModulesWhere(m => 
+            m.type === 'quarters' && m.ownerId === matched.id
+        )[0];
+        if (ownQuarters) {
+            destinationModuleId = ownQuarters.id;
+        } else {
+            console.warn(`${matched.name} has no quarters assigned`);
+        }
+    } else if (['here', 'this module', 'this location', 'this area', 'current module'].includes(destinationName.toLowerCase())) {
+        // Move to current skit module
+        destinationModuleId = skit.moduleId || '';
+    } else {
+        // Try to find a module by type name
+        const targetModule = stage.getLayout().getModulesWhere(m => namesMatch(destinationName, m.type))[0];
+        if (targetModule) {
+            destinationModuleId = targetModule.id;
+        } else {
+            // If no module found, check if it matches a faction name
+            const matchingFaction = Object.values(stage.getSave().factions).find(faction =>
+                namesMatch(destinationName, faction.name)
+            );
+            if (matchingFaction) {
+                destinationModuleId = matchingFaction.id;
+                console.log(`Movement detected: ${matched.name} moves to faction ${matchingFaction.name} (${matchingFaction.id})`);
+            } else {
+                console.warn(`Could not find module or faction matching: ${destinationName}`);
+            }
+        }
+    }
+    
+    // Return movement data if valid destination found
+    if (destinationModuleId) {
+        if (!stage.getSave().factions[destinationModuleId]) {
+            // Only log for modules, not factions (already logged above)
+            console.log(`Movement detected: ${matched.name} moves to ${destinationName} (${destinationModuleId})`);
+        }
+        return { actorId: matched.id, destinationId: destinationModuleId };
+    }
+    
+    return null;
+}
+
 export function generateSkitPrompt(skit: SkitData, stage: Stage, historyLength: number, instruction: string): string {
     const playerName = stage.getSave().player.name;
     const save = stage.getSave();
@@ -372,85 +462,10 @@ export async function generateSkitScript(skit: SkitData, stage: Stage): Promise<
 
                         console.log(`Processing tag: ${raw}`);
                         
-                        // Look for movement tags: [Character Name moves to Module Name]
-                        const movementRegex = /^([^[\]]+?)\s+moves\s+to\s+(.+)$/i;
-                        const movementMatch = movementRegex.exec(raw);
-                        if (movementMatch) {
-                            const characterName = movementMatch[1].trim();
-                            const destinationName = movementMatch[2].trim();
-                            
-                            // Find matching actor using findBestNameMatch
-                            const matched = findBestNameMatch(characterName, allActors);
-                            if (!matched) {
-                                console.warn(`Could not find actor matching: ${characterName}`);
-                                continue;
-                            }
-                            
-                            // Resolve destination module
-                            let destinationModuleId = '';
-                            
-                            // Check if it's a quarters reference (e.g., "Susan's quarters" or "quarters")
-                            const quartersMatch = /^(.+?)'s\s+quarters$/i.exec(destinationName);
-                            if (quartersMatch) {
-                                // Specific character's quarters
-                                const quartersOwnerName = quartersMatch[1].trim();
-                                const quartersOwner = findBestNameMatch(quartersOwnerName, allActors);
-                                if (quartersOwner) {
-                                    // Find the quarters module owned by this actor
-                                    const quartersModule = stage.getLayout().getModulesWhere(m => 
-                                        m.type === 'quarters' && m.ownerId === quartersOwner.id
-                                    )[0];
-                                    if (quartersModule) {
-                                        destinationModuleId = quartersModule.id;
-                                    } else {
-                                        console.warn(`${quartersOwner.name} has no quarters assigned`);
-                                    }
-                                } else {
-                                    console.warn(`Could not find quarters owner: ${quartersOwnerName}`);
-                                }
-                            } else if (destinationName.toLowerCase().endsWith('quarters')) {
-                                // Character's own quarters (if they have any)
-                                const ownQuarters = stage.getLayout().getModulesWhere(m => 
-                                    m.type === 'quarters' && m.ownerId === matched.id
-                                )[0];
-                                if (ownQuarters) {
-                                    destinationModuleId = ownQuarters.id;
-                                } else {
-                                    console.warn(`${matched.name} has no quarters assigned`);
-                                }
-                            } else if (['here', 'this module', 'this location', 'this area', 'current module'].includes(destinationName.toLowerCase())) {
-                                // Move to current skit module
-                                destinationModuleId = skit.moduleId || '';
-                            } else {
-                                // Try to find a module by type name
-                                const targetModule = stage.getLayout().getModulesWhere(m => namesMatch(destinationName, m.type))[0];
-                                if (targetModule) {
-                                    destinationModuleId = targetModule.id;
-                                } else {
-                                    // If no module found, check if it matches a faction name
-                                    const matchingFaction = Object.values(stage.getSave().factions).find(faction =>
-                                        namesMatch(destinationName, faction.name)
-                                    );
-                                    if (matchingFaction) {
-                                        destinationModuleId = matchingFaction.id;
-                                        console.log(`Movement detected: ${matched.name} moves to faction ${matchingFaction.name} (${matchingFaction.id})`);
-                                    } else {
-                                        console.warn(`Could not find module or faction matching: ${destinationName}`);
-                                    }
-                                }
-                            }
-                            
-                            // Track movement in the movements map
-                            if (destinationModuleId) {
-                                newMovements[matched.id] = destinationModuleId;
-                                if (!stage.getSave().factions[destinationModuleId]) {
-                                    // Only log for modules, not factions (already logged above)
-                                    console.log(`Movement detected: ${matched.name} moves to ${destinationName} (${destinationModuleId})`);
-                                }
-                            } else {
-                                // Invalid destination - set to empty string
-                                delete newMovements[matched.id];
-                            }
+                        // Process movement tags using the shared function
+                        const movementResult = processMovementTag(raw, stage, skit);
+                        if (movementResult) {
+                            newMovements[movementResult.actorId] = movementResult.destinationId;
                             continue;
                         }
                         
@@ -639,6 +654,15 @@ export async function generateSkitScript(skit: SkitData, stage: Stage): Promise<
                             `[${Object.values(stage.getSave().actors)[0].name}: ROLE None]\n` +
                             `The role name must directly match an existing role defined by the station's current modules (or "None," if a character's role is being removed by this tag).` +
 
+                            `\n---\nCharacter Movement/Departure:\n` +
+                            `If the scene depicts or implies that a character has departed the PARC or moved to a different faction (or such department is imminent), include any missing movement tags here.` +
+                            `[CHARACTER NAME moves to <module name|FACTION NAME>]\n` +
+                            `Full Example:\n` +
+                            `[${Object.values(stage.getSave().actors)[0].name} moves to Stellar Concord]\n` +
+                            `[${Object.values(stage.getSave().actors)[0].name} moves to Comms]\n` +
+                            `These tags ensure that the gamestate location data reflects the scene's events; it is especially important to include movement tags for any characters leaving on or returning from missions; ` +
+                            `remember that moving 'to' a faction is an abstract location representing a task on that faction's behalf.` +
+
                             (!summary ? 
                                 `\n---\nSummarize Scene:\n` +
                                 `"[SUMMARY: A brief synopsis of this scene's key events.]"` +
@@ -755,6 +779,21 @@ export async function generateSkitScript(skit: SkitData, stage: Stage): Promise<
                                     continue;
                                 }
 
+                                // Process movement tags using the shared function
+                                const movementResult = processMovementTag(trimmed.slice(1, -1), stage, skit);
+                                if (movementResult) {
+                                    console.log('Processing movement tag from analysis:', trimmed);
+                                    // Apply movement to the last script entry
+                                    if (scriptEntries.length > 0) {
+                                        const lastEntry = scriptEntries[scriptEntries.length - 1];
+                                        if (!lastEntry.movements) {
+                                            lastEntry.movements = {};
+                                        }
+                                        lastEntry.movements[movementResult.actorId] = movementResult.destinationId;
+                                    }
+                                    continue;
+                                }
+
                                 // Process stat change tags
                                 const statChangeRegex = /\[(.+?):\s*([^\]]+)\]/i;
                                 const match = statChangeRegex.exec(trimmed);
@@ -774,6 +813,7 @@ export async function generateSkitScript(skit: SkitData, stage: Stage): Promise<
 
                                             // Normalize stat name to possible Stat enum value if possible
                                             let statKey = statNameRaw.toLowerCase().trim();
+                                            console.log(`Normalizing station stat name for matching:${statKey}.`);
                                             const enumMatch = Object.values(StationStat).find(s => s.toLowerCase() === statKey || s.toLowerCase().includes(statKey) || statKey.includes(s.toLowerCase()));
                                             if (enumMatch) statKey = enumMatch;
                                             else continue; // Invalid station stat
