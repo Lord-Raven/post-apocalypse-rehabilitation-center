@@ -282,6 +282,26 @@ const getActorsAtIndex = (skit: SkitData, scriptIndex: number, allActors: {[key:
     return actorsAtModule;
 };
 
+/**
+ * Helper function to calculate the X position for an actor based on their index in the scene.
+ * Actors alternate between left and right sides of the screen, with positions distributed
+ * within ranges centered at 25vw (left) and 75vw (right).
+ */
+const calculateActorXPosition = (actorIndex: number, totalActors: number): number => {
+    const leftRange = 40;
+    const rightRange = 40;
+    
+    const leftSide = (actorIndex % 2) === 0;
+    const indexOnSide = leftSide ? Math.floor(actorIndex / 2) : Math.floor((actorIndex - 1) / 2);
+    const actorsOnSide = leftSide ? Math.ceil(totalActors / 2) : Math.floor(totalActors / 2);
+    const range = leftSide ? leftRange : rightRange;
+    const increment = actorsOnSide > 1 ? (indexOnSide / (actorsOnSide - 1)) : 0.5;
+    const center = leftSide ? 25 : 75;
+    const xPosition = totalActors === 1 ? 50 : Math.round(increment * range) + (center - Math.floor(range / 2));
+    
+    return xPosition;
+};
+
 export const SkitScreen: FC<SkitScreenProps> = ({ stage, setScreenType, isVerticalLayout }) => {
     const { setTooltip, clearTooltip } = useTooltip();
     const [index, setIndex] = React.useState<number>(0);
@@ -296,6 +316,57 @@ export const SkitScreen: FC<SkitScreenProps> = ({ stage, setScreenType, isVertic
     const [hoveredActor, setHoveredActor] = React.useState<Actor | null>(null);
     const [audioEnabled, setAudioEnabled] = React.useState<boolean>(true);
     const currentAudioRef = React.useRef<HTMLAudioElement | null>(null);
+    const [mousePosition, setMousePosition] = React.useState<{ x: number; y: number } | null>(null);
+
+    // Handle mouse move to update hover state based on proximity to actor positions
+    const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+        const x = (e.clientX / window.innerWidth) * 100; // Convert to vw
+        const y = (e.clientY / window.innerHeight) * 100; // Convert to vh
+        setMousePosition({ x, y });
+    };
+
+    // Calculate which actor should be hovered based on mouse proximity
+    React.useEffect(() => {
+        if (!mousePosition) {
+            setHoveredActor(null);
+            return;
+        }
+
+        // Don't show hover when over the message box area (bottom portion of screen)
+        const messageBoxTop = isVerticalLayout ? 79 : 56; // Approximate top of message box in vh
+        if (mousePosition.y > messageBoxTop) {
+            setHoveredActor(null);
+            return;
+        }
+
+        // Get current actors and their positions
+        const actors = getActorsAtIndex(skit, index, stage().getSave().actors);
+        if (actors.length === 0) {
+            setHoveredActor(null);
+            return;
+        }
+
+        // Calculate actor positions using shared logic
+        const actorPositions = actors.map((actor, i) => ({
+            actor,
+            xPosition: calculateActorXPosition(i, actors.length)
+        }));
+
+        // Find closest actor within 5vw range
+        const HOVER_RANGE = 5; // vw
+        let closestActor: Actor | null = null;
+        let closestDistance = Infinity;
+
+        actorPositions.forEach(({ actor, xPosition }) => {
+            const distance = Math.abs(mousePosition.x - xPosition);
+            if (distance < closestDistance && distance <= HOVER_RANGE) {
+                closestDistance = distance;
+                closestActor = actor;
+            }
+        });
+
+        setHoveredActor(closestActor);
+    }, [mousePosition, index, skit, isVerticalLayout]);
 
     // If audioEnabled changes to false, stop any currently playing audio
     useEffect(() => {
@@ -424,10 +495,6 @@ export const SkitScreen: FC<SkitScreenProps> = ({ stage, setScreenType, isVertic
     };
 
     const renderActors = (module: Module | null, actors: Actor[], currentSpeaker?: string) => {
-        // There are two expanding ranges to display actors within on screen: one centered around 25vw and one around 75vw. Actors alternate between these two ranges.
-        const leftRange = Math.min(40, Math.ceil((actors.length - 2) / 2) * 20); // Adjust used screen space by number of present actors.
-        const rightRange = Math.min(40, Math.floor((actors.length - 2) / 2) * 20);
-
         // Display actors centered across the scene bottom. Use emotion from current script entry or neutral as fallback
         return actors.map((actor, i) => {
             
@@ -445,13 +512,7 @@ export const SkitScreen: FC<SkitScreenProps> = ({ stage, setScreenType, isVertic
                 }
             }
             
-            const leftSide = (i % 2) === 0;
-            const indexOnSide = leftSide ? Math.floor(i / 2) : Math.floor((i - 1) / 2);
-            const actorsOnSide = leftSide ? Math.ceil(actors.length / 2) : Math.floor(actors.length / 2);
-            const range = leftSide ? leftRange : rightRange;
-            const increment = actorsOnSide > 1 ? (indexOnSide / (actorsOnSide - 1)) : 0.5;
-            const center = leftSide ? 25 : 75;
-            const xPosition = actors.length == 1 ? 50 : Math.round(increment * range) + (center - Math.floor(range / 2));
+            const xPosition = calculateActorXPosition(i, actors.length);
             const isSpeaking = actor === speaker;
             const isHovered = hoveredActor === actor;
             
@@ -467,11 +528,9 @@ export const SkitScreen: FC<SkitScreenProps> = ({ stage, setScreenType, isVertic
                     zIndex={55 - Math.abs(xPosition)}
                     heightMultiplier={isVerticalLayout ? (isSpeaking ? 0.9 : 0.7) : 1.0}
                     speaker={isSpeaking}
-                    highlightColor={isHovered ? "rgba(255,255,255,0.2)" : "rgba(255,255,255,0)"}
+                    highlightColor={isHovered ? "rgba(255,255,255,0)" : "rgba(250,250,250,0)"}
                     panX={0}
                     panY={0}
-                    onMouseEnter={() => setHoveredActor(actor)}
-                    onMouseLeave={() => setHoveredActor(null)}
                 />
             );
         });
@@ -486,7 +545,11 @@ export const SkitScreen: FC<SkitScreenProps> = ({ stage, setScreenType, isVertic
         <BlurredBackground
             imageUrl={decorImageUrl}
         >
-            <div style={{ position: 'relative', width: '100vw', height: '100vh' }}>
+            <div 
+                style={{ position: 'relative', width: '100vw', height: '100vh' }}
+                onMouseMove={handleMouseMove}
+                onMouseLeave={() => setMousePosition(null)}
+            >
 
             {/* Actors */}
             <div style={{ position: 'absolute', inset: 0, zIndex: 1 }}>
