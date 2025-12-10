@@ -352,8 +352,8 @@ export const SkitScreen: FC<SkitScreenProps> = ({ stage, setScreenType, isVertic
             xPosition: calculateActorXPosition(i, actors.length)
         }));
 
-        // Find closest actor within 5vw range
-        const HOVER_RANGE = 5; // vw
+        // Find closest actor within 10vw range
+        const HOVER_RANGE = 10; // vw
         let closestActor: Actor | null = null;
         let closestDistance = Infinity;
 
@@ -528,7 +528,7 @@ export const SkitScreen: FC<SkitScreenProps> = ({ stage, setScreenType, isVertic
                     zIndex={55 - Math.abs(xPosition)}
                     heightMultiplier={isVerticalLayout ? (isSpeaking ? 0.9 : 0.7) : 1.0}
                     speaker={isSpeaking}
-                    highlightColor={isHovered ? "rgba(255,255,255,0)" : "rgba(250,250,250,0)"}
+                    highlightColor={isHovered ? "rgba(255,255,255,0)" : "rgba(245,245,245,0)"}
                     panX={0}
                     panY={0}
                 />
