@@ -336,7 +336,10 @@ export async function loadReserveActor(data: any, stage: Stage): Promise<Actor|n
             `LUST: 2\n` +
             `JOY: 3\n` +
             `TRUST: 2\n` +
-            `#END#`,
+            `#END#` +
+            (stage.getSave().attenuation ? 
+                `\n\nThe station is currently tuned to modify this character; take the following additional context into account while shaping this distillation:\n${stage.getSave().attenuation}` : 
+                ''),
         stop: ['#END'],
         include_history: true, // There won't be any history, but if this is true, the front-end doesn't automatically apply pre-/post-history prompts.
         max_tokens: 400,

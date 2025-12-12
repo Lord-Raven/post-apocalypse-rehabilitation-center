@@ -6,7 +6,7 @@ import React, { FC } from 'react';
 import { motion } from 'framer-motion';
 import { ScreenType } from './BaseScreen';
 import { Stage } from '../Stage';
-import Actor from '../actors/Actor';
+import Actor, { loadReserveActorFromFullPath } from '../actors/Actor';
 import ActorCard, { ActorCardSection } from '../components/ActorCard';
 import { BlurredBackground } from '../components/BlurredBackground';
 import { RemoveButton } from '../components/RemoveButton';
@@ -22,15 +22,33 @@ interface AttenuationScreenProps {
 export const AttenuationScreen: FC<AttenuationScreenProps> = ({stage, setScreenType, isVerticalLayout}) => {
 
 	const [expandedCandidateId, setExpandedCandidateId] = React.useState<string | null>(null);
-	const [refreshKey, setRefreshKey] = React.useState(0); // Force re-renders when data changes
 	const [actorUrl, setActorUrl] = React.useState('');
-	const [modifierText, setModifierText] = React.useState('');
+	const [modifierText, setModifierText] = React.useState(stage().getSave().attenuation || '');
+    const [loadingReserve, setLoadingReserve] = React.useState(stage().reserveActorsLoadPromise != undefined);
 	const reserveActors = stage().reserveActors;
 	const RESERVE_LIMIT = stage().RESERVE_ACTORS;
+
+	// Monitor the stage's reserve loading promise and update state when it completes
+	React.useEffect(() => {
+		const promise = stage().reserveActorsLoadPromise;
+		if (promise) {
+			setLoadingReserve(true);
+			promise.finally(() => {
+				setLoadingReserve(false);
+			});
+		} else {
+			setLoadingReserve(false);
+		}
+	}, [stage().reserveActorsLoadPromise]);
 
 	const cancel = () => {
 		setScreenType(ScreenType.STATION);
 	};
+
+    // Update stage attenuation modifiers when changed
+    React.useEffect(() => {
+        stage().getSave().attenuation = modifierText;
+    }, [modifierText]);
 
 	// Handle Escape key to close the screen
 	React.useEffect(() => {
@@ -51,11 +69,16 @@ export const AttenuationScreen: FC<AttenuationScreenProps> = ({stage, setScreenT
 		e.preventDefault();
 		stage().reserveActors = stage().reserveActors.filter(a => a.id !== actorId);
 		stage().loadReserveActors();
-		setRefreshKey(prev => prev + 1); // Force re-render
 	};
 
 	const handleAttenuate = () => {
-		// TODO: Implement the logic to generate/retrieve actors
+
+        if (actorUrl.trim() !== '') {
+            loadReserveActorFromFullPath(actorUrl.trim(), stage());
+        } else {
+            // Kick off actor loading; this will populate remaining reserve slots. The generation process will pull attenuation modifiers from stage().
+            stage().loadReserveActors();
+        }
 		// For now, this is a placeholder
 		console.log('Attenuate clicked with:', { actorUrl, modifierText });
 	};
@@ -304,10 +327,10 @@ export const AttenuationScreen: FC<AttenuationScreenProps> = ({stage, setScreenT
 					<Button
 						variant="primary"
 						onClick={handleAttenuate}
-						disabled={isReserveFull}
+						disabled={isReserveFull || loadingReserve}
 						style={{
-							background: isReserveFull ? 'rgba(255,255,255,0.06)' : 'linear-gradient(90deg,#00ff88,#00b38f)',
-							color: isReserveFull ? '#9aa0a6' : '#002210'
+							background: (isReserveFull || loadingReserve) ? 'rgba(255,255,255,0.06)' : 'linear-gradient(90deg,#00ff88,#00b38f)',
+							color: (isReserveFull || loadingReserve) ? '#9aa0a6' : '#002210'
 						}}
 					>
 						Attenuate

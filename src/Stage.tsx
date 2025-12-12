@@ -44,6 +44,7 @@ export type SaveType = {
     disableEmotionImages?: boolean;
     characterArtStyle?: ArtStyle;
     characterArtist?: string;
+    attenuation?: string;
 }
 
 export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateType, ConfigType> {
@@ -52,7 +53,7 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
     private saves: (SaveType | undefined)[];
     private saveSlot: number = 0;
     // Flag/promise to avoid redundant concurrent requests for reserve actors
-    private reserveActorsLoadPromise?: Promise<void>;
+    public reserveActorsLoadPromise?: Promise<void>;
     private reserveFactionsLoadPromise?: Promise<void>;
     private generateAidePromise?: Promise<void>;
     public imageGenerationPromises: {[key: string]: Promise<string>} = {};
@@ -527,6 +528,27 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
         return this.generateAidePromise;
     }
 
+    async loadReserveActorFromFullPath(fullPath: string) {
+        if (this.reserveActorsLoadPromise) return this.reserveActorsLoadPromise;
+
+        this.reserveActorsLoadPromise = (async () => {
+            try {
+                const newActor = await loadReserveActorFromFullPath(fullPath, this);
+                if (newActor !== null) {
+                    this.reserveActors = [...this.reserveActors, newActor];
+                }
+            } catch (err) {
+                console.error('Error loading reserve actors', err);
+            } finally {
+                // clear the promise so future loads can be attempted if needed
+                this.reserveActorsLoadPromise = undefined;
+                // Note: We no longer automatically generate primary images here
+                // Images will be generated when actors are committed to echo slots
+            }
+        })();
+
+        return this.reserveActorsLoadPromise;
+    }
 
     async loadReserveActors() {
         // If a load is already in-flight, return the existing promise to dedupe concurrent calls

@@ -911,13 +911,13 @@ export const SkitScreen: FC<SkitScreenProps> = ({ stage, setScreenType, isVertic
                     <IconButton
                         onClick={handleWrapUp}
                         disabled={loading || (skit?.script.length || 0) < 6 || sceneEnded}
-                        onMouseEnter={(e) => setTooltip('Wrap up scene')}
+                        onMouseEnter={(e) => setTooltip('Wrap up the current scene.')}
                         onMouseLeave={clearTooltip}
                         sx={{
                             background: 'linear-gradient(90deg,#00ff88,#00b38f)',
                             color: '#00221a',
-                            marginLeft: 1,
                             padding: isVerticalLayout ? '6px' : '8px',
+                            borderRadius: '4px',
                             '&:hover': {
                                 background: 'linear-gradient(90deg,#00e67a,#009a7b)',
                             },
@@ -979,7 +979,9 @@ export const SkitScreen: FC<SkitScreenProps> = ({ stage, setScreenType, isVertic
         
         setSkit({...stageSkit as SkitData});
         setLoading(true);
-        setIndex(stageSkit.script.length - 1);
+        if (index != stageSkit.script.length - 1) {
+            setIndex(stageSkit.script.length - 1);
+        }
         setInputText('');
         const oldIndex = stageSkit.script.length;
         stage().continueSkit(wrapUp).then(() => {
