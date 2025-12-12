@@ -26,8 +26,6 @@ import {
     CircularProgress
 } from '@mui/material';
 import {
-    ArrowBackIos,
-    ArrowForwardIos,
     Send,
     Forward,
     Close,
@@ -35,7 +33,9 @@ import {
     Computer,
     VolumeUp,
     VolumeOff,
-    CardGiftcard
+    CardGiftcard,
+    ChevronRight,
+    ChevronLeft
 } from '@mui/icons-material';
 import TypeOut from '../components/TypeOut';
 
@@ -618,7 +618,7 @@ export const SkitScreen: FC<SkitScreenProps> = ({ stage, setScreenType, isVertic
                                 '&:disabled': { color: 'rgba(255,255,255,0.3)' }
                             }}
                         >
-                            <ArrowBackIos fontSize={isVerticalLayout ? 'inherit' : 'small'} sx={{ fontSize: isVerticalLayout ? '14px' : undefined }} />
+                            <ChevronLeft fontSize={isVerticalLayout ? 'inherit' : 'small'} sx={{ fontSize: isVerticalLayout ? '14px' : undefined }} />
                         </IconButton>
 
                         {/* Progress indicator */}
@@ -678,7 +678,7 @@ export const SkitScreen: FC<SkitScreenProps> = ({ stage, setScreenType, isVertic
                                 '&:disabled': { color: 'rgba(255,255,255,0.3)' }
                             }}
                         >
-                            <ArrowForwardIos fontSize={isVerticalLayout ? 'inherit' : 'small'} sx={{ fontSize: isVerticalLayout ? '14px' : undefined }} />
+                            <ChevronRight fontSize={isVerticalLayout ? 'inherit' : 'small'} sx={{ fontSize: isVerticalLayout ? '14px' : undefined }} />
                         </IconButton>
 
                         {/* Speaker name */}
