@@ -34,7 +34,8 @@ import {
     Casino,
     Computer,
     VolumeUp,
-    VolumeOff
+    VolumeOff,
+    CardGiftcard
 } from '@mui/icons-material';
 import TypeOut from '../components/TypeOut';
 
@@ -528,7 +529,7 @@ export const SkitScreen: FC<SkitScreenProps> = ({ stage, setScreenType, isVertic
                     zIndex={55 - Math.abs(xPosition)}
                     heightMultiplier={isVerticalLayout ? (isSpeaking ? 0.9 : 0.7) : 1.0}
                     speaker={isSpeaking}
-                    highlightColor={isHovered ? "rgba(255,255,255,0)" : "rgba(245,245,245,0)"}
+                    highlightColor={isHovered ? "rgba(255,255,255,0)" : "rgba(225,225,225,0)"}
                     panX={0}
                     panY={0}
                 />
@@ -625,7 +626,7 @@ export const SkitScreen: FC<SkitScreenProps> = ({ stage, setScreenType, isVertic
                             label={loading ? 
                                 <CircularProgress size={isVerticalLayout ? 12 : 16} sx={{ color: '#bfffd0' }} 
                                     onMouseEnter={() => {
-                                        setTooltip('Awaiting content from LLM', Computer);
+                                        setTooltip('Awaiting content from the LLM', Computer);
                                     }}
                                     onMouseLeave={() => {
                                         clearTooltip();
@@ -907,6 +908,27 @@ export const SkitScreen: FC<SkitScreenProps> = ({ stage, setScreenType, isVertic
                     >
                         {sceneEnded ? 'Close' : (inputText.trim() ? 'Send' : 'Continue')}
                     </Button>
+                    <IconButton
+                        onClick={handleWrapUp}
+                        disabled={loading || (skit?.script.length || 0) < 6 || sceneEnded}
+                        onMouseEnter={(e) => setTooltip('Wrap up scene')}
+                        onMouseLeave={clearTooltip}
+                        sx={{
+                            background: 'linear-gradient(90deg,#00ff88,#00b38f)',
+                            color: '#00221a',
+                            marginLeft: 1,
+                            padding: isVerticalLayout ? '6px' : '8px',
+                            '&:hover': {
+                                background: 'linear-gradient(90deg,#00e67a,#009a7b)',
+                            },
+                            '&:disabled': {
+                                background: 'rgba(255,255,255,0.04)',
+                                color: 'rgba(255,255,255,0.3)',
+                            }
+                        }}
+                    >
+                        <CardGiftcard fontSize={isVerticalLayout ? 'small' : 'medium'} />
+                    </IconButton>
                 </Box>
             </Paper>
             </div>
@@ -933,8 +955,13 @@ export const SkitScreen: FC<SkitScreenProps> = ({ stage, setScreenType, isVertic
         });
     }
     
+    // Handle wrap up - signals the AI to bring the scene to a close
+    function handleWrapUp() {
+        handleSubmit(true);
+    }
+    
     // Handle submission of player's guidance (or blank submit to continue the scene autonomously)
-    function handleSubmit() {
+    function handleSubmit(wrapUp: boolean = false) {
         // Truncate the script at the current index and add input text as a player speaker action:
         const stageSkit = stage().getSave().currentSkit;
         if (!stageSkit) return;
@@ -955,7 +982,7 @@ export const SkitScreen: FC<SkitScreenProps> = ({ stage, setScreenType, isVertic
         setIndex(stageSkit.script.length - 1);
         setInputText('');
         const oldIndex = stageSkit.script.length;
-        stage().continueSkit().then(() => {
+        stage().continueSkit(wrapUp).then(() => {
             const newIndex = Math.min(oldIndex, (stage().getSave().currentSkit?.script.length || 1) - 1);
             const skitData = stage().getSave().currentSkit;
             setSkit({...skitData as SkitData});

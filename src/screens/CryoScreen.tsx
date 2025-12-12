@@ -1,33 +1,46 @@
 /*
- * This is the screen where the player can view available echo pods and choose to wake a character.
+ * This is the screen where the player can manage characters in cryostasis.
+ * Characters can be placed into cryo (locationId set to "cryo") or woken up.
  */
 import React, { FC } from 'react';
 import { motion } from 'framer-motion';
 import { ScreenType } from './BaseScreen';
 import { Stage } from '../Stage';
-import { SkitType } from '../Skit';
 import Nameplate from '../components/Nameplate';
-import Actor, { generateActorDecor, Stat, ACTOR_STAT_ICONS } from '../actors/Actor';
+import Actor, { Stat, ACTOR_STAT_ICONS } from '../actors/Actor';
 import ActorCard, { ActorCardSection } from '../components/ActorCard';
 import { scoreToGrade } from '../utils';
 import { BlurredBackground } from '../components/BlurredBackground';
 import AuthorLink from '../components/AuthorLink';
 import { RemoveButton } from '../components/RemoveButton';
 import { Button } from '../components/UIComponents';
+import { SkitType } from '../Skit';
 
-interface EchoScreenProps {
+interface CryoScreenProps {
 	stage: () => Stage;
 	setScreenType: (type: ScreenType) => void;
 	isVerticalLayout: boolean;
 }
 
-export const EchoScreen: FC<EchoScreenProps> = ({stage, setScreenType, isVerticalLayout}) => {
+export const CryoScreen: FC<CryoScreenProps> = ({stage, setScreenType, isVerticalLayout}) => {
 
 	const [selectedSlotIndex, setSelectedSlotIndex] = React.useState<number | null>(null);
 	const [expandedCandidateId, setExpandedCandidateId] = React.useState<string | null>(null);
-	const [refreshKey, setRefreshKey] = React.useState(0); // Force re-renders when data changes
-	const reserveActors = stage().reserveActors;
-	const echoSlots = stage().getEchoSlots();
+	
+	// Get actors present on the station (locationId is '' or matches a module ID in the layout)
+	const stationActors = Object.values(stage().getSave().actors).filter(actor => {
+		if (actor.locationId === 'cryo') return false;
+		if (actor.locationId === '') return true;
+		// Check if locationId matches a module ID
+		return stage().getSave().layout.getModuleById(actor.locationId) !== null;
+	});
+
+	// Get actors in cryo (locationId === 'cryo'), max 3 slots
+	const cryoSlots: (Actor | null)[] = [null, null, null];
+	const cryoActors = Object.values(stage().getSave().actors).filter(actor => actor.locationId === 'cryo');
+	cryoActors.slice(0, 3).forEach((actor, index) => {
+		cryoSlots[index] = actor;
+	});
 
 	const cancel = () => {
 		setScreenType(ScreenType.STATION);
@@ -47,59 +60,37 @@ export const EchoScreen: FC<EchoScreenProps> = ({stage, setScreenType, isVertica
 		};
 	}, []);
 
-	const removeReserveActor = (actorId: string, e: React.MouseEvent) => {
-		e.stopPropagation();
-		e.preventDefault();
-		stage().reserveActors = stage().reserveActors.filter(a => a.id !== actorId);
-		stage().loadReserveActors();
-		setRefreshKey(prev => prev + 1); // Force re-render
-	};
+	// Characters in cryo cannot be dragged out - they must be awakened using the Wake button
 
-	const removeEchoActor = (actorId: string, e: React.MouseEvent) => {
-		e.stopPropagation();
-		e.preventDefault();
-		// Find the actor in echo slots
-		const actor = echoSlots.find(a => a?.id === actorId);
-		if (actor) {
-			// Remove from echo slot
-			stage().removeActorFromEcho(actorId, true);
-			// Add back to reserve actors if not already there
-			if (!stage().reserveActors.find(a => a.id === actorId)) {
-				stage().reserveActors.push(actor);
-			}
-			setRefreshKey(prev => prev + 1); // Force re-render
-		}
-	};
-
-	const accept = () => {
-		const selected = selectedSlotIndex != null ? echoSlots[selectedSlotIndex] : null;
-		const firstRoom = stage().getSave().layout.getModulesWhere(m => m?.type === 'quarters' && !m?.ownerId)[0] || null;
-		if (selected && firstRoom && selected.isPrimaryImageReady) {
-			// Assign the selected actor to the first available room
+	// Wake a character from cryo
+	const wake = () => {
+		const selected = selectedSlotIndex != null ? cryoSlots[selectedSlotIndex] : null;
+		const availableQuarters = stage().getSave().layout.getModulesWhere(m => m?.type === 'quarters' && !m?.ownerId);
+		
+		if (selected && availableQuarters.length > 0) {
+			const firstRoom = availableQuarters[0];
+			// Assign the selected actor to the first available quarters
 			firstRoom.ownerId = selected.id;
-			generateActorDecor(selected, firstRoom, stage());
-			// Set the actor's location to the echo room:
-			const sceneRoom = stage().getSave().layout.getModulesWhere(m => m.type === 'echo chamber')[0] || firstRoom;
-			selected.locationId = sceneRoom?.id || '';
-			stage().getSave().actors[selected.id] = selected;
-			// Remove from reserve actors and echo slots
-			stage().reserveActors = stage().reserveActors.filter(a => a.id !== selected.id);
-			stage().removeActorFromEcho(selected.id, false);
-			// Possibly set other properties on the selected actor as needed
-			selected.birth(stage().getSave().day);
+            setSelectedSlotIndex(null);
+            // Move actor to cryo module
+            const cryoModule = stage().getSave().layout.getModulesWhere(m => m?.type === 'cryo lab')[0];
+            if (cryoModule) {
+                // Set the actor's last known module to the cryo module
+                selected.locationId = cryoModule.id;
+            }
+            // EXIT_CRYO skit is triggered here
             stage().setSkit({
-                    type: SkitType.INTRO_CHARACTER,
-                    actorId: selected.id,
-                    moduleId: sceneRoom?.id,
-                    script: [],
-                    generating: true,
-                    context: {}
-			});
-			setScreenType(ScreenType.SKIT);
+                actorId: selected.id,
+                type: SkitType.EXIT_CRYO,
+                moduleId: cryoModule.id,
+                context: {},
+                script: []
+            });
+            setScreenType(ScreenType.SKIT);
 		}
 	};
 
-	const handleDragStart = (e: React.DragEvent, actor: Actor, source: 'reserve' | 'echo') => {
+	const handleDragStart = (e: React.DragEvent, actor: Actor, source: 'station' | 'cryo') => {
 		e.dataTransfer.setData('application/json', JSON.stringify({
 			actorId: actor.id,
 			source
@@ -126,47 +117,46 @@ export const EchoScreen: FC<EchoScreenProps> = ({stage, setScreenType, isVertica
 		e.preventDefault();
 	};
 
-	const handleDropOnEchoSlot = async (e: React.DragEvent, slotIndex: number) => {
+	const handleDropOnCryoSlot = (e: React.DragEvent, slotIndex: number) => {
 		e.preventDefault();
 		const data = JSON.parse(e.dataTransfer.getData('application/json'));
-		console.log('Dropping echo onto slot');
-		console.log(data);
-		const actor = reserveActors.find(a => a.id === data.actorId) || echoSlots.find(a => a?.id === data.actorId);
-		console.log(actor);
-		if (actor) {
+		const actor = stage().getSave().actors[data.actorId];
+		
+		if (actor && data.source === 'station') {
 			// Check if slot is occupied
-			const existingActor = echoSlots[slotIndex];
+			const existingActor = cryoSlots[slotIndex];
 			if (existingActor && existingActor.id !== actor.id) {
-				// Move existing actor back to reserves
-				if (!stage().reserveActors.find(a => a.id === existingActor.id)) {
-					stage().reserveActors.push(existingActor);
-				}
+				// Move existing actor back to station
+				existingActor.locationId = '';
 			}
-			await stage().commitActorToEcho(actor.id, slotIndex);
-			// Remove dragged actor from reserves if they came from there
-			if (data.source === 'reserve') {
-				stage().reserveActors = stage().reserveActors.filter(a => a.id !== actor.id);
-			}
-			// Use Stage method to manage echo slots
-			setRefreshKey(prev => prev + 1); // Force re-render
+			
+			// Move actor into cryo
+			actor.locationId = 'cryo';
+			
+			// Clear actor from ownership on their quarters
+			const quarters = stage().getSave().layout.getModulesWhere(m => m?.type === 'quarters' && m?.ownerId === actor.id);
+			quarters.forEach(q => {
+				q.ownerId = '';
+			});
+			
+			// Clear actor from any module where they hold a role
+			const roleModules = stage().getSave().layout.getModulesWhere(m => m?.type !== 'quarters' && m?.ownerId === actor.id);
+			roleModules.forEach(m => {
+				m.ownerId = '';
+			});
+
+            // Maybe trigger ENTER_CRYO skit here; the trouble is that locationId = 'cryo' is being used to indicate that the actor is already in cryo, but their location would need to be the module ID for the skit.
 		}
 	};
 
-	const handleDropOnReserve = (e: React.DragEvent) => {
-		e.preventDefault();
-		const data = JSON.parse(e.dataTransfer.getData('application/json'));
-		if (data.source === 'echo') {
-			// Remove from echo slot using Stage method
-			stage().removeActorFromEcho(data.actorId, true);
-			setRefreshKey(prev => prev + 1); // Force re-render
-		}
-	};
+	// Characters in cryo cannot be dragged back to station - they must be awakened using the Wake button
 
-	const module = stage().getSave().layout.getModulesWhere(m => m?.type === 'echo chamber')[0]!;
-	const availableRooms = stage().getSave().layout.getModulesWhere(m => m?.type === 'quarters' && !m?.ownerId) || [];
-	const selectedActor = selectedSlotIndex != null ? echoSlots[selectedSlotIndex] : null;
-	const acceptable = selectedActor && selectedActor.isPrimaryImageReady && availableRooms.length > 0;
+	const module = stage().getSave().layout.getModulesWhere(m => m?.type === 'cryo lab')[0]!;
+	const availableQuarters = stage().getSave().layout.getModulesWhere(m => m?.type === 'quarters' && !m?.ownerId) || [];
+	const selectedActor = selectedSlotIndex != null ? cryoSlots[selectedSlotIndex] : null;
+	const acceptable = selectedActor && availableQuarters.length > 0;
 	const background = stage().getSave().actors[module.ownerId || '']?.decorImageUrls[module.type] || module.getAttribute('defaultImageUrl')
+
 
 	return (
 		<BlurredBackground imageUrl={background}>
@@ -176,18 +166,16 @@ export const EchoScreen: FC<EchoScreenProps> = ({stage, setScreenType, isVertica
 				height: '100vh', 
 				width: '100vw'
 			}}>
-			{/* Reserve carousel at top */}
+			{/* Station actors carousel at top */}
 			<div 
 				style={{ 
 					flex: '0 0 auto', 
 					padding: '1vh', 
-					borderBottom: '2px solid rgba(0,255,136,0.2)',
+					borderBottom: '2px solid rgba(0,200,255,0.2)',
 					background: 'rgba(0,0,0,0.3)',
 					overflowX: 'auto',
 					overflowY: 'hidden'
 				}}
-				onDrop={handleDropOnReserve}
-				onDragOver={handleDragOver}
 			>
 				<div style={{ 
 					display: 'flex', 
@@ -197,11 +185,11 @@ export const EchoScreen: FC<EchoScreenProps> = ({stage, setScreenType, isVertica
 					height: isVerticalLayout ? '32vh' : '22vh',
 					paddingBottom: '0.5vh'
 				}}>
-				{reserveActors.map((actor, index) => {
+				{stationActors.map((actor, index) => {
 					const isExpanded = expandedCandidateId === actor.id;
 					return (
 					<motion.div
-					key={`reserve_${actor.id}`}
+					key={`station_${actor.id}`}
 					style={{ 
 						display: 'inline-block',
 						position: 'relative',
@@ -230,12 +218,6 @@ export const EchoScreen: FC<EchoScreenProps> = ({stage, setScreenType, isVertica
 					}}
 					whileTap={{ scale: 0.99 }}
 					>
-						<RemoveButton
-							onClick={(e: React.MouseEvent) => removeReserveActor(actor.id, e)}
-							title="Remove from reserves"
-							variant="topRight"
-							size="small"
-						/>							
 						<ActorCard
 								actor={actor}
 								isAway={actor.isOffSite(stage().getSave())}
@@ -244,10 +226,10 @@ export const EchoScreen: FC<EchoScreenProps> = ({stage, setScreenType, isVertica
 								isExpanded={isExpanded}
 								onClick={() => setExpandedCandidateId(isExpanded ? null : actor.id)}
 								draggable
-								onDragStart={(e) => handleDragStart(e, actor, 'reserve')}
+								onDragStart={(e) => handleDragStart(e, actor, 'station')}
 							style={{
 								height: isVerticalLayout ? '30vh' : '20vh',
-								boxShadow: `0 6px 18px rgba(0,0,0,0.4), 0 0 20px ${actor.themeColor ? actor.themeColor + '66' : 'rgba(0, 255, 136, 0.4)'}`,
+								boxShadow: `0 6px 18px rgba(0,0,0,0.4), 0 0 20px ${actor.themeColor ? actor.themeColor + '66' : 'rgba(0, 200, 255, 0.4)'}`,
 								padding: '8px',
 								overflow: 'hidden'
 							}}
@@ -255,7 +237,8 @@ export const EchoScreen: FC<EchoScreenProps> = ({stage, setScreenType, isVertica
 					</motion.div>
 				);})}
 			</div>
-		</div>			{/* Echo slots in center with buttons on sides or bottom */}
+		</div>
+			{/* Cryo slots in center with buttons on sides or bottom */}
 			<div style={{ 
 				flex: '1 1 auto', 
 				display: 'flex', 
@@ -275,16 +258,16 @@ export const EchoScreen: FC<EchoScreenProps> = ({stage, setScreenType, isVertica
 					</Button>
 				)}
 
-				{/* Echo slots container */}
+				{/* Cryo slots container */}
 				<div style={{ display: 'flex', gap: isVerticalLayout ? '20px' : '40px', alignItems: 'flex-end', justifyContent: 'center', flex: 1 }}>
-					{echoSlots.map((actor, slotIndex) => {
+					{cryoSlots.map((actor, slotIndex) => {
 						const isSelected = selectedSlotIndex === slotIndex;
 
 						return (
 							<motion.div
-								key={`echo_slot_${slotIndex}`}
+								key={`cryo_slot_${slotIndex}`}
 								onClick={() => setSelectedSlotIndex(actor ? slotIndex : null)}
-								onDrop={(e) => handleDropOnEchoSlot(e, slotIndex)}
+								onDrop={(e) => handleDropOnCryoSlot(e, slotIndex)}
 								onDragOver={handleDragOver}
 								animate={{
 									scale: (actor && isSelected) ? 1.05 : 1,
@@ -327,12 +310,7 @@ export const EchoScreen: FC<EchoScreenProps> = ({stage, setScreenType, isVertica
 									}
 								}}
 								whileTap={{ scale: actor ? 0.98 : 1 }}
-								className={actor && !actor.isPrimaryImageReady ? 'loading-echo-slot' : ''}
 								style={{
-									...((actor && !actor.isPrimaryImageReady && actor.themeColor) && {
-										'--shimmer-color': actor.themeColor
-									} as React.CSSProperties),
-									animationDelay: `${slotIndex * 0.7}s`,
 									cursor: actor ? 'pointer' : 'default',
 									height: isVerticalLayout ? '50vh' : '65vh',
 									width: isVerticalLayout ? '28vw' : '18vw',
@@ -342,17 +320,17 @@ export const EchoScreen: FC<EchoScreenProps> = ({stage, setScreenType, isVertica
 									alignItems: actor ? 'stretch' : 'center',
 									borderRadius: 12,
 									overflow: 'hidden',
-									background: actor ? undefined : 'linear-gradient(135deg, rgba(0,255,136,0.15), rgba(0,200,255,0.1))',
+									background: actor ? undefined : 'linear-gradient(135deg, rgba(0,200,255,0.15), rgba(100,150,255,0.1))',
 									border: isSelected
 										? `5px solid ${actor?.themeColor || '#ffffff'}` 
 										: actor 
-											? `4px solid ${actor.themeColor || '#00ff88'}`
-											: '3px dashed rgba(0,255,136,0.5)',
+											? `4px solid ${actor.themeColor || '#00c8ff'}`
+											: '3px dashed rgba(0,200,255,0.5)',
 									boxShadow: isSelected
-										? `0 12px 40px ${actor?.themeColor ? actor.themeColor + '40' : 'rgba(0,255,136,0.25)'}, inset 0 0 50px ${actor?.themeColor ? actor.themeColor + '20' : 'rgba(0,255,136,0.1)'}` 
+										? `0 12px 40px ${actor?.themeColor ? actor.themeColor + '40' : 'rgba(0,200,255,0.25)'}, inset 0 0 50px ${actor?.themeColor ? actor.themeColor + '20' : 'rgba(0,200,255,0.1)'}` 
 										: actor
-											? `0 8px 25px rgba(0,0,0,0.4), inset 0 0 30px ${actor.themeColor ? actor.themeColor + '15' : 'rgba(0,255,136,0.05)'}, 0 0 20px ${actor.themeColor ? actor.themeColor + '30' : 'rgba(0,255,136,0.1)'}`
-											: '0 8px 25px rgba(0,0,0,0.4), inset 0 0 30px rgba(0,255,136,0.05)',
+											? `0 8px 25px rgba(0,0,0,0.4), inset 0 0 30px ${actor.themeColor ? actor.themeColor + '15' : 'rgba(0,200,255,0.05)'}, 0 0 20px ${actor.themeColor ? actor.themeColor + '30' : 'rgba(0,200,255,0.1)'}`
+											: '0 8px 25px rgba(0,0,0,0.4), inset 0 0 30px rgba(0,200,255,0.05)',
 									position: 'relative',
 								}}
 							>
@@ -384,8 +362,8 @@ export const EchoScreen: FC<EchoScreenProps> = ({stage, setScreenType, isVertica
 												height: '100%',
 												background: `linear-gradient(
 													135deg, 
-													rgba(0, 255, 136, 0.15) 0%, 
-													rgba(0, 200, 255, 0.1) 50%, 
+													rgba(0, 200, 255, 0.15) 0%, 
+													rgba(100, 150, 255, 0.1) 50%, 
 													rgba(109, 87, 131, 0.15) 100%
 												)`,
 												mixBlendMode: 'overlay',
@@ -396,12 +374,6 @@ export const EchoScreen: FC<EchoScreenProps> = ({stage, setScreenType, isVertica
 								)}
 							{actor ? (
 								<>
-									<RemoveButton
-										onClick={(e: React.MouseEvent) => removeEchoActor(actor.id, e)}
-										title="Move to reserves"
-										variant="topRightInset"
-										size="medium"
-									/>
 									{/* Spacer to push the nameplate and stats down about 30vh */}
 									<div style={{ flex: '0 0 30vh', position: 'relative', zIndex: 2 }}></div>
 									{/* Actor nameplate */}
@@ -443,12 +415,12 @@ export const EchoScreen: FC<EchoScreenProps> = ({stage, setScreenType, isVertica
 								</>
 							) : (
 								<div style={{ 
-									color: 'rgba(0,255,136,0.7)', 
+									color: 'rgba(0,200,255,0.7)', 
 									fontSize: 'clamp(14px, 2.2vmin, 20px)', 
 									textAlign: 'center',
 									padding: 'clamp(12px, 2.5vmin, 24px)'
 								}}>
-									Drop an echo here to initiate the echofusion process.
+									Drop a character here to place them in cryostasis.
 								</div>
 							)}
 								</motion.div>
@@ -460,18 +432,18 @@ export const EchoScreen: FC<EchoScreenProps> = ({stage, setScreenType, isVertica
 				{!isVerticalLayout && (
 					<Button
 						variant="primary"
-						onClick={accept}
+						onClick={wake}
 						disabled={!acceptable}
 						style={{
 							background: acceptable ? 'var(--color-primary)' : 'rgba(255,255,255,0.06)',
 							color: acceptable ? '#002210' : '#9aa0a6'
 						}}
 					>
-						{availableRooms.length === 0 
+						{availableQuarters.length === 0 
 							? 'No Available Quarters' 
 							: selectedActor 
-								? (selectedActor.isPrimaryImageReady ? 'Wake Candidate' : 'Candidate Still Fusing')
-								: 'Select a Candidate'
+								? 'Wake Character'
+								: 'Select a Character'
 						}
 					</Button>
 				)}
@@ -487,18 +459,18 @@ export const EchoScreen: FC<EchoScreenProps> = ({stage, setScreenType, isVertica
 						</Button>
 						<Button
 							variant="primary"
-							onClick={accept}
+							onClick={wake}
 							disabled={!acceptable}
 							style={{
 								background: acceptable ? 'var(--color-primary)' : 'rgba(255,255,255,0.06)',
 								color: acceptable ? '#002210' : '#9aa0a6'
 							}}
 						>
-							{availableRooms.length === 0 
+							{availableQuarters.length === 0 
 								? 'No Available Quarters' 
 								: selectedActor 
-									? (selectedActor.isPrimaryImageReady ? 'Wake Candidate' : 'Candidate Still Fusing')
-									: 'Select a Candidate'
+									? 'Wake Character'
+									: 'Select a Character'
 							}
 						</Button>
 					</div>

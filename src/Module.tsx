@@ -3,7 +3,8 @@ import { Stage } from "./Stage";
 import { ScreenType } from './screens/BaseScreen';
 import { Build, Hotel, Restaurant, Security, AttachMoney, Favorite } from '@mui/icons-material';
 
-export type ModuleType = 'echo chamber' | 'comms' | 'generator' | 'quarters' | 'commons' | 'infirmary' | 'gym' | 'lounge' | 'armory' ;
+export type ModuleType = 'echo chamber' | 'comms' | 'generator' | 'quarters' | 'commons' | 'infirmary' | 'gym' | 'lounge' | 'armory' 
+    | 'cryo lab' | 'aperture';
     /*| 'hydroponics' | 'laboratory' | 'observatory' | 'security' | 'storage' | 'market' |
     'brig' | 'showers' | 'conservatory' |
     // Administration pack:
@@ -321,8 +322,10 @@ export const MODULE_DEFAULTS: Record<ModuleType, ModuleIntrinsic> = {
         cost: {Comfort: 2, Wealth: 1},
         action: randomAction,
         available: (stage: Stage) => {
+            // Require at least three patients on board to build a lounge:
+            const patientCount = Object.values(stage.getSave().actors).filter(a => a.origin === 'patient').length;
             // Can have only one in stage.getSave().layout:
-            return stage.getLayout().getModulesWhere(m => m.type === 'lounge').length === 0;
+            return stage.getLayout().getModulesWhere(m => m.type === 'lounge').length === 0 && patientCount >= 3;
         }
     },
     armory: {
@@ -335,8 +338,48 @@ export const MODULE_DEFAULTS: Record<ModuleType, ModuleIntrinsic> = {
         cost: {Systems: 1, Wealth: 1},
         action: randomAction,
         available: (stage: Stage) => {
+            // Require to have met at least three factions:
+            const metFactionsCount = Object.values(stage.getSave().factions).filter(f => f.active).length;
             // Can have only one in stage.getSave().layout:
-            return stage.getLayout().getModulesWhere(m => m.type === 'armory').length === 0;
+            return stage.getLayout().getModulesWhere(m => m.type === 'armory').length === 0 && metFactionsCount >= 3;
+        }
+    },
+    'cryo lab': {
+        skitPrompt: 'The cryo lab is where patients are placed in cryogenic stasis for long-term preservation. Scenes in this room often involve the ethical dilemmas of cryo-sleep, emergencies during stasis, or interactions with newly awakened patients.',
+        imagePrompt: 'A futuristic lab with a bank of cryo pods along the left wall and some advanced computer systems against the right wall.',
+        role: 'Keeper',
+        roleDescription: `Oversee the cryogenic systems and ensure the safety and well-being of patients in stasis.`,
+        baseImageUrl: 'https://media.charhub.io/439bcef8-3c12-4c07-b1fb-5659c0111edb/16e89185-6266-4ccf-a010-cf80090fcb08.png',
+        defaultImageUrl: 'https://media.charhub.io/6dbe1503-e10a-48e4-875d-cc7a5038bc43/be0aa5dc-70b6-4573-ae48-c37d8e90022f.png',
+        cost: {Provision: 2, Systems: 1},
+        action: (module: Module, stage: Stage, setScreenType: (type: ScreenType) => void) => {
+            // Open the cryo management screen
+            console.log("Opening cryo screen from cryo lab.");
+            setScreenType(ScreenType.CRYO);
+        },
+        available: (stage: Stage) => {
+            // Can have only one in stage.getSave().layout, and only once there are at least five patients:
+            const patientCount = Object.values(stage.getSave().actors).filter(a => a.origin === 'patient').length;
+            return stage.getLayout().getModulesWhere(m => m.type === 'cryo lab').length === 0 && patientCount >= 5;
+        }
+    },
+    'aperture': {
+        skitPrompt: 'The aperture module is a specialized focusing mechanism for attenuating or shaping the echoes pulled from the black hole. Scenes here often involve scientific discussions about the ill-understood mechanics of echoefusion or unexpected phenomena.',
+        imagePrompt: 'A sci-fi laboratory filled with advanced equipment. A large, circular machine frames a central window into space. There is a swirling black hole in the distance, with beams encircling it in a spiral pattern.',
+        role: 'Attenuator',
+        roleDescription: `Conduct research on spatial anomalies and manage the station's experimental echo projects.`,
+        baseImageUrl: 'https://chub.ai/imagine/project/8ca887ea-ea20-4c53-9536-a4354e565246',
+        defaultImageUrl: 'https://media.charhub.io/551ea94a-c64c-4328-a54a-08a8a356f261/ec7e47be-b157-4f71-a14d-4e45110e84f7.png',
+        cost: {Systems: 2, Wealth: 2},
+        action: (module: Module, stage: Stage, setScreenType: (type: ScreenType) => void) => {
+            // Open the attenuation screen
+            console.log("Opening aperture screen from aperture module.");
+            setScreenType(ScreenType.APERTURE);
+        },
+        available: (stage: Stage) => {
+            // Can have only one in stage.getSave().layout, and only once the station's Systems stat is at least 6:
+            const systemsStat = stage.getSave().stationStats?.[StationStat.SYSTEMS] || 0;
+            return stage.getLayout().getModulesWhere(m => m.type === 'aperture').length === 0 && systemsStat >= 6;
         }
     }
 };

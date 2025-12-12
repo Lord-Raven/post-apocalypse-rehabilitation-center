@@ -3,6 +3,7 @@ import { Stage } from '../Stage';
 import { SkitScreen } from './SkitScreen';
 import { StationScreen } from './StationScreen';
 import { EchoScreen } from './EchoScreen';
+import { CryoScreen } from './CryoScreen';
 import { MenuScreen } from './MenuScreen';
 import { LoadingScreen } from './LoadingScreen';
 import { TooltipProvider } from '../contexts/TooltipContext';
@@ -18,6 +19,8 @@ export enum ScreenType {
     LOADING = 'loading',
     STATION = 'station',
     ECHO = 'echo',
+    CRYO = 'cryo',
+    APERTURE = 'aperture',
     SKIT = 'skit',
 }
 
@@ -62,6 +65,10 @@ const BaseScreenContent: FC<{ stage: () => Stage }> = ({ stage }) => {
             {screenType === ScreenType.ECHO && (
                 // Render echo screen
                 <EchoScreen stage={stage} setScreenType={setScreenType} isVerticalLayout={isVerticalLayout} />
+            )}
+            {screenType === ScreenType.CRYO && (
+                // Render cryo screen
+                <CryoScreen stage={stage} setScreenType={setScreenType} isVerticalLayout={isVerticalLayout} />
             )}
             {screenType === ScreenType.SKIT && (
                 // Render skit screen

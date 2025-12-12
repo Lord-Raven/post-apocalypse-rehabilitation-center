@@ -1,0 +1,320 @@
+/*
+ * This is the screen where the player can manage reserve actors,
+ * request specific actor URLs for retrieval, and specify content modifiers.
+ */
+import React, { FC } from 'react';
+import { motion } from 'framer-motion';
+import { ScreenType } from './BaseScreen';
+import { Stage } from '../Stage';
+import Actor from '../actors/Actor';
+import ActorCard, { ActorCardSection } from '../components/ActorCard';
+import { BlurredBackground } from '../components/BlurredBackground';
+import { RemoveButton } from '../components/RemoveButton';
+import { Button, GlassPanel } from '../components/UIComponents';
+import { Box, TextField, Typography } from '@mui/material';
+
+interface AttenuationScreenProps {
+	stage: () => Stage;
+	setScreenType: (type: ScreenType) => void;
+	isVerticalLayout: boolean;
+}
+
+export const AttenuationScreen: FC<AttenuationScreenProps> = ({stage, setScreenType, isVerticalLayout}) => {
+
+	const [expandedCandidateId, setExpandedCandidateId] = React.useState<string | null>(null);
+	const [refreshKey, setRefreshKey] = React.useState(0); // Force re-renders when data changes
+	const [actorUrl, setActorUrl] = React.useState('');
+	const [modifierText, setModifierText] = React.useState('');
+	const reserveActors = stage().reserveActors;
+	const RESERVE_LIMIT = stage().RESERVE_ACTORS;
+
+	const cancel = () => {
+		setScreenType(ScreenType.STATION);
+	};
+
+	// Handle Escape key to close the screen
+	React.useEffect(() => {
+		const handleKeyDown = (e: KeyboardEvent) => {
+			if (e.key === 'Escape') {
+				cancel();
+			}
+		};
+
+		window.addEventListener('keydown', handleKeyDown);
+		return () => {
+			window.removeEventListener('keydown', handleKeyDown);
+		};
+	}, []);
+
+	const removeReserveActor = (actorId: string, e: React.MouseEvent) => {
+		e.stopPropagation();
+		e.preventDefault();
+		stage().reserveActors = stage().reserveActors.filter(a => a.id !== actorId);
+		stage().loadReserveActors();
+		setRefreshKey(prev => prev + 1); // Force re-render
+	};
+
+	const handleAttenuate = () => {
+		// TODO: Implement the logic to generate/retrieve actors
+		// For now, this is a placeholder
+		console.log('Attenuate clicked with:', { actorUrl, modifierText });
+	};
+
+	const isReserveFull = reserveActors.length >= RESERVE_LIMIT;
+    const module = stage().getSave().layout.getModulesWhere(m => m?.type === 'aperture')[0]!;
+   	const background = stage().getSave().actors[module.ownerId || '']?.decorImageUrls[module.type] || module.getAttribute('defaultImageUrl')
+
+
+	return (
+		<BlurredBackground imageUrl={background}>
+			<div style={{ 
+				display: 'flex', 
+				flexDirection: 'column', 
+				height: '100vh', 
+				width: '100vw'
+			}}>
+			{/* Reserve carousel at top */}
+			<div 
+				style={{ 
+					flex: '0 0 auto', 
+					padding: '1vh', 
+					borderBottom: '2px solid rgba(0,255,136,0.2)',
+					background: 'rgba(0,0,0,0.3)',
+					overflowX: 'auto',
+					overflowY: 'hidden'
+				}}
+			>
+				<div style={{ 
+					display: 'flex', 
+					gap: '1.2vmin', 
+					justifyContent: 'center',
+					minWidth: 'min-content',
+					height: isVerticalLayout ? '32vh' : '22vh',
+					paddingBottom: '0.5vh'
+				}}>
+				{reserveActors.map((actor, index) => {
+					const isExpanded = expandedCandidateId === actor.id;
+					return (
+					<motion.div
+					key={`reserve_${actor.id}`}
+					style={{ 
+						display: 'inline-block',
+						position: 'relative',
+						width: isVerticalLayout ? (isExpanded ? '48vmin' : (expandedCandidateId ? '24vmin' : '32vmin')) : (isExpanded ? '32vmin' : (expandedCandidateId ? '12vmin' : '16vmin')),
+						transition: 'width 0.3s ease'
+					}}
+					animate={{
+						y: [0, -3, -1, -4, 0],
+						x: [0, 1, -1, 0.5, 0],
+						rotate: [0, 0.5, -0.3, 0.2, 0],
+						transition: {
+							duration: 6,
+							repeat: Infinity,
+							ease: "easeInOut",
+							delay: 0.2 + index * 0.7
+						}
+					}}
+					whileHover={{ 
+						scale: 1.05,
+						filter: 'brightness(1.1)',
+						transition: {
+							type: "spring",
+							stiffness: 150,
+							damping: 15
+						}
+					}}
+					whileTap={{ scale: 0.99 }}
+					>
+						<RemoveButton
+							onClick={(e: React.MouseEvent) => removeReserveActor(actor.id, e)}
+							title="Remove from reserves"
+							variant="topRight"
+							size="small"
+						/>							
+						<ActorCard
+								actor={actor}
+								isAway={actor.isOffSite(stage().getSave())}
+								collapsedSections={[ActorCardSection.PORTRAIT]}
+								expandedSections={[ActorCardSection.PORTRAIT, ActorCardSection.STATS]}
+								isExpanded={isExpanded}
+								onClick={() => setExpandedCandidateId(isExpanded ? null : actor.id)}
+							style={{
+								height: isVerticalLayout ? '30vh' : '20vh',
+								boxShadow: `0 6px 18px rgba(0,0,0,0.4), 0 0 20px ${actor.themeColor ? actor.themeColor + '66' : 'rgba(0, 255, 136, 0.4)'}`,
+								padding: '8px',
+								overflow: 'hidden'
+							}}
+						/>
+					</motion.div>
+				);})}
+			</div>
+		</div>
+
+			{/* Main content area */}
+			<div style={{ 
+				flex: '1 1 auto', 
+				display: 'flex', 
+				flexDirection: 'column',
+				alignItems: 'center', 
+				justifyContent: 'center', 
+				padding: isVerticalLayout ? '20px' : '40px',
+				gap: '30px'
+			}}>
+				{/* Attenuation panel */}
+				<GlassPanel
+					variant="bright"
+					style={{
+						width: isVerticalLayout ? '90%' : 'clamp(400px, 50vw, 700px)',
+						maxWidth: '800px'
+					}}
+				>
+					<Typography 
+						variant="h4" 
+						sx={{
+							color: '#00ff88',
+							textShadow: '0 0 10px rgba(0, 255, 136, 0.5)',
+							marginBottom: 3,
+							textAlign: 'center',
+							fontWeight: 700
+						}}
+					>
+						Attenuation Chamber
+					</Typography>
+
+					<Typography 
+						variant="body2" 
+						sx={{
+							color: 'rgba(255, 255, 255, 0.7)',
+							marginBottom: 3,
+							textAlign: 'center'
+						}}
+					>
+						Request specific actors or apply modifiers to generate new candidates for your reserve pool.
+					</Typography>
+
+					<Box sx={{ display: 'flex', flexDirection: 'column', gap: 2.5 }}>
+						{/* Actor URL input */}
+						<Box>
+							<Typography 
+								variant="body1" 
+								sx={{
+									color: '#eafff2',
+									marginBottom: 1,
+									fontWeight: 600
+								}}
+							>
+								Actor URL (Optional)
+							</Typography>
+							<TextField
+								fullWidth
+								value={actorUrl}
+								onChange={(e) => setActorUrl(e.target.value)}
+								placeholder="Enter actor URL to retrieve a specific character..."
+								variant="outlined"
+								size="small"
+								sx={{
+									'& .MuiOutlinedInput-root': {
+										background: 'linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01))',
+										color: '#eafff2',
+										fontSize: isVerticalLayout ? '0.85rem' : '1rem',
+										'& fieldset': {
+											borderColor: 'rgba(0,255,136,0.3)',
+										},
+										'&:hover fieldset': {
+											borderColor: 'rgba(0,255,136,0.5)',
+										},
+										'&.Mui-focused fieldset': {
+											borderColor: 'rgba(0,255,136,0.7)',
+										},
+									},
+									'& .MuiInputBase-input::placeholder': {
+										color: 'rgba(255,255,255,0.4)',
+										opacity: 1,
+									},
+								}}
+							/>
+						</Box>
+
+						{/* Modifier text input */}
+						<Box>
+							<Typography 
+								variant="body1" 
+								sx={{
+									color: '#eafff2',
+									marginBottom: 1,
+									fontWeight: 600
+								}}
+							>
+								Content Modifiers (Optional)
+							</Typography>
+							<TextField
+								fullWidth
+								multiline
+								rows={4}
+								value={modifierText}
+								onChange={(e) => setModifierText(e.target.value)}
+								placeholder="Specify content modifiers to apply to generated actors (e.g., personality traits, appearance details, background information)..."
+								variant="outlined"
+								sx={{
+									'& .MuiOutlinedInput-root': {
+										background: 'linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01))',
+										color: '#eafff2',
+										fontSize: isVerticalLayout ? '0.85rem' : '1rem',
+										'& fieldset': {
+											borderColor: 'rgba(0,255,136,0.3)',
+										},
+										'&:hover fieldset': {
+											borderColor: 'rgba(0,255,136,0.5)',
+										},
+										'&.Mui-focused fieldset': {
+											borderColor: 'rgba(0,255,136,0.7)',
+										},
+									},
+									'& .MuiInputBase-input::placeholder': {
+										color: 'rgba(255,255,255,0.4)',
+										opacity: 1,
+									},
+								}}
+							/>
+						</Box>
+
+						{/* Reserve status */}
+						<Typography 
+							variant="body2" 
+							sx={{
+								color: isReserveFull ? '#ff8c66' : 'rgba(255, 255, 255, 0.6)',
+								textAlign: 'center',
+								fontStyle: 'italic'
+							}}
+						>
+							Reserve: {reserveActors.length} / {RESERVE_LIMIT}
+							{isReserveFull && ' (Full - Remove actors to make space)'}
+						</Typography>
+					</Box>
+				</GlassPanel>
+
+				{/* Action buttons */}
+				<Box sx={{ display: 'flex', gap: 3, justifyContent: 'center' }}>
+					<Button
+						variant="secondary"
+						onClick={cancel}
+					>
+						Cancel
+					</Button>
+					<Button
+						variant="primary"
+						onClick={handleAttenuate}
+						disabled={isReserveFull}
+						style={{
+							background: isReserveFull ? 'rgba(255,255,255,0.06)' : 'linear-gradient(90deg,#00ff88,#00b38f)',
+							color: isReserveFull ? '#9aa0a6' : '#002210'
+						}}
+					>
+						Attenuate
+					</Button>
+				</Box>
+			</div>
+			</div>
+		</BlurredBackground>
+	);
+}

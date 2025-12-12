@@ -920,12 +920,12 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
         }
     }
 
-    async continueSkit() {
+    async continueSkit(wrapUp: boolean = false): Promise<void> {
         const skit = (this.getSave() as any).currentSkit as SkitData;
         if (!skit) return;
         skit.generating = true;
         try {
-            const { entries, endScene, statChanges } = await generateSkitScript(skit, this);
+            const { entries, endScene, statChanges } = await generateSkitScript(skit, wrapUp, this);
             skit.script.push(...entries);
         } catch (err) {
             console.error('Error continuing skit script', err);

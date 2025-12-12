@@ -11,7 +11,9 @@ export enum SkitType {
     FACTION_INTRODUCTION = 'FACTION INTRODUCTION',
     FACTION_INTERACTION = 'FACTION INTERACTION',
     NEW_MODULE = 'NEW MODULE',
-    RANDOM_ENCOUNTER = 'RANDOM ENCOUNTER'
+    RANDOM_ENCOUNTER = 'RANDOM ENCOUNTER',
+    ENTER_CRYO = 'ENTER CRYO',
+    EXIT_CRYO = 'EXIT CRYO',
 }
 
 export interface ScriptEntry {
@@ -93,6 +95,13 @@ export function generateSkitTypePrompt(skit: SkitData, stage: Stage, continuing:
                 notHereText :
                 `Continue this scene between the Director and a representative for ${faction?.name || 'a secret organization'}'s. ` + 
                 notHereText);
+        case SkitType.ENTER_CRYO:
+            return `This scene depicts the Director's decision to place ${actor.name} into cryogenic stasis in the Cryo Lab module. ` +
+                `Explore ${actor.name}'s thoughts and feelings about this process, as well as any final exchanges with the player or other characters present. ` +
+                `The decision will not be reversed during this skit; it is a foregone conclusion.`;
+        case SkitType.EXIT_CRYO:
+            return `This scene depicts the Director's decision to awaken ${actor.name} from cryogenic stasis in the Cryo Lab module. ` +
+                `Explore ${actor.name}'s thoughts and feelings about this process, as well as any initial exchanges with the player or other characters present. `;
         default:
             return '';
     }
@@ -349,7 +358,7 @@ export function generateSkitPrompt(skit: SkitData, stage: Stage, historyLength: 
     return fullPrompt;
 }
 
-export async function generateSkitScript(skit: SkitData, stage: Stage): Promise<{ entries: ScriptEntry[]; endScene: boolean; statChanges: { [actorId: string]: { [stat: string]: number } } }> {
+export async function generateSkitScript(skit: SkitData, wrapUp: boolean, stage: Stage): Promise<{ entries: ScriptEntry[]; endScene: boolean; statChanges: { [actorId: string]: { [stat: string]: number } } }> {
 
     // There are two optional phrases for gently/more firmly prodding the model toward wrapping up the scene, and then we calculate one to show based on the skit.script.length and some randomness:
     const wrapUpPhrases = [
@@ -357,9 +366,8 @@ export async function generateSkitScript(skit: SkitData, stage: Stage): Promise<
         `\n\nCritical Instruction: This scene is running long and needs a summary. Finish the immediate beat and include a "[SUMMARY]" tag.` // Firmer prod
     ];
 
-    // Use script length + random(1, 8) > 16 for gentle or > 26 for firm.
     const scriptLengthFactor = skit.script.length > 0 ? (skit.script.length + Math.floor(Math.random() * 8) + 1) : 0;
-    const wrapupPrompt = scriptLengthFactor > 26 ? wrapUpPhrases[1] : (scriptLengthFactor > 16 ? wrapUpPhrases[0] : '');
+    const wrapupPrompt = wrapUp ? wrapUpPhrases[1] : (scriptLengthFactor > 30 ? wrapUpPhrases[0] : '');
 
 
     // Retry logic if response is null or response.result is empty
