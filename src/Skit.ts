@@ -261,7 +261,8 @@ export function generateSkitPrompt(skit: SkitData, stage: Stage, historyLength: 
     // Determine present and absent actors for this moment in the skit (as of the last entry in skit.script):
     const presentActorIds = getCurrentActorsInScene(skit, skit.moduleId, -1);
     const presentPatients = Object.values(save.actors).filter(a => presentActorIds.has(a.id) && !a.factionId);
-    const absentPatients = Object.values(save.actors).filter(a => !presentActorIds.has(a.id) && !a.factionId && save.aide.actorId != a.id);
+    const absentPatients = Object.values(save.actors).filter(a => !presentActorIds.has(a.id) && !a.factionId && save.aide.actorId != a.id && a.locationId != 'cryo');
+    const cryoPatients = Object.values(save.actors).filter(a => a.locationId === 'cryo' && !a.factionId);
     const awayPatients = Object.values(save.actors).filter(a => !a.factionId && a.isOffSite(save));
 
     // Update participation counts if this is the start of the skit
@@ -327,6 +328,10 @@ export function generateSkitPrompt(skit: SkitData, stage: Stage, historyLength: 
             const atFaction = save.factions[actor.locationId];
             return `${actor.name}\n  Description: ${actor.description}\n  Profile: ${actor.profile}\n  Role: ${roleModule?.getAttribute('role') || 'Patient'}\n  On Assignment to: ${atFaction?.name || 'Unknown Faction'}`;
         }).join('\n')}` +
+        // List cryo characters for reference; just need description and profile:
+        `\n\nCryo Frozen Characters (Absolutely Unavailable):\n${cryoPatients.map(actor => {
+            return `${actor.name}\n  Description: ${actor.description}\n  Profile: ${actor.profile}`;
+        }).join('\n')}` +
         // List stat meanings, for reference:
         `\n\nStats:\n${Object.values(Stat).map(stat => `${stat.toUpperCase()}: ${getStatDescription(stat)}`).join('\n')}` +
         `\n\nScene Prompt:\n${generateSkitTypePrompt(skit, stage, skit.script.length > 0)}` +
@@ -336,7 +341,7 @@ export function generateSkitPrompt(skit: SkitData, stage: Stage, historyLength: 
             `Typically, this and other faction contact the PARC to express interest in making offers for resources, information, or patients. ` +
             `The faction could have a temporary job to offer a patient, or suggest an exchange of resources or favors. Or they could have a permanent role in mind for an ideal candidate patient. ` +
             `If a patient is already on-loan to this faction, use this opportunity to update the Director on their status, depict the patient's return, or convert them to a permanent placement with the faction. ` +
-            `Remember to use appropriate tags when moving characters on- or off-station. ` : '') +
+            `Remember to use appropriate tags when moving characters on- or off-station in the skit. ` : '') +
         `\n\nKnown Factions: \n${Object.values(stage.getSave().factions).map(faction => `${faction.name}: ${faction.getReputationDescription()}`).join('\n')}` +
         (module ? (`\n\nModule Details:\n  This scene is set in ` +
             `${module.type === 'quarters' ? `${moduleOwner ? `${moduleOwner.name}'s` : 'a vacant'} quarters` : 
@@ -376,30 +381,30 @@ export async function generateSkitScript(skit: SkitData, wrapUp: boolean, stage:
         try {
             const fullPrompt = generateSkitPrompt(skit, stage, 2 + retries * 2, // 8 history entries on first try, reducing by two each iteration.
                 `Example Script Format:\n` +
-                    `System: CHARACTER NAME: Character Name does some actions in prose. They say, "My dialogue is in quotation marks."\n` +
+                    `System: CHARACTER NAME: Character Name does some actions in prose, for example, waving to you, the player. They say, "My dialogue is in quotation marks."\n` +
                     `ANOTHER CHARACTER NAME: [ANOTHER CHARACTER NAME EXPRESSES JOY][CHARACTER NAME EXPRESSES SURPRISE] "Even if my entire input is dialogue, it should be in quotation marks."\n` +
-                    `NARRATOR: [CHARACTER NAME EXPRESSES RELIEF] Descriptive content or other scene events occurring around you, the user, can be attributed to a narrator.\n` +
-                    `${stage.getSave().player.name.toUpperCase()}: I'm the player, and my entries use first-person narrative voice, while other skit narration uses second-person to refer to me.\n[PAUSE]\n` +
+                    `NARRATOR: [CHARACTER NAME EXPRESSES RELIEF] Descriptive content or other scene events occurring around you, the player, can be attributed to a narrator.\n` +
+                    `${stage.getSave().player.name.toUpperCase()}: I'm the player, and my entries use first-person narrative voice, while all other skit entries use second-person to refer to me.\n[PAUSE]\n\n` +
                 `Example Character Movement Format:\n` +
                     `System: NARRATOR: [CHARACTER NAME moves to THIS MODULE NAME] Character Name enters the room.\n` +
                     `CHARACTER NAME: Character Name waves, "Hey; just checking in. I'll be next door if you need anything."\n` +
-                    `NARRATOR: [CHARACTER NAME moves to OTHER CHARACTER\'s QUARTERS] Character Name ducks out with a smile. You hear their boots fade away down the corridor beyond.\n[PAUSE]\n` +
+                    `NARRATOR: [CHARACTER NAME moves to OTHER CHARACTER\'s QUARTERS] Character Name ducks out with a smile. You hear their boots fade away down the corridor beyond.\n[PAUSE]\n\n` +
                 `Example Character Departure from PARC Format:\n` +
                     `System: CHARACTER NAME: They sigh profoundly. "Well, I suppose this is goodbye for now." They wave as they somberly step through the bulkhead.\n` +
                     `NARRATOR: [CHARACTER NAME moves to FACTION NAME] You watch on-screen as Character Name's shuttle detaches from the PARC and disappears into the stars.\n` +
-                    `[SUMMARY: Character Name has departed the PARC, on loan to FACTION NAME for (mission description here).]\n` +
+                    `[SUMMARY: Character Name has departed the PARC, on loan to FACTION NAME for (mission description here).]\n\n` +
                 (skit.script.length > 0 ? (`Example Summary Script Format:\n` +
                     `System: CHARACTER NAME: [CHARACTER NAME EXPRESSES OPTIMISM] Character Name smiles at you. "I think we made real progress here today. Thanks!"\n` +
-                    `NARRATOR: There's a moment of real connection there. Something the PARC could use more of.\n` +
-                    `[SUMMARY: This moment of shared commaraderie has left Character Name hopeful about their future aboard the PARC.]\n`) : '') +
-                `\nCurrent Scene Script Log to Continue:\nSystem: ${buildScriptLog(skit)}` +
+                    `NARRATOR: There's a moment of real connection between the both of you. Something the PARC could use more of.\n` +
+                    `[SUMMARY: This moment of shared commaraderie has left Character Name hopeful about their future aboard the PARC.]\n\n`) : '') +
+                `Current Scene Script Log to Continue:\nSystem: ${buildScriptLog(skit)}` +
                 `\n\nPrimary Instruction:\n` +
                 `At the "System:" prompt, ${skit.script.length == 0 ? 'produce the initial moments of a scene (perhaps joined in medias res)' : 'extend or conclude the current scene script'} with three to six entries, ` +
                 `based upon the Premise and the specified Scene Prompt. Primarily involve the Present Characters, although Absent Characters may be moved to this location using appropriate tags. ` +
                 `The script should consider characters' stats, relationships, past events, and the station's stats—among other factors—to craft a compelling scene. ` +
                 `\nFollow the structure of the strict Example Script formatting above: ` +
                 `actions are depicted in prose and character dialogue in quotation marks. Character's present their own actions and dialogue, while events within the scene are attributed to a NARRATOR. ` +
-                `While a loose script format is employed, the actual content should be professionally edited narrative prose.\n` +
+                `Although a loose script format is employed, the actual content should be professionally edited narrative prose. Entries from the player, ${stage.getSave().player.name}, are written in first-person, while other entries consistently refer to ${stage.getSave().player.name} in second-person; all other characters are referred to in third-person, even in their own entries.\n` +
                 `Embedded within this script, you may employ special tags to trigger various game mechanics. ` +
                 `Emotion tags (e.g., "[CHARACTER NAME EXPRESSES JOY]") should be used to indicate visible emotional shifts in a character's appearance. ` +
                 `A [PAUSE] tag can be used to signal a suspension of this excerpt without fully ending the scene, in case the three-to-six-entry quota has already been met. ` +
@@ -409,12 +414,13 @@ export async function generateSkitScript(skit: SkitData, wrapUp: boolean, stage:
                 `The game engine uses these tags to update character locations and visually display character presence in scenes. The scene itself cannot transition to a new area, but individual characters may come and go; ` +
                 `the tags are not presented to users, so the content of the script should reflect these events. ` +
                 (skit.script.length > 0 ? (`If a scene transition is desired, the current scene must first be summarized. ` +
-                    `A "[SUMMARY]" tag (e.g., "[SUMMARY: Brief summary of the scene's events with key details.]") should be included when the scene has fulfilled the current Scene Prompt or reached a conclusive moment. `) : '') +
+                    `A "[SUMMARY]" tag (e.g., "[SUMMARY: Brief summary of the scene's events with key details and impacts.]") should be included when the scene has fulfilled the current Scene Prompt or reached a conclusive moment. `) : '') +
                 `\nThis scene is a brief visual novel skit within a video game; as such, the scene avoids major developments which would fundamentally alter the mechanics or nature of the game, ` +
                 `instead developing content within the existing rules. ` +
-                `Generally, focus upon interpersonal dynamics, character growth, faction relationships, and the state of the Station and its inhabitants.` +
-                (skit.script.length > 0 ? (`\nWhen the script completes a full story beat, indicates a scene change, or includes an implied closure, ` +
-                `remember to insert a "[SUMMARY: A brief synopsis of this scene's key events.]" tag, so the game engine can store the summary.${wrapupPrompt}`) : '')
+                `Similarly, avoid timelines or keep durations vague; the game's mechanics may by unable to map directly to what is depicted in the skit. ` +
+                `Generally, focus upon interpersonal dynamics, character growth, faction and patient relationships, and the state of the Station, its capabilities, and its inhabitants.` +
+                (skit.script.length > 0 ? (`\nWhen the script completes a major story beat, indicates a scene change, or includes an implied closure, ` +
+                `remember to insert a "[SUMMARY: A brief synopsis of this scene's key events or impacts.]" tag, so the game engine can store the summary.${wrapupPrompt}`) : '')
             );
 
             const response = await stage.generator.textGen({

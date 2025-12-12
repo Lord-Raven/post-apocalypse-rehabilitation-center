@@ -334,7 +334,7 @@ export const SkitScreen: FC<SkitScreenProps> = ({ stage, setScreenType, isVertic
         }
 
         // Don't show hover when over the message box area (bottom portion of screen)
-        const messageBoxTop = isVerticalLayout ? 79 : 56; // Approximate top of message box in vh
+        const messageBoxTop = isVerticalLayout ? 60 : 40; // Approximate top of message box in vh
         if (mousePosition.y > messageBoxTop) {
             setHoveredActor(null);
             return;

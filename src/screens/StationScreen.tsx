@@ -620,25 +620,34 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType, isV
                                                     left: 0,
                                                     right: 0,
                                                     bottom: 0,
-                                                    display: 'flex',
-                                                    justifyContent: actorCount <= 1 ? 'center' : 'space-evenly',
-                                                    alignItems: 'flex-end',
-                                                    padding: '0 6px',
                                                     pointerEvents: 'none',
                                                 }}>
-                                                    {actors.map((actor) => (
-                                                        <img
-                                                            key={actor.id}
-                                                            src={actor.getEmotionImage(actor.getDefaultEmotion(), stage())}
-                                                            alt={actor.name}
-                                                            style={{
-                                                                height: `calc(0.6 * ${cellSize})`,
-                                                                userSelect: 'none',
-                                                                pointerEvents: 'none',
-                                                                filter: actor.isHologram(stage().getSave()) ? 'sepia(100%) hue-rotate(180deg) saturate(200%) brightness(1.2)' : undefined,
-                                                            }}
-                                                        />
-                                                    ))}
+                                                    {actors.map((actor, index) => {
+                                                        // Calculate horizontal position: space evenly from their centers
+                                                        // For single actor: center at 50%
+                                                        // For multiple: distribute evenly across the width
+                                                        const leftPercent = actorCount === 1 
+                                                            ? 50 
+                                                            : (100 / (actorCount + 1)) * (index + 1);
+                                                        
+                                                        return (
+                                                            <img
+                                                                key={actor.id}
+                                                                src={actor.getEmotionImage(actor.getDefaultEmotion(), stage())}
+                                                                alt={actor.name}
+                                                                style={{
+                                                                    position: 'absolute',
+                                                                    left: `${leftPercent}%`,
+                                                                    bottom: 0,
+                                                                    transform: 'translateX(-50%)',
+                                                                    height: `calc(0.6 * ${cellSize})`,
+                                                                    userSelect: 'none',
+                                                                    pointerEvents: 'none',
+                                                                    filter: actor.isHologram(stage().getSave()) ? 'sepia(100%) hue-rotate(180deg) saturate(200%) brightness(1.2)' : undefined,
+                                                                }}
+                                                            />
+                                                        );
+                                                    })}
                                                 </div>
 
                                                 {/* Label bar: shaded, spans full width, overlays above actors (z-index) and is bottom-aligned */}
