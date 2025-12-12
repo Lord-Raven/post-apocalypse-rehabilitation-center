@@ -351,7 +351,7 @@ export const MODULE_DEFAULTS: Record<ModuleType, ModuleIntrinsic> = {
         roleDescription: `Oversee the cryogenic systems and ensure the safety and well-being of patients in stasis.`,
         baseImageUrl: 'https://media.charhub.io/439bcef8-3c12-4c07-b1fb-5659c0111edb/16e89185-6266-4ccf-a010-cf80090fcb08.png',
         defaultImageUrl: 'https://media.charhub.io/6dbe1503-e10a-48e4-875d-cc7a5038bc43/be0aa5dc-70b6-4573-ae48-c37d8e90022f.png',
-        cost: {Provision: 2, Systems: 1},
+        cost: {Harmony: 2, Systems: 2},
         action: (module: Module, stage: Stage, setScreenType: (type: ScreenType) => void) => {
             // Open the cryo management screen
             console.log("Opening cryo screen from cryo bank.");

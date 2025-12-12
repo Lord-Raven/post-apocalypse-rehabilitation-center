@@ -315,7 +315,7 @@ export async function loadReserveActor(data: any, stage: Stage): Promise<Actor|n
             `STYLE: A concise description of the character's sense of overall style, mood, interests, or aesthetic, to be applied to the way they decorate their space.\n` +
             `VOICE: Output the specific voice ID from the Available Voices section that best matches the character's apparent gender and personality\n` +
             `COLOR: A hex color that reflects the character's theme or mood—use darker or richer colors that will contrast with white text.\n` +
-            `FONT: A web-safe font family that reflects the character's personality.\n` +
+            `FONT: A web-safe font, font stack, or font family that reflects the character's personality; this will be embedded in a CSS font-family property.\n` +
             Object.entries(Stat).map(([key, value]) => {
                 return `${key.toUpperCase()}: 1-10 scoring of ${getStatDescription(value).toLowerCase()}\n`;
             }).join('\n') +
