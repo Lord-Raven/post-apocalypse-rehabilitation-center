@@ -73,7 +73,7 @@ export const CryoScreen: FC<CryoScreenProps> = ({stage, setScreenType, isVertica
 			firstRoom.ownerId = selected.id;
             setSelectedSlotIndex(null);
             // Move actor to cryo module
-            const cryoModule = stage().getSave().layout.getModulesWhere(m => m?.type === 'cryo lab')[0];
+            const cryoModule = stage().getSave().layout.getModulesWhere(m => m?.type === 'cryo bank')[0];
             if (cryoModule) {
                 // Set the actor's last known module to the cryo module
                 selected.locationId = cryoModule.id;
@@ -151,7 +151,7 @@ export const CryoScreen: FC<CryoScreenProps> = ({stage, setScreenType, isVertica
 
 	// Characters in cryo cannot be dragged back to station - they must be awakened using the Wake button
 
-	const module = stage().getSave().layout.getModulesWhere(m => m?.type === 'cryo lab')[0]!;
+	const module = stage().getSave().layout.getModulesWhere(m => m?.type === 'cryo bank')[0]!;
 	const availableQuarters = stage().getSave().layout.getModulesWhere(m => m?.type === 'quarters' && !m?.ownerId) || [];
 	const selectedActor = selectedSlotIndex != null ? cryoSlots[selectedSlotIndex] : null;
 	const acceptable = selectedActor && availableQuarters.length > 0;

@@ -68,7 +68,6 @@ export const AttenuationScreen: FC<AttenuationScreenProps> = ({stage, setScreenT
 		e.stopPropagation();
 		e.preventDefault();
 		stage().reserveActors = stage().reserveActors.filter(a => a.id !== actorId);
-		stage().loadReserveActors();
 	};
 
 	const handleAttenuate = () => {
@@ -79,8 +78,8 @@ export const AttenuationScreen: FC<AttenuationScreenProps> = ({stage, setScreenT
             // Kick off actor loading; this will populate remaining reserve slots. The generation process will pull attenuation modifiers from stage().
             stage().loadReserveActors();
         }
-		// For now, this is a placeholder
 		console.log('Attenuate clicked with:', { actorUrl, modifierText });
+		setActorUrl('');
 	};
 
 	const isReserveFull = reserveActors.length >= RESERVE_LIMIT;
@@ -333,7 +332,7 @@ export const AttenuationScreen: FC<AttenuationScreenProps> = ({stage, setScreenT
 							color: (isReserveFull || loadingReserve) ? '#9aa0a6' : '#002210'
 						}}
 					>
-						Attenuate
+						{loadingReserve ? 'Attenuating...' : (isReserveFull ? 'Reserve Full' : 'Attenuate')}
 					</Button>
 				</Box>
 			</div>

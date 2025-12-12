@@ -96,11 +96,11 @@ export function generateSkitTypePrompt(skit: SkitData, stage: Stage, continuing:
                 `Continue this scene between the Director and a representative for ${faction?.name || 'a secret organization'}'s. ` + 
                 notHereText);
         case SkitType.ENTER_CRYO:
-            return `This scene depicts the Director's decision to place ${actor.name} into cryogenic stasis in the Cryo Lab module. ` +
+            return `This scene depicts the Director's decision to place ${actor.name} into cryogenic stasis in the Cryo Bank module. ` +
                 `Explore ${actor.name}'s thoughts and feelings about this process, as well as any final exchanges with the player or other characters present. ` +
                 `The decision will not be reversed during this skit; it is a foregone conclusion.`;
         case SkitType.EXIT_CRYO:
-            return `This scene depicts the Director's decision to awaken ${actor.name} from cryogenic stasis in the Cryo Lab module. ` +
+            return `This scene depicts the Director's decision to awaken ${actor.name} from cryogenic stasis in the Cryo Bank module. ` +
                 `Explore ${actor.name}'s thoughts and feelings about this process, as well as any initial exchanges with the player or other characters present. `;
         default:
             return '';

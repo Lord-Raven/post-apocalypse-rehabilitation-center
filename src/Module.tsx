@@ -4,7 +4,7 @@ import { ScreenType } from './screens/BaseScreen';
 import { Build, Hotel, Restaurant, Security, AttachMoney, Favorite } from '@mui/icons-material';
 
 export type ModuleType = 'echo chamber' | 'comms' | 'generator' | 'quarters' | 'commons' | 'infirmary' | 'gym' | 'lounge' | 'armory' 
-    | 'cryo lab' | 'aperture';
+    | 'cryo bank' | 'aperture';
     /*| 'hydroponics' | 'laboratory' | 'observatory' | 'security' | 'storage' | 'market' |
     'brig' | 'showers' | 'conservatory' |
     // Administration pack:
@@ -344,8 +344,8 @@ export const MODULE_DEFAULTS: Record<ModuleType, ModuleIntrinsic> = {
             return stage.getLayout().getModulesWhere(m => m.type === 'armory').length === 0 && metFactionsCount >= 3;
         }
     },
-    'cryo lab': {
-        skitPrompt: 'The cryo lab is where patients are placed in cryogenic stasis for long-term preservation. Scenes in this room often involve the ethical dilemmas of cryo-sleep, emergencies during stasis, or interactions with newly awakened patients.',
+    'cryo bank': {
+        skitPrompt: 'The cryo bank is where patients are placed in cryogenic stasis for long-term preservation. Scenes in this room often involve the ethical dilemmas of cryo-sleep, emergencies during stasis, or interactions with newly awakened patients.',
         imagePrompt: 'A futuristic lab with a bank of cryo pods along the left wall and some advanced computer systems against the right wall.',
         role: 'Keeper',
         roleDescription: `Oversee the cryogenic systems and ensure the safety and well-being of patients in stasis.`,
@@ -354,13 +354,13 @@ export const MODULE_DEFAULTS: Record<ModuleType, ModuleIntrinsic> = {
         cost: {Provision: 2, Systems: 1},
         action: (module: Module, stage: Stage, setScreenType: (type: ScreenType) => void) => {
             // Open the cryo management screen
-            console.log("Opening cryo screen from cryo lab.");
+            console.log("Opening cryo screen from cryo bank.");
             setScreenType(ScreenType.CRYO);
         },
         available: (stage: Stage) => {
             // Can have only one in stage.getSave().layout, and only once there are at least five patients:
             const patientCount = Object.values(stage.getSave().actors).filter(a => a.origin === 'patient').length;
-            return stage.getLayout().getModulesWhere(m => m.type === 'cryo lab').length === 0 && patientCount >= 5;
+            return stage.getLayout().getModulesWhere(m => m.type === 'cryo bank').length === 0 && patientCount >= 5;
         }
     },
     'aperture': {
