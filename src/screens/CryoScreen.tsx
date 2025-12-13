@@ -11,6 +11,7 @@ import Actor, { Stat, ACTOR_STAT_ICONS } from '../actors/Actor';
 import ActorCard, { ActorCardSection } from '../components/ActorCard';
 import { scoreToGrade } from '../utils';
 import { BlurredBackground } from '../components/BlurredBackground';
+import { ActorCarousel } from '../components/ActorCarousel';
 import AuthorLink from '../components/AuthorLink';
 import { RemoveButton } from '../components/RemoveButton';
 import { Button } from '../components/UIComponents';
@@ -90,10 +91,10 @@ export const CryoScreen: FC<CryoScreenProps> = ({stage, setScreenType, isVertica
 		}
 	};
 
-	const handleDragStart = (e: React.DragEvent, actor: Actor, source: 'station' | 'cryo') => {
+	const handleDragStart = (e: React.DragEvent, actor: Actor) => {
 		e.dataTransfer.setData('application/json', JSON.stringify({
 			actorId: actor.id,
-			source
+			source: 'station'
 		}));
 
 		// Create custom drag image to show only the current card
@@ -167,77 +168,18 @@ export const CryoScreen: FC<CryoScreenProps> = ({stage, setScreenType, isVertica
 				width: '100vw'
 			}}>
 			{/* Station actors carousel at top */}
-			<div 
-				style={{ 
-					flex: '0 0 auto', 
-					padding: '1vh', 
-					borderBottom: '2px solid rgba(0,200,255,0.2)',
-					background: 'rgba(0,0,0,0.3)',
-					overflowX: 'auto',
-					overflowY: 'hidden'
-				}}
-			>
-				<div style={{ 
-					display: 'flex', 
-					gap: '1.2vmin', 
-					justifyContent: 'center',
-					minWidth: 'min-content',
-					height: isVerticalLayout ? '32vh' : '22vh',
-					paddingBottom: '0.5vh'
-				}}>
-				{stationActors.map((actor, index) => {
-					const isExpanded = expandedCandidateId === actor.id;
-					return (
-					<motion.div
-					key={`station_${actor.id}`}
-					style={{ 
-						display: 'inline-block',
-						position: 'relative',
-						width: isVerticalLayout ? (isExpanded ? '48vmin' : (expandedCandidateId ? '24vmin' : '32vmin')) : (isExpanded ? '32vmin' : (expandedCandidateId ? '12vmin' : '16vmin')),
-						transition: 'width 0.3s ease'
-					}}
-					animate={{
-						y: [0, -3, -1, -4, 0],
-						x: [0, 1, -1, 0.5, 0],
-						rotate: [0, 0.5, -0.3, 0.2, 0],
-						transition: {
-							duration: 6,
-							repeat: Infinity,
-							ease: "easeInOut",
-							delay: 0.2 + index * 0.7
-						}
-					}}
-					whileHover={{ 
-						scale: 1.05,
-						filter: 'brightness(1.1)',
-						transition: {
-							type: "spring",
-							stiffness: 150,
-							damping: 15
-						}
-					}}
-					whileTap={{ scale: 0.99 }}
-					>
-						<ActorCard
-								actor={actor}
-								isAway={actor.isOffSite(stage().getSave())}
-								collapsedSections={[ActorCardSection.PORTRAIT]}
-								expandedSections={[ActorCardSection.PORTRAIT, ActorCardSection.STATS]}
-								isExpanded={isExpanded}
-								onClick={() => setExpandedCandidateId(isExpanded ? null : actor.id)}
-								draggable
-								onDragStart={(e) => handleDragStart(e, actor, 'station')}
-							style={{
-								height: isVerticalLayout ? '30vh' : '20vh',
-								boxShadow: `0 6px 18px rgba(0,0,0,0.4), 0 0 20px ${actor.themeColor ? actor.themeColor + '66' : 'rgba(0, 200, 255, 0.4)'}`,
-								padding: '8px',
-								overflow: 'hidden'
-							}}
-						/>
-					</motion.div>
-				);})}
-			</div>
-		</div>
+			<ActorCarousel
+				actors={stationActors}
+				stage={stage()}
+				isVerticalLayout={isVerticalLayout}
+				expandedActorId={expandedCandidateId}
+				onExpandActor={setExpandedCandidateId}
+				borderColor="rgba(0,200,255,0.2)"
+				glowColor="rgba(0, 200, 255, 0.4)"
+				showRemoveButton={false}
+				draggable={true}
+				onDragStart={handleDragStart}
+			/>
 			{/* Cryo slots in center with buttons on sides or bottom */}
 			<div style={{ 
 				flex: '1 1 auto', 

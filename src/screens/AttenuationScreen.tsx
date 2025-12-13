@@ -3,14 +3,12 @@
  * request specific actor URLs for retrieval, and specify content modifiers.
  */
 import React, { FC } from 'react';
-import { motion } from 'framer-motion';
 import { ScreenType } from './BaseScreen';
 import { Stage } from '../Stage';
-import Actor, { loadReserveActorFromFullPath } from '../actors/Actor';
-import ActorCard, { ActorCardSection } from '../components/ActorCard';
+import { loadReserveActorFromFullPath } from '../actors/Actor';
 import { BlurredBackground } from '../components/BlurredBackground';
-import { RemoveButton } from '../components/RemoveButton';
 import { Button, GlassPanel } from '../components/UIComponents';
+import { ActorCarousel } from '../components/ActorCarousel';
 import { Box, TextField, Typography } from '@mui/material';
 
 interface AttenuationScreenProps {
@@ -99,81 +97,15 @@ export const AttenuationScreen: FC<AttenuationScreenProps> = ({stage, setScreenT
 				width: '100vw'
 			}}>
 			{/* Reserve carousel at top */}
-			<div 
-				style={{ 
-					flex: '0 0 auto', 
-					padding: '1vh', 
-					borderBottom: '2px solid rgba(0,255,136,0.2)',
-					background: 'rgba(0,0,0,0.3)',
-					overflowX: 'auto',
-					overflowY: 'hidden'
-				}}
-			>
-				<div style={{ 
-					display: 'flex', 
-					gap: '1.2vmin', 
-					justifyContent: 'center',
-					minWidth: 'min-content',
-					height: isVerticalLayout ? '32vh' : '22vh',
-					paddingBottom: '0.5vh'
-				}}>
-				{reserveActors.map((actor, index) => {
-					const isExpanded = expandedCandidateId === actor.id;
-					return (
-					<motion.div
-					key={`reserve_${actor.id}`}
-					style={{ 
-						display: 'inline-block',
-						position: 'relative',
-						width: isVerticalLayout ? (isExpanded ? '48vmin' : (expandedCandidateId ? '24vmin' : '32vmin')) : (isExpanded ? '32vmin' : (expandedCandidateId ? '12vmin' : '16vmin')),
-						transition: 'width 0.3s ease'
-					}}
-					animate={{
-						y: [0, -3, -1, -4, 0],
-						x: [0, 1, -1, 0.5, 0],
-						rotate: [0, 0.5, -0.3, 0.2, 0],
-						transition: {
-							duration: 6,
-							repeat: Infinity,
-							ease: "easeInOut",
-							delay: 0.2 + index * 0.7
-						}
-					}}
-					whileHover={{ 
-						scale: 1.05,
-						filter: 'brightness(1.1)',
-						transition: {
-							type: "spring",
-							stiffness: 150,
-							damping: 15
-						}
-					}}
-					whileTap={{ scale: 0.99 }}
-					>
-						<RemoveButton
-							onClick={(e: React.MouseEvent) => removeReserveActor(actor.id, e)}
-							title="Remove from reserves"
-							variant="topRight"
-							size="small"
-						/>							
-						<ActorCard
-								actor={actor}
-								isAway={actor.isOffSite(stage().getSave())}
-								collapsedSections={[ActorCardSection.PORTRAIT]}
-								expandedSections={[ActorCardSection.PORTRAIT, ActorCardSection.STATS]}
-								isExpanded={isExpanded}
-								onClick={() => setExpandedCandidateId(isExpanded ? null : actor.id)}
-							style={{
-								height: isVerticalLayout ? '30vh' : '20vh',
-								boxShadow: `0 6px 18px rgba(0,0,0,0.4), 0 0 20px ${actor.themeColor ? actor.themeColor + '66' : 'rgba(0, 255, 136, 0.4)'}`,
-								padding: '8px',
-								overflow: 'hidden'
-							}}
-						/>
-					</motion.div>
-				);})}
-			</div>
-		</div>
+			<ActorCarousel
+				actors={reserveActors}
+				stage={stage()}
+				isVerticalLayout={isVerticalLayout}
+				expandedActorId={expandedCandidateId}
+				onExpandActor={setExpandedCandidateId}
+				showRemoveButton={true}
+				onRemoveActor={removeReserveActor}
+			/>
 
 			{/* Main content area */}
 			<div style={{ 
