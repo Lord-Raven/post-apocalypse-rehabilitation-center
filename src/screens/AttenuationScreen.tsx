@@ -9,7 +9,7 @@ import { loadReserveActorFromFullPath } from '../actors/Actor';
 import { BlurredBackground } from '../components/BlurredBackground';
 import { Button, GlassPanel } from '../components/UIComponents';
 import { ActorCarousel } from '../components/ActorCarousel';
-import { Box, TextField, Typography } from '@mui/material';
+import { Box, setRef, TextField, Typography } from '@mui/material';
 
 interface AttenuationScreenProps {
 	stage: () => Stage;
@@ -81,6 +81,7 @@ export const AttenuationScreen: FC<AttenuationScreenProps> = ({stage, setScreenT
         }
 		console.log('Attenuate clicked with:', { actorUrl, modifierText });
 		setActorUrl('');
+		setRefreshKey(refreshKey + 1);
 	};
 
 	const isReserveFull = reserveActors.length >= RESERVE_LIMIT;
@@ -166,7 +167,7 @@ export const AttenuationScreen: FC<AttenuationScreenProps> = ({stage, setScreenT
 								fullWidth
 								value={actorUrl}
 								onChange={(e) => setActorUrl(e.target.value)}
-								placeholder={Object.values(stage().getSave().actors)[0]?.fullPath || "Enter a path to retrieve a targeted character..."}
+								placeholder={Object.values(stage().getSave().actors).filter(a => a.fullPath)[0]?.fullPath || "Enter a path to retrieve a targeted character..."}
 								variant="outlined"
 								size="small"
 								sx={{
@@ -210,7 +211,7 @@ export const AttenuationScreen: FC<AttenuationScreenProps> = ({stage, setScreenT
 								rows={4}
 								value={modifierText}
 								onChange={(e) => setModifierText(e.target.value)}
-								placeholder="Describe traits, themes, or characteristics for newly summoned characters..."
+								placeholder="Describe traits, themes, or characteristics to impose upon newly summoned characters..."
 								variant="outlined"
 								sx={{
 									'& .MuiOutlinedInput-root': {
