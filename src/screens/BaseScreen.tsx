@@ -9,6 +9,7 @@ import { LoadingScreen } from './LoadingScreen';
 import { TooltipProvider } from '../contexts/TooltipContext';
 import TooltipBar from '../components/TooltipBar';
 import { useTooltip } from '../contexts/TooltipContext';
+import { AttenuationScreen } from './AttenuationScreen';
 
 /*
  * Base screen management; the Stage class will display this, and this will track the current screen being displayed.
@@ -69,6 +70,10 @@ const BaseScreenContent: FC<{ stage: () => Stage }> = ({ stage }) => {
             {screenType === ScreenType.CRYO && (
                 // Render cryo screen
                 <CryoScreen stage={stage} setScreenType={setScreenType} isVerticalLayout={isVerticalLayout} />
+            )}
+            {screenType === ScreenType.APERTURE && (
+                // Render aperture screen
+                <AttenuationScreen stage={stage} setScreenType={setScreenType} isVerticalLayout={isVerticalLayout} />
             )}
             {screenType === ScreenType.SKIT && (
                 // Render skit screen
