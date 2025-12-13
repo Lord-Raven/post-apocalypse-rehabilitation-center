@@ -377,9 +377,9 @@ export const MODULE_DEFAULTS: Record<ModuleType, ModuleIntrinsic> = {
             setScreenType(ScreenType.APERTURE);
         },
         available: (stage: Stage) => {
-            // Can have only one in stage.getSave().layout, and only once the station's Systems stat is at least 6:
+            // Can have only one in stage.getSave().layout, and only once the station's Systems stat is at least 5:
             const systemsStat = stage.getSave().stationStats?.[StationStat.SYSTEMS] || 0;
-            return stage.getLayout().getModulesWhere(m => m.type === 'aperture').length === 0 && systemsStat >= 6;
+            return stage.getLayout().getModulesWhere(m => m.type === 'aperture').length === 0 && systemsStat >= 5;
         }
     }
 };

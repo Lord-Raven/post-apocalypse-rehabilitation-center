@@ -387,9 +387,9 @@ export async function generateSkitScript(skit: SkitData, wrapUp: boolean, stage:
                     `NARRATOR: [CHARACTER NAME EXPRESSES RELIEF] Descriptive content or other scene events occurring around you, the player, can be attributed to a narrator.\n` +
                     `${stage.getSave().player.name.toUpperCase()}: I'm the player, and my entries use first-person narrative voice, while all other skit entries use second-person to refer to me.\n[PAUSE]\n\n` +
                 `Example Character Movement Format:\n` +
-                    `System: NARRATOR: [CHARACTER NAME moves to THIS MODULE NAME] Character Name enters the room.\n` +
+                    `System: NARRATOR: [CHARACTER NAME moves to HERE] Character Name enters the room.\n` +
                     `CHARACTER NAME: Character Name waves to you, "Hey; just checking in. I'll be next door if you need anything."\n` +
-                    `NARRATOR: [CHARACTER NAME moves to OTHER CHARACTER\'s QUARTERS] Character Name ducks out with a smile. You hear their boots fade away down the corridor beyond.\n[PAUSE]\n\n` +
+                    `NARRATOR: [CHARACTER NAME moves to MODULE NAME] Character Name ducks out with a smile. You hear their boots fade away down the corridor beyond.\n[PAUSE]\n\n` +
                 `Example Character Departure from PARC Format:\n` +
                     `System: CHARACTER NAME: They sigh profoundly. "Well, I suppose this is goodbye for now." They wave as they somberly step through the bulkhead.\n` +
                     `NARRATOR: [CHARACTER NAME moves to FACTION NAME] You watch on-screen as Character Name's shuttle detaches from the PARC and disappears into the stars.\n` +
@@ -412,8 +412,8 @@ export async function generateSkitScript(skit: SkitData, wrapUp: boolean, stage:
                 `Character movement tags (e.g., "[CHARACTER NAME moves to MODULE NAME]" or "[CHARACTER NAME moves to FACTION NAME]") should be used to indicate when a character moves to a different module on the station OR to a different faction (abstractly representing any faction mission or time away). ` +
                 `MODULE NAME should be the name of a module type (e.g., 'comms', 'infirmary', 'lounge'), a character's quarters (e.g., 'Susan's quarters' or just 'quarters' for their own), or simply "Here" to move to the scene's location or "Another module" to leave this area. ` +
                 `A faction move is a more significant event, indicating a departure from the PARC itself. ` +
-                `The game engine uses these tags to update character locations and visually display character presence in scenes. The scene itself cannot transition to a new area, but individual characters may come and go; ` +
-                `the tags are not presented to users, so the content of the script should reflect these events. ` +
+                `The game engine uses these tags to update character locations and visually display character presence in scenes, so it is important to use these tags when introducing Absent Characters or departing Present Characters. ` +
+                `The scene itself cannot transition to a new area. The tags are not presented to users, so the content of the script should reflect any included tags and vice-versa. ` +
                 (skit.script.length > 0 ? (`If a scene transition is desired, the current scene must first be summarized. ` +
                     `A "[SUMMARY]" tag (e.g., "[SUMMARY: Brief summary of the scene's events with key details and impacts.]") should be included when the scene has fulfilled the current Scene Prompt or reached a conclusive moment. `) : '') +
                 `\nThis scene is a brief visual novel skit within a video game; as such, the scene avoids major developments which would fundamentally alter the mechanics or nature of the game, ` +
