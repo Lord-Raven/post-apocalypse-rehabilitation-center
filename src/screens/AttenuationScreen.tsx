@@ -74,7 +74,7 @@ export const AttenuationScreen: FC<AttenuationScreenProps> = ({stage, setScreenT
 	const handleAttenuate = () => {
 
         if (actorUrl.trim() !== '') {
-            loadReserveActorFromFullPath(actorUrl.trim(), stage());
+            stage().loadReserveActorFromFullPath(actorUrl.trim());
         } else {
             // Kick off actor loading; this will populate remaining reserve slots. The generation process will pull attenuation modifiers from stage().
             stage().loadReserveActors();
