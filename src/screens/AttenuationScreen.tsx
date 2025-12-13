@@ -25,6 +25,7 @@ export const AttenuationScreen: FC<AttenuationScreenProps> = ({stage, setScreenT
 	const [actorUrl, setActorUrl] = React.useState('');
 	const [modifierText, setModifierText] = React.useState(stage().getSave().attenuation || '');
     const [loadingReserve, setLoadingReserve] = React.useState(stage().reserveActorsLoadPromise != undefined);
+	const [refreshKey, setRefreshKey] = React.useState(0); // Force re-renders when data changes
 	const reserveActors = stage().reserveActors;
 	const RESERVE_LIMIT = stage().RESERVE_ACTORS;
 
@@ -67,7 +68,9 @@ export const AttenuationScreen: FC<AttenuationScreenProps> = ({stage, setScreenT
 	const removeReserveActor = (actorId: string, e: React.MouseEvent) => {
 		e.stopPropagation();
 		e.preventDefault();
+		
 		stage().reserveActors = stage().reserveActors.filter(a => a.id !== actorId);
+		setRefreshKey(refreshKey + 1);
 	};
 
 	const handleAttenuate = () => {
@@ -211,7 +214,7 @@ export const AttenuationScreen: FC<AttenuationScreenProps> = ({stage, setScreenT
 							textAlign: 'center'
 						}}
 					>
-						Request specific actors or apply modifiers to generate new candidates for your reserve pool.
+						Request specific characters or apply modifiers to newly summoned characters.
 					</Typography>
 
 					<Box sx={{ display: 'flex', flexDirection: 'column', gap: 2.5 }}>
@@ -225,13 +228,13 @@ export const AttenuationScreen: FC<AttenuationScreenProps> = ({stage, setScreenT
 									fontWeight: 600
 								}}
 							>
-								Actor URL (Optional)
+								Character Path
 							</Typography>
 							<TextField
 								fullWidth
 								value={actorUrl}
 								onChange={(e) => setActorUrl(e.target.value)}
-								placeholder="Enter actor URL to retrieve a specific character..."
+								placeholder={Object.values(stage().getSave().actors)[0]?.fullPath || "Enter a path to retrieve a targeted character..."}
 								variant="outlined"
 								size="small"
 								sx={{
@@ -275,7 +278,7 @@ export const AttenuationScreen: FC<AttenuationScreenProps> = ({stage, setScreenT
 								rows={4}
 								value={modifierText}
 								onChange={(e) => setModifierText(e.target.value)}
-								placeholder="Specify content modifiers to apply to generated actors (e.g., personality traits, appearance details, background information)..."
+								placeholder="Describe traits, themes, or characteristics for newly summoned characters..."
 								variant="outlined"
 								sx={{
 									'& .MuiOutlinedInput-root': {
