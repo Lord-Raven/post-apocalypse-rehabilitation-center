@@ -289,9 +289,8 @@ const getActorsAtIndex = (skit: SkitData, scriptIndex: number, allActors: {[key:
  * within ranges centered at 25vw (left) and 75vw (right).
  */
 const calculateActorXPosition = (actorIndex: number, totalActors: number): number => {
-    const leftRange = 40;
-    const rightRange = 40;
-    
+    const leftRange = Math.min(40, Math.ceil((totalActors - 2) / 2) * 20); // Adjust used screen space by number of present actors.
+    const rightRange = Math.min(40, Math.floor((totalActors - 2) / 2) * 20);
     const leftSide = (actorIndex % 2) === 0;
     const indexOnSide = leftSide ? Math.floor(actorIndex / 2) : Math.floor((actorIndex - 1) / 2);
     const actorsOnSide = leftSide ? Math.ceil(totalActors / 2) : Math.floor(totalActors / 2);
@@ -334,7 +333,7 @@ export const SkitScreen: FC<SkitScreenProps> = ({ stage, setScreenType, isVertic
         }
 
         // Don't show hover when over the message box area (bottom portion of screen)
-        const messageBoxTop = isVerticalLayout ? 60 : 40; // Approximate top of message box in vh
+        const messageBoxTop = isVerticalLayout ? 50 : 60; // Approximate top of message box in vh
         if (mousePosition.y > messageBoxTop) {
             setHoveredActor(null);
             return;
@@ -916,7 +915,7 @@ export const SkitScreen: FC<SkitScreenProps> = ({ stage, setScreenType, isVertic
                         sx={{
                             background: 'linear-gradient(90deg,#00ff88,#00b38f)',
                             color: '#00221a',
-                            padding: isVerticalLayout ? '6px' : '8px',
+                            padding: isVerticalLayout ? '4px' : '6px',
                             borderRadius: '4px',
                             '&:hover': {
                                 background: 'linear-gradient(90deg,#00e67a,#009a7b)',

@@ -924,7 +924,7 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
                     // Apply to actor.stats; actorChanges is a map of stat name to change amount
                     for (const prop of Object.keys(actorChanges)) {
                         const stat = (prop as keyof typeof actor.stats);
-                        actor.stats[stat] += actorChanges[prop];
+                        actor.stats[stat] = Math.max(1, Math.min(10, actor.stats[stat] + actorChanges[prop]));
                     }
                 }
             }

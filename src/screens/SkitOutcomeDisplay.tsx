@@ -342,7 +342,6 @@ const SkitOutcomeDisplay: FC<SkitOutcomeDisplayProps> = ({ skitData, stage, layo
                             {charChange.statChanges.map((statChange, statIndex) => {
                                 const isIncrease = statChange.newValue > statChange.oldValue;
                                 const isDecrease = statChange.newValue < statChange.oldValue;
-                                console.log('Rendering stat change:', charChange.actor ? charChange.actor.name : 'PARC', statChange.statName, statChange.oldValue, '->', statChange.newValue, isIncrease, isDecrease);
                                 
                                 return (
                                 <motion.div
