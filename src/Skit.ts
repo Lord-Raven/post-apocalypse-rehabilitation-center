@@ -382,12 +382,13 @@ export async function generateSkitScript(skit: SkitData, wrapUp: boolean, stage:
             const fullPrompt = generateSkitPrompt(skit, stage, 2 + retries * 2, // 8 history entries on first try, reducing by two each iteration.
                 `Example Script Format:\n` +
                     `System: CHARACTER NAME: Character Name does some actions in prose, for example, waving to you, the player. They say, "My dialogue is in quotation marks."\n` +
+                    `CHARACTER NAME: [CHARACTER NAME EXPRESSES PRIDE] "A character can have two entries in a row, if it makes sense to break up a lot of activity."\n` +
                     `ANOTHER CHARACTER NAME: [ANOTHER CHARACTER NAME EXPRESSES JOY][CHARACTER NAME EXPRESSES SURPRISE] "Even if my entire input is dialogue, it should be in quotation marks."\n` +
                     `NARRATOR: [CHARACTER NAME EXPRESSES RELIEF] Descriptive content or other scene events occurring around you, the player, can be attributed to a narrator.\n` +
                     `${stage.getSave().player.name.toUpperCase()}: I'm the player, and my entries use first-person narrative voice, while all other skit entries use second-person to refer to me.\n[PAUSE]\n\n` +
                 `Example Character Movement Format:\n` +
                     `System: NARRATOR: [CHARACTER NAME moves to THIS MODULE NAME] Character Name enters the room.\n` +
-                    `CHARACTER NAME: Character Name waves, "Hey; just checking in. I'll be next door if you need anything."\n` +
+                    `CHARACTER NAME: Character Name waves to you, "Hey; just checking in. I'll be next door if you need anything."\n` +
                     `NARRATOR: [CHARACTER NAME moves to OTHER CHARACTER\'s QUARTERS] Character Name ducks out with a smile. You hear their boots fade away down the corridor beyond.\n[PAUSE]\n\n` +
                 `Example Character Departure from PARC Format:\n` +
                     `System: CHARACTER NAME: They sigh profoundly. "Well, I suppose this is goodbye for now." They wave as they somberly step through the bulkhead.\n` +
@@ -399,7 +400,7 @@ export async function generateSkitScript(skit: SkitData, wrapUp: boolean, stage:
                     `[SUMMARY: This moment of shared commaraderie has left Character Name hopeful about their future aboard the PARC.]\n\n`) : '') +
                 `Current Scene Script Log to Continue:\nSystem: ${buildScriptLog(skit)}` +
                 `\n\nPrimary Instruction:\n` +
-                `At the "System:" prompt, ${skit.script.length == 0 ? 'produce the initial moments of a scene (perhaps joined in medias res)' : 'extend or conclude the current scene script'} with three to six entries, ` +
+                `At the "System:" prompt, ${skit.script.length == 0 ? 'produce the initial moments of a scene (perhaps joined in medias res)' : 'extend or conclude the current scene script'} with three to five entries, ` +
                 `based upon the Premise and the specified Scene Prompt. Primarily involve the Present Characters, although Absent Characters may be moved to this location using appropriate tags. ` +
                 `The script should consider characters' stats, relationships, past events, and the station's stats—among other factors—to craft a compelling scene. ` +
                 `\nFollow the structure of the strict Example Script formatting above: ` +
@@ -407,7 +408,7 @@ export async function generateSkitScript(skit: SkitData, wrapUp: boolean, stage:
                 `Although a loose script format is employed, the actual content should be professionally edited narrative prose. Entries from the player, ${stage.getSave().player.name}, are written in first-person, while other entries consistently refer to ${stage.getSave().player.name} in second-person; all other characters are referred to in third-person, even in their own entries.\n` +
                 `Embedded within this script, you may employ special tags to trigger various game mechanics. ` +
                 `Emotion tags (e.g., "[CHARACTER NAME EXPRESSES JOY]") should be used to indicate visible emotional shifts in a character's appearance. ` +
-                `A [PAUSE] tag can be used to signal a suspension of this excerpt without fully ending the scene, in case the three-to-six-entry quota has already been met. ` +
+                `A [PAUSE] tag can be used to signal a suspension of this excerpt without fully ending the scene, in case the three-to-five-entry quota has already been met. ` +
                 `Character movement tags (e.g., "[CHARACTER NAME moves to MODULE NAME]" or "[CHARACTER NAME moves to FACTION NAME]") should be used to indicate when a character moves to a different module on the station OR to a different faction (abstractly representing any faction mission or time away). ` +
                 `MODULE NAME should be the name of a module type (e.g., 'comms', 'infirmary', 'lounge'), a character's quarters (e.g., 'Susan's quarters' or just 'quarters' for their own), or simply "Here" to move to the scene's location or "Another module" to leave this area. ` +
                 `A faction move is a more significant event, indicating a departure from the PARC itself. ` +
