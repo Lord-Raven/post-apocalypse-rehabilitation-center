@@ -1,5 +1,6 @@
 import { SkitType } from './Skit';
 import { Stage } from "./Stage";
+import Faction from './factions/Faction';
 import { ScreenType } from './screens/BaseScreen';
 import { Build, Hotel, Restaurant, Security, AttachMoney, Favorite } from '@mui/icons-material';
 
@@ -126,7 +127,7 @@ export interface ModuleIntrinsic {
     [key: string]: any; // Additional properties, if needed
     // Action method; each module has an action that will need to take the Module and Stage as contextual parameters:
     action?: (module: Module, stage: Stage, setScreenType: (type: ScreenType) => void) => void;
-    available: (stage: Stage) => boolean;
+    available?: (stage: Stage) => boolean;
 }
 
 const randomAction = (module: Module, stage: Stage, setScreenType: (type: ScreenType) => void) => {
@@ -397,13 +398,21 @@ export const MODULE_TEMPLATES: Record<ModuleType, ModuleIntrinsic> = {
 };
 
 /**
- * Register a custom module template at runtime
+ * Register a custom faction module template at runtime
  */
-export function registerModuleTemplate(
+export function registerFactionModule(faction: Faction,
     type: string,
     intrinsic: ModuleIntrinsic
 ): void {
-    MODULE_TEMPLATES[type] = intrinsic;
+    MODULE_TEMPLATES[type] = {...intrinsic,
+        action: randomAction, // Use the default random action
+        available: (stage: Stage) => {
+            // Custom modules can only be built once and require minimum reputation with the faction
+            const factionRep = stage.getSave().factions[faction.id]?.reputation || 0;
+            const existingCount = stage.getLayout().getModulesWhere(m => m.type === intrinsic.name).length;
+            return existingCount === 0 && factionRep >= 6;
+        }
+    };
 }
 
 /**

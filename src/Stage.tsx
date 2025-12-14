@@ -3,7 +3,7 @@ import {StageBase, StageResponse, InitialData, Message, UpdateBuilder} from "@ch
 import {LoadResponse} from "@chub-ai/stages-ts/dist/types/load";
 import Actor, { loadReserveActor, generatePrimaryActorImage, commitActorToEcho, Stat, generateAdditionalActorImages, loadReserveActorFromFullPath, ArtStyle, generateActorDecor } from "./actors/Actor";
 import Faction, { generateFactionModule, generateFactionRepresentative, loadReserveFaction } from "./factions/Faction";
-import { DEFAULT_GRID_SIZE, Layout, StationStat, createModule, registerModuleTemplate } from './Module';
+import { DEFAULT_GRID_SIZE, Layout, StationStat, createModule, registerFactionModule } from './Module';
 import { BaseScreen, ScreenType } from "./screens/BaseScreen";
 import { generateSkitScript, SkitData, SkitType } from "./Skit";
 import { smartRehydrate } from "./SaveRehydration";
@@ -457,7 +457,7 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
         Object.values(save.factions).forEach(faction => {
             if (faction.module) {
                 console.log(`Registering module ${faction.module.name} for faction ${faction.name}`);
-                registerModuleTemplate(faction.module.name, faction.module);
+                registerFactionModule(faction, faction.module.name, faction.module);
             } else if (faction.reputation >= 5) {
                 // Kick off module generation for this faction:
                 console.log('Generating module for faction:', faction.name);

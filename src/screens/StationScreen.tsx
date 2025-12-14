@@ -136,7 +136,6 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType, isV
         
         return allModuleTypes.filter(moduleType => {
             const moduleDefaults = MODULE_TEMPLATES[moduleType];
-            if (!moduleDefaults) return false;
             
             const available = moduleDefaults.available;
             

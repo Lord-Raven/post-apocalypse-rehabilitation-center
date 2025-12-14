@@ -2,7 +2,7 @@ import { Stage } from "../Stage";
 import { v4 as generateUuid } from 'uuid';
 import Actor, { generatePrimaryActorImage, loadReserveActor } from "../actors/Actor";
 import { AspectRatio } from "@chub-ai/stages-ts";
-import { Module, MODULE_TEMPLATES, ModuleIntrinsic, registerModuleTemplate } from "../Module";
+import { Module, MODULE_TEMPLATES, ModuleIntrinsic, registerFactionModule } from "../Module";
 import { SkitType } from "../Skit";
 import { ScreenType } from "../screens/BaseScreen";
 
@@ -373,11 +373,10 @@ export async function generateFactionModule(faction: Faction, stage: Stage): Pro
         return null;
     }
 
-    // TODO: Have a validated module; next, generate art:
     // Start with a base image:
     const baseImageUrl = await stage.makeImage({
-        prompt: `A detailed interior of a futuristic space station module/room. The design should reflect the following description: ${description}. ` +
-            `Consider the following general aesthetic: ${faction.visualStyle}.` +
+        prompt: `The detailed interior of an unoccupied futuristic space station module/room. The design should reflect the following description: ${description}. ` +
+            `Consider the following general vibe: ${faction.visualStyle}.` +
             `Regardless of aesthetic, the image is rendered in a vibrant, painterly style with thick smudgy lines.`,
         aspect_ratio: AspectRatio.SQUARE
     }, '');
@@ -388,7 +387,7 @@ export async function generateFactionModule(faction: Faction, stage: Stage): Pro
     // Next, create a default variant with Qwen's image-to-image:
     const defaultImageUrl = await stage.makeImageFromImage({
         imageUrl: baseImageUrl,
-        prompt: `Go over this sci-fi space station room scene with a clean visual novel style.`,
+        prompt: `Go over this sci-fi space station room scene with a clean visual novel style. Remove any characters from the scene.`,
         transfer_type: 'edit'
     }, '');
     if (!defaultImageUrl) {
@@ -408,17 +407,10 @@ export async function generateFactionModule(faction: Faction, stage: Stage): Pro
         cost: {
             Wealth: 3 // Default cost for custom modules
         },
-        action: randomAction, // Use the default random action
-        available: (stage: Stage) => {
-            // Custom modules can only be built once and require minimum reputation with the faction
-            const factionRep = stage.getSave().factions[faction.id]?.reputation || 0;
-            const existingCount = stage.getLayout().getModulesWhere(m => m.type === moduleName).length;
-            return existingCount === 0 && factionRep >= 6;
-        }
     };
     
     faction.module = module;
-    registerModuleTemplate(moduleName, module);
+    registerFactionModule(faction, moduleName, module);
 
     return moduleName;
 }
