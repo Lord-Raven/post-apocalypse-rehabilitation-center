@@ -80,12 +80,14 @@ export const CryoScreen: FC<CryoScreenProps> = ({stage, setScreenType, isVertica
                 // Set the actor's last known module to the cryo module
                 selected.locationId = cryoModule.id;
             }
-            // EXIT_CRYO skit is triggered here
+			const entranceEvent = stage().getSave().timeline?.find(event => event.skit?.actorId === selected.id && event.skit?.type === SkitType.ENTER_CRYO);
+			const entranceDate = entranceEvent ? entranceEvent.day : stage().getSave().day;
+            // Have a skit to debrief the actor
             stage().setSkit({
                 actorId: selected.id,
                 type: SkitType.EXIT_CRYO,
                 moduleId: cryoModule.id,
-                context: {},
+                context: {days: stage().getSave().day - entranceDate},
                 script: []
             });
             setScreenType(ScreenType.SKIT);
@@ -150,7 +152,21 @@ export const CryoScreen: FC<CryoScreenProps> = ({stage, setScreenType, isVertica
   	
 			// Force re-render to update the screen
 			forceUpdate();
-		          // Maybe trigger ENTER_CRYO skit here; the trouble is that locationId = 'cryo' is being used to indicate that the actor is already in cryo, but their location would need to be the module ID for the skit.
+		    // TODO: Maybe trigger ENTER_CRYO skit here; the trouble is that locationId = 'cryo' is being used to indicate that the actor is already in cryo, but their location would need to be the module ID for the skit.
+			// Add a timeline event for this:
+			stage().getSave().timeline?.push({
+				day: stage().getSave().day,
+				turn: stage().getSave().turn,
+				description: `${actor.name} placed into cryostasis.`,
+				skit: { // Cheat; this skit didn't actually happen, but we can use it to log the event
+					actorId: actor.id,
+					type: SkitType.ENTER_CRYO,
+					moduleId: stage().getSave().layout.getModulesWhere(m => m?.type === 'cryo bank')[0]?.id || '',
+					summary: `${actor.name} was placed into cryostasis.`,
+					script: [],
+					context: {}
+				}
+			});
 		}
 	};
 

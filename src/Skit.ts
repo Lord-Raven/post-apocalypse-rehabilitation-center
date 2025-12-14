@@ -100,8 +100,8 @@ export function generateSkitTypePrompt(skit: SkitData, stage: Stage, continuing:
                 `Explore ${actor.name}'s thoughts and feelings about this process, as well as any final exchanges with the player or other characters present. ` +
                 `The decision will not be reversed during this skit; it is a foregone conclusion.`;
         case SkitType.EXIT_CRYO:
-            return `This scene depicts the Director's decision to awaken ${actor.name} from cryogenic stasis in the Cryo Bank module. ` +
-                `Explore ${actor.name}'s thoughts and feelings about this process, as well as any initial exchanges with the player or other characters present. `;
+            return `This scene depicts the Director's decision to awaken ${actor.name} from cryogenic stasis after ${skit.context.days} days. ` +
+                `Explore ${actor.name}'s thoughts and feelings about this process and their absence, as well as any initial exchanges with the player or other characters present. `;
         default:
             return '';
     }
@@ -330,7 +330,9 @@ export function generateSkitPrompt(skit: SkitData, stage: Stage, historyLength: 
         }).join('\n')}` +
         // List cryo characters for reference; just need description and profile:
         `\n\nCryo Frozen Characters (Absolutely Unavailable):\n${cryoPatients.map(actor => {
-            return `${actor.name}\n  Description: ${actor.description}\n  Profile: ${actor.profile}`;
+            const cryoStartEvent = save.timeline?.find(event => event.type === 'ENTER_CRYO' && event.skit && (event.skit as SkitData).actorId === actor.id);
+            const cryoDays = cryoStartEvent ? (cryoStartEvent.skit as SkitData).context.day : save.day;
+            return `${actor.name}\n  Description: ${actor.description}\n  Profile: ${actor.profile}\n  Days in Cryo: ${save.day - cryoDays}`;
         }).join('\n')}` +
         // List stat meanings, for reference:
         `\n\nStats:\n${Object.values(Stat).map(stat => `${stat.toUpperCase()}: ${getStatDescription(stat)}`).join('\n')}` +
