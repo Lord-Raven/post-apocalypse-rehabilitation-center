@@ -562,7 +562,7 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
         this.reserveActorsLoadPromise = (async () => {
             try {
                 console.log('Loading reserve actors...');
-                const reserveActors = this.getSave().reserveActors || [];
+                let reserveActors = this.getSave().reserveActors || [];
                 while (reserveActors.length < this.RESERVE_ACTORS) {
                     // Populate reserveActors; this is loaded with data from a service, calling the characterServiceQuery URL:
                     const exclusions = (this.getSave().bannedTags || []).concat(this.bannedTagsDefault).map(tag => encodeURIComponent(tag)).join('%2C');
@@ -583,6 +583,7 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
                     }));
 
                     this.getSave().reserveActors = [...reserveActors, ...newActors.filter(a => a !== null)];
+                    reserveActors = this.getSave().reserveActors || [];
                 }
                 this.saveGame();
             } catch (err) {
