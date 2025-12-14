@@ -25,6 +25,7 @@ export const CryoScreen: FC<CryoScreenProps> = ({stage, setScreenType, isVertica
 
 	const [selectedSlotIndex, setSelectedSlotIndex] = React.useState<number | null>(null);
 	const [expandedCandidateId, setExpandedCandidateId] = React.useState<string | null>(null);
+	const [, forceUpdate] = React.useReducer(x => x + 1, 0);
 	
 	// Get actors present on the station (locationId is '' or matches a module ID in the layout)
 	const stationActors = Object.values(stage().getSave().actors).filter(actor => {
@@ -146,7 +147,10 @@ export const CryoScreen: FC<CryoScreenProps> = ({stage, setScreenType, isVertica
 				m.ownerId = '';
 			});
 
-            // Maybe trigger ENTER_CRYO skit here; the trouble is that locationId = 'cryo' is being used to indicate that the actor is already in cryo, but their location would need to be the module ID for the skit.
+  	
+			// Force re-render to update the screen
+			forceUpdate();
+		          // Maybe trigger ENTER_CRYO skit here; the trouble is that locationId = 'cryo' is being used to indicate that the actor is already in cryo, but their location would need to be the module ID for the skit.
 		}
 	};
 
