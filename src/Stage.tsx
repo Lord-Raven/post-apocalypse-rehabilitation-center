@@ -537,10 +537,13 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
     }
 
     async loadReserveActorFromFullPath(fullPath: string) {
+        console.log('Loading reserve actor from fullPath:', fullPath);
+        console.log('reserveActorsLoadPromise:', this.reserveActorsLoadPromise);
         if (this.reserveActorsLoadPromise) return this.reserveActorsLoadPromise;
 
         this.reserveActorsLoadPromise = (async () => {
             try {
+                console.log('Loading targeted reserve actor...');
                 const newActor = await loadReserveActorFromFullPath(fullPath, this);
                 if (newActor !== null) {
                     this.getSave().reserveActors = [...(this.getSave().reserveActors || []), newActor];
