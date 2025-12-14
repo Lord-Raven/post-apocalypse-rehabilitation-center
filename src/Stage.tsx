@@ -456,16 +456,16 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
         // Register faction modules and repair faction reps that don't have a factionId set:
         Object.values(save.factions).forEach(faction => {
             if (faction.module) {
+                console.log(`Registering module ${faction.module.name} for faction ${faction.name}`);
                 registerModuleTemplate(faction.module.name, faction.module);
             } else if (faction.reputation >= 5) {
                 // Kick off module generation for this faction:
+                console.log('Generating module for faction:', faction.name);
                 generateFactionModule(faction, this);
             }
             if (faction.representativeId && save.actors[faction.representativeId]) {
                 const repActor = save.actors[faction.representativeId];
                 repActor.origin = 'faction';
-                console.log("Check if rep needs repair:");
-                console.log(repActor);
                 if (repActor.factionId !== faction.id) {
                     console.log(`Repairing factionId for representative ${repActor.name} of faction ${faction.name}`);
                     repActor.factionId = faction.id;
