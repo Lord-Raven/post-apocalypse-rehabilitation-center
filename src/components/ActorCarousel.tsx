@@ -1,6 +1,7 @@
 /*
  * A reusable component for displaying a horizontal carousel of actor cards.
  * Used by AttenuationScreen, EchoScreen, and optionally CryoScreen.
+ * Supports both drag-and-drop and tap-to-select mechanisms for mobile.
  */
 import React, { FC } from 'react';
 import { motion } from 'framer-motion';
@@ -25,6 +26,8 @@ interface ActorCarouselProps {
 	onDragStart?: (e: React.DragEvent, actor: Actor) => void;
 	onDrop?: (e: React.DragEvent) => void;
 	onDragOver?: (e: React.DragEvent) => void;
+	selectedActorId?: string | null;
+	onActorClick?: (actorId: string) => void;
 }
 
 export const ActorCarousel: FC<ActorCarouselProps> = ({
@@ -40,7 +43,9 @@ export const ActorCarousel: FC<ActorCarouselProps> = ({
 	draggable = false,
 	onDragStart,
 	onDrop,
-	onDragOver
+	onDragOver,
+	selectedActorId = null,
+	onActorClick
 }) => {
 	return (
 		<div 
@@ -65,6 +70,7 @@ export const ActorCarousel: FC<ActorCarouselProps> = ({
 			}}>
 				{actors.map((actor, index) => {
 					const isExpanded = expandedActorId === actor.id;
+					const isSelected = selectedActorId === actor.id;
 					return (
 						<motion.div
 							key={`actor_${actor.id}`}
@@ -80,15 +86,20 @@ export const ActorCarousel: FC<ActorCarouselProps> = ({
 								y: [0, -3, -1, -4, 0],
 								x: [0, 1, -1, 0.5, 0],
 								rotate: [0, 0.5, -0.3, 0.2, 0],
+								scale: isSelected ? 1.08 : 1,
 								transition: {
 									duration: 6,
 									repeat: Infinity,
 									ease: "easeInOut",
-									delay: 0.2 + index * 0.7
+									delay: 0.2 + index * 0.7,
+									scale: {
+										duration: 0.2,
+										repeat: 0
+									}
 								}
 							}}
 							whileHover={{ 
-								scale: 1.05,
+								scale: isSelected ? 1.08 : 1.05,
 								filter: 'brightness(1.1)',
 								transition: {
 									type: "spring",
@@ -112,14 +123,24 @@ export const ActorCarousel: FC<ActorCarouselProps> = ({
 								collapsedSections={[ActorCardSection.PORTRAIT]}
 								expandedSections={[ActorCardSection.PORTRAIT, ActorCardSection.STATS]}
 								isExpanded={isExpanded}
-								onClick={() => onExpandActor(isExpanded ? null : actor.id)}
+								onClick={() => {
+									if (onActorClick) {
+										onActorClick(actor.id);
+									} else {
+										onExpandActor(isExpanded ? null : actor.id);
+									}
+								}}
 								draggable={draggable}
 								onDragStart={onDragStart ? (e) => onDragStart(e, actor) : undefined}
 								style={{
 									height: isVerticalLayout ? '30vh' : '20vh',
-									boxShadow: `0 6px 18px rgba(0,0,0,0.4), 0 0 20px ${actor.themeColor ? actor.themeColor + '66' : glowColor}`,
+									boxShadow: isSelected 
+										? `0 8px 24px rgba(255,215,0,0.6), 0 0 30px rgba(255,215,0,0.5), inset 0 0 20px rgba(255,215,0,0.2)`
+										: `0 6px 18px rgba(0,0,0,0.4), 0 0 20px ${actor.themeColor ? actor.themeColor + '66' : glowColor}`,
 									padding: '8px',
-									overflow: 'hidden'
+									overflow: 'hidden',
+									border: isSelected ? '3px solid rgba(255,215,0,0.9)' : undefined,
+									transition: 'all 0.3s ease'
 								}}
 							/>
 						</motion.div>

@@ -27,6 +27,7 @@ export const EchoScreen: FC<EchoScreenProps> = ({stage, setScreenType, isVertica
 	const [selectedSlotIndex, setSelectedSlotIndex] = React.useState<number | null>(null);
 	const [expandedCandidateId, setExpandedCandidateId] = React.useState<string | null>(null);
 	const [refreshKey, setRefreshKey] = React.useState(0); // Force re-renders when data changes
+	const [selectedReserveActorId, setSelectedReserveActorId] = React.useState<string | null>(null); // For tap-to-select on mobile
 	const reserveActors = stage().getSave().reserveActors || [];
 	const echoSlots = stage().getEchoSlots();
 
@@ -168,6 +169,49 @@ export const EchoScreen: FC<EchoScreenProps> = ({stage, setScreenType, isVertica
 		}
 	};
 
+	// Tap-to-select handler for mobile
+	const handleReserveActorClick = (actorId: string) => {
+		if (selectedReserveActorId === actorId) {
+			// Deselect if already selected
+			setSelectedReserveActorId(null);
+		} else {
+			// Select the actor
+			setSelectedReserveActorId(actorId);
+		}
+	};
+
+	// Handler for clicking an echo slot with a reserve actor selected
+	const handleEchoSlotClick = async (slotIndex: number) => {
+		if (selectedReserveActorId) {
+			// Place the selected reserve actor in this slot
+			const actor = reserveActors.find(a => a.id === selectedReserveActorId) || echoSlots.find(a => a?.id === selectedReserveActorId);
+			if (actor) {
+				// Check if slot is occupied
+				const existingActor = echoSlots[slotIndex];
+				if (existingActor && existingActor.id !== actor.id) {
+					// Move existing actor back to reserves
+					const reserveActors = stage().getSave().reserveActors || [];
+					if (!reserveActors.find(a => a.id === existingActor.id)) {
+						stage().getSave().reserveActors = [...reserveActors, existingActor];
+					}
+				}
+				await stage().commitActorToEcho(actor.id, slotIndex);
+				// Remove from reserves if they came from there
+				const wasInReserve = reserveActors.find(a => a.id === actor.id);
+				if (wasInReserve) {
+					stage().getSave().reserveActors = (stage().getSave().reserveActors || []).filter(a => a.id !== actor.id);
+					stage().saveGame();
+				}
+				setSelectedReserveActorId(null);
+				setRefreshKey(prev => prev + 1);
+			}
+		} else {
+			// No reserve actor selected, handle normal slot selection
+			const actor = echoSlots[slotIndex];
+			setSelectedSlotIndex(actor ? slotIndex : null);
+		}
+	};
+
 	const module = stage().getSave().layout.getModulesWhere(m => m?.type === 'echo chamber')[0]!;
 	const availableRooms = stage().getSave().layout.getModulesWhere(m => m?.type === 'quarters' && !m?.ownerId) || [];
 	const selectedActor = selectedSlotIndex != null ? echoSlots[selectedSlotIndex] : null;
@@ -195,6 +239,8 @@ export const EchoScreen: FC<EchoScreenProps> = ({stage, setScreenType, isVertica
 				onDragStart={handleDragStart}
 				onDrop={handleDropOnReserve}
 				onDragOver={handleDragOver}
+				selectedActorId={selectedReserveActorId}
+				onActorClick={handleReserveActorClick}
 			/>
 			{/* Echo slots in center with buttons on sides or bottom */}
 			<div style={{ 
@@ -224,7 +270,7 @@ export const EchoScreen: FC<EchoScreenProps> = ({stage, setScreenType, isVertica
 						return (
 							<motion.div
 								key={`echo_slot_${slotIndex}`}
-								onClick={() => setSelectedSlotIndex(actor ? slotIndex : null)}
+							onClick={() => handleEchoSlotClick(slotIndex)}
 								onDrop={(e) => handleDropOnEchoSlot(e, slotIndex)}
 								onDragOver={handleDragOver}
 								animate={{
@@ -286,9 +332,11 @@ export const EchoScreen: FC<EchoScreenProps> = ({stage, setScreenType, isVertica
 									background: actor ? undefined : 'linear-gradient(135deg, rgba(0,255,136,0.15), rgba(0,200,255,0.1))',
 									border: isSelected
 										? `5px solid ${actor?.themeColor || '#ffffff'}` 
-										: actor 
-											? `4px solid ${actor.themeColor || '#00ff88'}`
-											: '3px dashed rgba(0,255,136,0.5)',
+										: selectedReserveActorId
+											? '4px solid rgba(255,215,0,0.8)' // Gold border when ready to place
+											: actor 
+												? `4px solid ${actor.themeColor || '#00ff88'}`
+												: '3px dashed rgba(0,255,136,0.5)',
 									boxShadow: isSelected
 										? `0 12px 40px ${actor?.themeColor ? actor.themeColor + '40' : 'rgba(0,255,136,0.25)'}, inset 0 0 50px ${actor?.themeColor ? actor.themeColor + '20' : 'rgba(0,255,136,0.1)'}` 
 										: actor
@@ -384,12 +432,13 @@ export const EchoScreen: FC<EchoScreenProps> = ({stage, setScreenType, isVertica
 								</>
 							) : (
 								<div style={{ 
-									color: 'rgba(0,255,136,0.7)', 
+									color: selectedReserveActorId ? 'rgba(255,215,0,0.9)' : 'rgba(0,255,136,0.7)', 
 									fontSize: 'clamp(14px, 2.2vmin, 20px)', 
 									textAlign: 'center',
-									padding: 'clamp(12px, 2.5vmin, 24px)'
+									padding: 'clamp(12px, 2.5vmin, 24px)',
+									transition: 'color 0.3s ease'
 								}}>
-									Drop an echo here to initiate the echofusion process.
+									{selectedReserveActorId ? 'Tap here to place selected echo' : 'Drag or tap an echo above, then tap here to place'}
 								</div>
 							)}
 								</motion.div>

@@ -25,6 +25,7 @@ export const CryoScreen: FC<CryoScreenProps> = ({stage, setScreenType, isVertica
 
 	const [selectedSlotIndex, setSelectedSlotIndex] = React.useState<number | null>(null);
 	const [expandedCandidateId, setExpandedCandidateId] = React.useState<string | null>(null);
+	const [selectedStationActorId, setSelectedStationActorId] = React.useState<string | null>(null); // For tap-to-select on mobile
 	const [, forceUpdate] = React.useReducer(x => x + 1, 0);
 	
 	// Get actors present on the station (locationId is '' or matches a module ID in the layout)
@@ -121,52 +122,83 @@ export const CryoScreen: FC<CryoScreenProps> = ({stage, setScreenType, isVertica
 		e.preventDefault();
 	};
 
+	// Common function to place an actor into a cryo slot
+	const placeActorInCryo = (actor: Actor, slotIndex: number) => {
+		// Don't allow placement in occupied slots
+		const existingActor = cryoSlots[slotIndex];
+		if (existingActor) {
+			return false; // Slot is occupied
+		}
+		
+		// Move actor into cryo
+		actor.locationId = 'cryo';
+		
+		// Clear actor from ownership on their quarters
+		const quarters = stage().getSave().layout.getModulesWhere(m => m?.type === 'quarters' && m?.ownerId === actor.id);
+		quarters.forEach(q => {
+			q.ownerId = '';
+		});
+		
+		// Clear actor from any module where they hold a role
+		const roleModules = stage().getSave().layout.getModulesWhere(m => m?.type !== 'quarters' && m?.ownerId === actor.id);
+		roleModules.forEach(m => {
+			m.ownerId = '';
+		});
+
+		// Add timeline event
+		stage().getSave().timeline?.push({
+			day: stage().getSave().day,
+			turn: stage().getSave().turn,
+			description: `${actor.name} placed into cryostasis.`,
+			skit: {
+				actorId: actor.id,
+				type: SkitType.ENTER_CRYO,
+				moduleId: stage().getSave().layout.getModulesWhere(m => m?.type === 'cryo bank')[0]?.id || '',
+				summary: `${actor.name} was placed into cryostasis.`,
+				script: [],
+				context: {}
+			}
+		});
+		
+		forceUpdate();
+		return true;
+	};
+
+	// Tap-to-select handler for mobile
+	const handleStationActorClick = (actorId: string) => {
+		if (selectedStationActorId === actorId) {
+			// Deselect if already selected
+			setSelectedStationActorId(null);
+		} else {
+			// Select the actor
+			setSelectedStationActorId(actorId);
+		}
+	};
+
+	// Handler for clicking a cryo slot with a station actor selected
+	const handleCryoSlotClick = (slotIndex: number) => {
+		if (selectedStationActorId) {
+			// Place the selected station actor in this slot
+			const actor = stage().getSave().actors[selectedStationActorId];
+			
+			if (actor && placeActorInCryo(actor, slotIndex)) {
+				setSelectedStationActorId(null);
+			}
+			// If placement failed (slot occupied), keep actor selected
+		} else {
+			// No station actor selected, handle normal slot selection
+			const actor = cryoSlots[slotIndex];
+			setSelectedSlotIndex(actor ? slotIndex : null);
+		}
+	};
+
 	const handleDropOnCryoSlot = (e: React.DragEvent, slotIndex: number) => {
 		e.preventDefault();
 		const data = JSON.parse(e.dataTransfer.getData('application/json'));
 		const actor = stage().getSave().actors[data.actorId];
 		
 		if (actor && data.source === 'station') {
-			// Check if slot is occupied
-			const existingActor = cryoSlots[slotIndex];
-			if (existingActor && existingActor.id !== actor.id) {
-				// Move existing actor back to station
-				existingActor.locationId = '';
-			}
-			
-			// Move actor into cryo
-			actor.locationId = 'cryo';
-			
-			// Clear actor from ownership on their quarters
-			const quarters = stage().getSave().layout.getModulesWhere(m => m?.type === 'quarters' && m?.ownerId === actor.id);
-			quarters.forEach(q => {
-				q.ownerId = '';
-			});
-			
-			// Clear actor from any module where they hold a role
-			const roleModules = stage().getSave().layout.getModulesWhere(m => m?.type !== 'quarters' && m?.ownerId === actor.id);
-			roleModules.forEach(m => {
-				m.ownerId = '';
-			});
-
-  	
-			// Force re-render to update the screen
-			forceUpdate();
-		    // TODO: Maybe trigger ENTER_CRYO skit here; the trouble is that locationId = 'cryo' is being used to indicate that the actor is already in cryo, but their location would need to be the module ID for the skit.
-			// Add a timeline event for this:
-			stage().getSave().timeline?.push({
-				day: stage().getSave().day,
-				turn: stage().getSave().turn,
-				description: `${actor.name} placed into cryostasis.`,
-				skit: { // Cheat; this skit didn't actually happen, but we can use it to log the event
-					actorId: actor.id,
-					type: SkitType.ENTER_CRYO,
-					moduleId: stage().getSave().layout.getModulesWhere(m => m?.type === 'cryo bank')[0]?.id || '',
-					summary: `${actor.name} was placed into cryostasis.`,
-					script: [],
-					context: {}
-				}
-			});
+			placeActorInCryo(actor, slotIndex);
 		}
 	};
 
@@ -176,6 +208,7 @@ export const CryoScreen: FC<CryoScreenProps> = ({stage, setScreenType, isVertica
 	const availableQuarters = stage().getSave().layout.getModulesWhere(m => m?.type === 'quarters' && !m?.ownerId) || [];
 	const selectedActor = selectedSlotIndex != null ? cryoSlots[selectedSlotIndex] : null;
 	const acceptable = selectedActor && availableQuarters.length > 0;
+	const allCryoSlotsFull = cryoSlots.every(slot => slot !== null);
 	const background = stage().getSave().actors[module.ownerId || '']?.decorImageUrls[module.type] || module.getAttribute('defaultImageUrl')
 
 
@@ -197,8 +230,10 @@ export const CryoScreen: FC<CryoScreenProps> = ({stage, setScreenType, isVertica
 				borderColor="rgba(0,200,255,0.2)"
 				glowColor="rgba(0, 200, 255, 0.4)"
 				showRemoveButton={false}
-				draggable={true}
+				draggable={!allCryoSlotsFull}
 				onDragStart={handleDragStart}
+				selectedActorId={selectedStationActorId}
+				onActorClick={allCryoSlotsFull ? undefined : handleStationActorClick}
 			/>
 			{/* Cryo slots in center with buttons on sides or bottom */}
 			<div style={{ 
@@ -228,7 +263,7 @@ export const CryoScreen: FC<CryoScreenProps> = ({stage, setScreenType, isVertica
 						return (
 							<motion.div
 								key={`cryo_slot_${slotIndex}`}
-								onClick={() => setSelectedSlotIndex(actor ? slotIndex : null)}
+							onClick={() => handleCryoSlotClick(slotIndex)}
 								onDrop={(e) => handleDropOnCryoSlot(e, slotIndex)}
 								onDragOver={handleDragOver}
 								animate={{
@@ -285,9 +320,11 @@ export const CryoScreen: FC<CryoScreenProps> = ({stage, setScreenType, isVertica
 									background: actor ? undefined : 'linear-gradient(135deg, rgba(0,200,255,0.15), rgba(100,150,255,0.1))',
 									border: isSelected
 										? `5px solid ${actor?.themeColor || '#ffffff'}` 
-										: actor 
-											? `4px solid ${actor.themeColor || '#00c8ff'}`
-											: '3px dashed rgba(0,200,255,0.5)',
+										: selectedStationActorId
+											? '4px solid rgba(255,215,0,0.8)' // Gold border when ready to place
+											: actor 
+												? `4px solid ${actor.themeColor || '#00c8ff'}`
+												: '3px dashed rgba(0,200,255,0.5)',
 									boxShadow: isSelected
 										? `0 12px 40px ${actor?.themeColor ? actor.themeColor + '40' : 'rgba(0,200,255,0.25)'}, inset 0 0 50px ${actor?.themeColor ? actor.themeColor + '20' : 'rgba(0,200,255,0.1)'}` 
 										: actor
@@ -377,12 +414,13 @@ export const CryoScreen: FC<CryoScreenProps> = ({stage, setScreenType, isVertica
 								</>
 							) : (
 								<div style={{ 
-									color: 'rgba(0,200,255,0.7)', 
+									color: selectedStationActorId ? 'rgba(255,215,0,0.9)' : 'rgba(0,200,255,0.7)', 
 									fontSize: 'clamp(14px, 2.2vmin, 20px)', 
 									textAlign: 'center',
-									padding: 'clamp(12px, 2.5vmin, 24px)'
+									padding: 'clamp(12px, 2.5vmin, 24px)',
+									transition: 'color 0.3s ease'
 								}}>
-									Drop a character here to place them in cryostasis.
+									{selectedStationActorId ? 'Tap here to place character in cryostasis' : 'Drag or tap a character above, then tap a slot to place in cryostasis'}
 								</div>
 							)}
 								</motion.div>
