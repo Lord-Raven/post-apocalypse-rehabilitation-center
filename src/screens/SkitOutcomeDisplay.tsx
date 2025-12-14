@@ -297,7 +297,7 @@ const SkitOutcomeDisplay: FC<SkitOutcomeDisplayProps> = ({ skitData, stage, layo
                                     backgroundImage: `url(${charChange.actor === undefined ? "https://media.charhub.io/41b7b65d-839b-4d31-8c11-64ee50e817df/0fc1e223-ad07-41c4-bdae-c9545d5c5e34.png" : 
                                         charChange.actor.getEmotionImage(charChange.actor.getDefaultEmotion())})`,
                                     backgroundSize: 'cover',
-                                    backgroundPosition: '50% -5%',
+                                    backgroundPosition: '50% -10%',
                                     backgroundRepeat: 'no-repeat',
                                     filter: 'brightness(1.1)',
                                     boxShadow: '0 8px 24px rgba(0,0,0,0.6)',
