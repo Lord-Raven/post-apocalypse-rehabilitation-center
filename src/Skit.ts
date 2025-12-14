@@ -330,9 +330,9 @@ export function generateSkitPrompt(skit: SkitData, stage: Stage, historyLength: 
         }).join('\n')}` +
         // List cryo characters for reference; just need description and profile:
         `\n\nCryo Frozen Characters (Absolutely Unavailable):\n${cryoPatients.map(actor => {
-            const cryoStartSkit = save.timeline?.map(event => event.skit).filter(skit => skit != undefined).find(skit => skit.type === 'ENTER CRYO' && skit.actorId === actor.id);
-            const cryoDays = cryoStartSkit ? (cryoStartSkit as SkitData).context.day : save.day;
-            return `${actor.name}\n  Description: ${actor.description}\n  Profile: ${actor.profile}\n  Days in Cryo: ${save.day - cryoDays}`;
+            const entranceEvent = stage.getSave().timeline?.find(event => event.skit?.actorId === actor.id && event.skit?.type === SkitType.ENTER_CRYO);
+            const entranceDate = entranceEvent ? entranceEvent.day : stage.getSave().day;
+            return `${actor.name}\n  Description: ${actor.description}\n  Profile: ${actor.profile}\n  Days in Cryo: ${save.day - entranceDate}`;
         }).join('\n')}` +
         // List stat meanings, for reference:
         `\n\nStats:\n${Object.values(Stat).map(stat => `${stat.toUpperCase()}: ${getStatDescription(stat)}`).join('\n')}` +
