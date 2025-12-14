@@ -147,6 +147,8 @@ export const EMOTION_SYNONYMS: {[key: string]: Emotion} = {
     defensiveness: Emotion.disappointment,
     arrogance: Emotion.pride,
     arrogant: Emotion.pride,
+    mockery: Emotion.disappointment,
+    mocking: Emotion.disappointment,
 }
 
 export const EMOTION_PROMPTS: {[emotion in Emotion]?: string} = {

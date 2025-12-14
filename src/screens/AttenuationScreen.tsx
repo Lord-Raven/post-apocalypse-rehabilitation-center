@@ -24,7 +24,7 @@ export const AttenuationScreen: FC<AttenuationScreenProps> = ({stage, setScreenT
 	const [modifierText, setModifierText] = React.useState(stage().getSave().attenuation || '');
     const [loadingReserve, setLoadingReserve] = React.useState(stage().reserveActorsLoadPromise != undefined);
 	const [refreshKey, setRefreshKey] = React.useState(0); // Force re-renders when data changes
-	const reserveActors = stage().reserveActors;
+	const reserveActors = stage().getSave().reserveActors || [];
 	const RESERVE_LIMIT = stage().RESERVE_ACTORS;
 
 	// Monitor the stage's reserve loading promise and update state when it completes
@@ -67,7 +67,8 @@ export const AttenuationScreen: FC<AttenuationScreenProps> = ({stage, setScreenT
 		e.stopPropagation();
 		e.preventDefault();
 		
-		stage().reserveActors = stage().reserveActors.filter(a => a.id !== actorId);
+		stage().getSave().reserveActors = (stage().getSave().reserveActors || []).filter(a => a.id !== actorId);
+		stage().saveGame();
 		setRefreshKey(refreshKey + 1);
 	};
 

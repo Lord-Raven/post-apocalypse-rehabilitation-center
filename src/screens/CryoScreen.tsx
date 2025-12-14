@@ -8,12 +8,10 @@ import { ScreenType } from './BaseScreen';
 import { Stage } from '../Stage';
 import Nameplate from '../components/Nameplate';
 import Actor, { Stat, ACTOR_STAT_ICONS } from '../actors/Actor';
-import ActorCard, { ActorCardSection } from '../components/ActorCard';
 import { scoreToGrade } from '../utils';
 import { BlurredBackground } from '../components/BlurredBackground';
 import { ActorCarousel } from '../components/ActorCarousel';
 import AuthorLink from '../components/AuthorLink';
-import { RemoveButton } from '../components/RemoveButton';
 import { Button } from '../components/UIComponents';
 import { SkitType } from '../Skit';
 
@@ -31,6 +29,8 @@ export const CryoScreen: FC<CryoScreenProps> = ({stage, setScreenType, isVertica
 	// Get actors present on the station (locationId is '' or matches a module ID in the layout)
 	const stationActors = Object.values(stage().getSave().actors).filter(actor => {
 		if (actor.locationId === 'cryo') return false;
+		if (actor.origin === 'aide') return false;
+		if (actor.factionId) return false;
 		if (actor.locationId === '') return true;
 		// Check if locationId matches a module ID
 		return stage().getSave().layout.getModuleById(actor.locationId) !== null;

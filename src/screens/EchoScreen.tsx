@@ -27,7 +27,7 @@ export const EchoScreen: FC<EchoScreenProps> = ({stage, setScreenType, isVertica
 	const [selectedSlotIndex, setSelectedSlotIndex] = React.useState<number | null>(null);
 	const [expandedCandidateId, setExpandedCandidateId] = React.useState<string | null>(null);
 	const [refreshKey, setRefreshKey] = React.useState(0); // Force re-renders when data changes
-	const reserveActors = stage().reserveActors;
+	const reserveActors = stage().getSave().reserveActors || [];
 	const echoSlots = stage().getEchoSlots();
 
 	const cancel = () => {
@@ -51,7 +51,8 @@ export const EchoScreen: FC<EchoScreenProps> = ({stage, setScreenType, isVertica
 	const removeReserveActor = (actorId: string, e: React.MouseEvent) => {
 		e.stopPropagation();
 		e.preventDefault();
-		stage().reserveActors = stage().reserveActors.filter(a => a.id !== actorId);
+		stage().getSave().reserveActors = (stage().getSave().reserveActors || []).filter(a => a.id !== actorId);
+		stage().saveGame();
 		stage().loadReserveActors();
 		setRefreshKey(prev => prev + 1); // Force re-render
 	};
@@ -65,8 +66,10 @@ export const EchoScreen: FC<EchoScreenProps> = ({stage, setScreenType, isVertica
 			// Remove from echo slot
 			stage().removeActorFromEcho(actorId, true);
 			// Add back to reserve actors if not already there
-			if (!stage().reserveActors.find(a => a.id === actorId)) {
-				stage().reserveActors.push(actor);
+			const reserveActors = stage().getSave().reserveActors || [];
+			if (!reserveActors.find(a => a.id === actorId)) {
+				stage().getSave().reserveActors = [...reserveActors, actor];
+				stage().saveGame();
 			}
 			setRefreshKey(prev => prev + 1); // Force re-render
 		}
@@ -84,7 +87,7 @@ export const EchoScreen: FC<EchoScreenProps> = ({stage, setScreenType, isVertica
 			selected.locationId = sceneRoom?.id || '';
 			stage().getSave().actors[selected.id] = selected;
 			// Remove from reserve actors and echo slots
-			stage().reserveActors = stage().reserveActors.filter(a => a.id !== selected.id);
+			stage().getSave().reserveActors = (stage().getSave().reserveActors || []).filter(a => a.id !== selected.id);
 			stage().removeActorFromEcho(selected.id, false);
 			// Possibly set other properties on the selected actor as needed
 			selected.birth(stage().getSave().day);
@@ -139,14 +142,16 @@ export const EchoScreen: FC<EchoScreenProps> = ({stage, setScreenType, isVertica
 			const existingActor = echoSlots[slotIndex];
 			if (existingActor && existingActor.id !== actor.id) {
 				// Move existing actor back to reserves
-				if (!stage().reserveActors.find(a => a.id === existingActor.id)) {
-					stage().reserveActors.push(existingActor);
+				const reserveActors = stage().getSave().reserveActors || [];
+				if (!reserveActors.find(a => a.id === existingActor.id)) {
+					stage().getSave().reserveActors = [...reserveActors, existingActor];
 				}
 			}
 			await stage().commitActorToEcho(actor.id, slotIndex);
 			// Remove dragged actor from reserves if they came from there
 			if (data.source === 'reserve') {
-				stage().reserveActors = stage().reserveActors.filter(a => a.id !== actor.id);
+				stage().getSave().reserveActors = (stage().getSave().reserveActors || []).filter(a => a.id !== actor.id);
+				stage().saveGame();
 			}
 			// Use Stage method to manage echo slots
 			setRefreshKey(prev => prev + 1); // Force re-render
@@ -254,7 +259,7 @@ export const EchoScreen: FC<EchoScreenProps> = ({stage, setScreenType, isVertica
 									}
 								}}
 								whileHover={{ 
-									scale: actor ? (isSelected ? 1.1 : 1.05) : 1,
+									scale: actor ? (isSelected ? 1.05 : 1.02) : 1,
 									filter: 'brightness(1.1)',
 									transition: {
 										type: "spring",
@@ -262,7 +267,7 @@ export const EchoScreen: FC<EchoScreenProps> = ({stage, setScreenType, isVertica
 										damping: 15
 									}
 								}}
-								whileTap={{ scale: actor ? 0.98 : 1 }}
+								whileTap={{ scale: actor ? (isSelected ? 1.03 : 1) : 0.98 }}
 								className={actor && !actor.isPrimaryImageReady ? 'loading-echo-slot' : ''}
 								style={{
 									...((actor && !actor.isPrimaryImageReady && actor.themeColor) && {

@@ -45,6 +45,7 @@ export type SaveType = {
     characterArtStyle?: ArtStyle;
     characterArtist?: string;
     attenuation?: string;
+    reserveActors?: Actor[];
 }
 
 export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateType, ConfigType> {
@@ -99,8 +100,6 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
 
     screenProps: any = {};
 
-    reserveActors: Actor[] = [];
-
     initialized: boolean = false;
 
     constructor(data: InitialData<InitStateType, ChatStateType, MessageStateType, ConfigType>) {
@@ -132,7 +131,7 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
                 description: `Your holographic assistant is acutely familiar with the technical details of your Post-Apocalypse Rehabilitation Center, so you don't have to be! ` +
                 `Your StationAide™ comes pre-programmed with a friendly and non-condescending demeanor that will leave you feeling empowered and never patronized; ` +
                 `your bespoke projection comes with an industry-leading feminine form in a pleasing shade of default blue, but, as always, StationAide™ remains infinitely customizable to suit your tastes.`}, 
-            echoes: [], actors: {}, factions: {}, layout: layout, day: 1, turn: 0, currentSkit: undefined };
+            echoes: [], actors: {}, factions: {}, layout: layout, day: 1, turn: 0, currentSkit: undefined, reserveActors: [] };
 
         // ensure at least one save exists and has a layout
         if (!this.saves.length) {
@@ -416,6 +415,11 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
             this.getSave().characterArtStyle = 'original';
         }
 
+        // Initialize reserveActors if missing
+        if (!this.getSave().reserveActors) {
+            this.getSave().reserveActors = [];
+        }
+
         this.loadReserveActors();
         this.loadReserveFactions();
         this.generateAide();
@@ -535,7 +539,8 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
             try {
                 const newActor = await loadReserveActorFromFullPath(fullPath, this);
                 if (newActor !== null) {
-                    this.reserveActors = [...this.reserveActors, newActor];
+                    this.getSave().reserveActors = [...(this.getSave().reserveActors || []), newActor];
+                    this.saveGame();
                 }
             } catch (err) {
                 console.error('Error loading reserve actors', err);
@@ -557,7 +562,8 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
         this.reserveActorsLoadPromise = (async () => {
             try {
                 console.log('Loading reserve actors...');
-                while (this.reserveActors.length < this.RESERVE_ACTORS) {
+                const reserveActors = this.getSave().reserveActors || [];
+                while (reserveActors.length < this.RESERVE_ACTORS) {
                     // Populate reserveActors; this is loaded with data from a service, calling the characterServiceQuery URL:
                     const exclusions = (this.getSave().bannedTags || []).concat(this.bannedTagsDefault).map(tag => encodeURIComponent(tag)).join('%2C');
                     console.log('Applying exclusions:', exclusions);
@@ -568,7 +574,7 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
                     const searchResults = await response.json();
                     console.log(searchResults);
                     // Need to do a secondary lookup for each character in searchResults, to get the details we actually care about:
-                    const basicCharacterData = searchResults.data?.nodes.filter((item: string, index: number) => index < this.RESERVE_ACTORS - this.reserveActors.length).map((item: any) => item.fullPath) || [];
+                    const basicCharacterData = searchResults.data?.nodes.filter((item: string, index: number) => index < this.RESERVE_ACTORS - reserveActors.length).map((item: any) => item.fullPath) || [];
                     this.actorPageNumber = (this.actorPageNumber % this.MAX_PAGES) + 1;
                     console.log(basicCharacterData);
 
@@ -576,8 +582,9 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
                         return loadReserveActorFromFullPath(fullPath, this);
                     }));
 
-                    this.reserveActors = [...this.reserveActors, ...newActors.filter(a => a !== null)];
+                    this.getSave().reserveActors = [...reserveActors, ...newActors.filter(a => a !== null)];
                 }
+                this.saveGame();
             } catch (err) {
                 console.error('Error loading reserve actors', err);
             } finally {
@@ -741,7 +748,7 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
     }
 
     async commitActorToEcho(actorId: string, slotIndex: number): Promise<void> {
-        const actor = this.reserveActors.find(a => a.id === actorId) || this.getSave().echoes.find(a => a?.id === actorId);
+        const actor = (this.getSave().reserveActors || []).find(a => a.id === actorId) || this.getSave().echoes.find(a => a?.id === actorId);
         if (actor) {
             const save = this.getSave();
             // Ensure echoes array has 3 slots
