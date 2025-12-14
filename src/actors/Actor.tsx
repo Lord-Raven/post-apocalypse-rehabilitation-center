@@ -216,6 +216,7 @@ export async function loadReserveActor(data: any, stage: Stage): Promise<Actor|n
         'youngster': 'young adult',
         'teen': 'young adult',
         'highschooler': 'young adult',
+        'childhood': 'formative years',
         // Don't bother with these; just set it to the same word so it gets discarded.
         'child': 'child',
         'toddler': 'toddler',
@@ -313,9 +314,9 @@ export async function loadReserveActor(data: any, stage: Stage): Promise<Actor|n
             `DESCRIPTION: A vivid description of the character's physical appearance, attire, and any distinguishing features.\n` +
             `PROFILE: A brief summary of the character's key personality traits and behaviors.\n` +
             `STYLE: A concise description of the character's sense of overall style, mood, interests, or aesthetic, to be applied to the way they decorate their space.\n` +
-            `VOICE: Output the specific voice ID from the Available Voices section that best matches the character's apparent gender and personality\n` +
+            `VOICE: Output the specific voice ID from the Available Voices section that best matches the character's apparent gender (foremost) and personality.\n` +
             `COLOR: A hex color that reflects the character's theme or mood—use darker or richer colors that will contrast with white text.\n` +
-            `FONT: A web-safe font, font stack, or font family that reflects the character's personality; this will be embedded in a CSS font-family property.\n` +
+            `FONT: A font stack, or font family that reflects the character's personality; this will be embedded in a CSS font-family property.\n` +
             Object.entries(Stat).map(([key, value]) => {
                 return `${key.toUpperCase()}: 1-10 scoring of ${getStatDescription(value).toLowerCase()}\n`;
             }).join('\n') +
@@ -327,7 +328,7 @@ export async function loadReserveActor(data: any, stage: Stage): Promise<Actor|n
             `STYLE: Practical and no-nonsense, favoring functionality over fashion. Prefers muted colors and simple designs that allow freedom and comfort.\n` +
             `VOICE: 03a438b7-ebfa-4f72-9061-f086d8f1fca6\n` +
             `COLOR: #333333\n` +
-            `FONT: Arial\n` +
+            `FONT: Calibri, sans-serif\n` +
             `BRAWN: 5\n` +
             `SKILL: 5\n` +
             `NERVE: 7\n` +
@@ -338,7 +339,7 @@ export async function loadReserveActor(data: any, stage: Stage): Promise<Actor|n
             `TRUST: 2\n` +
             `#END#` +
             (stage.getSave().attenuation ? 
-                `\n\nThe station is currently tuned to modify this character; take the following additional context into account while shaping this distillation:\n${stage.getSave().attenuation}` : 
+                `\n\nThe station is currently tuned to modify this character; take the following additional context into account while forming this distillation:\n${stage.getSave().attenuation}` : 
                 ''),
         stop: ['#END'],
         include_history: true, // There won't be any history, but if this is true, the front-end doesn't automatically apply pre-/post-history prompts.

@@ -8,7 +8,6 @@ import { Stage } from '../Stage';
 import { SkitType } from '../Skit';
 import Nameplate from '../components/Nameplate';
 import Actor, { generateActorDecor, Stat, ACTOR_STAT_ICONS } from '../actors/Actor';
-import ActorCard, { ActorCardSection } from '../components/ActorCard';
 import { scoreToGrade } from '../utils';
 import { BlurredBackground } from '../components/BlurredBackground';
 import { ActorCarousel } from '../components/ActorCarousel';

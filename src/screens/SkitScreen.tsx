@@ -313,6 +313,7 @@ export const SkitScreen: FC<SkitScreenProps> = ({ stage, setScreenType, isVertic
     const [displayName, setDisplayName] = React.useState<string>('');
     const [displayMessage, setDisplayMessage] = React.useState<JSX.Element>(<></>);
     const [finishTyping, setFinishTyping] = React.useState<boolean>(false);
+    const [messageKey, setMessageKey] = React.useState<number>(0); // Key to force TypeOut reset
     const [hoveredActor, setHoveredActor] = React.useState<Actor | null>(null);
     const [audioEnabled, setAudioEnabled] = React.useState<boolean>(true);
     const currentAudioRef = React.useRef<HTMLAudioElement | null>(null);
@@ -450,10 +451,12 @@ export const SkitScreen: FC<SkitScreenProps> = ({ stage, setScreenType, isVertic
             const playerName = stage().getSave().player.name;
             const isPlayerSpeaker = !matchingActor && playerName && namesMatch(playerName.trim().toLowerCase(), currentSpeakerName.toLowerCase());
             
+            // Reset typing state BEFORE setting new message to prevent flash of full content
+            setFinishTyping(false);
+            setMessageKey(prev => prev + 1); // Increment key to force fresh TypeOut mount
             setSpeaker(matchingActor || null);
             setDisplayName(matchingActor?.name || (isPlayerSpeaker ? playerName : ''));
-            setDisplayMessage(formatMessage(skit.script[index]?.message || '', matchingActor));
-            setFinishTyping(false); // Reset typing state when message changes
+            setDisplayMessage(formatMessage(skit.script[index]?.message || '', matchingActor))
             if (currentAudioRef.current) {
                 // Stop any currently playing audio
                 currentAudioRef.current.pause();
@@ -798,7 +801,7 @@ export const SkitScreen: FC<SkitScreenProps> = ({ stage, setScreenType, isVertic
                     >
                         {skit.script && skit.script.length > 0 ? (
                             <TypeOut
-                                key={`message-box-${index}`}
+                                key={messageKey}
                                 speed={20}
                                 finishTyping={finishTyping}
                                 onTypingComplete={() => setFinishTyping(true)}

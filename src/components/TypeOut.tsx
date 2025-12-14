@@ -169,14 +169,14 @@ export const TypeOut: React.FC<TypeOutProps> = ({
             return null;
         }
         
-        // If finishTyping is true, always show complete content regardless of displayLength
-        if (finishTyping) {
+        // If finished naturally or forced, show complete content
+        if (finished || (finishTyping && displayLength >= textContent.length)) {
             return children;
         }
         
         // Truncate React children based on character count
         return truncateReactContent(children, displayLength);
-    }, [children, displayLength, finishTyping]);
+    }, [children, displayLength, finished, finishTyping, textContent.length]);
 
     return (
         <span
