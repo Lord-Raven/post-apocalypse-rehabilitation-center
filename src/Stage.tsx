@@ -2,8 +2,8 @@ import {ReactElement, useEffect, useState} from "react";
 import {StageBase, StageResponse, InitialData, Message, UpdateBuilder} from "@chub-ai/stages-ts";
 import {LoadResponse} from "@chub-ai/stages-ts/dist/types/load";
 import Actor, { loadReserveActor, generatePrimaryActorImage, commitActorToEcho, Stat, generateAdditionalActorImages, loadReserveActorFromFullPath, ArtStyle, generateActorDecor } from "./actors/Actor";
-import Faction, { generateFactionRepresentative, loadReserveFaction } from "./factions/Faction";
-import { DEFAULT_GRID_SIZE, Layout, StationStat, createModule } from './Module';
+import Faction, { generateFactionModule, generateFactionRepresentative, loadReserveFaction } from "./factions/Faction";
+import { DEFAULT_GRID_SIZE, Layout, StationStat, createModule, registerModuleTemplate } from './Module';
 import { BaseScreen, ScreenType } from "./screens/BaseScreen";
 import { generateSkitScript, SkitData, SkitType } from "./Skit";
 import { smartRehydrate } from "./SaveRehydration";
@@ -453,8 +453,14 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
             delete save.actors[id];
         });
 
-        // Repair faction reps that don't have a factionId set:
+        // Register faction modules and repair faction reps that don't have a factionId set:
         Object.values(save.factions).forEach(faction => {
+            if (faction.module) {
+                registerModuleTemplate(faction.module.name, faction.module);
+            } else if (faction.reputation >= 5) {
+                // Kick off module generation for this faction:
+                generateFactionModule(faction, this);
+            }
             if (faction.representativeId && save.actors[faction.representativeId]) {
                 const repActor = save.actors[faction.representativeId];
                 repActor.origin = 'faction';
@@ -710,51 +716,6 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
         }
     }
 
-    async softenImage(blob: Blob): Promise<Blob> {
-        return new Promise((resolve, reject) => {
-            const img = new Image();
-            img.onload = () => {
-                const canvas = document.createElement('canvas');
-                const ctx = canvas.getContext('2d');
-                if (!ctx) {
-                    reject(new Error('Failed to get canvas context'));
-                    return;
-                }
-                
-                canvas.width = img.width;
-                canvas.height = img.height;
-                
-                // Apply slight blur filter to smooth the image
-                ctx.filter = 'blur(1px)';
-                ctx.drawImage(img, 0, 0);
-                
-                canvas.toBlob((result) => {
-                    if (result) {
-                        resolve(result);
-                    } else {
-                        reject(new Error('Failed to convert canvas to blob'));
-                    }
-                }, 'image/png');
-            };
-            img.onerror = () => reject(new Error('Failed to load image'));
-            img.src = URL.createObjectURL(blob);
-        });
-    }
-
-    async uploadBlob(fileName: string, blob: Blob, propertyBag: BlobPropertyBag): Promise<string> {
-        const file: File = new File([blob], fileName, propertyBag);
-        return this.uploadFile(fileName, file);
-    }
-
-    async uploadFile(fileName: string, file: File): Promise<string> {
-        // Don't honor filename; want to overwrite existing content that may have had a different actual name.
-        const updateResponse = await this.storage.set(fileName, file).forUser();
-        if (!updateResponse.data || updateResponse.data.length == 0) {
-            throw new Error('Failed to upload file to storage.');
-        }
-        return updateResponse.data[0].value;
-    }
-
     async commitActorToEcho(actorId: string, slotIndex: number): Promise<void> {
         const actor = (this.getSave().reserveActors || []).find(a => a.id === actorId) || this.getSave().echoes.find(a => a?.id === actorId);
         if (actor) {
@@ -911,6 +872,9 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
                                     actor.locationId = faction.id; // move to faction location
                                 }
                             });
+                        } else if (newReputation >= 5 && !faction.module) {
+                            // Generate a faction module, if not present
+                            generateFactionModule(faction, this);
                         }
                     });
                 // Handle special "STATION" id for station stat changes

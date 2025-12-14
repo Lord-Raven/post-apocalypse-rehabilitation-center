@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Typography, Card, CardContent, Tabs, Tab } from '@mui/material';
 import { styled } from '@mui/material/styles';
 import { ScreenType } from './BaseScreen';
-import { Layout, Module, createModule, ModuleType, MODULE_DEFAULTS, StationStat, STATION_STAT_DESCRIPTIONS, STATION_STAT_ICONS } from '../Module';
+import { Layout, Module, createModule, ModuleType, MODULE_TEMPLATES, StationStat, STATION_STAT_DESCRIPTIONS, STATION_STAT_ICONS } from '../Module';
 import { Stage } from '../Stage';
 import ActorCard from '../components/ActorCard';
 import ModuleCard from '../components/ModuleCard';
@@ -81,7 +81,12 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType, isV
         const newModule: Module = createModule(moduleType);
         
         // Deduct cost from station stats
-        const moduleDefaults = MODULE_DEFAULTS[moduleType];
+        const moduleDefaults = MODULE_TEMPLATES[moduleType];
+        if (!moduleDefaults) {
+            console.error(`Module type ${moduleType} not found in defaults or templates`);
+            return;
+        }
+        
         const cost = moduleDefaults.cost || {};
         const save = stage().getSave();
         
@@ -126,8 +131,13 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType, isV
     };
 
     const getAvailableModules = (): ModuleType[] => {
-        return Object.keys(MODULE_DEFAULTS).filter(moduleType => {
-            const moduleDefaults = MODULE_DEFAULTS[moduleType as ModuleType];
+        // Combine built-in and custom modules
+        const allModuleTypes = Object.keys(MODULE_TEMPLATES);
+        
+        return allModuleTypes.filter(moduleType => {
+            const moduleDefaults = MODULE_TEMPLATES[moduleType];
+            if (!moduleDefaults) return false;
+            
             const available = moduleDefaults.available;
             
             // Check if available() returns true
@@ -1397,7 +1407,9 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType, isV
                                 marginTop: '20px',
                             }}>
                                 {getAvailableModules().map((moduleType) => {
-                                    const moduleDefaults = MODULE_DEFAULTS[moduleType];
+                                    const moduleDefaults = MODULE_TEMPLATES[moduleType];
+                                    if (!moduleDefaults) return null;
+                                    
                                     const cost = moduleDefaults.cost || {};
                                     const hasCost = Object.keys(cost).length > 0;
                                     

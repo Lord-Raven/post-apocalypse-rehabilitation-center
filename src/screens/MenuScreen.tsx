@@ -268,7 +268,7 @@ export const MenuScreen: FC<MenuScreenProps> = ({ stage, setScreenType }) => {
                         fontSize: 'clamp(10px, 1.5vw, 12px)',
                     }}
                 >
-                    v2025.12.12 (beta) - New special modules in testing: Cryo Bank and Aperture.
+                    v2025.12.14 (beta) - Adding generated faction modules.
                 </motion.div>
             </motion.div>
             </div>

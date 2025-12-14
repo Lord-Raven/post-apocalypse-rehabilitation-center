@@ -4,7 +4,7 @@ import { ScreenType } from './screens/BaseScreen';
 import { Build, Hotel, Restaurant, Security, AttachMoney, Favorite } from '@mui/icons-material';
 
 export type ModuleType = 'echo chamber' | 'comms' | 'generator' | 'quarters' | 'commons' | 'infirmary' | 'gym' | 'lounge' | 'armory' 
-    | 'cryo bank' | 'aperture';
+    | 'cryo bank' | 'aperture' | string; // Allow string for modded modules
     /*| 'hydroponics' | 'laboratory' | 'observatory' | 'security' | 'storage' | 'market' |
     'brig' | 'showers' | 'conservatory' |
     // Administration pack:
@@ -115,6 +115,7 @@ export const STATION_STAT_PROMPTS: Record<StationStat, Record<StatRating, string
 };
 
 export interface ModuleIntrinsic {
+    name: string;
     skitPrompt?: string; // Additional prompt text to influence the script in skit generation
     imagePrompt?: string; // Additional prompt text to describe the module in decor image generation
     role?: string;
@@ -149,8 +150,9 @@ const randomAction = (module: Module, stage: Stage, setScreenType: (type: Screen
             }
         };
 
-export const MODULE_DEFAULTS: Record<ModuleType, ModuleIntrinsic> = {
+export const MODULE_TEMPLATES: Record<ModuleType, ModuleIntrinsic> = {
     'echo chamber': {
+        name: 'Echo Chamber',
         skitPrompt: 'The echo chamber is where the player fuses echoes from the nearby black hole. Scenes in this room typically involve newly echofused patients as they get their bearings.',
         imagePrompt: 'A futuristic lab with a bank of cryo pods along the left wall and some advanced computer systems against the right wall.',
         role: 'Assistant',
@@ -170,6 +172,7 @@ export const MODULE_DEFAULTS: Record<ModuleType, ModuleIntrinsic> = {
         }
     },
     comms: {
+        name: 'Comms',
         skitPrompt: 'The comms room is the hub for all external and internal station communications. This room is critical for communicating with external factions, with whom the PARC fulfills contracts to supply patients "jobs." ' +
             `Scenes here often involve receiving important messages, coordinating among the crew, or managing station-wide announcements.`,
         imagePrompt: 'A sci-fi communications room dominated by a massive screen and associated computers and equipment, as well as some seating.',
@@ -228,6 +231,7 @@ export const MODULE_DEFAULTS: Record<ModuleType, ModuleIntrinsic> = {
         }
     },
     generator: {
+        name: 'Generator',
         skitPrompt: 'The generator room serves as an engineering hub of sorts, where many of the station\'s mechanical systems can be managed. Scenes here often involve the station\'s overall systems health and stability.',
         imagePrompt: 'A sci-fi chamber dominated by a large, glowing generator, filled with humming machinery, control panels, and energy conduits.',
         role: 'Engineer',
@@ -242,6 +246,7 @@ export const MODULE_DEFAULTS: Record<ModuleType, ModuleIntrinsic> = {
         }
     },
     quarters: {
+        name: 'Quarters',
         skitPrompt: 'Crew quarters are personal living spaces for station inhabitants. Scenes here often involve personal interactions:  revelations, troubles, interests, or relaxation.',
         imagePrompt: 'A sci-fi living quarters with a bed, personal storage, and ambient lighting, reflecting the occupant\'s personality.',
         baseImageUrl: 'https://media.charhub.io/5e39db53-9d66-459d-8926-281b3b089b36/8ff20bdb-b719-4cf7-bf53-3326d6f9fcaa.png', 
@@ -270,6 +275,7 @@ export const MODULE_DEFAULTS: Record<ModuleType, ModuleIntrinsic> = {
         }
     },
     commons: {
+        name: 'Commons',
         skitPrompt: 'The commons area is a social hub for the station crew, where they gather to relax, eat, and interact. Scenes here often involve camaraderie, conflicts, and leisure activities among the crew.',
         imagePrompt: 'A sci-fi common area with a large table, seating, and storage and kitchen facilities along the far wall.',
         // Maybe need a better term for this than "keeper"; this role is essentially cook/maid for the station:
@@ -285,6 +291,7 @@ export const MODULE_DEFAULTS: Record<ModuleType, ModuleIntrinsic> = {
         }
     },
     infirmary: {
+        name: 'Infirmary',
         skitPrompt: 'The infirmary is the station\'s medical facility, where crew members receive treatment and care. Scenes here often involve medical incidents, health concerns, or ways to improve the crew\'s health and well-being.',
         imagePrompt: 'A futuristic medical bay with treatment beds and advanced diagnostic equipment.',
         role: 'Medic',
@@ -299,6 +306,7 @@ export const MODULE_DEFAULTS: Record<ModuleType, ModuleIntrinsic> = {
         }
     },
     gym: {
+        name: 'Gym',
         skitPrompt: 'The gym is the station\'s fitness center, where crew members work out and maintain their physical health. Scenes here often involve training sessions, fitness challenges, or ways to boost crew morale through physical activity.',
         imagePrompt: 'A sci-fi gym with advanced exercise equipment and weightlifting stations.',
         role: 'Trainer',
@@ -313,6 +321,7 @@ export const MODULE_DEFAULTS: Record<ModuleType, ModuleIntrinsic> = {
         }
     },
     lounge: {
+        name: 'Lounge',
         skitPrompt: 'The lounge is a recreational area for the station crew, where they can unwind with a drink and socialize. Scenes here often involve leisure activities, social interactions, and ways to boost crew morale through relaxation and entertainment.',
         imagePrompt: 'A sci-fi lounge with comfortable seating, a wet bar, and entertainment systems.',
         role: 'Concierge',
@@ -329,6 +338,7 @@ export const MODULE_DEFAULTS: Record<ModuleType, ModuleIntrinsic> = {
         }
     },
     armory: {
+        name: 'Armory',
         skitPrompt: 'The armory is the station\'s defense hub, where weapons and security systems are managed. Scenes here often involve security protocols, incident reports, or ways to enhance the station\'s safety and defense capabilities.',
         imagePrompt: 'A sci-fi armory with weapon lockers, equipment racks, and security equipment.',
         role: 'Officer',
@@ -345,6 +355,7 @@ export const MODULE_DEFAULTS: Record<ModuleType, ModuleIntrinsic> = {
         }
     },
     'cryo bank': {
+        name: 'Cryo Bank',
         skitPrompt: 'The cryo bank is where patients are placed in cryogenic stasis for long-term preservation. Scenes in this room often involve the ethical dilemmas of cryo-sleep, emergencies during stasis, or interactions with newly awakened patients.',
         imagePrompt: 'A futuristic lab with a bank of cryo pods along the left wall and some advanced computer systems against the right wall.',
         role: 'Keeper',
@@ -364,6 +375,7 @@ export const MODULE_DEFAULTS: Record<ModuleType, ModuleIntrinsic> = {
         }
     },
     'aperture': {
+        name: 'Aperture',
         skitPrompt: 'The aperture module is a specialized focusing mechanism for attenuating or shaping the echoes pulled from the black hole. Scenes here often involve scientific discussions about the ill-understood mechanics of echoefusion or unexpected phenomena.',
         imagePrompt: 'A sci-fi laboratory filled with advanced equipment. A large, circular machine frames a central window into space. There is a swirling black hole in the distance, with beams encircling it in a spiral pattern.',
         role: 'Attenuator',
@@ -383,6 +395,30 @@ export const MODULE_DEFAULTS: Record<ModuleType, ModuleIntrinsic> = {
         }
     }
 };
+
+/**
+ * Register a custom module template at runtime
+ */
+export function registerModuleTemplate(
+    type: string,
+    intrinsic: ModuleIntrinsic
+): void {
+    MODULE_TEMPLATES[type] = intrinsic;
+}
+
+/**
+ * Check if a module type is registered (either built-in or custom)
+ */
+export function isModuleTypeRegistered(type: string): boolean {
+    return type in MODULE_TEMPLATES;
+}
+
+/**
+ * Get the template for a module type
+ */
+export function getModuleTemplate(type: string): ModuleIntrinsic | undefined {
+    return MODULE_TEMPLATES[type];
+}
 
 export class Module<T extends ModuleType = ModuleType> {
     public id: string;
@@ -414,7 +450,8 @@ export class Module<T extends ModuleType = ModuleType> {
      * Get all attributes with intrinsic defaults applied
      */
     getAttributes(): ModuleIntrinsic & { [key: string]: any } {
-        return { ...MODULE_DEFAULTS[this.type], ...(this.attributes || {}) };
+        const defaults = MODULE_TEMPLATES[this.type] || {};
+        return { ...defaults, ...(this.attributes || {}) };
     }
 
     /**
@@ -427,14 +464,14 @@ export class Module<T extends ModuleType = ModuleType> {
         if (instanceValue !== undefined) {
             return instanceValue;
         }
-        return MODULE_DEFAULTS[this.type]?.[key];
+        return MODULE_TEMPLATES[this.type]?.[key];
     }
 
     /**
      * Get the action method for this module type
      */
     getAction(): ((module: Module, stage: Stage, setScreenType: (type: ScreenType) => void) => void) | undefined {
-        return MODULE_DEFAULTS[this.type]?.action;
+        return MODULE_TEMPLATES[this.type]?.action;
     }
 }
 
