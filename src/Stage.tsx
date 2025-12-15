@@ -234,6 +234,9 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
 
     pushMessage(message: string) {
         // Problematic because it builds history that the AI sees, which can lead to confusion.
+        this.messenger.updateEnvironment({
+            input_enabled: true
+        });
         /*this.messenger.impersonate({
             speaker_id: this.characterId,
             is_main: true,
