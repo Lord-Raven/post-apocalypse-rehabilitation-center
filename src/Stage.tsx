@@ -233,11 +233,12 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
     }
 
     pushMessage(message: string) {
-        this.messenger.impersonate({
+        // Problematic because it builds history that the AI sees, which can lead to confusion.
+        /*this.messenger.impersonate({
             speaker_id: this.characterId,
             is_main: true,
             message: message
-        });
+        });*/
     }
 
     incTurn(numberOfTurns: number = 1, setScreenType: (type: ScreenType) => void) {

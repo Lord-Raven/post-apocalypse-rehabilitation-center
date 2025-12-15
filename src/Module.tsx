@@ -174,7 +174,8 @@ export const MODULE_TEMPLATES: Record<ModuleType, ModuleIntrinsic> = {
     },
     comms: {
         name: 'Comms',
-        skitPrompt: 'The comms room is the hub for all external and internal station communications. This room is critical for communicating with external factions, with whom the PARC fulfills contracts to supply patients "jobs." ' +
+        skitPrompt: `The comms room is the hub for all external and internal station communications. ` +
+            `This room is critical for communicating with external factions, with whom the PARC finds work for patients or conducts trade in exchange for desired resources. ` +
             `Scenes here often involve receiving important messages, coordinating among the crew, or managing station-wide announcements.`,
         imagePrompt: 'A sci-fi communications room dominated by a massive screen and associated computers and equipment, as well as some seating.',
         role: 'Liaison',
