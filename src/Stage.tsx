@@ -493,6 +493,9 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
             }
         }
 
+        // TODO: Remove this after testing some more.
+        Object.values(save.actors).forEach(actor => console.log(actor));
+
         // If there are any actors in the save with missing emotion images, kick one of them off now.
         for (const actorId in save.actors) {
             const actor = save.actors[actorId];
