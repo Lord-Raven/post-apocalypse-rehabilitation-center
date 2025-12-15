@@ -10,7 +10,7 @@ import ModuleCard from '../components/ModuleCard';
 import FactionCard from '../components/FactionCard';
 import { TurnIndicator as SharedTurnIndicator } from '../components/UIComponents';
 import { useTooltip } from '../contexts/TooltipContext';
-import { SwapHoriz, Home, Work, Menu, HourglassBottom, HourglassTop } from '@mui/icons-material';
+import { SwapHoriz, Home, Work, Menu, HourglassBottom, HourglassTop, NotInterested } from '@mui/icons-material';
 import { SkitType } from '../Skit';
 import { generateActorDecor } from '../actors/Actor';
 import { scoreToGrade } from '../utils';
@@ -200,7 +200,8 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType, isV
 
     const handleActorDropOnModule = (actorId: string, targetModule: Module) => {
         const actor = stage().getSave().actors[actorId];
-        if (!actor) return;
+        // No actor found, or actor is off-site or in invalid location
+        if (!actor || (actor.locationId && !stage().getSave().layout.getModuleById(actor.locationId))) return;
         let turnCost = 0;
 
         if (targetModule.type === 'quarters') {
@@ -501,7 +502,11 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType, isV
                                         
                                         // Update tooltip with assignment message
                                         const actor = draggedActor;
-                                        if (module.type === 'quarters') {
+                                        if (actor.locationId && !stage().getSave().layout.getModuleById(actor.locationId)) {
+                                            // Actor is off-site or in invalid location; cannot be assigned
+                                            setTooltip(`Cannot assign ${actor.name} (off-station)`, NotInterested);
+                                        }
+                                        else if (module.type === 'quarters') {
                                             if (module.ownerId === actor.id) {
                                                 setTooltip(`${actor.name} is already assigned here.`, Home);
                                             } else if (!module.ownerId) {
