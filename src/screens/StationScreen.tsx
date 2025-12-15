@@ -1044,7 +1044,6 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType, isV
                                                 onMouseEnter={() => setHoveredActorId(actor.id)}
                                                 onMouseLeave={() => setHoveredActorId(null)}
                                             >
-                                                <div><p>{`Testing: ${actor.locationId}`}</p></div>
                                                 <ActorCard
                                                     actor={actor}
                                                     isAway={actor.isOffSite(stage().getSave())}
@@ -1245,10 +1244,10 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType, isV
                                 {/* Always render content, but with conditional styling for visibility */}
                                 {itemKey === 'patients' && (
                                     <div style={{ padding: '15px', flex: '1 1 auto', overflowY: 'auto', minHeight: 0 }}>
-                                        {Object.values(stage().getSave().actors).length === 0 ? (
+                                        {Object.values(stage().getSave().actors).filter(actor => !actor.factionId && stage().getSave().aide.actorId != actor.id && actor.locationId != 'cryo').length === 0 ? (
                                             <p style={{ color: '#00ff88', opacity: 0.5, fontStyle: 'italic', fontSize: '0.85rem', fontWeight: 700 }}>No patients currently on station</p>
                                         ) : (
-                                            Object.values(stage().getSave().actors).filter(actor => !actor.factionId && stage().getSave().aide.actorId != actor.id).map((actor: any) => (
+                                            Object.values(stage().getSave().actors).filter(actor => !actor.factionId && stage().getSave().aide.actorId != actor.id && actor.locationId != 'cryo').map((actor: any) => (
                                                 <div 
                                                     key={actor.id}
                                                     onMouseEnter={() => setHoveredActorId(actor.id)}

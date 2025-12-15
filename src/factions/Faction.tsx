@@ -386,7 +386,7 @@ export async function generateFactionModule(faction: Faction, stage: Stage): Pro
     // Next, create a default variant with Qwen's image-to-image:
     const defaultImageUrl = await stage.makeImageFromImage({
         image: baseImageUrl,
-        prompt: `Go over this sci-fi space station room scene with a clean visual novel style. Remove any characters from the scene.`,
+        prompt: `Apply a visual novel art style to this sci-fi space station room. Remove any characters from the scene.`,
         transfer_type: 'edit'
     }, '');
     if (!defaultImageUrl) {
