@@ -571,13 +571,13 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
                 }
             } catch (err) {
                 console.error('Error loading reserve actors', err);
-            } finally {
-                // clear the promise so future loads can be attempted if needed
-                this.reserveActorsLoadPromise = undefined;
-                // Note: We no longer automatically generate primary images here
-                // Images will be generated when actors are committed to echo slots
             }
         })();
+
+        this.reserveActorsLoadPromise?.then(() => {
+            console.log('Clearing reserveActorsLoadPromise');
+            this.reserveActorsLoadPromise = undefined;
+        });
 
         return this.reserveActorsLoadPromise;
     }
@@ -615,13 +615,13 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
                 this.saveGame();
             } catch (err) {
                 console.error('Error loading reserve actors', err);
-            } finally {
-                // clear the promise so future loads can be attempted if needed
-                this.reserveActorsLoadPromise = undefined;
-                // Note: We no longer automatically generate primary images here
-                // Images will be generated when actors are committed to echo slots
             }
         })();
+
+        this.reserveActorsLoadPromise?.then(() => {
+            console.log('Clearing reserveActorsLoadPromise');
+            this.reserveActorsLoadPromise = undefined;
+        });
 
         return this.reserveActorsLoadPromise;
     }
@@ -661,11 +661,12 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
                 }
             } catch (err) {
                 console.error('Error loading reserve factions', err);
-            } finally {
-                // clear the promise so future loads can be attempted if needed
-                this.reserveFactionsLoadPromise = undefined;
             }
         })();
+
+        this.reserveFactionsLoadPromise?.then(() => {
+            this.reserveFactionsLoadPromise = undefined;
+        });
 
         return this.reserveFactionsLoadPromise;
     }
