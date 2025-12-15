@@ -1,5 +1,5 @@
 import Actor, { getStatDescription, findBestNameMatch, Stat, namesMatch } from "./actors/Actor";
-import { Emotion, EMOTION_SYNONYMS } from "./actors/Emotion";
+import { Emotion, EMOTION_MAPPING } from "./actors/Emotion";
 import { getStatRating, STATION_STAT_PROMPTS, StationStat } from "./Module";
 import { Stage } from "./Stage";
 
@@ -501,8 +501,8 @@ export async function generateSkitScript(skit: SkitData, wrapUp: boolean, stage:
                             let finalEmotion: Emotion | undefined;
                             if (emotionName in Emotion) {
                                 finalEmotion = emotionName as Emotion;
-                            } else if (emotionName in EMOTION_SYNONYMS) {
-                                finalEmotion = EMOTION_SYNONYMS[emotionName];
+                            } else if (emotionName in EMOTION_MAPPING) {
+                                finalEmotion = EMOTION_MAPPING[emotionName];
                                 console.log(`Mapped non-standard emotion "${emotionName}" to "${finalEmotion}" for ${matched.name}`);
                             }
                             
@@ -884,6 +884,8 @@ export async function generateSkitScript(skit: SkitData, wrapUp: boolean, stage:
                 skit.endFactionChanges = factionChanges;
                 skit.endRoleChanges = roleChanges;
                 skit.summary = summary;
+
+                stage.pushMessage(text);
 
                 return { entries: scriptEntries, endScene: endScene, statChanges: statChanges };
             }

@@ -94,6 +94,7 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
     private factionPageNumber = Math.floor(Math.random() * this.MAX_PAGES);
 
     private userId: string;
+    private characterId: string;
 
     // Expose a simple grid size (can be tuned)
     public gridSize = DEFAULT_GRID_SIZE;
@@ -118,6 +119,8 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
         console.log(chatState);
         this.saves = chatState?.saves || [];
         this.saveSlot = chatState?.lastSaveSlot || 0;
+
+        this.characterId = Object.keys(characters)[0];
 
         const layout = new Layout();
         layout.setModuleAt(DEFAULT_GRID_SIZE/2, DEFAULT_GRID_SIZE/2, createModule('echo chamber', { id: `echo-${DEFAULT_GRID_SIZE/2}-${DEFAULT_GRID_SIZE/2}`, attributes: {} }));
@@ -227,6 +230,14 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
             initState: null,
             chatState: this.buildSaves(),
         };
+    }
+
+    pushMessage(message: string) {
+        this.messenger.impersonate({
+            speaker_id: this.characterId,
+            is_main: true,
+            message: message
+        });
     }
 
     incTurn(numberOfTurns: number = 1, setScreenType: (type: ScreenType) => void) {
