@@ -81,6 +81,8 @@ export const CryoScreen: FC<CryoScreenProps> = ({stage, setScreenType, isVertica
                 // Set the actor's last known module to the cryo module
                 selected.locationId = cryoModule.id;
             }
+			// Remove actor from cryo slot:
+			cryoSlots[selectedSlotIndex!] = null;
 			const entranceEvent = stage().getSave().timeline?.find(event => event.skit?.actorId === selected.id && event.skit?.type === SkitType.ENTER_CRYO);
 			const entranceDate = entranceEvent ? entranceEvent.day : stage().getSave().day;
             // Have a skit to debrief the actor
