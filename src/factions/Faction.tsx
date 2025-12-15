@@ -322,7 +322,7 @@ export async function generateFactionModule(faction: Faction, stage: Stage): Pro
             `#END#`,
         stop: ['#END'],
         include_history: true,
-        max_tokens: 400,
+        max_tokens: 350,
     });
 
     console.log('Generated faction module distillation:');
@@ -376,7 +376,6 @@ export async function generateFactionModule(faction: Faction, stage: Stage): Pro
     // Start with a base image:
     const baseImageUrl = await stage.makeImage({
         prompt: `The detailed interior of an unoccupied futuristic space station module/room. The design should reflect the following description: ${description}. ` +
-            `Consider the following general vibe: ${faction.visualStyle}.` +
             `Regardless of aesthetic, the image is rendered in a vibrant, painterly style with thick smudgy lines.`,
         aspect_ratio: AspectRatio.SQUARE
     }, '');

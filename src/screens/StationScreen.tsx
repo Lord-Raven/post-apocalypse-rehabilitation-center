@@ -1044,7 +1044,7 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType, isV
                                                 onMouseEnter={() => setHoveredActorId(actor.id)}
                                                 onMouseLeave={() => setHoveredActorId(null)}
                                             >
-                                                {`Testing: ${actor.locationId}`}
+                                                <div><p>{`Testing: ${actor.locationId}`}</p></div>
                                                 <ActorCard
                                                     actor={actor}
                                                     isAway={actor.isOffSite(stage().getSave())}
