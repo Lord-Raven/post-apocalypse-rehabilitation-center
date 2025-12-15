@@ -22,7 +22,7 @@ export enum Emotion {
 
 export const EMOTION_SYNONYMS: {[key in Emotion]: string[]} = {
     neutral: ['calm', 'placid', 'serene', 'tranquil', 'stoic', 'neutrality', 'composed', 'composure', 'unemotional', 'impassive', 'impassivity'],
-    approval: ['content', 'amusement', 'admiration', 'pleased', 'appreciative', 'appreciation', 'interest'],
+    approval: ['content', 'amusement', 'admiration', 'pleased', 'appreciative', 'appreciation', 'interest', 'satisfaction', 'satisfied', 'enjoyment', 'enjoying', 'content', 'contentedness'],
     anger: ['angry', 'furious', 'fury', 'enraged', 'livid', 'wrathful', 'frustration', 'ire', 'rage'],
     confusion: ['confused', 'puzzled', 'baffled', 'stunned', 'confounded', 'perplexed', 'bewilderment', 'perplexity'],
     desire: ['seductive', 'sexy', 'desirous', 'longing', 'lust', 'yearning', 'passion', 'passionate'],
