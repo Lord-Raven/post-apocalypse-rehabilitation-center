@@ -272,15 +272,17 @@ export async function loadReserveActor(data: any, stage: Stage): Promise<Actor|n
 
     // Fetch the avatar image to inspect properties; if it's too small, discard this actor.
     try {
-        const imgResponse = await fetch(data.avatar);
-        const imgBlob = await imgResponse.blob();
-        const imgBitmap = await createImageBitmap(imgBlob);
-        if (imgBitmap.width < 400 || imgBitmap.height < 400) {
-            console.log(`Discarding actor due to small avatar image: ${data.name} (${imgBitmap.width}x${imgBitmap.height})`);
-            return null;
-        } else if (imgBitmap.width / imgBitmap.height < 0.3 || imgBitmap.width / imgBitmap.height > 1.2) {
-            console.log(`Discarding actor due to extreme avatar aspect ratio: ${data.name} (${imgBitmap.width}x${imgBitmap.height})`);
-            return null;
+        if (data.avatar) {
+            const imgResponse = await fetch(data.avatar);
+            const imgBlob = await imgResponse.blob();
+            const imgBitmap = await createImageBitmap(imgBlob);
+            if (imgBitmap.width < 400 || imgBitmap.height < 400) {
+                console.log(`Discarding actor due to small avatar image: ${data.name} (${imgBitmap.width}x${imgBitmap.height})`);
+                return null;
+            } else if (imgBitmap.width / imgBitmap.height < 0.3 || imgBitmap.width / imgBitmap.height > 1.2) {
+                console.log(`Discarding actor due to extreme avatar aspect ratio: ${data.name} (${imgBitmap.width}x${imgBitmap.height})`);
+                return null;
+            }
         }
     } catch (error) {
         // Failed to fetch avatar image.
