@@ -441,10 +441,10 @@ export async function loadReserveActor(data: any, stage: Stage): Promise<Actor|n
     return newActor;
 }
 
-export async function generatePrimaryActorImage(actor: Actor, stage: Stage): Promise<void> {
+export async function generatePrimaryActorImage(actor: Actor, stage: Stage, force: boolean = false): Promise<void> {
     console.log(`Populating images for actor ${actor.name} (ID: ${actor.id})`);
     // If the actor has no neutral emotion image in their emotion pack, generate one based on their description or from the existing avatar image
-    if (!actor.emotionPack['neutral']) {
+    if (!actor.emotionPack['neutral'] || force) {
         console.log(`Generating neutral emotion image for actor ${actor.name}`);
         let imageUrl = '';
         if (!actor.avatarImageUrl) {
@@ -472,8 +472,10 @@ export async function generatePrimaryActorImage(actor: Actor, stage: Stage): Pro
         
         actor.emotionPack['base'] = imageUrl || '';
 
-        // Now create the neutral expression from the base image, but don't wait up.
-        generateEmotionImage(actor, Emotion.neutral, stage);
+        // Now create the neutral expression from the base image, but don't wait up. Only kick this off if this is not a forced regen (which is targeting the base image specifically).
+        if (!force) {
+            generateEmotionImage(actor, Emotion.neutral, stage);
+        }
     }
 }
 
@@ -492,8 +494,8 @@ export async function generateAdditionalActorImages(actor: Actor, stage: Stage):
     actor.isImageLoadingComplete = true;
 }
 
-async function generateEmotionImage(actor: Actor, emotion: Emotion, stage: Stage): Promise<string> {
-    if (actor.emotionPack['base'] && !stage.imageGenerationPromises[`actor/${actor.id}`]) {
+export async function generateEmotionImage(actor: Actor, emotion: Emotion, stage: Stage, force: boolean = false): Promise<string> {
+    if (actor.emotionPack['base'] && (!stage.imageGenerationPromises[`actor/${actor.id}`] || force) && !stage.getSave().disableEmotionImages) {
         console.log(`Generating ${emotion} emotion image for actor ${actor.name}`);
         stage.imageGenerationPromises[`actor/${actor.id}`] = stage.makeImageFromImage({
             image: actor.emotionPack['base'] || '',
@@ -510,8 +512,8 @@ async function generateEmotionImage(actor: Actor, emotion: Emotion, stage: Stage
     return '';
 }
 
-export async function generateActorDecor(actor: Actor, module: Module, stage: Stage): Promise<string> {
-    if ((Object.keys(actor.decorImageUrls).includes(module.type) && actor.decorImageUrls[module.type] && actor.decorImageUrls[module.type] !== module.getAttribute('baseImageUrl'))) {
+export async function generateActorDecor(actor: Actor, module: Module, stage: Stage, force: boolean = false): Promise<string> {
+    if (!force && (Object.keys(actor.decorImageUrls).includes(module.type) && actor.decorImageUrls[module.type] && actor.decorImageUrls[module.type] !== module.getAttribute('baseImageUrl'))) {
         return actor.decorImageUrls[module.type];
     }
     if (Object.keys(stage.imageGenerationPromises).includes(`actor/decor/${actor.id}/${module.type}`) || stage.getSave().disableEmotionImages) {

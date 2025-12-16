@@ -147,14 +147,6 @@ export const MenuScreen: FC<MenuScreenProps> = ({ stage, setScreenType }) => {
             tooltip: disableAllButtons ? 'Currently unavailable' : 'Quickly save your current progress',
             icon: Save,
         }] : []),
-        ...(saveExists() ? [{
-            key: 'manage-content',
-            label: 'Manage Content',
-            onClick: () => setShowContentManagement(true),
-            enabled: !disableAllButtons,
-            tooltip: disableAllButtons ? 'Currently unavailable' : 'View and edit actors and factions',
-            icon: EditNote,
-        }] : []),
         {
             key: 'save',
             label: 'Save Game',
@@ -178,7 +170,15 @@ export const MenuScreen: FC<MenuScreenProps> = ({ stage, setScreenType }) => {
             enabled: !disableAllButtons,
             tooltip: disableAllButtons ? 'Currently unavailable' : 'Adjust game settings and preferences',
             icon: Settings
-        }
+        },
+        ...(saveExists() ? [{
+            key: 'manage-content',
+            label: 'Manage Content',
+            onClick: () => setShowContentManagement(true),
+            enabled: !disableAllButtons,
+            tooltip: disableAllButtons ? 'Currently unavailable' : 'View and edit actors and factions',
+            icon: EditNote,
+        }] : []),
     ];
 
     return (

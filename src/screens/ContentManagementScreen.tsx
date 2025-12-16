@@ -168,6 +168,7 @@ export const ContentManagementScreen: FC<ContentManagementScreenProps> = ({ stag
                                         display: 'grid',
                                         gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))',
                                         gap: '15px',
+                                        padding: '10px',
                                     }}>
                                         {actors.length === 0 ? (
                                             <div style={{
@@ -217,7 +218,7 @@ export const ContentManagementScreen: FC<ContentManagementScreenProps> = ({ stag
                                                                 ? `url(${actor.emotionPack['neutral'] || actor.avatarImageUrl})` 
                                                                 : 'none',
                                                             backgroundSize: 'cover',
-                                                            backgroundPosition: 'center',
+                                                            backgroundPosition: 'top center',
                                                             display: 'flex',
                                                             alignItems: 'center',
                                                             justifyContent: 'center',
@@ -264,6 +265,7 @@ export const ContentManagementScreen: FC<ContentManagementScreenProps> = ({ stag
                                         display: 'grid',
                                         gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))',
                                         gap: '15px',
+                                        padding: '10px',
                                     }}>
                                         {factions.length === 0 ? (
                                             <div style={{

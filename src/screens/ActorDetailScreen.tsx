@@ -1,7 +1,7 @@
 import React, { FC, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Stage } from '../Stage';
-import Actor, { Stat, ACTOR_STAT_ICONS, getStatDescription } from '../actors/Actor';
+import Actor, { Stat, ACTOR_STAT_ICONS, getStatDescription, generatePrimaryActorImage, generateEmotionImage } from '../actors/Actor';
 import { Emotion, EMOTION_PROMPTS } from '../actors/Emotion';
 import { GlassPanel, Title, Button, TextInput, Chip } from '../components/UIComponents';
 import { Close, Save, Image as ImageIcon } from '@mui/icons-material';
@@ -23,7 +23,6 @@ export const ActorDetailScreen: FC<ActorDetailScreenProps> = ({ actor, stage, on
         voiceId: string;
         themeColor: string;
         themeFontFamily: string;
-        stats: Record<Stat, number>;
     }>({
         name: actor.name,
         description: actor.description,
@@ -33,10 +32,11 @@ export const ActorDetailScreen: FC<ActorDetailScreenProps> = ({ actor, stage, on
         voiceId: actor.voiceId,
         themeColor: actor.themeColor,
         themeFontFamily: actor.themeFontFamily,
-        stats: { ...actor.stats }
     });
 
     const [isSaving, setIsSaving] = useState(false);
+    const [regeneratingImages, setRegeneratingImages] = useState<Set<string>>(new Set());
+    const [, forceUpdate] = useState({});
 
     const handleSave = () => {
         setIsSaving(true);
@@ -50,7 +50,6 @@ export const ActorDetailScreen: FC<ActorDetailScreenProps> = ({ actor, stage, on
         actor.voiceId = editedActor.voiceId;
         actor.themeColor = editedActor.themeColor;
         actor.themeFontFamily = editedActor.themeFontFamily;
-        actor.stats = { ...editedActor.stats };
 
         // Save the game
         stage().saveGame();
@@ -68,16 +67,52 @@ export const ActorDetailScreen: FC<ActorDetailScreenProps> = ({ actor, stage, on
         }));
     };
 
-    const handleStatChange = (stat: Stat, value: number) => {
-        // Clamp value between 1 and 10
-        const clampedValue = Math.max(1, Math.min(10, value));
-        setEditedActor(prev => ({
-            ...prev,
-            stats: {
-                ...prev.stats,
-                [stat]: clampedValue
-            }
-        }));
+    const handleRegenerateEmotion = async (emotion: Emotion) => {
+        if (regeneratingImages.has(emotion)) return;
+        
+        const confirmed = window.confirm(`Regenerate the ${emotion} emotion image? This will replace the existing image.`);
+        if (!confirmed) return;
+
+        setRegeneratingImages(prev => new Set(prev).add(emotion));
+        
+        try {
+            await generateEmotionImage(actor, emotion, stage(), true);
+            // Force a re-render to show the new image
+            forceUpdate({});
+        } catch (error) {
+            console.error(`Failed to regenerate ${emotion} emotion:`, error);
+            alert(`Failed to regenerate ${emotion} emotion. Check console for details.`);
+        } finally {
+            setRegeneratingImages(prev => {
+                const next = new Set(prev);
+                next.delete(emotion);
+                return next;
+            });
+        }
+    };
+
+    const handleRegenerateBase = async () => {
+        if (regeneratingImages.has('base')) return;
+        
+        const confirmed = window.confirm('Regenerate the base image? This will replace the existing image and may affect emotion variations.');
+        if (!confirmed) return;
+
+        setRegeneratingImages(prev => new Set(prev).add('base'));
+        
+        try {
+            await generatePrimaryActorImage(actor, stage(), true);
+            // Force a re-render to show the new image
+            forceUpdate({});
+        } catch (error) {
+            console.error('Failed to regenerate base image:', error);
+            alert('Failed to regenerate base image. Check console for details.');
+        } finally {
+            setRegeneratingImages(prev => {
+                const next = new Set(prev);
+                next.delete('base');
+                return next;
+            });
+        }
     };
 
     // Get all emotions for the grid
@@ -476,41 +511,34 @@ export const ActorDetailScreen: FC<ActorDetailScreenProps> = ({ actor, stage, on
                                                 <div style={{ 
                                                     display: 'flex', 
                                                     alignItems: 'center', 
+                                                    justifyContent: 'space-between',
                                                     gap: '8px',
                                                     marginBottom: '8px'
                                                 }}>
-                                                    <StatIcon style={{ color: '#00ff88', fontSize: '20px' }} />
-                                                    <label 
+                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                                        <StatIcon style={{ color: '#00ff88', fontSize: '20px' }} />
+                                                        <span
+                                                            style={{
+                                                                color: '#00ff88',
+                                                                fontSize: '14px',
+                                                                fontWeight: 'bold',
+                                                                textTransform: 'capitalize',
+                                                            }}
+                                                        >
+                                                            {stat}
+                                                        </span>
+                                                    </div>
+                                                    <div
                                                         style={{
-                                                            color: '#00ff88',
-                                                            fontSize: '14px',
+                                                            fontSize: '24px',
                                                             fontWeight: 'bold',
-                                                            textTransform: 'capitalize',
+                                                            color: '#00ff88',
                                                         }}
                                                     >
-                                                        {stat}
-                                                    </label>
+                                                        {actor.stats[stat]}
+                                                    </div>
                                                 </div>
-                                                <input
-                                                    type="number"
-                                                    min="1"
-                                                    max="10"
-                                                    value={editedActor.stats[stat]}
-                                                    onChange={(e) => handleStatChange(stat, parseInt(e.target.value) || 1)}
-                                                    style={{
-                                                        width: '100%',
-                                                        padding: '8px',
-                                                        fontSize: '16px',
-                                                        fontWeight: 'bold',
-                                                        backgroundColor: 'rgba(0, 20, 40, 0.8)',
-                                                        border: '2px solid rgba(0, 255, 136, 0.2)',
-                                                        borderRadius: '3px',
-                                                        color: '#e0f0ff',
-                                                        textAlign: 'center',
-                                                    }}
-                                                />
                                                 <div style={{
-                                                    marginTop: '5px',
                                                     fontSize: '11px',
                                                     color: 'rgba(224, 240, 255, 0.6)',
                                                     lineHeight: '1.3'
@@ -545,19 +573,91 @@ export const ActorDetailScreen: FC<ActorDetailScreenProps> = ({ actor, stage, on
                                     gridTemplateColumns: 'repeat(auto-fill, minmax(120px, 1fr))', 
                                     gap: '15px' 
                                 }}>
+                                    {/* Base Image */}
+                                    <motion.div
+                                        whileHover={{ scale: 1.05 }}
+                                        whileTap={{ scale: 0.95 }}
+                                        onClick={handleRegenerateBase}
+                                        style={{
+                                            display: 'flex',
+                                            flexDirection: 'column',
+                                            alignItems: 'center',
+                                            gap: '8px',
+                                            cursor: 'pointer',
+                                        }}
+                                    >
+                                        <div
+                                            style={{
+                                                width: '120px',
+                                                height: '120px',
+                                                backgroundColor: actor.emotionPack['base'] ? 'transparent' : 'rgba(0, 20, 40, 0.6)',
+                                                border: `2px solid ${actor.emotionPack['base'] ? 'rgba(255, 136, 0, 0.5)' : 'rgba(0, 255, 136, 0.2)'}`,
+                                                borderRadius: '8px',
+                                                backgroundImage: actor.emotionPack['base'] ? `url(${actor.emotionPack['base']})` : 'none',
+                                                backgroundSize: 'cover',
+                                                backgroundPosition: 'center top',
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                justifyContent: 'center',
+                                                overflow: 'hidden',
+                                                position: 'relative',
+                                            }}
+                                        >
+                                            {!actor.emotionPack['base'] && (
+                                                <div style={{
+                                                    color: 'rgba(0, 255, 136, 0.3)',
+                                                    fontSize: '12px',
+                                                    textAlign: 'center',
+                                                    padding: '10px'
+                                                }}>
+                                                    Not Generated
+                                                </div>
+                                            )}
+                                            {regeneratingImages.has('base') && (
+                                                <div style={{
+                                                    position: 'absolute',
+                                                    top: 0,
+                                                    left: 0,
+                                                    right: 0,
+                                                    bottom: 0,
+                                                    backgroundColor: 'rgba(0, 0, 0, 0.7)',
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    justifyContent: 'center',
+                                                    color: '#00ff88',
+                                                    fontSize: '12px',
+                                                }}>
+                                                    Generating...
+                                                </div>
+                                            )}
+                                        </div>
+                                        <Chip style={{
+                                            fontSize: '11px',
+                                            textTransform: 'capitalize',
+                                            backgroundColor: 'rgba(255, 136, 0, 0.2)',
+                                        }}>
+                                            Base
+                                        </Chip>
+                                    </motion.div>
+
+                                    {/* Emotion Images */}
                                     {allEmotions.map(emotion => {
                                         const imageUrl = actor.emotionPack[emotion];
                                         const hasImage = !!imageUrl;
+                                        const isRegenerating = regeneratingImages.has(emotion);
                                         
                                         return (
                                             <motion.div
                                                 key={emotion}
                                                 whileHover={{ scale: 1.05 }}
+                                                whileTap={{ scale: 0.95 }}
+                                                onClick={() => handleRegenerateEmotion(emotion)}
                                                 style={{
                                                     display: 'flex',
                                                     flexDirection: 'column',
                                                     alignItems: 'center',
                                                     gap: '8px',
+                                                    cursor: 'pointer',
                                                 }}
                                             >
                                                 <div
@@ -574,6 +674,7 @@ export const ActorDetailScreen: FC<ActorDetailScreenProps> = ({ actor, stage, on
                                                         alignItems: 'center',
                                                         justifyContent: 'center',
                                                         overflow: 'hidden',
+                                                        position: 'relative',
                                                     }}
                                                 >
                                                     {!hasImage && (
@@ -584,6 +685,23 @@ export const ActorDetailScreen: FC<ActorDetailScreenProps> = ({ actor, stage, on
                                                             padding: '10px'
                                                         }}>
                                                             Not Generated
+                                                        </div>
+                                                    )}
+                                                    {isRegenerating && (
+                                                        <div style={{
+                                                            position: 'absolute',
+                                                            top: 0,
+                                                            left: 0,
+                                                            right: 0,
+                                                            bottom: 0,
+                                                            backgroundColor: 'rgba(0, 0, 0, 0.7)',
+                                                            display: 'flex',
+                                                            alignItems: 'center',
+                                                            justifyContent: 'center',
+                                                            color: '#00ff88',
+                                                            fontSize: '12px',
+                                                        }}>
+                                                            Generating...
                                                         </div>
                                                     )}
                                                 </div>
