@@ -6,8 +6,9 @@ import { BlurredBackground } from '../components/BlurredBackground';
 import { GridOverlay, Title, Button } from '../components/UIComponents';
 import { SettingsScreen } from './SettingsScreen';
 import { SaveLoadScreen } from './SaveLoadScreen';
+import { ContentManagementScreen } from './ContentManagementScreen';
 import { useTooltip } from '../contexts/TooltipContext';
-import { Save, SaveAlt, PlayArrow, FiberNew, Folder, Settings } from '@mui/icons-material';
+import { Save, SaveAlt, PlayArrow, FiberNew, Folder, Settings, EditNote } from '@mui/icons-material';
 
 /*
  * This screen represents both the start-up and in-game menu screen. It should present basic options: new game, load game, settings.
@@ -24,6 +25,7 @@ export const MenuScreen: FC<MenuScreenProps> = ({ stage, setScreenType }) => {
     const [isNewGameSettings, setIsNewGameSettings] = React.useState(false);
     const [showSaveLoad, setShowSaveLoad] = React.useState(false);
     const [saveLoadMode, setSaveLoadMode] = React.useState<'save' | 'load'>('save');
+    const [showContentManagement, setShowContentManagement] = React.useState(false);
     const { setTooltip, clearTooltip } = useTooltip();
     const disableAllButtons = false; // When true, disable all options on this menu, including escape to continue; this is being used to effectively shut down the game at the moment.
     
@@ -42,6 +44,9 @@ export const MenuScreen: FC<MenuScreenProps> = ({ stage, setScreenType }) => {
                 } else if (showSaveLoad) {
                     console.log('close save/load');
                     setShowSaveLoad(false);
+                } else if (showContentManagement) {
+                    console.log('close content management');
+                    setShowContentManagement(false);
                 } else if (saveExists() && !showSettings) {
                     console.log('continue');
                     handleContinue();
@@ -141,6 +146,14 @@ export const MenuScreen: FC<MenuScreenProps> = ({ stage, setScreenType }) => {
             enabled: !disableAllButtons,
             tooltip: disableAllButtons ? 'Currently unavailable' : 'Quickly save your current progress',
             icon: Save,
+        }] : []),
+        ...(saveExists() ? [{
+            key: 'manage-content',
+            label: 'Manage Content',
+            onClick: () => setShowContentManagement(true),
+            enabled: !disableAllButtons,
+            tooltip: disableAllButtons ? 'Currently unavailable' : 'View and edit actors and factions',
+            icon: EditNote,
         }] : []),
         {
             key: 'save',
@@ -290,6 +303,14 @@ export const MenuScreen: FC<MenuScreenProps> = ({ stage, setScreenType }) => {
                     mode={saveLoadMode}
                     onClose={() => setShowSaveLoad(false)}
                     setScreenType={setScreenType}
+                />
+            )}
+
+            {/* Content Management Modal */}
+            {showContentManagement && (
+                <ContentManagementScreen
+                    stage={stage}
+                    onClose={() => setShowContentManagement(false)}
                 />
             )}
         </BlurredBackground>

@@ -758,7 +758,7 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType, isV
                         right: '1vh',
                         display: 'flex',
                         gap: '0',
-                        padding: '0.5vmin 0.5vmin',
+                        padding: '0.3vmin 0.5vmin',
                         background: 'linear-gradient(135deg, rgba(0, 30, 60, 0.85) 0%, rgba(0, 20, 40, 0.85) 100%)',
                         border: '2px solid #00ff88',
                         borderRadius: '12px',
@@ -814,7 +814,7 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType, isV
                                         <span
                                             className="stat-label"
                                             style={{
-                                                fontSize: isVerticalLayout ? '1.5vmin' : '1.1vmin',
+                                                fontSize: isVerticalLayout ? '1.5vmin' : '1.5vmin',
                                                 whiteSpace: 'nowrap',
                                                 overflow: 'hidden',
                                                 textOverflow: 'ellipsis',

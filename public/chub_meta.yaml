@@ -2,7 +2,7 @@
 #   in which case these values can be managed in the UI.
 
 # The name of the stage.
-project_name: "Post-Apocalypse Rehabilitation Clinic"
+project_name: "Post-Apocalypse Rehabilitation Center"
 
 # A short tagline to show in search.
 tagline: "Surviving the Apocalypse is a walk in the PARC"
@@ -25,9 +25,12 @@ tags:
  - 'Stage'
  - 'Game'
  - 'Sci-fi'
+ - 'Simulation'
+ - 'Post-Apocalyptic'
+ - 'Management'
 
 creator_notes: |
-  This is a simulation game where you run a rehabilitation clinic
+  This is a simulation game where you run a rehabilitation center
   for survivors of a multiversal apocalypse. Manage resources, help patients
   recover, and rebuild society in a post-apocalyptic world.
 
@@ -37,9 +40,9 @@ creator_notes: |
 config_schema:
   type: object
   properties:
-    health:
-      type: integer
-      default: 100
+    debug_mode:
+      type: boolean
+      default: false
 
 # The schema of the state that you store.
 # This isn't needed even if you do store state,
