@@ -81,7 +81,7 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
         'feral'
     ];
     // At least one of these is required for a character search; some sort of gender helps indicate that the card represents a singular person.
-    readonly actorTags = ['male', 'female', 'masculine', 'feminine', 'non-binary', 'trans', 'genderqueer', 'genderfluid', 'agender', 'androgyne', 'intersex', 'futa', 'futanari', 'hermaphrodite'];
+    readonly actorTags = ['male', 'female', 'woman', 'man', 'masculine', 'feminine', 'non-binary', 'trans', 'genderqueer', 'genderfluid', 'agender', 'androgyne', 'intersex', 'futa', 'futanari', 'hermaphrodite'];
     // At least one of these is required for a faction search; helps indicate that the card has a focus on setting or tone.
     readonly factionTags = ['sci-fi', 'cyberpunk', 'post-apocalyptic', 'dystopian', 'space', 'alien', 'robot', 'setting', 'world', 'narrator', 'scenario'];
     readonly characterSearchQuery = `https://inference.chub.ai/search?first=${this.FETCH_AT_TIME}&exclude_tags={{EXCLUSIONS}}&page={{PAGE_NUMBER}}&tags={{SEARCH_TAGS}}&sort=random&asc=false&include_forks=false&nsfw=true&nsfl=false` +
@@ -233,15 +233,12 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
     }
 
     pushMessage(message: string) {
-        // Problematic because it builds history that the AI sees, which can lead to confusion.
-        this.messenger.updateEnvironment({
-            input_enabled: true
-        });
-        /*this.messenger.impersonate({
+        this.messenger.impersonate({
             speaker_id: this.characterId,
-            is_main: true,
+            is_main: false,
+            parent_id: null,
             message: message
-        });*/
+        });
     }
 
     incTurn(numberOfTurns: number = 1, setScreenType: (type: ScreenType) => void) {
