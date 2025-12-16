@@ -357,10 +357,8 @@ export const FactionDetailScreen: FC<FactionDetailScreenProps> = ({ faction, sta
                                                         gap: '5px',
                                                         cursor: 'pointer',
                                                     }}
-                                                    onClick={() => handleRemoveRole(role)}
                                                 >
                                                     {role}
-                                                    <span style={{ marginLeft: '3px', fontWeight: 'bold' }}>×</span>
                                                 </Chip>
                                             ))
                                         )}
