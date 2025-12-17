@@ -1551,7 +1551,7 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType, isV
                                                         fontSize: '1rem',
                                                     }}
                                                 >
-                                                    {moduleType}
+                                                    {moduleDefaults.name}
                                                 </Typography>
                                                 {moduleDefaults.role && (
                                                     <Typography
