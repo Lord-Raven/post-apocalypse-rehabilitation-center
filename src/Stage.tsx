@@ -458,7 +458,7 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
 
         save.layout.getModulesWhere(m => true).forEach(module => {
             if (!Object.keys(MODULE_TEMPLATES).includes(module.type)) {
-                console.log(`Removing unknown module type ${module.type} from layout.`);
+                console.log(`Removing unknown module type ${module.getAttribute('name')} from layout.`);
                 save.layout.removeModule(module);
             }
         });
@@ -802,7 +802,7 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
                 // First, remove actor from any current role module they own (except quarters)
                 const currentRoleModules = save.layout.getModulesWhere(m => m.type !== 'quarters' && m.ownerId === actor.id);
                 currentRoleModules.forEach(module => {
-                    console.log(`Removing ${actor.name} from ${module.type} role`);
+                    console.log(`Removing ${actor.name} from ${module.getAttribute('name')} role`);
                     module.ownerId = '';
                 });
 
@@ -818,10 +818,10 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
                         const targetModule = roleModules[0];
                         // Clear any existing owner
                         if (targetModule.ownerId) {
-                            console.log(`Removing previous owner from ${targetModule.type} role`);
+                            console.log(`Removing previous owner from ${targetModule.getAttribute('name')} role`);
                         }
                         targetModule.ownerId = actor.id;
-                        console.log(`Assigned ${actor.name} to ${newRole} role in ${targetModule.type} module`);
+                        console.log(`Assigned ${actor.name} to ${newRole} role in ${targetModule.getAttribute('name')} module`);
 
                         // Initialize heldRoles if it doesn't exist
                         if (!actor.heldRoles) {

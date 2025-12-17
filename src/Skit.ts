@@ -69,18 +69,18 @@ export function generateSkitTypePrompt(skit: SkitData, stage: Stage, continuing:
                 `Continue this scene with ${actor.name}, potentially exploring their thoughts, feelings, or troubles in this intimate setting.`;
         case SkitType.RANDOM_ENCOUNTER:
             return !continuing ?
-                `This scene depicts a chance encounter in the ${module?.type || 'unknown'} module${module?.ownerId ? ` which has been redecorated to suit ${stage.getSave().actors[module.ownerId]?.name || 'its owner'}'s style (${stage.getSave().actors[module.ownerId]?.style})` : ''}. ` +
+                `This scene depicts a chance encounter in the ${module?.getAttribute('name') || 'unknown'} module${module?.ownerId ? ` which has been redecorated to suit ${stage.getSave().actors[module.ownerId]?.name || 'its owner'}'s style (${stage.getSave().actors[module.ownerId]?.style})` : ''}. ` +
                 `Bear in mind that patients are from another universe, and may be unaware of details of this one. ` +
                     `Explore the setting and what might arise from this unexpected meeting.` :
-                `Continue this chance encounter in the ${module?.type || 'unknown'} module, exploring what might arise from this unexpected meeting.`;
+                `Continue this chance encounter in the ${module?.getAttribute('name') || 'unknown'} module, exploring what might arise from this unexpected meeting.`;
         case SkitType.ROLE_ASSIGNMENT:
             return !continuing ?
-                `This scene depicts an exchange between the player and ${actor.name}, following the player's decision to newly assign ${actor.name} to the role of ${skit.context.role || 'something new'} in the ${module?.type || 'unknown'} module. ` +
+                `This scene depicts an exchange between the player and ${actor.name}, following the player's decision to newly assign ${actor.name} to the role of ${skit.context.role || 'something new'} in the ${module?.getAttribute('name') || 'unknown'} module. ` +
                     `Bear in mind ${actor.name}'s personality, stats, and experience within this setting (or lack thereof) as you portray their reaction and to this new role. ` :
                 `Continue this scene with ${actor.name}, potentially exploring their thoughts or feelings toward their new role.`;
         case SkitType.NEW_MODULE:
             return !continuing ?
-                `This scene depicts an exchange between the player and some of the patients regarding the opening of a new module, the ${module?.type || 'unknown'}. ` :
+                `This scene depicts an exchange between the player and some of the patients regarding the opening of a new module, the ${module?.getAttribute('name') || 'unknown'}. ` :
                 `Continue this scene, exploring the crew's thoughts or feelings toward this latest addition to the PARC.`;
         case SkitType.FACTION_INTRODUCTION:
             return (!continuing ?
@@ -217,7 +217,7 @@ function processMovementTag(rawTag: string, stage: Stage, skit: SkitData): { act
         destinationModuleId = skit.moduleId || '';
     } else {
         // Try to find a module by type name
-        const targetModule = stage.getLayout().getModulesWhere(m => namesMatch(destinationName, m.type))[0];
+        const targetModule = stage.getLayout().getModulesWhere(m => namesMatch(destinationName, m.getAttribute('name')))[0];
         if (targetModule) {
             destinationModuleId = targetModule.id;
         } else {
@@ -298,7 +298,7 @@ export function generateSkitPrompt(skit: SkitData, stage: Stage, historyLength: 
             `\n\nThe PARC's current modules (rooms) and associated crew roles (modules or services not listed here are currently unavailable aboard the PARC):\n` +
             save.layout.getModulesWhere(module => true).map(module => module.type == 'quarters' ? 
                 (module.ownerId ? `${save.actors[module.ownerId]?.name || 'Unknown'}'s quarters` : 'vacant quarters') : 
-                `${module.type} (Role: ${module.getAttribute('role') || 'None'})`).join(', ')
+                `${module.getAttribute('name')} (Role: ${module.getAttribute('role') || 'None'})`).join(', ')
         ) +
         `\n\n${playerName}'s profile: ${save.player.description}` +
         (stationAide ? (presentActorIds.has(stationAide.id) ? `\n\nThe holographic StationAide™ ${stationAide.name} is active in the scene. Profile: ${stationAide.profile}` : '\n\nThe holographic StationAide™ ${stationAide.name} remains absent from the scene unless summoned by the Director.') : '') +
@@ -318,7 +318,7 @@ export function generateSkitPrompt(skit: SkitData, stage: Stage, historyLength: 
                 m && m.type !== 'quarters' && m.ownerId === actor.id
             )[0];
             const module = save.layout.getModuleById(actor.locationId);
-            const locationString = module ? (module.type === 'quarters' ? (module.ownerId === actor.id ? ' Their Quarters' : (`${save.actors[module.ownerId || ''] || 'Someone'}'s Quarters`)) : module.type) : 'Unknown'
+            const locationString = module ? (module.type === 'quarters' ? (module.ownerId === actor.id ? ' Their Quarters' : (`${save.actors[module.ownerId || ''] || 'Someone'}'s Quarters`)) : module.getAttribute('name')) : 'Unknown'
             return `${actor.name}\n  Description: ${actor.description}\n  Profile: ${actor.profile}\n  Role: ${roleModule?.getAttribute('role') || 'Patient'}\n  Location: ${locationString}`;
         }).join('\n')}` +
         // List away characters for reference; just need description and profile:
@@ -349,14 +349,14 @@ export function generateSkitPrompt(skit: SkitData, stage: Stage, historyLength: 
         `\n\nKnown Factions: \n${Object.values(stage.getSave().factions).filter(faction => faction.active && faction.reputation > 0).map(faction => `${faction.name}: ${faction.getReputationDescription()}`).join('\n')}` +
         (module ? (`\n\nCurrent Module:\nThe following scene is set in ` +
             `${module.type === 'quarters' ? `${moduleOwner ? `${moduleOwner.name}'s` : 'a vacant'} quarters` : 
-            `the ${module.type || 'Unknown'}`}. ${module.getAttribute('skitPrompt') || 'No description available.'}\n`) : '') +
+            `the ${module.getAttribute('name') || 'Unknown'}`}. ${module.getAttribute('skitPrompt') || 'No description available.'}\n`) : '') +
 
         ((historyLength > 0 && pastSkits.length) ? 
             // Include last few skit scripts for context and style reference; use summary except for most recent skit or if no summary.
             '\n\nRecent Scenes for additional context:' + pastSkits.map((v, index) =>  {
             const module = stage.getSave().layout.getModuleById(v.moduleId || '');
             const moduleOwner = module?.ownerId ? stage.getSave().actors[module.ownerId] : null;
-            const moduleDescription = module ? (module.type === 'quarters' && moduleOwner ? `${moduleOwner.name}'s quarters` : `the ${module.type}`) : 'an unknown location';
+            const moduleDescription = module ? (module.type === 'quarters' && moduleOwner ? `${moduleOwner.name}'s quarters` : `the ${module.getAttribute('name')}`) : 'an unknown location';
             return ((!v.summary || index == pastSkits.length - 1) ?
                 (`\n\n  Script of Scene in ${moduleDescription} (${stage.getSave().day - v.context.day}) days ago:\n` +
                 `System: ${buildScriptLog(v)}`) :

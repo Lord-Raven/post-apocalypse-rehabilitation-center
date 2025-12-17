@@ -29,7 +29,7 @@ export const ModuleCard: FC<ModuleCardProps> = ({
     onClick
 }) => {
     const actor = module.ownerId ? stage.getSave().actors[module.ownerId] : null;
-    const role = module.type === 'quarters' ? 'Occupant' : (module.getAttribute('role') || module.type);
+    const role = module.type === 'quarters' ? 'Occupant' : (module.getAttribute('role') || 'None');
     
     // Default hover behavior
     const defaultWhileHover = {
@@ -121,7 +121,7 @@ export const ModuleCard: FC<ModuleCardProps> = ({
                         textOverflow: 'ellipsis',
                     }}
                 >
-                    {module.type}
+                    {module.getAttribute('name') || module.type}
                 </div>
 
                 {/* Role and assignment */}

@@ -167,7 +167,7 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType, isV
 
     const handleModuleDragStart = (module: Module, x: number, y: number) => {
         setDraggedModule({module, fromX: x, fromY: y});
-        setTooltip(`Moving ${module.type} module`, SwapHoriz);
+        setTooltip(`Moving ${module.getAttribute('name') || module.type} module`, SwapHoriz);
     };
 
     const handleModuleDrop = (toX: number, toY: number) => {
@@ -206,7 +206,7 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType, isV
         
         // Only allow deleting unowned modules
         if (module.ownerId) {
-            console.log(`Cannot delete module ${module.type} - it has an owner (${module.ownerId})`);
+            console.log(`Cannot delete module ${module.getAttribute('name') || module.type} - it has an owner (${module.ownerId})`);
             setDraggedModule(null);
             setIsHoveringDeleteZone(false);
             clearTooltip();
@@ -220,7 +220,7 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType, isV
         setIsHoveringDeleteZone(false);
         clearTooltip();
         
-        console.log(`Deleted module ${module.type} at (${fromX}, ${fromY})`);
+        console.log(`Deleted module ${module.getAttribute('name') || module.type} at (${fromX}, ${fromY})`);
     };
 
     const handleActorDropOnModule = (actorId: string, targetModule: Module) => {
@@ -554,7 +554,7 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType, isV
                                     } else if (draggedModule && draggedModule.module.id !== module.id) {
                                         // Show swap tooltip when dragging one module over another
                                         e.preventDefault();
-                                        setTooltip(`Swap ${draggedModule.module.type} with ${module.type}`, SwapHoriz);
+                                        setTooltip(`Swap ${draggedModule.module.getAttribute('name') || draggedModule.module.type} with ${module.getAttribute('name') || module.type}`, SwapHoriz);
                                     }
                                 }}
                                 onDragLeave={() => {
@@ -563,7 +563,7 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType, isV
                                         clearTooltip();
                                     } else if (draggedModule) {
                                         // Restore the "Moving module" tooltip when leaving another module
-                                        setTooltip(`Moving ${draggedModule.module.type} module`, SwapHoriz);
+                                        setTooltip(`Moving ${draggedModule.module.getAttribute('name') || draggedModule.module.type} module`, SwapHoriz);
                                     }
                                 }}
                                 onDrop={(e) => {
@@ -609,7 +609,6 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType, isV
                                     if (draggedModule) return;
                                     
                                     // Trigger module action if defined
-                                    console.log(`Clicked module ${module.id} of type ${module.type}`);
                                     const action = module.getAction();
                                     if (action) {
                                         action(module, stage(), setScreenType);
@@ -710,7 +709,7 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType, isV
                                                         zIndex: 2,
                                                         fontSize: isVerticalLayout ? '1.2vh' : '1.5vh',
                                                     }}
-                                                >{module.type}</div>
+                                                >{module.getAttribute('name') || module.type}</div>
                                             </>
                                         );
                                     })()}
@@ -975,11 +974,11 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType, isV
                             onDragOver={(e) => {
                                 e.preventDefault();
                                 setIsHoveringDeleteZone(true);
-                                setTooltip(`Delete ${draggedModule.module.type}`, Delete);
+                                setTooltip(`Delete ${draggedModule.module.getAttribute('name') || draggedModule.module.type}`, Delete);
                             }}
                             onDragLeave={() => {
                                 setIsHoveringDeleteZone(false);
-                                setTooltip(`Moving ${draggedModule.module.type} module`, SwapHoriz);
+                                setTooltip(`Moving ${draggedModule.module.getAttribute('name') || draggedModule.module.type} module`, SwapHoriz);
                             }}
                             onDrop={(e) => {
                                 e.preventDefault();
@@ -1207,7 +1206,6 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType, isV
                                                     module={module}
                                                     stage={stage()}
                                                     onClick={() => {
-                                                        console.log(`Clicked module ${module.id} of type ${module.type}`);
                                                         const action = module.getAction();
                                                         if (action) {
                                                             action(module, stage(), setScreenType);
@@ -1406,7 +1404,6 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType, isV
                                                         module={module}
                                                         stage={stage()}
                                                         onClick={() => {
-                                                            console.log(`Clicked module ${module.id} of type ${module.type}`);
                                                             const action = module.getAction();
                                                             if (action) {
                                                                 action(module, stage(), setScreenType);
