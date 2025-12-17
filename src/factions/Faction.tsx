@@ -373,45 +373,51 @@ export async function generateFactionModule(faction: Faction, stage: Stage): Pro
         return null;
     }
 
-    // Start with a base image:
-    const baseImageUrl = await stage.makeImage({
-        prompt: `The detailed interior of an unoccupied futuristic space station module/room. The design should reflect the following description: ${description}. ` +
-            `Regardless of aesthetic, the image is rendered in a vibrant, painterly style with thick smudgy lines.`,
-        aspect_ratio: AspectRatio.SQUARE
-    }, '');
-    if (!baseImageUrl) {
-        console.error('Failed to generate base image for module');
-        return null;
-    }
-    // Next, create a default variant with Qwen's image-to-image:
-    const defaultImageUrl = await stage.makeImageFromImage({
-        image: baseImageUrl,
-        prompt: `Apply a visual novel art style to this sci-fi space station room (${description}). Remove any characters from the scene.`,
-        transfer_type: 'edit'
-    }, '');
-    if (!defaultImageUrl) {
-        console.error('Failed to generate default image for module');
-        return null;
-    }
-
-    console.log(`Registering custom module: ${moduleName}`);
     const module: ModuleIntrinsic = {
         name: moduleName,
         skitPrompt: purpose,
         imagePrompt: description,
         role: roleName,
         roleDescription: roleDescription,
-        baseImageUrl: baseImageUrl,
-        defaultImageUrl: defaultImageUrl,
+        baseImageUrl: '',
+        defaultImageUrl: '',
         cost: {
             Wealth: 3 // Default cost for custom modules
         },
     };
-    
+
+    await generateFactionModuleImage(faction, module, stage);
+
+    if (!module.baseImageUrl || !module.defaultImageUrl) {
+        console.error('Failed to generate images for faction module');
+        return null;
+    }
+    console.log(`Registering custom module: ${moduleName}`);
     faction.module = module;
     registerFactionModule(faction, moduleName, module);
 
     return moduleName;
 }
 
+export async function generateFactionModuleImage(faction: Faction, module: ModuleIntrinsic, stage: Stage): Promise<void> {
+    // Start with a base image:
+    const baseImageUrl = await stage.makeImage({
+        prompt: `The detailed interior of an unoccupied futuristic space station module/room. The design should reflect the following description: ${module.imagePrompt}. ` +
+            `Regardless of aesthetic, the image is rendered in a vibrant, painterly style with thick smudgy lines.`,
+        aspect_ratio: AspectRatio.SQUARE
+    }, '');
+    if (!baseImageUrl) {
+        return;
+    }
+    // Next, create a default variant with Qwen's image-to-image:
+    const defaultImageUrl = await stage.makeImageFromImage({
+        image: baseImageUrl,
+        prompt: `Apply a visual novel art style to this sci-fi space station room (${module.imagePrompt}). Remove any characters from the scene.`,
+        transfer_type: 'edit'
+    }, '');
+    if (baseImageUrl && defaultImageUrl) {
+        module.baseImageUrl = baseImageUrl;
+        module.defaultImageUrl = defaultImageUrl;
+    }
+}
 export default Faction;

@@ -1,7 +1,8 @@
 import React, { FC, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { Dialog, DialogTitle, DialogContent, DialogActions } from '@mui/material';
 import { Stage } from '../Stage';
-import Faction from '../factions/Faction';
+import Faction, { generateFactionModuleImage } from '../factions/Faction';
 import { GlassPanel, Title, Button, TextInput, Chip } from '../components/UIComponents';
 import { Close, Save, Image as ImageIcon, Domain } from '@mui/icons-material';
 
@@ -53,6 +54,14 @@ export const FactionDetailScreen: FC<FactionDetailScreenProps> = ({ faction, sta
 
     const [isSaving, setIsSaving] = useState(false);
     const [newRole, setNewRole] = useState('');
+    const [regeneratingImage, setRegeneratingImage] = useState(false);
+    const [, forceUpdate] = useState({});
+    const [confirmDialog, setConfirmDialog] = useState<{
+        open: boolean;
+        title: string;
+        message: string;
+        onConfirm?: () => void;
+    }>({ open: false, title: '', message: '' });
 
     const handleSave = () => {
         setIsSaving(true);
@@ -110,6 +119,37 @@ export const FactionDetailScreen: FC<FactionDetailScreenProps> = ({ faction, sta
             ...prev,
             roles: prev.roles.filter(role => role !== roleToRemove)
         }));
+    };
+
+    const handleRegenerateModuleImage = async () => {
+        if (!faction.module || regeneratingImage) return;
+        
+        setConfirmDialog({
+            open: true,
+            title: 'Regenerate Module Image',
+            message: 'This will regenerate the module image and replace the existing one. Continue?',
+            onConfirm: async () => {
+                setConfirmDialog(prev => ({ ...prev, open: false }));
+                setRegeneratingImage(true);
+                
+                try {
+                    await generateFactionModuleImage(faction, faction.module!, stage());
+                    // Update local state with new image URLs
+                    setEditedFaction(prev => ({
+                        ...prev,
+                        moduleDefaultImageUrl: faction.module!.defaultImageUrl,
+                        moduleBaseImageUrl: faction.module!.baseImageUrl
+                    }));
+                    // Force a re-render to show the new image
+                    forceUpdate({});
+                } catch (error) {
+                    console.error('Failed to regenerate module image:', error);
+                    alert('Failed to regenerate module image. Check console for details.');
+                } finally {
+                    setRegeneratingImage(false);
+                }
+            }
+        });
     };
 
     const representative = faction.representativeId 
@@ -318,7 +358,7 @@ export const FactionDetailScreen: FC<FactionDetailScreenProps> = ({ faction, sta
                                 </div>
                             </section>
 
-                            {/* Roles Section */}
+                            {/* Theme Section */}
                             <section>
                                 <h2 style={{ 
                                     color: '#00ff88', 
@@ -328,76 +368,7 @@ export const FactionDetailScreen: FC<FactionDetailScreenProps> = ({ faction, sta
                                     borderBottom: '2px solid rgba(0, 255, 136, 0.3)',
                                     paddingBottom: '5px'
                                 }}>
-                                    Available Roles
-                                </h2>
-                                
-                                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                                    {/* Role chips */}
-                                    <div style={{ 
-                                        display: 'flex', 
-                                        flexWrap: 'wrap', 
-                                        gap: '8px',
-                                        minHeight: '40px',
-                                        padding: '10px',
-                                        backgroundColor: 'rgba(0, 20, 40, 0.4)',
-                                        borderRadius: '5px',
-                                        border: '1px solid rgba(0, 255, 136, 0.2)',
-                                    }}>
-                                        {editedFaction.roles.length === 0 ? (
-                                            <span style={{ color: 'rgba(224, 240, 255, 0.5)', fontSize: '14px' }}>
-                                                No roles defined
-                                            </span>
-                                        ) : (
-                                            editedFaction.roles.map(role => (
-                                                <Chip
-                                                    key={role}
-                                                    style={{
-                                                        display: 'flex',
-                                                        alignItems: 'center',
-                                                        gap: '5px',
-                                                        cursor: 'pointer',
-                                                    }}
-                                                >
-                                                    {role}
-                                                </Chip>
-                                            ))
-                                        )}
-                                    </div>
-                                    
-                                    {/* Add new role */}
-                                    <div style={{ display: 'flex', gap: '10px' }}>
-                                        <TextInput
-                                            value={newRole}
-                                            onChange={(e) => setNewRole(e.target.value)}
-                                            onKeyPress={(e) => {
-                                                if (e.key === 'Enter') {
-                                                    handleAddRole();
-                                                }
-                                            }}
-                                            placeholder="Add a new role..."
-                                            style={{ flex: 1 }}
-                                        />
-                                        <Button
-                                            onClick={handleAddRole}
-                                            disabled={!newRole.trim()}
-                                        >
-                                            Add Role
-                                        </Button>
-                                    </div>
-                                </div>
-                            </section>
-
-                            {/* Theme & Status Section */}
-                            <section>
-                                <h2 style={{ 
-                                    color: '#00ff88', 
-                                    fontSize: '18px', 
-                                    fontWeight: 'bold',
-                                    marginBottom: '15px',
-                                    borderBottom: '2px solid rgba(0, 255, 136, 0.3)',
-                                    paddingBottom: '5px'
-                                }}>
-                                    Theme & Status
+                                    Theme
                                 </h2>
                                 
                                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
@@ -453,82 +424,6 @@ export const FactionDetailScreen: FC<FactionDetailScreenProps> = ({ faction, sta
                                             placeholder="Font stack (e.g., Georgia, serif)"
                                         />
                                     </div>
-
-                                    {/* Reputation */}
-                                    <div>
-                                        <label 
-                                            style={{
-                                                display: 'block',
-                                                color: '#00ff88',
-                                                fontSize: '14px',
-                                                fontWeight: 'bold',
-                                                marginBottom: '8px',
-                                            }}
-                                        >
-                                            Reputation (0-10)
-                                        </label>
-                                        <input
-                                            type="number"
-                                            min="0"
-                                            max="10"
-                                            value={editedFaction.reputation}
-                                            onChange={(e) => handleInputChange('reputation', Math.max(0, Math.min(10, parseInt(e.target.value) || 0)))}
-                                            style={{
-                                                width: '100%',
-                                                padding: '12px',
-                                                fontSize: '16px',
-                                                fontWeight: 'bold',
-                                                backgroundColor: 'rgba(0, 20, 40, 0.6)',
-                                                border: '2px solid rgba(0, 255, 136, 0.3)',
-                                                borderRadius: '5px',
-                                                color: '#e0f0ff',
-                                            }}
-                                        />
-                                        <div style={{
-                                            marginTop: '5px',
-                                            fontSize: '12px',
-                                            color: 'rgba(224, 240, 255, 0.6)',
-                                        }}>
-                                            {faction.getReputationDescription()}
-                                        </div>
-                                    </div>
-
-                                    {/* Active Status */}
-                                    <div>
-                                        <label 
-                                            style={{
-                                                display: 'block',
-                                                color: '#00ff88',
-                                                fontSize: '14px',
-                                                fontWeight: 'bold',
-                                                marginBottom: '8px',
-                                            }}
-                                        >
-                                            Status
-                                        </label>
-                                        <div style={{ display: 'flex', gap: '10px', alignItems: 'center', height: '38px' }}>
-                                            <label style={{ 
-                                                display: 'flex', 
-                                                alignItems: 'center', 
-                                                gap: '8px',
-                                                cursor: 'pointer',
-                                                color: '#e0f0ff',
-                                                fontSize: '14px',
-                                            }}>
-                                                <input
-                                                    type="checkbox"
-                                                    checked={editedFaction.active}
-                                                    onChange={(e) => handleInputChange('active', e.target.checked)}
-                                                    style={{
-                                                        width: '20px',
-                                                        height: '20px',
-                                                        cursor: 'pointer',
-                                                    }}
-                                                />
-                                                Active (conducting business with PARC)
-                                            </label>
-                                        </div>
-                                    </div>
                                 </div>
                             </section>
 
@@ -550,13 +445,6 @@ export const FactionDetailScreen: FC<FactionDetailScreenProps> = ({ faction, sta
                                 </h2>
                                 
                                 <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
-                                    <TextInput
-                                        fullWidth
-                                        value={editedFaction.backgroundImageUrl}
-                                        onChange={(e) => handleInputChange('backgroundImageUrl', e.target.value)}
-                                        placeholder="Background image URL"
-                                    />
-                                    
                                     {editedFaction.backgroundImageUrl && (
                                         <div
                                             style={{
@@ -731,79 +619,54 @@ export const FactionDetailScreen: FC<FactionDetailScreenProps> = ({ faction, sta
                                             />
                                         </div>
 
-                                        {/* Module Images */}
-                                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
-                                            {/* Base Image */}
-                                            <div>
-                                                <label 
+                                        {/* Module Image */}
+                                        <div>
+                                            <label 
+                                                style={{
+                                                    display: 'block',
+                                                    color: '#00ff88',
+                                                    fontSize: '14px',
+                                                    fontWeight: 'bold',
+                                                    marginBottom: '8px',
+                                                }}
+                                            >
+                                                Default Image
+                                            </label>
+                                            {editedFaction.moduleDefaultImageUrl && (
+                                                <div
+                                                    onClick={handleRegenerateModuleImage}
                                                     style={{
-                                                        display: 'block',
-                                                        color: '#00ff88',
-                                                        fontSize: '14px',
-                                                        fontWeight: 'bold',
-                                                        marginBottom: '8px',
+                                                        marginTop: '10px',
+                                                        width: '100%',
+                                                        height: '200px',
+                                                        borderRadius: '5px',
+                                                        backgroundColor: 'rgba(0, 20, 40, 0.6)',
+                                                        border: '2px solid rgba(0, 255, 136, 0.3)',
+                                                        backgroundImage: `url(${editedFaction.moduleDefaultImageUrl})`,
+                                                        backgroundSize: 'cover',
+                                                        backgroundPosition: 'center',
+                                                        cursor: regeneratingImage ? 'wait' : 'pointer',
+                                                        opacity: regeneratingImage ? 0.6 : 1,
+                                                        transition: 'opacity 0.2s ease',
+                                                        position: 'relative',
                                                     }}
                                                 >
-                                                    Base Image URL
-                                                </label>
-                                                <TextInput
-                                                    fullWidth
-                                                    value={editedFaction.moduleBaseImageUrl}
-                                                    onChange={(e) => handleInputChange('moduleBaseImageUrl', e.target.value)}
-                                                    placeholder="Base image URL"
-                                                />
-                                                {editedFaction.moduleBaseImageUrl && (
-                                                    <div
-                                                        style={{
-                                                            marginTop: '10px',
-                                                            width: '100%',
-                                                            height: '150px',
-                                                            borderRadius: '5px',
-                                                            backgroundColor: 'rgba(0, 20, 40, 0.6)',
-                                                            border: '2px solid rgba(0, 255, 136, 0.3)',
-                                                            backgroundImage: `url(${editedFaction.moduleBaseImageUrl})`,
-                                                            backgroundSize: 'cover',
-                                                            backgroundPosition: 'center',
-                                                        }}
-                                                    />
-                                                )}
-                                            </div>
-
-                                            {/* Default Image */}
-                                            <div>
-                                                <label 
-                                                    style={{
-                                                        display: 'block',
-                                                        color: '#00ff88',
-                                                        fontSize: '14px',
-                                                        fontWeight: 'bold',
-                                                        marginBottom: '8px',
-                                                    }}
-                                                >
-                                                    Default Image URL
-                                                </label>
-                                                <TextInput
-                                                    fullWidth
-                                                    value={editedFaction.moduleDefaultImageUrl}
-                                                    onChange={(e) => handleInputChange('moduleDefaultImageUrl', e.target.value)}
-                                                    placeholder="Default themed image URL"
-                                                />
-                                                {editedFaction.moduleDefaultImageUrl && (
-                                                    <div
-                                                        style={{
-                                                            marginTop: '10px',
-                                                            width: '100%',
-                                                            height: '150px',
-                                                            borderRadius: '5px',
-                                                            backgroundColor: 'rgba(0, 20, 40, 0.6)',
-                                                            border: '2px solid rgba(0, 255, 136, 0.3)',
-                                                            backgroundImage: `url(${editedFaction.moduleDefaultImageUrl})`,
-                                                            backgroundSize: 'cover',
-                                                            backgroundPosition: 'center',
-                                                        }}
-                                                    />
-                                                )}
-                                            </div>
+                                                    {regeneratingImage && (
+                                                        <div style={{
+                                                            position: 'absolute',
+                                                            top: '50%',
+                                                            left: '50%',
+                                                            transform: 'translate(-50%, -50%)',
+                                                            color: '#00ff88',
+                                                            fontSize: '14px',
+                                                            fontWeight: 'bold',
+                                                            textShadow: '0 0 10px rgba(0, 0, 0, 0.8)',
+                                                        }}>
+                                                            Regenerating...
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            )}
                                         </div>
                                     </div>
                                 </section>
@@ -839,6 +702,14 @@ export const FactionDetailScreen: FC<FactionDetailScreenProps> = ({ faction, sta
                                             {faction.id}
                                         </div>
                                     </div>
+                                    <div>
+                                        <div style={{ color: 'rgba(0, 255, 136, 0.7)', fontSize: '12px', marginBottom: '4px' }}>
+                                            Reputation
+                                        </div>
+                                        <div style={{ color: '#e0f0ff', fontSize: '14px' }}>
+                                            {faction.reputation}/10 - {faction.getReputationDescription()}
+                                        </div>
+                                    </div>
                                     {representative && (
                                         <div>
                                             <div style={{ color: 'rgba(0, 255, 136, 0.7)', fontSize: '12px', marginBottom: '4px' }}>
@@ -871,6 +742,55 @@ export const FactionDetailScreen: FC<FactionDetailScreenProps> = ({ faction, sta
                     </GlassPanel>
                 </motion.div>
             </motion.div>
+
+            {/* Confirmation Dialog */}
+            <Dialog
+                open={confirmDialog.open}
+                onClose={() => setConfirmDialog(prev => ({ ...prev, open: false }))}
+                PaperProps={{
+                    style: {
+                        backgroundColor: 'rgba(0, 20, 40, 0.95)',
+                        backdropFilter: 'blur(10px)',
+                        border: '2px solid rgba(0, 255, 136, 0.3)',
+                        borderRadius: '8px',
+                        color: '#e0f0ff',
+                        minWidth: '400px',
+                    }
+                }}
+            >
+                <DialogTitle style={{
+                    color: '#00ff88',
+                    fontSize: '18px',
+                    fontWeight: 'bold',
+                    borderBottom: '2px solid rgba(0, 255, 136, 0.3)',
+                    paddingBottom: '10px',
+                }}>
+                    {confirmDialog.title}
+                </DialogTitle>
+                <DialogContent style={{ paddingTop: '20px' }}>
+                    <div style={{
+                        color: '#e0f0ff',
+                        fontSize: '14px',
+                        lineHeight: '1.6',
+                    }}>
+                        {confirmDialog.message}
+                    </div>
+                </DialogContent>
+                <DialogActions style={{ padding: '15px 20px', display: 'flex', gap: '10px' }}>
+                    <Button
+                        onClick={() => setConfirmDialog(prev => ({ ...prev, open: false }))}
+                        variant="secondary"
+                    >
+                        Cancel
+                    </Button>
+                    <Button
+                        onClick={confirmDialog.onConfirm}
+                        variant="primary"
+                    >
+                        Regenerate
+                    </Button>
+                </DialogActions>
+            </Dialog>
         </AnimatePresence>
     );
 };
