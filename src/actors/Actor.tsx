@@ -181,7 +181,7 @@ export function getStatDescription(stat: Stat | string): string {
         case Stat.Charm:
             return 'personality appeal and tact, with 10 being extremely charismatic and 1 being socially inept.';
         case Stat.Lust:
-            return 'physical lustiness and sexual confidence, with 10 being abjectly lewd and 1 being utterly asexual.';
+            return 'physical lustiness and sexual confidence, with 10 being abjectly lewd and 1 being entirely asexual.';
         case Stat.Joy:
             return 'happiness and positivity, with 10 being eternally optimistic and 1 being deeply depressed.';
         case Stat.Trust:

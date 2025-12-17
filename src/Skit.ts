@@ -261,7 +261,7 @@ export function generateSkitPrompt(skit: SkitData, stage: Stage, historyLength: 
     // Determine present and absent actors for this moment in the skit (as of the last entry in skit.script):
     const presentActorIds = getCurrentActorsInScene(skit, skit.moduleId, -1);
     const presentPatients = Object.values(save.actors).filter(a => presentActorIds.has(a.id) && !a.factionId);
-    const absentPatients = Object.values(save.actors).filter(a => !presentActorIds.has(a.id) && !a.factionId && save.aide.actorId != a.id && a.locationId != 'cryo');
+    const absentPatients = Object.values(save.actors).filter(a => !presentActorIds.has(a.id) && !a.factionId && save.aide.actorId != a.id && a.locationId != 'cryo' && !a.isOffSite(save));
     const cryoPatients = Object.values(save.actors).filter(a => a.locationId === 'cryo' && !a.factionId);
     const awayPatients = Object.values(save.actors).filter(a => !a.factionId && a.isOffSite(save));
 
@@ -280,6 +280,8 @@ export function generateSkitPrompt(skit: SkitData, stage: Stage, historyLength: 
     const faction = skit.context.factionId ? save.factions[skit.context.factionId] : null;
     const factionRepresentative = faction ? save.actors[faction.representativeId || ''] : null;
     const stationAide = save.actors[save.aide.actorId || ''];
+    console.log('StationAide details:');
+    console.log(stationAide);
 
     let fullPrompt = `{{messages}}\nPremise:\nThis is a sci-fi visual novel game set on a space station that resurrects and rehabilitates patients who died in other universes' apocalypses: ` +
         `the Post-Apocalypse Rehabilitation Center. ` +
@@ -293,7 +295,7 @@ export function generateSkitPrompt(skit: SkitData, stage: Stage, historyLength: 
         ) : '') +
         (
             // If module is a quarters, present it as "Owner's quarters" or "vacant quarters": module type otherwise.
-            `\n\nThe PARC's Current Modules (Rooms) and associated crew roles:\n` +
+            `\n\nThe PARC's current modules (rooms) and associated crew roles (modules or services not listed here are currently unavailable aboard the PARC):\n` +
             save.layout.getModulesWhere(module => true).map(module => module.type == 'quarters' ? 
                 (module.ownerId ? `${save.actors[module.ownerId]?.name || 'Unknown'}'s quarters` : 'vacant quarters') : 
                 `${module.type} (Role: ${module.getAttribute('role') || 'None'})`).join(', ')
@@ -308,7 +310,7 @@ export function generateSkitPrompt(skit: SkitData, stage: Stage, historyLength: 
             return `${actor.name}\n  Description: ${actor.description}\n  Profile: ${actor.profile}\n  Days Aboard: ${save.day - actor.birthDay}\n  Scene Participation: ${actor.participations}\n` +
             (roleModule ? `  Role: ${roleModule.getAttribute('role') || 'Patient'} (${actor.heldRoles[roleModule.getAttribute('role') || 'Patient'] || 0} days)\n` : '') +
             `  Role Description: ${roleModule?.getAttribute('roleDescription') || 'This character has no assigned role aboard the PARC. They are to focus upon their own needs.'}\n` +
-            `  Stats:\n    ${Object.entries(actor.stats).map(([stat, value]) => `${stat}: ${value}`).join('\n    ')}`}).join('\n')}` +
+            `  Stats:\n    ${Object.entries(actor.stats).map(([stat, value]) => `${stat}: ${value}`).join(', ')}`}).join('\n')}` +
         // List non-present characters for reference; just need description and profile:
         `\n\nAbsent Characters:\n${absentPatients.map(actor => {
             // Roll name and current location
@@ -344,8 +346,8 @@ export function generateSkitPrompt(skit: SkitData, stage: Stage, historyLength: 
             `The faction could have a temporary job to offer a patient, or suggest an exchange of resources or favors. Or they could have a permanent role in mind for an ideal candidate patient. ` +
             `If a patient is already on-loan to this faction, use this opportunity to update the Director on their status, depict the patient's return, or convert them to a permanent placement with the faction. ` +
             `Remember to use appropriate tags when moving characters on- or off-station in the skit. ` : '') +
-        `\n\nKnown Factions: \n${Object.values(stage.getSave().factions).map(faction => `${faction.name}: ${faction.getReputationDescription()}`).join('\n')}` +
-        (module ? (`\n\nModule Details:\n  This scene is set in ` +
+        `\n\nKnown Factions: \n${Object.values(stage.getSave().factions).filter(faction => faction.active && faction.reputation > 0).map(faction => `${faction.name}: ${faction.getReputationDescription()}`).join('\n')}` +
+        (module ? (`\n\nCurrent Module:\nThe following scene is set in ` +
             `${module.type === 'quarters' ? `${moduleOwner ? `${moduleOwner.name}'s` : 'a vacant'} quarters` : 
             `the ${module.type || 'Unknown'}`}. ${module.getAttribute('skitPrompt') || 'No description available.'}\n`) : '') +
 
@@ -619,26 +621,28 @@ export async function generateSkitScript(skit: SkitData, wrapUp: boolean, stage:
 
                     ttsPromises.push((async () => {
                         const analysisPrompt = generateSkitPrompt(skit, stage, 0,
-                            `Scene Script:\nSystem: ${buildScriptLog(skit)}` +
-                            `\n\nPrimary Instruction:\nAnalyze the preceding scene script and output formatted tags in brackets, identifying the following categorical changes to be inorporated into the game. ` +
-                            `\n\n---` +
-                            `\nCharacter Stat Changes:\nIdentify any changes to character stats implied by the scene. For each change, output a line in the following format:\n` +
-                            `[CHARACTER NAME: <stat> +<value>(, ...)]` +
+                            `Scene Script for Analysis:\nSystem: ${buildScriptLog(skit)}` +
+                            `\n\nInstruction:\nAnalyze the preceding scene script and output formatted tags in brackets, identifying the following categorical changes to be incorporated into the game as a result of events in this scene. ` +
+                            `\n` +
+                            `\n#Character Stat Changes:#\n` +
+                            `Identify any changes to character stats implied by the scene. For each change, output a line in the following format:\n` +
+                            `[<characterName>: <stat> +<value>(, ...)]` +
                             `Where <stat> is the name of the stat to be changed, and <value> is the amount to increase or decrease the stat by (positive or negative). ` +
                             `Multiple stat changes can be included in a single tag, separated by commas. Similarly, multiple character tags can be provided in the output.` +
                             `Full Examples:\n` +
                             `[${Object.values(stage.getSave().actors)[0].name}: brawn +1, charm +2]\n` +
                             `[${Object.values(stage.getSave().actors)[0].name}: lust -1]\n` +
-                            `\n\nStation Stat Changes:\nIdentify any changes to PARC station stats implied by the scene. For each change, output a line in the following format:\n` +
+                            
+                            `\n#Station Stat Changes:#\n` +
+                            `Identify any changes to PARC station stats implied by the scene. For each change, output a line in the following format:\n` +
                             `[STATION: <stat> +<value>(, ...)]` +
                             `Where <stat> is the name of the station stat to be changed, and <value> is the amount to increase or decrease the stat by (positive or negative). ` +
                             `Multiple stat changes can be included in a single tag, separated by commas.` +
                             `Full Examples:\n` +
                             `[STATION: Systems +2, Comfort +1]\n` +
-                            `[STATION: Security -1]` +
+                            `[STATION: Security -1]\n` +
 
-                            `\n---` +
-                            `\nFaction Reputation Changes:\n` +
+                            `\n#Faction Reputation Changes:#\n` +
                             `Identify any changes to faction reputations implied by the scene. For each change, output a line in the following format:\n` +
                             `[FACTION: <factionName> +<value>]\n` +
                             `Where <factionName> is the name of the faction whose reputation is changing, and <value> is the amount to increase or decrease the reputation by (positive or negative). ` +
@@ -648,31 +652,30 @@ export async function generateSkitScript(skit: SkitData, wrapUp: boolean, stage:
                             `[FACTION: Stellar Concord +1]\n` +
                             `[FACTION: Shadow Syndicate -2]\n` +
 
-                            `\n---` +
-                            `\nCharacter Faction Change:\n` +
+                            `\n#Character Faction Change:#\n` +
                             `If a character has changed faction affiliations in the scene, output a line in the following format:\n` +
                             `[CHARACTER NAME: JOINED <factionName or PARC>]\n` +
                             `Where <factionName or PARC> is the name of the faction the character has joined, or "PARC" if they have left a faction to join the station itself. ` +
                             `Full Examples:\n` +
                             `[${Object.values(stage.getSave().actors)[0].name}: JOINED Stellar Concord]\n` +
                             `[${Object.values(stage.getSave().actors)[0].name}: JOINED PARC]` +
-                            `\n\nThis tag indicates an official change in allegiance or ownership/possession of the named character. ` +
+                            `\n\nThis tag indicates an official change in allegiance/affiliation/ownership/possession of the named character. ` +
                             `Consider this tag when the script depicts: ` +
                             `\n - A patient taking a permanent position with a faction.` +
                             `\n - A faction representative defecting to the PARC.` +
                             `\n - A character being formally recruited or dismissed.` +
-                            `\n - A character being sold to or imprisoned by a faction.` +
+                            `\n - A character being sold to or imprisoned by a faction.\n` +
 
-                            `\n---\nCharacter Role Change:\n` +
+                            `\n#Character Role Change:#\n` +
                             `If a character's role on the station changes as a result of this scene (e.g., a patient has been assigned to a staff position), output a line in the following format:\n` +
                             `[CHARACTER NAME: ROLE <roleName>]\n` +
                             `Where <roleName> is the name of the new role assigned to the character. ` +
                             `Full Example:\n` +
                             `[${Object.values(stage.getSave().actors)[0].name}: ROLE Liaison]\n` +
                             `[${Object.values(stage.getSave().actors)[0].name}: ROLE None]\n` +
-                            `The role name must directly match an existing role defined by the station's current modules (or "None," if a character's role is being removed by this tag).` +
+                            `The role name must directly match an existing role defined by the station's current modules (or "None," if a character's role is being removed by this tag).\n` +
 
-                            `\n---\nCharacter Movement/Departure:\n` +
+                            `\n#Character Movement/Departure:#\n` +
                             `If the scene depicts or implies that a character has departed the PARC or moved to a different faction (or such department is imminent), include any missing movement tags here.` +
                             `[CHARACTER NAME moves to <module name|FACTION NAME>]\n` +
                             `Full Example:\n` +
@@ -688,12 +691,12 @@ export async function generateSkitScript(skit: SkitData, wrapUp: boolean, stage:
                                 : ''
                             ) +
 
-                            `\n\nFinal Instruction:\n` +
+                            `\n\Core Instruction:\n` +
                             `Closely analyze the scene and output all suitable tags in this response. Stat changes should be a fair reflection of the scene's direct or implied events. ` +
                             `Bear in mind the somewhat abstract nature of character and station stats when determining reasonable changes. ` +
                             `All stats (station and character) exist on a scale of 1-10, with 1 being the lowest and 10 being the highest possible value; ` +
-                            `typically, these changes should be minor (+/- 1 or 2) at a time, unless something incredibly dramatic occurs. ` +
-                            `If there is little or no change, and all relevant tags have been presented, the response may be ended early with [END]. \n\n`
+                            `typically, changes should be minor (+/- 1 or 2) at a time, unless something dramatic occurs. ` +
+                            `If the scene presents no appreciable change, or all relevant tags have been presented, the response may be ended early with [END]. \n\n`
                         );
                         const requestAnalysis = await stage.generator.textGen({
                             prompt: analysisPrompt,
