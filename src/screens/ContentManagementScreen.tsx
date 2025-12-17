@@ -214,8 +214,8 @@ export const ContentManagementScreen: FC<ContentManagementScreenProps> = ({ stag
                                                             borderRadius: '50%',
                                                             backgroundColor: 'rgba(0, 20, 40, 0.8)',
                                                             border: `3px solid ${actor.themeColor}`,
-                                                            backgroundImage: actor.emotionPack['neutral'] || actor.avatarImageUrl 
-                                                                ? `url(${actor.emotionPack['neutral'] || actor.avatarImageUrl})` 
+                                                            backgroundImage: actor.emotionPack['neutral'] || actor.emotionPack['base'] || actor.avatarImageUrl 
+                                                                ? `url(${actor.emotionPack['neutral'] || actor.emotionPack['base'] || actor.avatarImageUrl})` 
                                                                 : 'none',
                                                             backgroundSize: 'cover',
                                                             backgroundPosition: 'top center',
@@ -224,7 +224,7 @@ export const ContentManagementScreen: FC<ContentManagementScreenProps> = ({ stag
                                                             justifyContent: 'center',
                                                         }}
                                                     >
-                                                        {!actor.emotionPack['neutral'] && !actor.avatarImageUrl && (
+                                                        {!actor.emotionPack['neutral'] && !actor.emotionPack['base'] && !actor.avatarImageUrl && (
                                                             <Person style={{ fontSize: '50px', color: 'rgba(0, 255, 136, 0.3)' }} />
                                                         )}
                                                     </div>

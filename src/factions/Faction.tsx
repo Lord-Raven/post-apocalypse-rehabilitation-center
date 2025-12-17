@@ -1,6 +1,6 @@
 import { Stage } from "../Stage";
 import { v4 as generateUuid } from 'uuid';
-import Actor, { generatePrimaryActorImage, loadReserveActor } from "../actors/Actor";
+import Actor, { generateBaseActorImage, loadReserveActor } from "../actors/Actor";
 import { AspectRatio } from "@chub-ai/stages-ts";
 import { Module, MODULE_TEMPLATES, ModuleIntrinsic, registerFactionModule } from "../Module";
 import { SkitType } from "../Skit";
@@ -283,7 +283,7 @@ export async function generateFactionRepresentative(faction: Faction, stage: Sta
             repActor.origin = 'faction';
             repActor.locationId = faction.id; // place them "in" the faction for now
             faction.representativeId = repActor.id;
-            await generatePrimaryActorImage(repActor, stage);
+            await generateBaseActorImage(repActor, stage);
             stage.getSave().actors[repActor.id] = repActor;
             break;
         }

@@ -2,7 +2,7 @@ import React, { FC, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Dialog, DialogTitle, DialogContent, DialogActions } from '@mui/material';
 import { Stage } from '../Stage';
-import Actor, { Stat, ACTOR_STAT_ICONS, getStatDescription, generatePrimaryActorImage, generateEmotionImage } from '../actors/Actor';
+import Actor, { Stat, ACTOR_STAT_ICONS, getStatDescription, generateBaseActorImage, generateEmotionImage, generateActorDecor } from '../actors/Actor';
 import { Emotion, EMOTION_PROMPTS } from '../actors/Emotion';
 import { GlassPanel, Title, Button, TextInput, Chip } from '../components/UIComponents';
 import { Close, Save, Image as ImageIcon } from '@mui/icons-material';
@@ -43,8 +43,9 @@ export const ActorDetailScreen: FC<ActorDetailScreenProps> = ({ actor, stage, on
         open: boolean;
         title: string;
         message: string;
-        onConfirm: () => void;
-    }>({ open: false, title: '', message: '', onConfirm: () => {} });
+        actions?: Array<{ label: string; onClick: () => void; variant?: 'primary' | 'secondary' }>;
+        onConfirm?: () => void;
+    }>({ open: false, title: '', message: '' });
 
     const handleSave = () => {
         setIsSaving(true);
@@ -107,25 +108,90 @@ export const ActorDetailScreen: FC<ActorDetailScreenProps> = ({ actor, stage, on
     const handleRegenerateBase = async () => {
         if (regeneratingImages.has('base')) return;
         
+        const regenerateBase = async (fromAvatar: boolean) => {
+            setConfirmDialog(prev => ({ ...prev, open: false }));
+            setRegeneratingImages(prev => new Set(prev).add('base'));
+            
+            try {
+                await generateBaseActorImage(actor, stage(), true, fromAvatar);
+                // Force a re-render to show the new image
+                forceUpdate({});
+            } catch (error) {
+                console.error('Failed to regenerate base image:', error);
+                alert('Failed to regenerate base image. Check console for details.');
+            } finally {
+                setRegeneratingImages(prev => {
+                    const next = new Set(prev);
+                    next.delete('base');
+                    return next;
+                });
+            }
+        };
+
+        const hasAvatarUrl = !!actor.avatarImageUrl;
+        
+        if (hasAvatarUrl) {
+            setConfirmDialog({
+                open: true,
+                title: 'Regenerate Base Image',
+                message: 'This will regenerate the base image and may affect all emotion variations. Choose generation method:',
+                actions: [
+                    {
+                        label: 'From Source Image',
+                        onClick: () => regenerateBase(true),
+                        variant: 'primary'
+                    },
+                    {
+                        label: 'From Description',
+                        onClick: () => regenerateBase(false),
+                        variant: 'primary'
+                    }
+                ]
+            });
+        } else {
+            setConfirmDialog({
+                open: true,
+                title: 'Regenerate Base Image',
+                message: 'This will regenerate the base image from the character description and may affect all emotion variations. Continue?',
+                actions: [
+                    {
+                        label: 'Regenerate',
+                        onClick: () => regenerateBase(false),
+                        variant: 'primary'
+                    }
+                ]
+            });
+        }
+    };
+
+    const handleRegenerateDecor = async (moduleType: string) => {
+        if (regeneratingImages.has(`decor-${moduleType}`)) return;
+        
         setConfirmDialog({
             open: true,
-            title: 'Regenerate Base Image',
-            message: 'This will regenerate the base image and may affect all emotion variations. Continue?',
+            title: `Regenerate ${moduleType} Decor`,
+            message: `This will regenerate the decor image for this ${moduleType} module. Continue?`,
             onConfirm: async () => {
                 setConfirmDialog(prev => ({ ...prev, open: false }));
-                setRegeneratingImages(prev => new Set(prev).add('base'));
+                setRegeneratingImages(prev => new Set(prev).add(`decor-${moduleType}`));
                 
                 try {
-                    await generatePrimaryActorImage(actor, stage(), true);
+                    // Find the module by type
+                    const module = stage().getSave().layout.getModulesWhere((m: any) => m?.type === moduleType)[0];
+                    if (!module) {
+                        throw new Error(`No module found with type: ${moduleType}`);
+                    }
+                    
+                    await generateActorDecor(actor, module, stage(), true);
                     // Force a re-render to show the new image
                     forceUpdate({});
                 } catch (error) {
-                    console.error('Failed to regenerate base image:', error);
-                    alert('Failed to regenerate base image. Check console for details.');
+                    console.error(`Failed to regenerate ${moduleType} decor:`, error);
+                    alert(`Failed to regenerate ${moduleType} decor. Check console for details.`);
                 } finally {
                     setRegeneratingImages(prev => {
                         const next = new Set(prev);
-                        next.delete('base');
+                        next.delete(`decor-${moduleType}`);
                         return next;
                     });
                 }
@@ -752,38 +818,63 @@ export const ActorDetailScreen: FC<ActorDetailScreenProps> = ({ actor, stage, on
                                         gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', 
                                         gap: '15px' 
                                     }}>
-                                        {decorImages.map(([moduleType, imageUrl]) => (
-                                            <motion.div
-                                                key={moduleType}
-                                                whileHover={{ scale: 1.05 }}
-                                                style={{
-                                                    display: 'flex',
-                                                    flexDirection: 'column',
-                                                    alignItems: 'center',
-                                                    gap: '8px',
-                                                }}
-                                            >
-                                                <div
+                                        {decorImages.map(([moduleType, imageUrl]) => {
+                                            const isRegenerating = regeneratingImages.has(`decor-${moduleType}`);
+                                            return (
+                                                <motion.div
+                                                    key={moduleType}
+                                                    whileHover={{ scale: 1.05 }}
+                                                    whileTap={{ scale: 0.95 }}
+                                                    onClick={() => handleRegenerateDecor(moduleType)}
                                                     style={{
-                                                        width: '200px',
-                                                        height: '150px',
-                                                        backgroundColor: 'rgba(0, 20, 40, 0.6)',
-                                                        border: '2px solid rgba(0, 255, 136, 0.5)',
-                                                        borderRadius: '8px',
-                                                        backgroundImage: `url(${imageUrl})`,
-                                                        backgroundSize: 'cover',
-                                                        backgroundPosition: 'center',
-                                                        overflow: 'hidden',
+                                                        display: 'flex',
+                                                        flexDirection: 'column',
+                                                        alignItems: 'center',
+                                                        gap: '8px',
+                                                        cursor: 'pointer',
                                                     }}
-                                                />
-                                                <Chip style={{
-                                                    fontSize: '11px',
-                                                    textTransform: 'capitalize',
-                                                }}>
-                                                    {moduleType}
-                                                </Chip>
-                                            </motion.div>
-                                        ))}
+                                                >
+                                                    <div
+                                                        style={{
+                                                            width: '200px',
+                                                            height: '150px',
+                                                            backgroundColor: 'rgba(0, 20, 40, 0.6)',
+                                                            border: '2px solid rgba(0, 255, 136, 0.5)',
+                                                            borderRadius: '8px',
+                                                            backgroundImage: `url(${imageUrl})`,
+                                                            backgroundSize: 'cover',
+                                                            backgroundPosition: 'center',
+                                                            overflow: 'hidden',
+                                                            position: 'relative',
+                                                        }}
+                                                    >
+                                                        {isRegenerating && (
+                                                            <div style={{
+                                                                position: 'absolute',
+                                                                top: 0,
+                                                                left: 0,
+                                                                right: 0,
+                                                                bottom: 0,
+                                                                backgroundColor: 'rgba(0, 0, 0, 0.7)',
+                                                                display: 'flex',
+                                                                alignItems: 'center',
+                                                                justifyContent: 'center',
+                                                                color: '#00ff88',
+                                                                fontSize: '12px',
+                                                            }}>
+                                                                Generating...
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                    <Chip style={{
+                                                        fontSize: '11px',
+                                                        textTransform: 'capitalize',
+                                                    }}>
+                                                        {moduleType}
+                                                    </Chip>
+                                                </motion.div>
+                                            );
+                                        })}
                                     </div>
                                 </section>
                             )}
@@ -906,20 +997,31 @@ export const ActorDetailScreen: FC<ActorDetailScreenProps> = ({ actor, stage, on
                         {confirmDialog.message}
                     </div>
                 </DialogContent>
-                <DialogActions style={{ padding: '15px 20px' }}>
+                <DialogActions style={{ padding: '15px 20px', display: 'flex', gap: '10px' }}>
                     <Button
                         onClick={() => setConfirmDialog(prev => ({ ...prev, open: false }))}
                         variant="secondary"
-                        style={{ marginRight: '10px' }}
                     >
                         Cancel
                     </Button>
-                    <Button
-                        onClick={confirmDialog.onConfirm}
-                        variant="primary"
-                    >
-                        Regenerate
-                    </Button>
+                    {confirmDialog.actions ? (
+                        confirmDialog.actions.map((action, index) => (
+                            <Button
+                                key={index}
+                                onClick={action.onClick}
+                                variant={action.variant || 'primary'}
+                            >
+                                {action.label}
+                            </Button>
+                        ))
+                    ) : (
+                        <Button
+                            onClick={confirmDialog.onConfirm}
+                            variant="primary"
+                        >
+                            Regenerate
+                        </Button>
+                    )}
                 </DialogActions>
             </Dialog>
         </AnimatePresence>

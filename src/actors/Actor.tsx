@@ -441,13 +441,13 @@ export async function loadReserveActor(data: any, stage: Stage): Promise<Actor|n
     return newActor;
 }
 
-export async function generatePrimaryActorImage(actor: Actor, stage: Stage, force: boolean = false): Promise<void> {
+export async function generateBaseActorImage(actor: Actor, stage: Stage, force: boolean = false, fromAvatar: boolean = true): Promise<void> {
     console.log(`Populating images for actor ${actor.name} (ID: ${actor.id})`);
     // If the actor has no neutral emotion image in their emotion pack, generate one based on their description or from the existing avatar image
     if (!actor.emotionPack['neutral'] || force) {
         console.log(`Generating neutral emotion image for actor ${actor.name}`);
         let imageUrl = '';
-        if (!actor.avatarImageUrl) {
+        if (!actor.avatarImageUrl || !fromAvatar) {
             console.log(`Generating new image for actor ${actor.name} from description`);
             // Use stage.makeImage to create a neutral expression based on the description
             imageUrl = await stage.makeImage({
@@ -456,7 +456,6 @@ export async function generatePrimaryActorImage(actor: Actor, stage: Stage, forc
                     .replace('{{ARTIST}}', stage.getSave().characterArtist || 'some professional'),
                 aspect_ratio: AspectRatio.PHOTO_VERTICAL
             }, '');
-            actor.avatarImageUrl = imageUrl || '';
         }
 
         // Use stage.makeImageFromImage to create a base image.
@@ -472,10 +471,12 @@ export async function generatePrimaryActorImage(actor: Actor, stage: Stage, forc
         
         actor.emotionPack['base'] = imageUrl || '';
 
-        // Now create the neutral expression from the base image, but don't wait up. Only kick this off if this is not a forced regen (which is targeting the base image specifically).
-        if (!force) {
-            generateEmotionImage(actor, Emotion.neutral, stage);
+        if (force) {
+            // Invalidate all other emotions
+            actor.emotionPack = {'base': actor.emotionPack['base']};
         }
+        // Generate neutral but don't wait up.
+        generateEmotionImage(actor, Emotion.neutral, stage);
     }
 }
 
@@ -552,7 +553,7 @@ export async function commitActorToEcho(actor: Actor, stage: Stage): Promise<voi
     console.log(`Committing actor ${actor.name} to echo process`);
     
     // Generate the primary image (this makes the character ready)
-    await generatePrimaryActorImage(actor, stage);
+    await generateBaseActorImage(actor, stage);
     
     // Start generating additional emotion images in the background
     generateAdditionalActorImages(actor, stage).catch(console.error);

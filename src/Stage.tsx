@@ -1,7 +1,7 @@
 import {ReactElement, useEffect, useState} from "react";
 import {StageBase, StageResponse, InitialData, Message, UpdateBuilder} from "@chub-ai/stages-ts";
 import {LoadResponse} from "@chub-ai/stages-ts/dist/types/load";
-import Actor, { loadReserveActor, generatePrimaryActorImage, commitActorToEcho, Stat, generateAdditionalActorImages, loadReserveActorFromFullPath, ArtStyle, generateActorDecor } from "./actors/Actor";
+import Actor, { loadReserveActor, generateBaseActorImage, commitActorToEcho, Stat, generateAdditionalActorImages, loadReserveActorFromFullPath, ArtStyle, generateActorDecor } from "./actors/Actor";
 import Faction, { generateFactionModule, generateFactionRepresentative, loadReserveFaction } from "./factions/Faction";
 import { DEFAULT_GRID_SIZE, Layout, StationStat, createModule, registerFactionModule } from './Module';
 import { BaseScreen, ScreenType } from "./screens/BaseScreen";
@@ -488,7 +488,7 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
         // If any echo actors are missing primary images, kick those off now.
         for (const echoActor of save.echoes) {
             if (echoActor && (!echoActor.emotionPack || !echoActor.emotionPack[Emotion.neutral] || echoActor.emotionPack[Emotion.neutral] == echoActor.avatarImageUrl)) {
-                generatePrimaryActorImage(echoActor, this).then(() => {
+                generateBaseActorImage(echoActor, this).then(() => {
                     this.saveGame();
                 });
             }
@@ -501,7 +501,7 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
         for (const actorId in save.actors) {
             const actor = save.actors[actorId];
             if (!actor.emotionPack || !actor.emotionPack[Emotion.neutral] || actor.emotionPack[Emotion.neutral] == actor.avatarImageUrl) {
-                generatePrimaryActorImage(actor, this).then(() => {
+                generateBaseActorImage(actor, this).then(() => {
                     this.saveGame();
                 });
                 break; // only do one at a time
@@ -547,7 +547,7 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
                         aideActor.profile = save.aide.description;
                         save.aide.actorId = aideActor.id;
                         save.actors[aideActor.id] = aideActor;
-                        await generatePrimaryActorImage(aideActor, this);
+                        await generateBaseActorImage(aideActor, this);
                         break;
                     }
                 }
