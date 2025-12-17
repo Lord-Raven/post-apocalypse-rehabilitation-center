@@ -1,10 +1,12 @@
 import React, { FC, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { Dialog, DialogTitle, DialogContent, DialogActions } from '@mui/material';
 import { Stage } from '../Stage';
 import Actor, { Stat, ACTOR_STAT_ICONS, getStatDescription, generatePrimaryActorImage, generateEmotionImage } from '../actors/Actor';
 import { Emotion, EMOTION_PROMPTS } from '../actors/Emotion';
 import { GlassPanel, Title, Button, TextInput, Chip } from '../components/UIComponents';
 import { Close, Save, Image as ImageIcon } from '@mui/icons-material';
+import { scoreToGrade } from '../utils';
 
 interface ActorDetailScreenProps {
     actor: Actor;
@@ -18,7 +20,7 @@ export const ActorDetailScreen: FC<ActorDetailScreenProps> = ({ actor, stage, on
         name: string;
         description: string;
         profile: string;
-        history: string;
+        development: string;
         style: string;
         voiceId: string;
         themeColor: string;
@@ -27,7 +29,7 @@ export const ActorDetailScreen: FC<ActorDetailScreenProps> = ({ actor, stage, on
         name: actor.name,
         description: actor.description,
         profile: actor.profile,
-        history: actor.history || '',
+        development: actor.development || '',
         style: actor.style,
         voiceId: actor.voiceId,
         themeColor: actor.themeColor,
@@ -37,6 +39,12 @@ export const ActorDetailScreen: FC<ActorDetailScreenProps> = ({ actor, stage, on
     const [isSaving, setIsSaving] = useState(false);
     const [regeneratingImages, setRegeneratingImages] = useState<Set<string>>(new Set());
     const [, forceUpdate] = useState({});
+    const [confirmDialog, setConfirmDialog] = useState<{
+        open: boolean;
+        title: string;
+        message: string;
+        onConfirm: () => void;
+    }>({ open: false, title: '', message: '', onConfirm: () => {} });
 
     const handleSave = () => {
         setIsSaving(true);
@@ -45,7 +53,7 @@ export const ActorDetailScreen: FC<ActorDetailScreenProps> = ({ actor, stage, on
         actor.name = editedActor.name;
         actor.description = editedActor.description;
         actor.profile = editedActor.profile;
-        actor.history = editedActor.history;
+        actor.development = editedActor.development;
         actor.style = editedActor.style;
         actor.voiceId = editedActor.voiceId;
         actor.themeColor = editedActor.themeColor;
@@ -70,49 +78,59 @@ export const ActorDetailScreen: FC<ActorDetailScreenProps> = ({ actor, stage, on
     const handleRegenerateEmotion = async (emotion: Emotion) => {
         if (regeneratingImages.has(emotion)) return;
         
-        const confirmed = window.confirm(`Regenerate the ${emotion} emotion image? This will replace the existing image.`);
-        if (!confirmed) return;
-
-        setRegeneratingImages(prev => new Set(prev).add(emotion));
-        
-        try {
-            await generateEmotionImage(actor, emotion, stage(), true);
-            // Force a re-render to show the new image
-            forceUpdate({});
-        } catch (error) {
-            console.error(`Failed to regenerate ${emotion} emotion:`, error);
-            alert(`Failed to regenerate ${emotion} emotion. Check console for details.`);
-        } finally {
-            setRegeneratingImages(prev => {
-                const next = new Set(prev);
-                next.delete(emotion);
-                return next;
-            });
-        }
+        setConfirmDialog({
+            open: true,
+            title: `Regenerate ${emotion} Image`,
+            message: `This will regenerate the ${emotion} emotion image and replace the existing one. Continue?`,
+            onConfirm: async () => {
+                setConfirmDialog(prev => ({ ...prev, open: false }));
+                setRegeneratingImages(prev => new Set(prev).add(emotion));
+                
+                try {
+                    await generateEmotionImage(actor, emotion, stage(), true);
+                    // Force a re-render to show the new image
+                    forceUpdate({});
+                } catch (error) {
+                    console.error(`Failed to regenerate ${emotion} emotion:`, error);
+                    alert(`Failed to regenerate ${emotion} emotion. Check console for details.`);
+                } finally {
+                    setRegeneratingImages(prev => {
+                        const next = new Set(prev);
+                        next.delete(emotion);
+                        return next;
+                    });
+                }
+            }
+        });
     };
 
     const handleRegenerateBase = async () => {
         if (regeneratingImages.has('base')) return;
         
-        const confirmed = window.confirm('Regenerate the base image? This will replace the existing image and may affect emotion variations.');
-        if (!confirmed) return;
-
-        setRegeneratingImages(prev => new Set(prev).add('base'));
-        
-        try {
-            await generatePrimaryActorImage(actor, stage(), true);
-            // Force a re-render to show the new image
-            forceUpdate({});
-        } catch (error) {
-            console.error('Failed to regenerate base image:', error);
-            alert('Failed to regenerate base image. Check console for details.');
-        } finally {
-            setRegeneratingImages(prev => {
-                const next = new Set(prev);
-                next.delete('base');
-                return next;
-            });
-        }
+        setConfirmDialog({
+            open: true,
+            title: 'Regenerate Base Image',
+            message: 'This will regenerate the base image and may affect all emotion variations. Continue?',
+            onConfirm: async () => {
+                setConfirmDialog(prev => ({ ...prev, open: false }));
+                setRegeneratingImages(prev => new Set(prev).add('base'));
+                
+                try {
+                    await generatePrimaryActorImage(actor, stage(), true);
+                    // Force a re-render to show the new image
+                    forceUpdate({});
+                } catch (error) {
+                    console.error('Failed to regenerate base image:', error);
+                    alert('Failed to regenerate base image. Check console for details.');
+                } finally {
+                    setRegeneratingImages(prev => {
+                        const next = new Set(prev);
+                        next.delete('base');
+                        return next;
+                    });
+                }
+            }
+        });
     };
 
     // Get all emotions for the grid
@@ -322,7 +340,7 @@ export const ActorDetailScreen: FC<ActorDetailScreenProps> = ({ actor, stage, on
                                         />
                                     </div>
 
-                                    {/* History */}
+                                    {/* Development */}
                                     <div>
                                         <label 
                                             style={{
@@ -333,12 +351,12 @@ export const ActorDetailScreen: FC<ActorDetailScreenProps> = ({ actor, stage, on
                                                 marginBottom: '8px',
                                             }}
                                         >
-                                            History (Optional)
+                                            Development
                                         </label>
                                         <textarea
-                                            value={editedActor.history}
-                                            onChange={(e) => handleInputChange('history', e.target.value)}
-                                            placeholder="Background and history"
+                                            value={editedActor.development}
+                                            onChange={(e) => handleInputChange('development', e.target.value)}
+                                            placeholder="Character arc over this narrative"
                                             style={{
                                                 width: '100%',
                                                 minHeight: '80px',
@@ -535,15 +553,8 @@ export const ActorDetailScreen: FC<ActorDetailScreenProps> = ({ actor, stage, on
                                                             color: '#00ff88',
                                                         }}
                                                     >
-                                                        {actor.stats[stat]}
+                                                        {scoreToGrade(actor.stats[stat])}
                                                     </div>
-                                                </div>
-                                                <div style={{
-                                                    fontSize: '11px',
-                                                    color: 'rgba(224, 240, 255, 0.6)',
-                                                    lineHeight: '1.3'
-                                                }}>
-                                                    {getStatDescription(stat)}
                                                 </div>
                                             </div>
                                         );
@@ -861,6 +872,56 @@ export const ActorDetailScreen: FC<ActorDetailScreenProps> = ({ actor, stage, on
                     </GlassPanel>
                 </motion.div>
             </motion.div>
+
+            {/* Confirmation Dialog */}
+            <Dialog
+                open={confirmDialog.open}
+                onClose={() => setConfirmDialog(prev => ({ ...prev, open: false }))}
+                PaperProps={{
+                    style: {
+                        backgroundColor: 'rgba(0, 20, 40, 0.95)',
+                        backdropFilter: 'blur(10px)',
+                        border: '2px solid rgba(0, 255, 136, 0.3)',
+                        borderRadius: '8px',
+                        color: '#e0f0ff',
+                        minWidth: '400px',
+                    }
+                }}
+            >
+                <DialogTitle style={{
+                    color: '#00ff88',
+                    fontSize: '18px',
+                    fontWeight: 'bold',
+                    borderBottom: '2px solid rgba(0, 255, 136, 0.3)',
+                    paddingBottom: '10px',
+                }}>
+                    {confirmDialog.title}
+                </DialogTitle>
+                <DialogContent style={{ paddingTop: '20px' }}>
+                    <div style={{
+                        color: '#e0f0ff',
+                        fontSize: '14px',
+                        lineHeight: '1.6',
+                    }}>
+                        {confirmDialog.message}
+                    </div>
+                </DialogContent>
+                <DialogActions style={{ padding: '15px 20px' }}>
+                    <Button
+                        onClick={() => setConfirmDialog(prev => ({ ...prev, open: false }))}
+                        variant="secondary"
+                        style={{ marginRight: '10px' }}
+                    >
+                        Cancel
+                    </Button>
+                    <Button
+                        onClick={confirmDialog.onConfirm}
+                        variant="primary"
+                    >
+                        Regenerate
+                    </Button>
+                </DialogActions>
+            </Dialog>
         </AnimatePresence>
     );
 };

@@ -176,7 +176,7 @@ export const MenuScreen: FC<MenuScreenProps> = ({ stage, setScreenType }) => {
             label: 'Manage Content',
             onClick: () => setShowContentManagement(true),
             enabled: !disableAllButtons,
-            tooltip: disableAllButtons ? 'Currently unavailable' : 'View and edit actors and factions',
+            tooltip: disableAllButtons ? 'Currently unavailable' : 'View and edit generative content',
             icon: EditNote,
         }] : []),
     ];
