@@ -3,7 +3,7 @@ import {StageBase, StageResponse, InitialData, Message, UpdateBuilder} from "@ch
 import {LoadResponse} from "@chub-ai/stages-ts/dist/types/load";
 import Actor, { loadReserveActor, generateBaseActorImage, commitActorToEcho, Stat, generateAdditionalActorImages, loadReserveActorFromFullPath, ArtStyle, generateActorDecor } from "./actors/Actor";
 import Faction, { generateFactionModule, generateFactionRepresentative, loadReserveFaction } from "./factions/Faction";
-import { DEFAULT_GRID_SIZE, Layout, StationStat, createModule, registerFactionModule } from './Module';
+import { DEFAULT_GRID_SIZE, Layout, MODULE_TEMPLATES, StationStat, createModule, registerFactionModule } from './Module';
 import { BaseScreen, ScreenType } from "./screens/BaseScreen";
 import { generateSkitScript, SkitData, SkitType } from "./Skit";
 import { smartRehydrate } from "./SaveRehydration";
@@ -456,6 +456,13 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
             save.factions = {};
         }
 
+        save.layout.getModulesWhere(m => true).forEach(module => {
+            if (!Object.keys(MODULE_TEMPLATES).includes(module.type)) {
+                console.log(`Removing unknown module type ${module.type} from layout.`);
+                save.layout.removeModule(module);
+            }
+        });
+
         // Clean out remote actors that aren't supported by current factions
         const idsToRemove: string[] = [];
         Object.values(save.actors).filter(actor => actor.factionId && (!save.factions || !Object.values(save.factions).some(faction => faction.id === actor.factionId))).forEach(actor => {
@@ -469,7 +476,7 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
         Object.values(save.factions).forEach(faction => {
             if (faction.module) {
                 console.log(`Registering module ${faction.module.name} for faction ${faction.name}`);
-                registerFactionModule(faction, faction.module.name, faction.module);
+                registerFactionModule(faction, faction.id, faction.module);
             } else if (faction.reputation >= 5) {
                 // Kick off module generation for this faction:
                 console.log('Generating module for faction:', faction.name);
@@ -493,9 +500,6 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
                 });
             }
         }
-
-        // TODO: Remove this after testing some more.
-        Object.values(save.actors).forEach(actor => console.log(actor));
 
         // If there are any actors in the save with missing emotion images, kick one of them off now.
         for (const actorId in save.actors) {

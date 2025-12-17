@@ -481,7 +481,7 @@ export const FactionDetailScreen: FC<FactionDetailScreenProps> = ({ faction, sta
                                     </h2>
                                     
                                     <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
-                                        {/* Module Name (Read-only) */}
+                                        {/* Module Name */}
                                         <div>
                                             <label 
                                                 style={{
@@ -494,16 +494,12 @@ export const FactionDetailScreen: FC<FactionDetailScreenProps> = ({ faction, sta
                                             >
                                                 Module Name
                                             </label>
-                                            <div style={{
-                                                padding: '12px',
-                                                fontSize: '16px',
-                                                backgroundColor: 'rgba(0, 20, 40, 0.4)',
-                                                border: '2px solid rgba(0, 255, 136, 0.2)',
-                                                borderRadius: '5px',
-                                                color: '#e0f0ff',
-                                            }}>
-                                                {editedFaction.moduleName}
-                                            </div>
+                                            <TextInput
+                                                fullWidth
+                                                value={editedFaction.moduleName}
+                                                onChange={(e) => handleInputChange('moduleName', e.target.value)}
+                                                placeholder="Module name"
+                                            />
                                         </div>
 
                                         {/* Skit Prompt */}

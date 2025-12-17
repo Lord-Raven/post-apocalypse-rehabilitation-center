@@ -10,7 +10,7 @@ import ModuleCard from '../components/ModuleCard';
 import FactionCard from '../components/FactionCard';
 import { TurnIndicator as SharedTurnIndicator } from '../components/UIComponents';
 import { useTooltip } from '../contexts/TooltipContext';
-import { SwapHoriz, Home, Work, Menu, HourglassBottom, HourglassTop, NotInterested } from '@mui/icons-material';
+import { SwapHoriz, Home, Work, Menu, HourglassBottom, HourglassTop, NotInterested, Delete } from '@mui/icons-material';
 import { SkitType } from '../Skit';
 import { generateActorDecor } from '../actors/Actor';
 import { scoreToGrade } from '../utils';
@@ -63,6 +63,7 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType, isV
     const [hoveredModuleId, setHoveredModuleId] = React.useState<string | null>(null);
     const [justDroppedModuleId, setJustDroppedModuleId] = React.useState<string | null>(null);
     const [hoveredActorId, setHoveredActorId] = React.useState<string | null>(null);
+    const [isHoveringDeleteZone, setIsHoveringDeleteZone] = React.useState<boolean>(false);
 
     // Tooltip context
     const { setTooltip, clearTooltip } = useTooltip();
@@ -196,6 +197,30 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType, isV
         setLayout(stage().getLayout());
         setDraggedModule(null);
         clearTooltip();
+    };
+
+    const handleModuleDelete = () => {
+        if (!draggedModule) return;
+        
+        const {fromX, fromY, module} = draggedModule;
+        
+        // Only allow deleting unowned modules
+        if (module.ownerId) {
+            console.log(`Cannot delete module ${module.type} - it has an owner (${module.ownerId})`);
+            setDraggedModule(null);
+            setIsHoveringDeleteZone(false);
+            clearTooltip();
+            return;
+        }
+        
+        // Remove the module from the layout
+        stage().getLayout().removeModuleAt(fromX, fromY);
+        setLayout(stage().getLayout());
+        setDraggedModule(null);
+        setIsHoveringDeleteZone(false);
+        clearTooltip();
+        
+        console.log(`Deleted module ${module.type} at (${fromX}, ${fromY})`);
     };
 
     const handleActorDropOnModule = (actorId: string, targetModule: Module) => {
@@ -549,6 +574,11 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType, isV
                                     }
                                 }}
                                 onDragEnd={(event, info) => {
+                                    // If hovering delete zone, don't handle drop here (let delete zone handle it)
+                                    if (isHoveringDeleteZone) {
+                                        return;
+                                    }
+                                    
                                     // Calculate which cell we're over based on drag position
                                     const gridContainer = document.querySelector('.station-modules');
                                     if (!gridContainer) {
@@ -930,6 +960,79 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType, isV
                 >
                     {renderGrid()}
                 </div>
+
+                {/* Deletion Zone - appears in bottom-right corner when dragging unowned modules */}
+                <AnimatePresence>
+                    {draggedModule && !draggedModule.module.ownerId && (
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.8 }}
+                            animate={{ 
+                                opacity: 1, 
+                                scale: isHoveringDeleteZone ? 1.1 : 1,
+                            }}
+                            exit={{ opacity: 0, scale: 0.8 }}
+                            transition={{ duration: 0.2 }}
+                            onDragOver={(e) => {
+                                e.preventDefault();
+                                setIsHoveringDeleteZone(true);
+                                setTooltip(`Delete ${draggedModule.module.type}`, Delete);
+                            }}
+                            onDragLeave={() => {
+                                setIsHoveringDeleteZone(false);
+                                setTooltip(`Moving ${draggedModule.module.type} module`, SwapHoriz);
+                            }}
+                            onDrop={(e) => {
+                                e.preventDefault();
+                                handleModuleDelete();
+                            }}
+                            style={{
+                                position: 'absolute',
+                                bottom: isVerticalLayout ? '2vh' : '4vh',
+                                right: isVerticalLayout ? '2vh' : '4vh',
+                                width: isVerticalLayout ? '12vh' : '10vh',
+                                height: isVerticalLayout ? '12vh' : '10vh',
+                                borderRadius: '20px',
+                                background: isHoveringDeleteZone 
+                                    ? 'linear-gradient(135deg, rgba(255, 50, 50, 0.9) 0%, rgba(200, 0, 0, 0.9) 100%)'
+                                    : 'linear-gradient(135deg, rgba(255, 50, 50, 0.6) 0%, rgba(200, 0, 0, 0.6) 100%)',
+                                border: isHoveringDeleteZone ? '3px solid #ff3333' : '3px dashed #ff6666',
+                                display: 'flex',
+                                flexDirection: 'column',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                boxShadow: isHoveringDeleteZone
+                                    ? '0 0 40px rgba(255, 50, 50, 0.8), inset 0 0 30px rgba(255, 100, 100, 0.3)'
+                                    : '0 0 20px rgba(255, 50, 50, 0.5)',
+                                backdropFilter: 'blur(10px)',
+                                cursor: 'pointer',
+                                zIndex: 100,
+                                pointerEvents: 'auto',
+                            }}
+                        >
+                            <Delete 
+                                style={{ 
+                                    fontSize: isVerticalLayout ? '5vh' : '4vh',
+                                    color: '#ffffff',
+                                    marginBottom: '0.5vh',
+                                    filter: isHoveringDeleteZone ? 'drop-shadow(0 0 10px #ffffff)' : 'none',
+                                }} 
+                            />
+                            <Typography
+                                style={{
+                                    color: '#ffffff',
+                                    fontSize: isVerticalLayout ? '1.4vh' : '1.2vh',
+                                    fontWeight: 700,
+                                    textAlign: 'center',
+                                    textShadow: '0 2px 4px rgba(0, 0, 0, 0.8)',
+                                    textTransform: 'uppercase',
+                                    letterSpacing: '0.05em',
+                                }}
+                            >
+                                Delete
+                            </Typography>
+                        </motion.div>
+                    )}
+                </AnimatePresence>
             </div>
 
             {/* Side Menu (right side for horizontal, bottom for vertical) */}

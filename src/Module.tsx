@@ -277,10 +277,9 @@ export const MODULE_TEMPLATES: Record<ModuleType, ModuleIntrinsic> = {
         }
     },
     commons: {
-        name: 'Commons',
-        skitPrompt: 'The commons area is a social hub for the station crew, where they gather to relax, eat, and interact. Scenes here often involve camaraderie, conflicts, and leisure activities among the crew.',
-        imagePrompt: 'A sci-fi common area with a large table, seating, and storage and kitchen facilities along the far wall.',
-        // Maybe need a better term for this than "keeper"; this role is essentially cook/maid for the station:
+        name: 'Hub',
+        skitPrompt: 'The hub is a place for patients and crew to gather, relax, eat, and interact. Scenes here often involve camaraderie, conflicts, and leisure activities among the crew.',
+        imagePrompt: 'A sci-fi common area with a large table, seating, and storage and kitchen or vending facilities along the far wall.',
         role: 'Custodian',
         roleDescription: `Maintain the station's communal areas, ensuring they remain inviting and well-stocked for crew relaxation and socialization.`,
         baseImageUrl: 'https://media.charhub.io/0cee625e-73e7-43b3-86b3-a06c082e73a9/7f958523-48b9-40a4-ae67-59b0cea199d3.png', 
@@ -574,5 +573,29 @@ export class Layout {
         if (!this.grid[y]) return;
         this.grid[y][x] = module;
         console.log(`Module set. Current module at (${x}, ${y}):`, this.grid[y][x]);
+    }
+
+    removeModule(module: Module | null): boolean {
+        if (!module) return false;
+        
+        for (let y = 0; y < this.gridSize; y++) {
+            for (let x = 0; x < this.gridSize; x++) {
+                if (this.grid[y][x]?.id === module.id) {
+                    this.grid[y][x] = null;
+                    console.log(`Removed module ${module.id} at (${x}, ${y})`);
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    removeModuleAt(x: number, y: number): Module | null {
+        const module = this.grid[y]?.[x] || null;
+        if (module && this.grid[y]) {
+            this.grid[y][x] = null;
+            console.log(`Removed module ${module.id} at (${x}, ${y})`);
+        }
+        return module;
     }
 }

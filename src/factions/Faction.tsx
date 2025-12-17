@@ -394,7 +394,7 @@ export async function generateFactionModule(faction: Faction, stage: Stage): Pro
     }
     console.log(`Registering custom module: ${moduleName}`);
     faction.module = module;
-    registerFactionModule(faction, moduleName, module);
+    registerFactionModule(faction, faction.id, module);
 
     return moduleName;
 }
