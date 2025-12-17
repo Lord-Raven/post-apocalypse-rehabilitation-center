@@ -281,7 +281,7 @@ export const MenuScreen: FC<MenuScreenProps> = ({ stage, setScreenType }) => {
                         fontSize: 'clamp(10px, 1.5vw, 12px)',
                     }}
                 >
-                    v2025.12.14 (beta) - Adding generated faction modules.
+                    v2025.12.16 (beta) - Added content management screens.
                 </motion.div>
             </motion.div>
             </div>

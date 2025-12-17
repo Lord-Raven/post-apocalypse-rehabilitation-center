@@ -419,5 +419,8 @@ export async function generateFactionModuleImage(faction: Faction, module: Modul
         module.baseImageUrl = baseImageUrl;
         module.defaultImageUrl = defaultImageUrl;
     }
+
+    // If there is a module in the stage already, update its images:
+    Object.values(stage.getSave().layout.getModulesWhere(m => m.type === module.name)).forEach(m => m.attributes = {...module});
 }
 export default Faction;
