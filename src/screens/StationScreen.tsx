@@ -13,7 +13,7 @@ import { useTooltip } from '../contexts/TooltipContext';
 import { SwapHoriz, Home, Work, Menu, HourglassBottom, HourglassTop, NotInterested, Delete } from '@mui/icons-material';
 import { SkitType } from '../Skit';
 import { generateActorDecor } from '../actors/Actor';
-import { scoreToGrade } from '../utils';
+import { scoreToGrade, assignActorToRole } from '../utils';
 
 // Styled components for the day/turn display
 const StyledDayCard = styled(Card)(({ theme }) => ({
@@ -317,23 +317,16 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType, isV
                 turnCost = 1;
             }
 
-            // Clear any previous role assignment for this actor (non-quarters modules)
-            layout.getLayout().flat().forEach(module => {
-                if (module && module.type !== 'quarters' && module.ownerId === actorId) {
-                    module.ownerId = undefined;
-                }
-            });
-
-            // Assign the actor to this module as their role
-            targetModule.ownerId = actorId;
+            // Use centralized role assignment logic
+            assignActorToRole(stage(), actor, targetModule, layout);
+            
             if (!actor.isOffSite(stage().getSave())) {
                 actor.locationId = targetModule.id;
             }
             generateActorDecor(actor, targetModule, stage());
             const roleName: string = targetModule.getAttribute('role') || '';
             if (roleName && Object.keys(actor.heldRoles).indexOf(roleName) === -1) {
-                // This character has never held this role before; initialize counter and also kick off a little skit about it.
-                actor.heldRoles[roleName] = 0;
+                // This character has never held this role before; kick off a little skit about it.
                 turnCost = 0; // The skit will advance the turn.
                 stage().setSkit({
                     type: SkitType.ROLE_ASSIGNMENT,
@@ -549,9 +542,7 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType, isV
                                             ? `0 0 50px rgba(0, 255, 136, 1), inset 0 0 40px rgba(0, 255, 136, 0.5)`
                                             : isHighlighted
                                                 ? `0 0 25px rgba(255, 200, 0, 0.8), inset 0 0 20px rgba(255, 200, 0, 0.2)`
-                                                : isInteractable
-                                                    ? `0 0 20px rgba(0, 255, 200, 0.6), inset 0 0 10px rgba(0, 255, 200, 0.2)`
-                                                    : undefined,
+                                                : undefined,
                                     x: 0,
                                     y: 0
                                 }}
@@ -569,8 +560,8 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType, isV
                                     border: isHighlighted 
                                         ? '3px solid rgba(255, 200, 0, 0.9)' 
                                         : isInteractable
-                                            ? '3px solid rgba(0, 255, 200, 1)'
-                                            : '3px solid rgba(0, 255, 136, 0.9)',
+                                            ? '3px solid rgba(0, 255, 136, 0.9)'
+                                            : '3px solid rgba(0, 255, 136, 0.3)',
                                     borderRadius: 10,
                                     background: `url(${stage().getSave().actors[module.ownerId || '']?.decorImageUrls[module.type] || module.getAttribute('defaultImageUrl')}) center center / contain no-repeat`,
                                     cursor: 'pointer',
@@ -1071,7 +1062,7 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType, isV
                                     : '0 0 20px rgba(255, 50, 50, 0.5)',
                                 backdropFilter: 'blur(10px)',
                                 cursor: 'pointer',
-                                zIndex: 50,
+                                zIndex: 100,
                                 pointerEvents: 'auto',
                             }}
                         >

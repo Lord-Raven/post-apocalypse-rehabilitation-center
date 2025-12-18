@@ -31,7 +31,7 @@ export const MenuScreen: FC<MenuScreenProps> = ({ stage, setScreenType }) => {
     
     // Check if a save exists (if there are any actors or the layout has been modified)
     const saveExists = () => {
-        return stage().getSave();
+        return stage().getSave() && Object.keys(stage().getSave().actors).length > 0;
     };
 
     // Handle escape key to continue game if available
@@ -281,7 +281,7 @@ export const MenuScreen: FC<MenuScreenProps> = ({ stage, setScreenType }) => {
                         fontSize: 'clamp(10px, 1.5vw, 12px)',
                     }}
                 >
-                    v2025.12.16 (beta) - Added content management screens.
+                    v2025.12.18 (beta) - Improving skit feedback and other details.
                 </motion.div>
             </motion.div>
             </div>

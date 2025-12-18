@@ -8,6 +8,7 @@ import { BaseScreen, ScreenType } from "./screens/BaseScreen";
 import { generateSkitScript, SkitData, SkitType } from "./Skit";
 import { smartRehydrate } from "./SaveRehydration";
 import { Emotion } from "./actors/Emotion";
+import { assignActorToRole } from "./utils";
 
 type MessageStateType = any;
 type ConfigType = any;
@@ -786,7 +787,12 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
     endSkit(setScreenType: (type: ScreenType) => void) {
         const save = this.getSave();
         if (save.currentSkit) {
-            // Save skit to timeline first, so outcomes save afterward.
+            if (save.currentSkit.type === SkitType.EXIT_CRYO) {
+                this.pushToTimeline(save, `${save.actors[save.currentSkit.actorId ?? '']?.name || 'An unknown individual'} thawed from cryostasis.`);
+            } else if (save.currentSkit.type === SkitType.INTRO_CHARACTER) {
+                this.pushToTimeline(save, `New patient, ${save.actors[save.currentSkit.actorId ?? '']?.name || 'An unknown individual'}, fused from echo.`);
+            }
+            // Save skit to timeline first, so (most) outcomes save afterward.
             this.pushToTimeline(save, `${save.currentSkit.type} skit.`, save.currentSkit);
 
             // Apply endProperties to actors - find from the final entry with endScene=true
@@ -802,13 +808,6 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
                 const newRole = endRoleChanges[actorId];
                 console.log(`Changing ${actor.name}'s role to ${newRole || 'None'}`);
 
-                // First, remove actor from any current role module they own (except quarters)
-                const currentRoleModules = save.layout.getModulesWhere(m => m.type !== 'quarters' && m.ownerId === actor.id);
-                currentRoleModules.forEach(module => {
-                    console.log(`Removing ${actor.name} from ${module.getAttribute('name')} role`);
-                    module.ownerId = '';
-                });
-
                 // If newRole is not empty, find the module with that role and assign the actor
                 if (newRole) {
                     // Find module with matching role
@@ -823,20 +822,20 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
                         if (targetModule.ownerId) {
                             console.log(`Removing previous owner from ${targetModule.getAttribute('name')} role`);
                         }
-                        targetModule.ownerId = actor.id;
+                        
+                        // Use centralized role assignment logic
+                        assignActorToRole(this, actor, targetModule, save.layout);
                         console.log(`Assigned ${actor.name} to ${newRole} role in ${targetModule.getAttribute('name')} module`);
-
-                        // Initialize heldRoles if it doesn't exist
-                        if (!actor.heldRoles) {
-                            actor.heldRoles = {};
-                        }
-                        // Initialize the role's day count if this is a new role
-                        if (actor.heldRoles[newRole] === undefined) {
-                            actor.heldRoles[newRole] = 0;
-                        }
                     } else {
                         console.warn(`No module found with role: ${newRole}`);
                     }
+                } else {
+                    // If newRole is empty, just clear any current role assignments
+                    const currentRoleModules = save.layout.getModulesWhere(m => m.type !== 'quarters' && m.ownerId === actor.id);
+                    currentRoleModules.forEach(module => {
+                        console.log(`Removing ${actor.name} from ${module.getAttribute('name')} role`);
+                        module.ownerId = '';
+                    });
                 }
             }
 
@@ -888,8 +887,9 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
                         faction.reputation = newReputation;
                     
                         // If reputation reaches 0, deactivate faction
-                        if (newReputation <= 0) {
+                        if (newReputation <= 0 && faction.active) {
                             faction.active = false;
+                            this.pushToTimeline(save, `The ${faction.name} cut ties with the PARC.`);
                             // Remove any actors belonging to this faction from the PARC:
                             Object.values(save.actors).forEach(actor => {
                                 if (actor.factionId === faction.id) {

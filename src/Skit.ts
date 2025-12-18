@@ -387,7 +387,7 @@ export async function generateSkitScript(skit: SkitData, wrapUp: boolean, stage:
     let retries = 3;
     while (retries > 0) {
         try {
-            const fullPrompt = generateSkitPrompt(skit, stage, 2 + retries * 2, // 8 history entries on first try, reducing by two each iteration.
+            const fullPrompt = generateSkitPrompt(skit, stage, 5 + retries * 5, // Start with lots of history, reducing each iteration.
                 `Example Script Format:\n` +
                     `System: CHARACTER NAME: Character Name does some actions in prose, for example, waving to you, the player. They say, "My dialogue is in quotation marks."\n` +
                     `CHARACTER NAME: [CHARACTER NAME EXPRESSES PRIDE] "A character can have two entries in a row, if it makes sense to break up a lot of activity."\n` +

@@ -83,7 +83,8 @@ export const CryoScreen: FC<CryoScreenProps> = ({stage, setScreenType, isVertica
             }
 			// Remove actor from cryo slot:
 			cryoSlots[selectedSlotIndex!] = null;
-			const entranceEvent = stage().getSave().timeline?.find(event => event.skit?.actorId === selected.id && event.skit?.type === SkitType.ENTER_CRYO);
+			// find the last skit where they entered cryo to get the date
+			const entranceEvent = stage().getSave().timeline?.reverse().find(event => event.skit?.actorId === selected.id && event.skit?.type === SkitType.ENTER_CRYO);
 			const entranceDate = entranceEvent ? entranceEvent.day : stage().getSave().day;
             // Have a skit to debrief the actor
             stage().setSkit({
@@ -148,11 +149,8 @@ export const CryoScreen: FC<CryoScreenProps> = ({stage, setScreenType, isVertica
 		});
 
 		// Add timeline event
-		stage().getSave().timeline?.push({
-			day: stage().getSave().day,
-			turn: stage().getSave().turn,
-			description: `${actor.name} placed into cryostasis.`,
-			skit: {
+		stage().pushToTimeline(stage().getSave(), `${actor.name} placed into cryostasis.`, 
+			{
 				actorId: actor.id,
 				type: SkitType.ENTER_CRYO,
 				moduleId: stage().getSave().layout.getModulesWhere(m => m?.type === 'cryo bank')[0]?.id || '',
@@ -160,7 +158,7 @@ export const CryoScreen: FC<CryoScreenProps> = ({stage, setScreenType, isVertica
 				script: [],
 				context: {}
 			}
-		});
+		);
 		
 		forceUpdate();
 		return true;

@@ -364,9 +364,6 @@ export async function generateFactionModule(faction: Faction, stage: Stage): Pro
         });
         return null;
     }
-
-    // Sanitize module name (remove special characters, ensure lowercase)
-    moduleName = moduleName.replace(/[^a-z0-9\s-]/g, '').trim();
     
     if (moduleName.length < 2 || moduleName.length > 30) {
         console.error('Module name has invalid length:', moduleName);
