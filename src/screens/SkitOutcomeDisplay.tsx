@@ -33,6 +33,18 @@ interface RoleChange {
     newRole: string;
 }
 
+interface FactionChange {
+    actor: Actor;
+    oldFaction: Faction | null;
+    newFaction: Faction | null;
+}
+
+interface OffStationChange {
+    actor: Actor;
+    isVisiting: boolean; // true if going off-station, false if returning
+    faction: Faction; // The faction being visited or returned from
+}
+
 interface SkitOutcomeDisplayProps {
     skitData: SkitData;
     stage: Stage;
@@ -189,12 +201,96 @@ const SkitOutcomeDisplay: FC<SkitOutcomeDisplayProps> = ({ skitData, stage, layo
         return roleChanges;
     };
 
+    const processFactionChanges = (): FactionChange[] => {
+        if (!skitData.endFactionChanges) return [];
+
+        const factionChanges: FactionChange[] = [];
+
+        Object.entries(skitData.endFactionChanges).forEach(([actorId, newFactionId]) => {
+            const actor = stage.getSave().actors[actorId];
+            if (!actor) return;
+
+            const oldFactionId = actor.factionId;
+            
+            // Only add if there's an effective change (new faction is different from current)
+            if (newFactionId !== oldFactionId) {
+                const oldFaction = oldFactionId ? stage.getSave().factions[oldFactionId] : null;
+                const newFaction = newFactionId ? stage.getSave().factions[newFactionId] : null;
+                
+                factionChanges.push({
+                    actor: actor,
+                    oldFaction: oldFaction,
+                    newFaction: newFaction
+                });
+            }
+        });
+
+        return factionChanges;
+    };
+
+    const processOffStationChanges = (): OffStationChange[] => {
+        if (!skitData.initialActorLocations) return [];
+
+        const offStationChanges: OffStationChange[] = [];
+        const save = stage.getSave();
+
+        // Calculate final locations by applying all movements
+        const finalLocations = {...skitData.initialActorLocations};
+        skitData.script.forEach((entry) => {
+            if (entry.movements) {
+                Object.entries(entry.movements).forEach(([actorId, newLocation]) => {
+                    finalLocations[actorId] = newLocation;
+                });
+            }
+        });
+
+        // Check each actor for off-station changes
+        Object.entries(skitData.initialActorLocations).forEach(([actorId, initialLocation]) => {
+            const actor = save.actors[actorId];
+            if (!actor) return;
+            
+            // Skip actors who actually changed factions (that's a different display)
+            if (skitData.endFactionChanges && skitData.endFactionChanges[actorId] !== undefined) {
+                return;
+            }
+
+            const finalLocation = finalLocations[actorId];
+            if (!finalLocation || initialLocation === finalLocation) return;
+
+            // Check if initial location is a faction
+            const initialFaction = Object.values(save.factions).find(f => f.id === initialLocation);
+            // Check if final location is a faction
+            const finalFaction = Object.values(save.factions).find(f => f.id === finalLocation);
+
+            // Going off-station (from non-faction to faction location)
+            if (!initialFaction && finalFaction) {
+                offStationChanges.push({
+                    actor: actor,
+                    isVisiting: true,
+                    faction: finalFaction
+                });
+            }
+            // Returning to station (from faction to non-faction location)
+            else if (initialFaction && !finalFaction) {
+                offStationChanges.push({
+                    actor: actor,
+                    isVisiting: false,
+                    faction: initialFaction
+                });
+            }
+        });
+
+        return offStationChanges;
+    };
+
     const characterChanges = processStatChanges();
     const factionReputationChanges = processFactionReputationChanges();
     const roleChanges = processRoleChanges();
+    const factionChanges = processFactionChanges();
+    const offStationChanges = processOffStationChanges();
 
     // Don't render if there's nothing to display
-    if (characterChanges.length === 0 && factionReputationChanges.length === 0 && roleChanges.length === 0) {
+    if (characterChanges.length === 0 && factionReputationChanges.length === 0 && roleChanges.length === 0 && factionChanges.length === 0 && offStationChanges.length === 0) {
         return null;
     }
 
@@ -297,7 +393,7 @@ const SkitOutcomeDisplay: FC<SkitOutcomeDisplayProps> = ({ skitData, stage, layo
                                     backgroundImage: `url(${charChange.actor === undefined ? "https://media.charhub.io/41b7b65d-839b-4d31-8c11-64ee50e817df/0fc1e223-ad07-41c4-bdae-c9545d5c5e34.png" : 
                                         charChange.actor.getEmotionImage(charChange.actor.getDefaultEmotion())})`,
                                     backgroundSize: 'cover',
-                                    backgroundPosition: '50% -10%',
+                                    backgroundPosition: '50% -15%',
                                     backgroundRepeat: 'no-repeat',
                                     filter: 'brightness(1.1)',
                                     boxShadow: '0 8px 24px rgba(0,0,0,0.6)',
@@ -866,6 +962,339 @@ const SkitOutcomeDisplay: FC<SkitOutcomeDisplayProps> = ({ skitData, stage, layo
                 </motion.div>
                 </div>
             ))}
+
+            {/* Faction Changes */}
+            {factionChanges.map((factionChange, factionIndex) => {
+                const PARC_BACKGROUND = "https://media.charhub.io/41b7b65d-839b-4d31-8c11-64ee50e817df/0fc1e223-ad07-41c4-bdae-c9545d5c5e34.png";
+                const newFactionBackground = factionChange.newFaction?.backgroundImageUrl || PARC_BACKGROUND;
+                const oldFactionName = factionChange.oldFaction?.name || 'PARC';
+                const newFactionName = factionChange.newFaction?.name || 'PARC';
+                
+                return (
+                <div key={`faction_${factionChange.actor.id}`}>
+                <motion.div
+                    initial={{ opacity: 0, y: 30 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.4, delay: 0.5 + characterChanges.length * 0.2 + factionReputationChanges.length * 0.2 + roleChanges.length * 0.2 + factionIndex * 0.2 }}
+                >
+                    <Paper
+                        elevation={6}
+                        sx={{
+                            background: 'rgba(10,20,30,0.95)',
+                            border: '2px solid rgba(255,200,0,0.3)',
+                            borderRadius: 3,
+                            p: 2,
+                            backdropFilter: 'blur(8px)',
+                            textAlign: 'center',
+                            position: 'relative',
+                            overflow: 'hidden'
+                        }}
+                    >
+                        {/* Background Image - new faction */}
+                        <Box
+                            sx={{
+                                position: 'absolute',
+                                top: 0,
+                                left: 0,
+                                right: 0,
+                                bottom: 0,
+                                backgroundImage: `url(${newFactionBackground})`,
+                                backgroundSize: 'cover',
+                                backgroundPosition: 'center',
+                                opacity: 0.15,
+                                zIndex: 0
+                            }}
+                        />
+
+                        {/* Dark overlay for readability */}
+                        <Box
+                            sx={{
+                                position: 'absolute',
+                                top: 0,
+                                left: 0,
+                                right: 0,
+                                bottom: 0,
+                                background: 'rgba(0, 10, 20, 0.7)',
+                                zIndex: 0
+                            }}
+                        />
+
+                        {/* Content */}
+                        <Box sx={{ position: 'relative', zIndex: 1 }}>
+                            {/* Character Portrait over faction background */}
+                            <motion.div
+                                initial={{ scale: 0.8, opacity: 0 }}
+                                animate={{ scale: 1, opacity: 1 }}
+                                transition={{ duration: 0.5, delay: 0.6 + characterChanges.length * 0.2 + factionReputationChanges.length * 0.2 + roleChanges.length * 0.2 + factionIndex * 0.2 }}
+                                style={{ marginBottom: '12px' }}
+                            >
+                                <Box
+                                    sx={{
+                                        width: '100%',
+                                        height: '150px',
+                                        borderRadius: '12px',
+                                        overflow: 'hidden',
+                                        border: '2px solid rgba(255,200,0,0.4)',
+                                        position: 'relative',
+                                        boxShadow: '0 8px 24px rgba(0,0,0,0.6)',
+                                    }}
+                                >
+                                    {/* Faction background */}
+                                    <Box
+                                        sx={{
+                                            position: 'absolute',
+                                            top: 0,
+                                            left: 0,
+                                            right: 0,
+                                            bottom: 0,
+                                            backgroundImage: `url(${newFactionBackground})`,
+                                            backgroundSize: 'cover',
+                                            backgroundPosition: 'center',
+                                            filter: 'brightness(0.6)',
+                                        }}
+                                    />
+                                    {/* Character portrait overlay */}
+                                    <Box
+                                        sx={{
+                                            position: 'absolute',
+                                            top: 0,
+                                            left: 0,
+                                            right: 0,
+                                            bottom: 0,
+                                            backgroundImage: `url(${factionChange.actor.getEmotionImage(factionChange.actor.getDefaultEmotion())})`,
+                                            backgroundSize: 'cover',
+                                            backgroundPosition: '50% -5%',
+                                            backgroundRepeat: 'no-repeat',
+                                            filter: 'brightness(1.1)',
+                                            mixBlendMode: 'normal',
+                                            '&:hover': {
+                                                transform: 'scale(1.02)',
+                                                transition: 'transform 0.2s ease-in-out'
+                                            }
+                                        }}
+                                    />
+                                </Box>
+                            </motion.div>
+
+                            {/* Character Nameplate */}
+                            <motion.div
+                                initial={{ opacity: 0, y: 20 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ duration: 0.4, delay: 0.7 + characterChanges.length * 0.2 + factionReputationChanges.length * 0.2 + roleChanges.length * 0.2 + factionIndex * 0.2 }}
+                                style={{ marginBottom: '12px' }}
+                            >
+                                <Nameplate 
+                                    actor={factionChange.actor} 
+                                    size="large"
+                                    layout="inline"
+                                />
+                            </motion.div>
+
+                            {/* Faction transition display */}
+                            <motion.div
+                                initial={{ opacity: 0, scale: 0.8 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                                transition={{ duration: 0.5, delay: 0.8 + characterChanges.length * 0.2 + factionReputationChanges.length * 0.2 + roleChanges.length * 0.2 + factionIndex * 0.2 }}
+                                style={{
+                                    padding: '16px',
+                                    background: 'rgba(255,200,0,0.1)',
+                                    borderRadius: '12px',
+                                    border: '2px solid rgba(255,200,0,0.2)'
+                                }}
+                            >
+                                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 2 }}>
+                                    {/* Old Faction */}
+                                    <Box sx={{ textAlign: 'center', flex: 1 }}>
+                                        <Typography
+                                            sx={{
+                                                fontSize: '1.2rem',
+                                                fontWeight: 700,
+                                                color: '#aaa',
+                                                textDecoration: 'line-through'
+                                            }}
+                                        >
+                                            {oldFactionName}
+                                        </Typography>
+                                    </Box>
+
+                                    {/* Arrow */}
+                                    <Typography
+                                        sx={{
+                                            fontSize: '2rem',
+                                            color: '#ffc800',
+                                            fontWeight: 900
+                                        }}
+                                    >
+                                        →
+                                    </Typography>
+
+                                    {/* New Faction */}
+                                    <Box sx={{ textAlign: 'center', flex: 1 }}>
+                                        <Typography
+                                            sx={{
+                                                fontSize: '1.4rem',
+                                                fontWeight: 900,
+                                                color: '#ffc800',
+                                                textShadow: '0 2px 4px rgba(255,200,0,0.6)'
+                                            }}
+                                        >
+                                            {newFactionName}
+                                        </Typography>
+                                    </Box>
+                                </Box>
+                            </motion.div>
+                        </Box>
+                    </Paper>
+                </motion.div>
+                </div>
+                );
+            })}
+
+            {/* Off-Station Changes (Visiting/Returning) */}
+            {offStationChanges.map((offStationChange, offStationIndex) => {
+                const isVisiting = offStationChange.isVisiting;
+                
+                return (
+                <div key={`offstation_${offStationChange.actor.id}`}>
+                <motion.div
+                    initial={{ opacity: 0, y: 30 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.4, delay: 0.5 + characterChanges.length * 0.2 + factionReputationChanges.length * 0.2 + roleChanges.length * 0.2 + factionChanges.length * 0.2 + offStationIndex * 0.2 }}
+                >
+                    <Paper
+                        elevation={6}
+                        sx={{
+                            background: 'rgba(10,20,30,0.95)',
+                            border: isVisiting ? '2px solid rgba(147,51,234,0.3)' : '2px solid rgba(34,197,94,0.3)',
+                            borderRadius: 3,
+                            p: 2,
+                            backdropFilter: 'blur(8px)',
+                            textAlign: 'center',
+                            position: 'relative',
+                            overflow: 'hidden'
+                        }}
+                    >
+                        {/* Background Image - faction background */}
+                        {offStationChange.faction.backgroundImageUrl && (
+                        <Box
+                            sx={{
+                                position: 'absolute',
+                                top: 0,
+                                left: 0,
+                                right: 0,
+                                bottom: 0,
+                                backgroundImage: `url(${offStationChange.faction.backgroundImageUrl})`,
+                                backgroundSize: 'cover',
+                                backgroundPosition: 'center',
+                                opacity: 0.15,
+                                zIndex: 0
+                            }}
+                        />
+                        )}
+
+                        {/* Dark overlay for readability */}
+                        <Box
+                            sx={{
+                                position: 'absolute',
+                                top: 0,
+                                left: 0,
+                                right: 0,
+                                bottom: 0,
+                                background: 'rgba(0, 10, 20, 0.7)',
+                                zIndex: 0
+                            }}
+                        />
+
+                        {/* Content */}
+                        <Box sx={{ position: 'relative', zIndex: 1 }}>
+                            {/* Character Portrait */}
+                            <motion.div
+                                initial={{ scale: 0.8, opacity: 0 }}
+                                animate={{ scale: 1, opacity: 1 }}
+                                transition={{ duration: 0.5, delay: 0.6 + characterChanges.length * 0.2 + factionReputationChanges.length * 0.2 + roleChanges.length * 0.2 + factionChanges.length * 0.2 + offStationIndex * 0.2 }}
+                                style={{ marginBottom: '12px' }}
+                            >
+                                <Box
+                                    sx={{
+                                        width: '100%',
+                                        height: '150px',
+                                        borderRadius: '12px',
+                                        overflow: 'hidden',
+                                        border: isVisiting ? '2px solid rgba(147,51,234,0.4)' : '2px solid rgba(34,197,94,0.4)',
+                                        backgroundImage: `url(${offStationChange.actor.getEmotionImage(offStationChange.actor.getDefaultEmotion())})`,
+                                        backgroundSize: 'cover',
+                                        backgroundPosition: '50% -5%',
+                                        backgroundRepeat: 'no-repeat',
+                                        filter: 'brightness(1.1)',
+                                        boxShadow: '0 8px 24px rgba(0,0,0,0.6)',
+                                        '&:hover': {
+                                            transform: 'scale(1.02)',
+                                            transition: 'transform 0.2s ease-in-out'
+                                        }
+                                    }}
+                                />
+                            </motion.div>
+
+                            {/* Character Nameplate */}
+                            <motion.div
+                                initial={{ opacity: 0, y: 20 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ duration: 0.4, delay: 0.7 + characterChanges.length * 0.2 + factionReputationChanges.length * 0.2 + roleChanges.length * 0.2 + factionChanges.length * 0.2 + offStationIndex * 0.2 }}
+                                style={{ marginBottom: '12px' }}
+                            >
+                                <Nameplate 
+                                    actor={offStationChange.actor} 
+                                    size="large"
+                                    layout="inline"
+                                />
+                            </motion.div>
+
+                            {/* Off-Station Message */}
+                            <motion.div
+                                initial={{ opacity: 0, scale: 0.8 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                                transition={{ duration: 0.5, delay: 0.8 + characterChanges.length * 0.2 + factionReputationChanges.length * 0.2 + roleChanges.length * 0.2 + factionChanges.length * 0.2 + offStationIndex * 0.2 }}
+                                style={{
+                                    padding: '16px',
+                                    background: isVisiting ? 'rgba(147,51,234,0.1)' : 'rgba(34,197,94,0.1)',
+                                    borderRadius: '12px',
+                                    border: isVisiting ? '2px solid rgba(147,51,234,0.2)' : '2px solid rgba(34,197,94,0.2)'
+                                }}
+                            >
+                                <Typography
+                                    variant="h6"
+                                    sx={{
+                                        fontWeight: 800,
+                                        color: isVisiting ? '#9333ea' : '#22c55e',
+                                        textTransform: 'uppercase',
+                                        letterSpacing: '1px',
+                                        textShadow: '0 2px 4px rgba(0,0,0,0.8)',
+                                        mb: 1.5
+                                    }}
+                                >
+                                    {isVisiting ? 'Visiting Off-Station' : 'Returning to Station'}
+                                </Typography>
+                                <Typography
+                                    sx={{
+                                        fontSize: '1.2rem',
+                                        fontWeight: 600,
+                                        color: '#fff',
+                                        lineHeight: 1.5,
+                                        textShadow: '0 2px 4px rgba(0,0,0,0.8)'
+                                    }}
+                                >
+                                    {isVisiting 
+                                        ? `${offStationChange.actor.name} is visiting ${offStationChange.faction.name}`
+                                        : `${offStationChange.actor.name} has returned from ${offStationChange.faction.name}`
+                                    }
+                                </Typography>
+                            </motion.div>
+                        </Box>
+                    </Paper>
+                </motion.div>
+                </div>
+                );
+            })}
             </Box>
         </motion.div>
     );

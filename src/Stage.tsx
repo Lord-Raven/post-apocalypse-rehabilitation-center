@@ -280,7 +280,11 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
                     // Check if actor didn't move anywhere in the last skit, then put them in a random non-quarters module:
                     const previousSkit = (save.timeline && save.timeline.length > 0) ? save.timeline[save.timeline.length - 1].skit : undefined;
                     if ((!previousSkit || previousSkit.script.every(entry => !entry.movements || !Object.keys(entry.movements).some(moverId => moverId === actor.id)))) {
-                        actor.locationId = save.layout.getModulesWhere(m => m.type !== 'quarters' || m.ownerId == actorId).sort(() => Math.random() - 0.5)[0]?.id || '';
+                        // Eligible modules are any non-quarters module with fewer than four people at that location, or their own quarters:
+                        const eligibleModules = save.layout.getModulesWhere(m => (m.type !== 'quarters' && save.layout.getActorsAtModule(m, save).length < 4) || (m.type === 'quarters' && m.ownerId == actorId));
+                        if (eligibleModules.length > 0) {
+                            actor.locationId = eligibleModules.sort(() => Math.random() - 0.5)[0]?.id || '';
+                        }
                     }
                 }
                 console.log(`Moved actor ${actor.name} to location ${actor.locationId}`);
@@ -782,9 +786,8 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
     endSkit(setScreenType: (type: ScreenType) => void) {
         const save = this.getSave();
         if (save.currentSkit) {
-            if (!save.timeline) {
-                save.timeline = [];
-            }
+            // Save skit to timeline first, so outcomes save afterward.
+            this.pushToTimeline(save, `${save.currentSkit.type} skit.`, save.currentSkit);
 
             // Apply endProperties to actors - find from the final entry with endScene=true
             let endProps: { [actorId: string]: { [stat: string]: number } } = save.currentSkit.endProperties || {};
@@ -840,15 +843,14 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
             // Apply faction changes to actors
             for (const actorId in endFactionChanges) {
                 const actor = save.actors[actorId];
-                if (actor) {
-                    const newFactionId = endFactionChanges[actorId];
+                const newFactionId = endFactionChanges[actorId];
+                if (actor && actor.factionId != newFactionId) {
                     console.log(`Changing ${actor.name}'s faction from ${actor.factionId || 'PARC'} to ${newFactionId || 'PARC'}`);
-                    actor.factionId = newFactionId;
                     
                     // If currently a faction rep and joining PARC (factionId = ''), need to generate a new faction rep:
                     if (newFactionId === '') {
-
                         const currentFaction = Object.values(save.factions).find(faction => faction.representativeId === actor.id);
+                        this.pushToTimeline(save, `${actor.name}, formerly of the ${currentFaction?.name || 'unknown faction'} joined the ${newFactionId ? save.factions[newFactionId]?.name || 'unknown faction' : 'PARC'}.`);
                         if (currentFaction) {
                             console.log(`Generating new representative for faction ${currentFaction.name} as ${actor.name} is leaving.`);
                             generateFactionRepresentative(currentFaction, this).then(() => {
@@ -861,12 +863,14 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
                         }
                     } else {
                         // If joining a faction, set locationId to the factionId
+                        this.pushToTimeline(save, `${actor.name} left the ${actor.factionId ? save.factions[actor.factionId]?.name || 'unknown faction' : 'PARC'} to join the ${newFactionId ? save.factions[newFactionId]?.name || 'unknown faction' : 'PARC'}.`);
                         actor.locationId = newFactionId;
                         // Free up rooms owned by this actor
                         save.layout.getModulesWhere(m => m.ownerId === actor.id).forEach(module => {
                             module.ownerId = '';
                         });
                     }
+                    actor.factionId = newFactionId;
                 }
             }
 
@@ -928,14 +932,7 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
                 }
             }
 
-            // Save skit to timeline
-            save.currentSkit.context = {...save.currentSkit.context, day: this.getSave().day};
-            save.timeline.push({
-                day: save.day,
-                turn: save.turn,
-                description: `${save.currentSkit.type} skit.`,
-                skit: save.currentSkit
-            });
+
             save.currentSkit = undefined;
             this.incTurn(1, setScreenType);
         }
@@ -954,6 +951,17 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
             skit.generating = false;
         }
         return;
+    }
+
+    pushToTimeline(save: SaveType, description: string, skit: SkitData | null = null) {
+        if (!save.timeline) {
+            save.timeline = [];
+        }
+        save.timeline.push({
+            day: save.day,
+            turn: save.turn,
+            description: description
+        });
     }
 
 

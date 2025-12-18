@@ -273,8 +273,8 @@ export function generateSkitPrompt(skit: SkitData, stage: Stage, historyLength: 
         });
     }
 
-    let pastSkits = save.timeline?.filter(event => event.skit).map(event => event.skit as SkitData) || []
-    pastSkits = pastSkits.filter((v, index) => index > (pastSkits.length || 0) - historyLength);
+    let pastEvents = save.timeline || [];
+    pastEvents = pastEvents.filter((v, index) => index > (pastEvents.length || 0) - historyLength);
     const module = save.layout.getModuleById(skit.moduleId || '');
     const moduleOwner = module?.ownerId ? save.actors[module.ownerId] : null;
     const faction = skit.context.factionId ? save.factions[skit.context.factionId] : null;
@@ -351,18 +351,22 @@ export function generateSkitPrompt(skit: SkitData, stage: Stage, historyLength: 
             `${module.type === 'quarters' ? `${moduleOwner ? `${moduleOwner.name}'s` : 'a vacant'} quarters` : 
             `the ${module.getAttribute('name') || 'Unknown'}`}. ${module.getAttribute('skitPrompt') || 'No description available.'}\n`) : '') +
 
-        ((historyLength > 0 && pastSkits.length) ? 
-            // Include last few skit scripts for context and style reference; use summary except for most recent skit or if no summary.
-            '\n\nRecent Scenes for additional context:' + pastSkits.map((v, index) =>  {
-            const module = stage.getSave().layout.getModuleById(v.moduleId || '');
-            const moduleOwner = module?.ownerId ? stage.getSave().actors[module.ownerId] : null;
-            const moduleDescription = module ? (module.type === 'quarters' && moduleOwner ? `${moduleOwner.name}'s quarters` : `the ${module.getAttribute('name')}`) : 'an unknown location';
-            return ((!v.summary || index == pastSkits.length - 1) ?
-                (`\n\n  Script of Scene in ${moduleDescription} (${stage.getSave().day - v.context.day}) days ago:\n` +
-                `System: ${buildScriptLog(v)}`) :
-                (`\n\n  Summary of scene in ${moduleDescription} (${stage.getSave().day - v.context.day}) days ago:\n` + v.summary)
-                )}).join('') :
-            '') +
+        ((historyLength > 0 && pastEvents.length) ? 
+                // Include last few skit scripts for context and style reference; use summary except for most recent skit or if no summary.
+                '\n\nRecent Events for additional context:' + pastEvents.map((v, index) =>  {
+                if (v.skit) {
+                    const module = stage.getSave().layout.getModuleById(v.skit.moduleId || '');
+                    const moduleOwner = module?.ownerId ? stage.getSave().actors[module.ownerId] : null;
+                    const moduleDescription = module ? (module.type === 'quarters' && moduleOwner ? `${moduleOwner.name}'s quarters` : `the ${module.getAttribute('name')}`) : 'an unknown location';
+                    return ((!v.skit.summary || index == pastEvents.length - 1) ?
+                        (`\n\n  Script of Scene in ${moduleDescription} (${stage.getSave().day - v.day}) days ago:\n` +
+                        `System: ${buildScriptLog(v.skit)}`) :
+                        (`\n\n  Summary of scene in ${moduleDescription} (${stage.getSave().day - v.day}) days ago:\n` + v.skit.summary)
+                        )
+                } else {
+                    return `Action ${stage.getSave().day - v.day} days ago: ${v.description || ''}`;
+                }
+            }).join('') : '') +
         `\n\n${instruction}`;
     return fullPrompt;
 }

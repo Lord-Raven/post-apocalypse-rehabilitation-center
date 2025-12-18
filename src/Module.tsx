@@ -1,5 +1,6 @@
 import { SkitType } from './Skit';
-import { Stage } from "./Stage";
+import { SaveType, Stage } from "./Stage";
+import Actor from './actors/Actor';
 import Faction from './factions/Faction';
 import { ScreenType } from './screens/BaseScreen';
 import { Build, Hotel, Restaurant, Security, AttachMoney, Favorite } from '@mui/icons-material';
@@ -526,6 +527,10 @@ export class Layout {
 
     setLayout(layout: (Module | null)[][]) {
         this.grid = layout;
+    }
+
+    getActorsAtModule(module: Module, save: SaveType): Actor[] {
+        return Object.values(save.actors).filter(actor => actor.locationId === module.id);
     }
 
     getModulesWhere(predicate: (module: Module) => boolean): Module[] {

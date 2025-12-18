@@ -103,6 +103,11 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType, isV
         
         // Write into the Stage's layout
         stage().getLayout().setModuleAt(x, y, newModule);
+        
+        // Log to timeline
+        const moduleName = newModule.getAttribute('name') || moduleType;
+        stage().pushToTimeline(save, `Added ${moduleName} module to the PARC`);
+        
         // update local layout state so this component re-renders with the new module
         setLayout(stage().getLayout());
         setShowModuleSelector(false);
@@ -165,6 +170,40 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType, isV
         }) as ModuleType[];
     };
 
+    const getUnaffordableModules = (): ModuleType[] => {
+        // Get modules that are available but not affordable
+        const allModuleTypes = Object.keys(MODULE_TEMPLATES);
+        
+        return allModuleTypes.filter(moduleType => {
+            const moduleDefaults = MODULE_TEMPLATES[moduleType];
+            
+            const available = moduleDefaults.available;
+            
+            // Check if available() returns true
+            if (available && !available(stage())) {
+                return false;
+            }
+            
+            // Check if requirements are NOT met (unaffordable)
+            const requirements = moduleDefaults.cost || {};
+            const stationStats = stage().getSave().stationStats;
+            
+            if (!stationStats) {
+                // If no station stats exist, all with costs are unaffordable
+                return Object.keys(requirements).length > 0;
+            }
+            
+            for (const [stat, requiredValue] of Object.entries(requirements)) {
+                const currentValue = stationStats[stat as StationStat] || 1;
+                if (currentValue < requiredValue + 1) {
+                    return true; // Unaffordable
+                }
+            }
+            
+            return false; // Is affordable
+        }) as ModuleType[];
+    };
+
     const handleModuleDragStart = (module: Module, x: number, y: number) => {
         setDraggedModule({module, fromX: x, fromY: y});
         setTooltip(`Moving ${module.getAttribute('name') || module.type} module`, SwapHoriz);
@@ -215,6 +254,11 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType, isV
         
         // Remove the module from the layout
         stage().getLayout().removeModuleAt(fromX, fromY);
+        
+        // Log to timeline
+        const moduleName = module.getAttribute('name') || module.type;
+        stage().pushToTimeline(stage().getSave(), `Removed ${moduleName} module from the PARC`);
+        
         setLayout(stage().getLayout());
         setDraggedModule(null);
         setIsHoveringDeleteZone(false);
@@ -438,6 +482,24 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType, isV
         return { locationId, homeId, workId };
     };
 
+    // Helper function to determine if a module is interactable
+    const isModuleInteractable = (module: Module | null): boolean => {
+        if (!module) return false;
+        
+        // Check if there's at least one actor present
+        const hasActors = Object.values(stage().getSave().actors).some(a => a.locationId === module.id);
+        if (hasActors) return true;
+        
+        // Check if quarters has an owner
+        if (module.type === 'quarters' && module.ownerId) return true;
+        
+        // Check for rooms with dedicated screens
+        const dedicatedScreenRooms = ['echo chamber', 'cryo bank', 'aperture'];
+        if (dedicatedScreenRooms.includes(module.type)) return true;
+        
+        return false;
+    };
+
     const renderGrid = () => {
         const cells: React.ReactNode[] = [];
         
@@ -457,6 +519,7 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType, isV
                 );
                 const isHome = module && module.id === homeId;
                 const isWork = module && module.id === workId;
+                const isInteractable = isModuleInteractable(module);
                 cells.push(
                     <div
                         key={`cell_${x}-${y}`}
@@ -486,7 +549,9 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType, isV
                                             ? `0 0 50px rgba(0, 255, 136, 1), inset 0 0 40px rgba(0, 255, 136, 0.5)`
                                             : isHighlighted
                                                 ? `0 0 25px rgba(255, 200, 0, 0.8), inset 0 0 20px rgba(255, 200, 0, 0.2)`
-                                                : undefined,
+                                                : isInteractable
+                                                    ? `0 0 20px rgba(0, 255, 200, 0.6), inset 0 0 10px rgba(0, 255, 200, 0.2)`
+                                                    : undefined,
                                     x: 0,
                                     y: 0
                                 }}
@@ -503,7 +568,9 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType, isV
                                     height: '100%',
                                     border: isHighlighted 
                                         ? '3px solid rgba(255, 200, 0, 0.9)' 
-                                        : '3px solid rgba(0, 255, 136, 0.9)',
+                                        : isInteractable
+                                            ? '3px solid rgba(0, 255, 200, 1)'
+                                            : '3px solid rgba(0, 255, 136, 0.9)',
                                     borderRadius: 10,
                                     background: `url(${stage().getSave().actors[module.ownerId || '']?.decorImageUrls[module.type] || module.getAttribute('defaultImageUrl')}) center center / contain no-repeat`,
                                     cursor: 'pointer',
@@ -974,7 +1041,7 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType, isV
                             onDragOver={(e) => {
                                 e.preventDefault();
                                 setIsHoveringDeleteZone(true);
-                                setTooltip(`Delete ${draggedModule.module.getAttribute('name') || draggedModule.module.type}`, Delete);
+                                setTooltip(`Remove ${draggedModule.module.getAttribute('name') || draggedModule.module.type}`, Delete);
                             }}
                             onDragLeave={() => {
                                 setIsHoveringDeleteZone(false);
@@ -1004,7 +1071,7 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType, isV
                                     : '0 0 20px rgba(255, 50, 50, 0.5)',
                                 backdropFilter: 'blur(10px)',
                                 cursor: 'pointer',
-                                zIndex: 100,
+                                zIndex: 50,
                                 pointerEvents: 'auto',
                             }}
                         >
@@ -1504,6 +1571,7 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType, isV
                                 Select Module Type
                             </Typography>
                             
+                            {/* Affordable Modules */}
                             <div style={{
                                 display: 'grid',
                                 gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))',
@@ -1601,6 +1669,125 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType, isV
                                     );
                                 })}
                             </div>
+                            
+                            {/* Unaffordable Modules */}
+                            {getUnaffordableModules().length > 0 && (
+                                <>
+                                    <Typography
+                                        variant="h5"
+                                        style={{
+                                            color: '#666',
+                                            marginTop: '30px',
+                                            marginBottom: '10px',
+                                            textAlign: 'center',
+                                            fontWeight: 700,
+                                        }}
+                                    >
+                                        Insufficient Resources
+                                    </Typography>
+                                    
+                                    <div style={{
+                                        display: 'grid',
+                                        gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))',
+                                        gap: '20px',
+                                        marginTop: '10px',
+                                    }}>
+                                        {getUnaffordableModules().map((moduleType) => {
+                                            const moduleDefaults = MODULE_TEMPLATES[moduleType];
+                                            if (!moduleDefaults) return null;
+                                            
+                                            const cost = moduleDefaults.cost || {};
+                                            const hasCost = Object.keys(cost).length > 0;
+                                            
+                                            return (
+                                                <div
+                                                    key={moduleType}
+                                                    style={{
+                                                        background: `url(${moduleDefaults.defaultImageUrl}) center center / cover`,
+                                                        border: '2px solid #444',
+                                                        borderRadius: '10px',
+                                                        padding: '15px',
+                                                        cursor: 'not-allowed',
+                                                        position: 'relative',
+                                                        minHeight: '150px',
+                                                        display: 'flex',
+                                                        flexDirection: 'column',
+                                                        justifyContent: 'flex-end',
+                                                        opacity: 0.4,
+                                                        filter: 'grayscale(0.5)',
+                                                    }}
+                                                >
+                                                    <div style={{
+                                                        background: 'rgba(0, 0, 0, 0.8)',
+                                                        padding: '10px',
+                                                        borderRadius: '5px',
+                                                        textAlign: 'center',
+                                                    }}>
+                                                        <Typography
+                                                            variant="h6"
+                                                            style={{
+                                                                color: '#666',
+                                                                textTransform: 'capitalize',
+                                                                fontWeight: 700,
+                                                                fontSize: '1rem',
+                                                            }}
+                                                        >
+                                                            {moduleDefaults.name}
+                                                        </Typography>
+                                                        {moduleDefaults.role && (
+                                                            <Typography
+                                                                variant="body2"
+                                                                style={{
+                                                                    color: '#666',
+                                                                    opacity: 0.7,
+                                                                    fontSize: '0.85rem',
+                                                                    marginTop: '4px',
+                                                                    fontWeight: 700,
+                                                                }}
+                                                            >
+                                                                {moduleDefaults.role}
+                                                            </Typography>
+                                                        )}
+                                                        {hasCost && (
+                                                            <div style={{
+                                                                display: 'flex',
+                                                                justifyContent: 'center',
+                                                                gap: '8px',
+                                                                marginTop: '8px',
+                                                                flexWrap: 'wrap',
+                                                            }}>
+                                                                {Object.entries(cost).map(([stat, value]) => {
+                                                                    const StatIcon = STATION_STAT_ICONS[stat as StationStat];
+                                                                    const stationStats = stage().getSave().stationStats;
+                                                                    const currentValue = stationStats?.[stat as StationStat] || 1;
+                                                                    const isInsufficient = currentValue < value + 1;
+                                                                    
+                                                                    return (
+                                                                        <div
+                                                                            key={stat}
+                                                                            style={{
+                                                                                display: 'flex',
+                                                                                alignItems: 'center',
+                                                                                gap: '4px',
+                                                                                color: isInsufficient ? '#ff3333' : '#666',
+                                                                                fontSize: '0.9rem',
+                                                                                fontWeight: 700,
+                                                                            }}
+                                                                        >
+                                                                            <StatIcon style={{ fontSize: '1rem' }} />
+                                                                            <span>-{value}</span>
+                                                                        </div>
+                                                                    );
+                                                                })}
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+                                </>
+                            )}
                             
                             <motion.button
                                 whileHover={{ scale: 1.05 }}

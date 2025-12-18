@@ -1,5 +1,5 @@
-import React, { FC } from 'react';
-import { Box, CircularProgress, Typography } from '@mui/material';
+import React, { FC, useState, useEffect } from 'react';
+import { Box, LinearProgress, Typography } from '@mui/material';
 import { ScreenType } from './BaseScreen';
 import { Stage } from '../Stage';
 
@@ -13,9 +13,19 @@ interface LoadingScreenProps {
     setScreenType: (type: ScreenType) => void;
 }
 
+const LOADING_PHASES = [
+    { message: "Generating content (this may take a while)", duration: 20000, progress: 25 },
+    { message: "Expanding StationAide details.", duration: 20000, progress: 50 },
+    { message: "Visualizing StationAide.", duration: 20000, progress: 75 },
+    { message: "Wrapping up", duration: Infinity, progress: 90 },
+];
+
 export const LoadingScreen: FC<LoadingScreenProps> = ({ stage, setScreenType }) => {
+    const [currentPhaseIndex, setCurrentPhaseIndex] = useState(0);
+    const [progress, setProgress] = useState(0);
+
     // Poll for completion of aide generation
-    React.useEffect(() => {
+    useEffect(() => {
         const interval = setInterval(() => {
             const aidePromise = stage().getGenerateAidePromise();
             
@@ -27,6 +37,37 @@ export const LoadingScreen: FC<LoadingScreenProps> = ({ stage, setScreenType }) 
         
         return () => clearInterval(interval);
     }, [stage, setScreenType]);
+
+    // Handle phase transitions and progress animation
+    useEffect(() => {
+        const currentPhase = LOADING_PHASES[currentPhaseIndex];
+        const targetProgress = currentPhase.progress;
+        
+        // Smoothly animate progress to target
+        const progressInterval = setInterval(() => {
+            setProgress(prev => {
+                if (prev < targetProgress) {
+                    return Math.min(prev + 0.5, targetProgress);
+                }
+                return prev;
+            });
+        }, 50);
+
+        // Move to next phase after duration (if not the last phase)
+        let phaseTimeout: NodeJS.Timeout | null = null;
+        if (currentPhaseIndex < LOADING_PHASES.length - 1) {
+            phaseTimeout = setTimeout(() => {
+                setCurrentPhaseIndex(prev => Math.min(prev + 1, LOADING_PHASES.length - 1));
+            }, currentPhase.duration);
+        }
+
+        return () => {
+            clearInterval(progressInterval);
+            if (phaseTimeout) clearTimeout(phaseTimeout);
+        };
+    }, [currentPhaseIndex]);
+
+    const currentPhase = LOADING_PHASES[currentPhaseIndex];
 
     return (
         <Box
@@ -40,23 +81,57 @@ export const LoadingScreen: FC<LoadingScreenProps> = ({ stage, setScreenType }) 
                 background: 'linear-gradient(45deg, #001122 0%, #002244 100%)',
             }}
         >
-            <CircularProgress 
-                size={80} 
-                sx={{ 
-                    color: '#00ff88',
-                    marginBottom: 3
-                }} 
-            />
-            <Typography
-                variant="h5"
+            <Box
                 sx={{
-                    color: '#00ff88',
-                    fontWeight: 700,
-                    textShadow: '0 0 20px rgba(0, 255, 136, 0.5)',
+                    width: '500px',
+                    maxWidth: '80%',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
                 }}
             >
-                Initializing StationAide™...
-            </Typography>
+                <Typography
+                    variant="h5"
+                    sx={{
+                        color: '#00ff88',
+                        fontWeight: 700,
+                        textShadow: '0 0 20px rgba(0, 255, 136, 0.5)',
+                        marginBottom: 4,
+                        textAlign: 'center',
+                    }}
+                >
+                    Initializing StationAide™
+                </Typography>
+
+                <Box sx={{ width: '100%', marginBottom: 2 }}>
+                    <LinearProgress
+                        variant="determinate"
+                        value={progress}
+                        sx={{
+                            height: 10,
+                            borderRadius: 5,
+                            backgroundColor: 'rgba(0, 255, 136, 0.1)',
+                            '& .MuiLinearProgress-bar': {
+                                backgroundColor: '#00ff88',
+                                boxShadow: '0 0 10px rgba(0, 255, 136, 0.5)',
+                                borderRadius: 5,
+                            },
+                        }}
+                    />
+                </Box>
+
+                <Typography
+                    variant="body1"
+                    sx={{
+                        color: '#00cc66',
+                        fontWeight: 500,
+                        textAlign: 'center',
+                        minHeight: '24px',
+                    }}
+                >
+                    {currentPhase.message}
+                </Typography>
+            </Box>
         </Box>
     );
 };

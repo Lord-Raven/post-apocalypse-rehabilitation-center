@@ -2,7 +2,7 @@ import React, { FC, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Dialog, DialogTitle, DialogContent, DialogActions } from '@mui/material';
 import { Stage } from '../Stage';
-import Actor, { Stat, ACTOR_STAT_ICONS, getStatDescription, generateBaseActorImage, generateEmotionImage, generateActorDecor } from '../actors/Actor';
+import Actor, { Stat, ACTOR_STAT_ICONS, getStatDescription, generateBaseActorImage, generateEmotionImage, generateActorDecor, VOICE_MAP } from '../actors/Actor';
 import { Emotion, EMOTION_PROMPTS } from '../actors/Emotion';
 import { GlassPanel, Title, Button, TextInput, Chip } from '../components/UIComponents';
 import { Close, Save, Image as ImageIcon } from '@mui/icons-material';
@@ -499,12 +499,27 @@ export const ActorDetailScreen: FC<ActorDetailScreenProps> = ({ actor, stage, on
                                         >
                                             Voice ID
                                         </label>
-                                        <TextInput
-                                            fullWidth
+                                        <select
                                             value={editedActor.voiceId}
                                             onChange={(e) => handleInputChange('voiceId', e.target.value)}
-                                            placeholder="Voice identifier"
-                                        />
+                                            style={{
+                                                width: '100%',
+                                                padding: '12px',
+                                                fontSize: '14px',
+                                                backgroundColor: 'rgba(0, 20, 40, 0.6)',
+                                                border: '2px solid rgba(0, 255, 136, 0.3)',
+                                                borderRadius: '5px',
+                                                color: '#e0f0ff',
+                                                fontFamily: 'inherit',
+                                                cursor: 'pointer',
+                                            }}
+                                        >
+                                            {Object.entries(VOICE_MAP).map(([id, description]) => (
+                                                <option key={id} value={id}>
+                                                    {description}
+                                                </option>
+                                            ))}
+                                        </select>
                                     </div>
 
                                     {/* Theme Color */}
