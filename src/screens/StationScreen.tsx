@@ -765,7 +765,17 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType, isV
                                                         textAlign: 'center',
                                                         pointerEvents: 'none',
                                                         zIndex: 2,
-                                                        fontSize: isVerticalLayout ? '1.2vh' : '1.5vh',
+                                                        fontSize: (() => {
+                                                            const labelText = module.getAttribute('name') || module.type;
+                                                            const baseSize = isVerticalLayout ? 1.2 : 1.5;
+                                                            // Scale down more aggressively for long labels
+                                                            if (labelText.length > 20) return `${baseSize * 0.65}vh`;
+                                                            if (labelText.length > 15) return `${baseSize * 0.75}vh`;
+                                                            if (labelText.length > 12) return `${baseSize * 0.85}vh`;
+                                                            return `${baseSize}vh`;
+                                                        })(),
+                                                        opacity: isInteractable ? 1 : 0.4,
+                                                        transition: 'opacity 0.3s ease',
                                                     }}
                                                 >{module.getAttribute('name') || module.type}</div>
                                             </>

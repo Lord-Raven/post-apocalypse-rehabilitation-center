@@ -223,6 +223,10 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
             console.log('No saves loaded from storage API; using existing saves.');
             this.saveAllGames()
         }
+
+        // Remove saves that have no actors or layout (they didn't even initialize an aide); set those indices to undefined
+        this.saves = this.saves.map(save => (save && save.actors && Object.keys(save.actors).length > 0 && save.layout) ? save : undefined);
+
         this.currentSave = this.saves[this.saveSlot] || this.getFreshSave();
 
         return {
