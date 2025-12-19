@@ -451,7 +451,7 @@ export async function generateBaseActorImage(actor: Actor, stage: Stage, force: 
             console.log(`Generating new image for actor ${actor.name} from description`);
             // Use stage.makeImage to create a neutral expression based on the description
             imageUrl = await stage.makeImage({
-                prompt: (`${(stage.getSave().characterArtStyle || 'original' === 'original') ? 'Illustrate this character in a hyperrealistic anime visual novel style' : ART_PROMPT[stage.getSave().characterArtStyle || 'original']}: ` +
+                prompt: (`${((stage.getSave().characterArtStyle || 'original') === 'original') ? 'Illustrate this character in a hyperrealistic anime visual novel style' : ART_PROMPT[stage.getSave().characterArtStyle || 'original']}: ` +
                     `${actor.description}\nThe character should have a neutral expression Maintain a margin of negative space over their head/hair.`)
                     .replace('{{ARTIST}}', stage.getSave().characterArtist || 'some professional'),
                 aspect_ratio: AspectRatio.PHOTO_VERTICAL
@@ -461,7 +461,7 @@ export async function generateBaseActorImage(actor: Actor, stage: Stage, force: 
         // Use stage.makeImageFromImage to create a base image.
         imageUrl = await stage.makeImageFromImage({
             image: imageUrl || actor.avatarImageUrl,
-            prompt: `${ART_PROMPT[stage.getSave().characterArtStyle || 'original']}. Create a waist-up portrait of this character (${actor.description}) with a neutral expression and pose. Maintain a margin of negative space over their head/hair.`
+            prompt: `${ART_PROMPT[stage.getSave().characterArtStyle || 'original']}. Create a waist-up portrait of this character (${actor.description}) with a neutral expression and pose. Place them on a light gray background with a negative-space margin at the top of the image.`
                 .replace('{{ARTIST}}', stage.getSave().characterArtist || 'some professional'),
             remove_background: true,
             transfer_type: 'edit'
