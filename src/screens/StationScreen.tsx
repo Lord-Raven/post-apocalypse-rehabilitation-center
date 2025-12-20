@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Typography, Card, CardContent, Tabs, Tab } from '@mui/material';
 import { styled } from '@mui/material/styles';
 import { ScreenType } from './BaseScreen';
-import { Layout, Module, createModule, ModuleType, MODULE_TEMPLATES, StationStat, STATION_STAT_DESCRIPTIONS, STATION_STAT_ICONS } from '../Module';
+import { Layout, Module, createModule, ModuleType, MODULE_TEMPLATES, StationStat, STATION_STAT_DESCRIPTIONS, STATION_STAT_ICONS, DEFAULT_GRID_WIDTH, DEFAULT_GRID_HEIGHT } from '../Module';
 import { Stage } from '../Stage';
 import ActorCard from '../components/ActorCard';
 import ModuleCard from '../components/ModuleCard';
@@ -68,7 +68,8 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType, isV
     // Tooltip context
     const { setTooltip, clearTooltip } = useTooltip();
 
-    const gridSize = 6;
+    const gridWidth = layout.gridWidth;
+    const gridHeight = layout.gridHeight;
     const cellSize = isVerticalLayout ? '8.5vh' : '12vh';
     const gridEdgeSize = isVerticalLayout ? '10vh' : '0';
 
@@ -500,8 +501,8 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType, isV
         const activeActorId = draggedActor?.id || hoveredActorId;
         const { locationId, homeId, workId } = getActorRelatedModules(activeActorId);
         
-        for (let y = 0; y < gridSize; y++) {
-            for (let x = 0; x < gridSize; x++) {
+        for (let y = 0; y < gridHeight; y++) {
+            for (let x = 0; x < gridWidth; x++) {
                 const module = layout.getModuleAt(x, y);
                 
                 // Check if this module should be highlighted
@@ -645,7 +646,7 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType, isV
                                     }
                                     
                                     const rect = gridContainer.getBoundingClientRect();
-                                    const cellSizeNum = rect.width / gridSize;
+                                    const cellSizeNum = rect.width / gridWidth;
                                     
                                     // Get pointer position relative to grid
                                     const relX = info.point.x - rect.left;
@@ -655,7 +656,7 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType, isV
                                     const dropY = Math.floor(relY / cellSizeNum);
                                     
                                     // Validate drop position
-                                    if (dropX >= 0 && dropX < gridSize && dropY >= 0 && dropY < gridSize) {
+                                    if (dropX >= 0 && dropX < gridWidth && dropY >= 0 && dropY < gridHeight) {
                                         handleModuleDrop(dropX, dropY);
                                     } else {
                                         setDraggedModule(null);
@@ -1014,8 +1015,8 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType, isV
                         top: isVerticalLayout ? `${gridEdgeSize}` : '50%',
                         left: '50%',
                         transform: isVerticalLayout ? 'translate(-50%, 0)' : 'translate(-50%, -50%)',
-                        width: `calc(${gridSize} * ${cellSize})`,
-                        height: `calc(${gridSize} * ${cellSize})`,
+                        width: `calc(${gridWidth} * ${cellSize})`,
+                        height: `calc(${gridHeight} * ${cellSize})`,
                         // move the subtle grid onto the centered modules container so lines align with cells
                         backgroundImage: `
                             linear-gradient(rgba(0, 255, 136, 0.08) 1px, transparent 1px),
@@ -1107,7 +1108,7 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType, isV
                 className="station-menu"
                 style={{
                     width: isVerticalLayout ? '100vw' : '20vw',
-                    height: isVerticalLayout ? '40vh' : '100vh',
+                    height: isVerticalLayout ? '50vh' : '100vh',
                     boxSizing: 'border-box',
                     background: 'rgba(0, 20, 40, 0.9)',
                     borderLeft: isVerticalLayout ? 'none' : '2px solid #00ff88',

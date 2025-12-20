@@ -489,18 +489,26 @@ export function createModule(type: ModuleType, opts?: { id?: string; attributes?
     return new Module(type, opts);
 }
 
-export const DEFAULT_GRID_SIZE = 6;
+export const DEFAULT_GRID_SIZE = 6; // Deprecated - use DEFAULT_GRID_WIDTH and DEFAULT_GRID_HEIGHT
+export const DEFAULT_GRID_WIDTH = 8;
+export const DEFAULT_GRID_HEIGHT = 5;
 
 export type LayoutChangeHandler = (grid: Module[]) => void;
 
 export class Layout {
     public grid: (Module | null)[][];
-    public gridSize: number;
+    public gridWidth: number;
+    public gridHeight: number;
+    // Deprecated: gridSize kept for backward compatibility
+    public get gridSize(): number {
+        return Math.max(this.gridWidth, this.gridHeight);
+    }
 
-    constructor(gridSize: number = DEFAULT_GRID_SIZE, initial?: (Module | null)[][]) {
-        this.gridSize = gridSize;
-        this.grid = initial || Array.from({ length: this.gridSize }, () =>
-            Array.from({ length: this.gridSize }, () => null)
+    constructor(width: number = DEFAULT_GRID_WIDTH, height: number = DEFAULT_GRID_HEIGHT, initial?: (Module | null)[][]) {
+        this.gridWidth = width;
+        this.gridHeight = height;
+        this.grid = initial || Array.from({ length: this.gridHeight }, () =>
+            Array.from({ length: this.gridWidth }, () => null)
         );
     }
 
@@ -509,14 +517,64 @@ export class Layout {
      */
     static fromSave(savedLayout: any): Layout {
         const layout = Object.create(Layout.prototype);
-        layout.gridSize = savedLayout.gridSize || DEFAULT_GRID_SIZE;
+        
+        // Support both old square grids and new rectangular grids
+        if (savedLayout.gridWidth !== undefined && savedLayout.gridHeight !== undefined) {
+            layout.gridWidth = savedLayout.gridWidth;
+            layout.gridHeight = savedLayout.gridHeight;
+        } else {
+            // Old save format - convert square grid to rectangular
+            const oldSize = savedLayout.gridSize || DEFAULT_GRID_SIZE;
+            layout.gridWidth = DEFAULT_GRID_WIDTH;
+            layout.gridHeight = DEFAULT_GRID_HEIGHT;
+        }
         
         // Rehydrate grid with proper Module instances
-        layout.grid = savedLayout.grid?.map((row: any[]) => 
+        const oldGrid = savedLayout.grid?.map((row: any[]) => 
             row?.map((savedModule: any) => 
                 savedModule ? Module.fromSave(savedModule) : null
-            ) || Array(layout.gridSize).fill(null)
-        ) || Array.from({ length: layout.gridSize }, () => Array(layout.gridSize).fill(null));
+            )
+        ) || [];
+        
+        // Create new grid with target dimensions
+        layout.grid = Array.from({ length: layout.gridHeight }, () => 
+            Array.from({ length: layout.gridWidth }, () => null)
+        );
+        
+        // Copy modules from old grid, migrating out-of-bounds ones
+        const modulesToRelocate: Module[] = [];
+        
+        for (let y = 0; y < oldGrid.length; y++) {
+            for (let x = 0; x < (oldGrid[y]?.length || 0); x++) {
+                const module = oldGrid[y][x];
+                if (module) {
+                    // Check if module fits in new grid
+                    if (y < layout.gridHeight && x < layout.gridWidth) {
+                        layout.grid[y][x] = module;
+                    } else {
+                        // Module is out of bounds, needs relocation
+                        modulesToRelocate.push(module);
+                    }
+                }
+            }
+        }
+        
+        // Relocate out-of-bounds modules to first available empty spots
+        for (const module of modulesToRelocate) {
+            let relocated = false;
+            for (let y = 0; y < layout.gridHeight && !relocated; y++) {
+                for (let x = 0; x < layout.gridWidth && !relocated; x++) {
+                    if (!layout.grid[y][x]) {
+                        layout.grid[y][x] = module;
+                        relocated = true;
+                        console.log(`Migrated module ${module.type} from out-of-bounds to (${x}, ${y})`);
+                    }
+                }
+            }
+            if (!relocated) {
+                console.warn(`Could not relocate module ${module.type} - grid is full`);
+            }
+        }
         
         return layout;
     }
@@ -535,8 +593,8 @@ export class Layout {
 
     getModulesWhere(predicate: (module: Module) => boolean): Module[] {
         const modules: Module[] = [];
-        for (let y = 0; y < this.gridSize; y++) {
-            for (let x = 0; x < this.gridSize; x++) {
+        for (let y = 0; y < this.gridHeight; y++) {
+            for (let x = 0; x < this.gridWidth; x++) {
                 const module = this.grid[y][x];
                 if (module && predicate(module)) {
                     modules.push(module);
@@ -547,8 +605,8 @@ export class Layout {
     }
 
     getModuleById(id: string): Module | null {
-        for (let y = 0; y < this.gridSize; y++) {
-            for (let x = 0; x < this.gridSize; x++) {
+        for (let y = 0; y < this.gridHeight; y++) {
+            for (let x = 0; x < this.gridWidth; x++) {
                 const module = this.grid[y][x];
                 if (module && module.id === id) {
                     return module;
@@ -563,8 +621,8 @@ export class Layout {
     }
 
     getModuleCoordinates(module: Module | null): { x: number; y: number } {
-        for (let y = 0; y < this.gridSize; y++) {
-            for (let x = 0; x < this.gridSize; x++) {
+        for (let y = 0; y < this.gridHeight; y++) {
+            for (let x = 0; x < this.gridWidth; x++) {
                 if (module && this.grid[y][x]?.id === module?.id) {
                     return { x, y };
                 }
@@ -583,8 +641,8 @@ export class Layout {
     removeModule(module: Module | null): boolean {
         if (!module) return false;
         
-        for (let y = 0; y < this.gridSize; y++) {
-            for (let x = 0; x < this.gridSize; x++) {
+        for (let y = 0; y < this.gridHeight; y++) {
+            for (let x = 0; x < this.gridWidth; x++) {
                 if (this.grid[y][x]?.id === module.id) {
                     this.grid[y][x] = null;
                     console.log(`Removed module ${module.id} at (${x}, ${y})`);

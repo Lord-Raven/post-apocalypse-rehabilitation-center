@@ -1,11 +1,11 @@
-import {ReactElement, useEffect, useState} from "react";
+import {ReactElement} from "react";
 import {StageBase, StageResponse, InitialData, Message, UpdateBuilder} from "@chub-ai/stages-ts";
 import {LoadResponse} from "@chub-ai/stages-ts/dist/types/load";
 import Actor, { loadReserveActor, generateBaseActorImage, commitActorToEcho, Stat, generateAdditionalActorImages, loadReserveActorFromFullPath, ArtStyle, generateActorDecor } from "./actors/Actor";
 import Faction, { generateFactionModule, generateFactionRepresentative, loadReserveFaction } from "./factions/Faction";
-import { DEFAULT_GRID_SIZE, Layout, MODULE_TEMPLATES, StationStat, createModule, registerFactionModule } from './Module';
+import { DEFAULT_GRID_WIDTH, DEFAULT_GRID_HEIGHT, Layout, MODULE_TEMPLATES, StationStat, createModule, registerFactionModule } from './Module';
 import { BaseScreen, ScreenType } from "./screens/BaseScreen";
-import Skit, { generateSkitScript, SkitData, SkitType, updateActorDevelopments } from "./Skit";
+import { generateSkitScript, SkitData, SkitType, updateActorDevelopments } from "./Skit";
 import { smartRehydrate } from "./SaveRehydration";
 import { Emotion } from "./actors/Emotion";
 import { assignActorToRole } from "./utils";
@@ -98,7 +98,12 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
     private characterId: string;
 
     // Expose a simple grid size (can be tuned)
-    public gridSize = DEFAULT_GRID_SIZE;
+    public gridWidth = DEFAULT_GRID_WIDTH;
+    public gridHeight = DEFAULT_GRID_HEIGHT;
+    // Deprecated: use gridWidth and gridHeight instead
+    public get gridSize() {
+        return Math.max(this.gridWidth, this.gridHeight);
+    }
 
     screenProps: any = {};
 
@@ -124,10 +129,15 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
         this.characterId = Object.keys(characters)[0];
 
         const layout = new Layout();
-        layout.setModuleAt(DEFAULT_GRID_SIZE/2, DEFAULT_GRID_SIZE/2, createModule('echo chamber', { id: `echo-${DEFAULT_GRID_SIZE/2}-${DEFAULT_GRID_SIZE/2}`, attributes: {} }));
-        layout.setModuleAt(DEFAULT_GRID_SIZE/2 - 1, DEFAULT_GRID_SIZE/2, createModule("quarters", { id: `quarters-${DEFAULT_GRID_SIZE/2 - 1}-${DEFAULT_GRID_SIZE/2}`, attributes: {} }));
-        layout.setModuleAt(DEFAULT_GRID_SIZE/2, DEFAULT_GRID_SIZE/2 - 1, createModule("generator", { id: `generator-${DEFAULT_GRID_SIZE/2}-${DEFAULT_GRID_SIZE/2 - 1}`, attributes: {} }));
-        layout.setModuleAt(DEFAULT_GRID_SIZE/2 - 1, DEFAULT_GRID_SIZE/2 - 1, createModule("comms", { id: `comms-${DEFAULT_GRID_SIZE/2}-${DEFAULT_GRID_SIZE/2}`, attributes: {} }));
+        // Center the starting modules in the 8x5 grid
+        // For 8 wide: center is between columns 3 and 4, so use 3 and 4
+        // For 5 tall: center is row 2, so use 1, 2, and 3
+        const centerX = Math.floor(DEFAULT_GRID_WIDTH / 2);
+        const centerY = Math.floor(DEFAULT_GRID_HEIGHT / 2);
+        layout.setModuleAt(centerX, centerY, createModule('echo chamber', { id: `echo-${centerX}-${centerY}`, attributes: {} }));
+        layout.setModuleAt(centerX - 1, centerY, createModule("quarters", { id: `quarters-${centerX - 1}-${centerY}`, attributes: {} }));
+        layout.setModuleAt(centerX, centerY - 1, createModule("generator", { id: `generator-${centerX}-${centerY - 1}`, attributes: {} }));
+        layout.setModuleAt(centerX - 1, centerY - 1, createModule("comms", { id: `comms-${centerX - 1}-${centerY - 1}`, attributes: {} }));
         this.userId = Object.values(users)[0].anonymizedId;
         this.freshSave = { player: {name: Object.values(users)[0].name, description: Object.values(users)[0].chatProfile || ''}, 
             aide: {
