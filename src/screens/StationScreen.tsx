@@ -1031,7 +1031,8 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType, isV
 
                 {/* Deletion Zone - appears in bottom-right corner when dragging unowned modules */}
                 <AnimatePresence>
-                    {draggedModule && !draggedModule.module.ownerId && (
+                    {draggedModule && !draggedModule.module.ownerId && 
+                     !['echo chamber', 'comms', 'generator'].includes(draggedModule.module.type) && (
                         <motion.div
                             initial={{ opacity: 0, scale: 0.8 }}
                             animate={{ 
@@ -1073,7 +1074,7 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType, isV
                                     : '0 0 20px rgba(255, 50, 50, 0.5)',
                                 backdropFilter: 'blur(10px)',
                                 cursor: 'pointer',
-                                zIndex: 100,
+                                zIndex: 50,
                                 pointerEvents: 'auto',
                             }}
                         >
