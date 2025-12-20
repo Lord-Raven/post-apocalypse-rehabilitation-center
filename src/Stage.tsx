@@ -981,7 +981,8 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
         save.timeline.push({
             day: save.day,
             turn: save.turn,
-            description: description
+            description: description,
+            ...skit ? {skit: skit} : {}
         });
     }
 
