@@ -676,7 +676,7 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType, isV
                             >
                                 <div style={{ position: 'relative', width: '100%', height: '100%' }}>
                                     {/* Icon overlays for home and work modules */}
-                                    {isHome && (
+                                    {isHome && !draggedModule && (
                                         <div style={{
                                             position: 'absolute',
                                             top: '8px',
@@ -693,7 +693,7 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType, isV
                                             <Home style={{ color: '#ffc800', fontSize: '24px' }} />
                                         </div>
                                     )}
-                                    {isWork && (
+                                    {isWork && !draggedModule && (
                                         <div style={{
                                             position: 'absolute',
                                             top: '8px',
@@ -1024,6 +1024,7 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType, isV
                         `,
                         backgroundPosition: '0 0',
                         backgroundRepeat: 'repeat',
+                        zIndex: 51
                     }}
                 >
                     {renderGrid()}
@@ -1074,7 +1075,7 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType, isV
                                     : '0 0 20px rgba(255, 50, 50, 0.5)',
                                 backdropFilter: 'blur(10px)',
                                 cursor: 'pointer',
-                                zIndex: 1001,
+                                zIndex: 50,
                                 pointerEvents: 'auto',
                             }}
                         >
