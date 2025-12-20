@@ -485,7 +485,7 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType, isV
         if (hasActors) return true;
         
         // Check if quarters has an owner
-        if (module.type === 'quarters' && module.ownerId) return true;
+        if (module.type === 'quarters' && module.ownerId && !stage().getSave().actors[module.ownerId].isOffSite(stage().getSave())) return true;
         
         // Check for rooms with dedicated screens
         const dedicatedScreenRooms = ['echo chamber', 'cryo bank', 'aperture'];
@@ -1074,7 +1074,7 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType, isV
                                     : '0 0 20px rgba(255, 50, 50, 0.5)',
                                 backdropFilter: 'blur(10px)',
                                 cursor: 'pointer',
-                                zIndex: 50,
+                                zIndex: 1001,
                                 pointerEvents: 'auto',
                             }}
                         >
