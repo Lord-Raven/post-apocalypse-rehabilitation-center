@@ -89,8 +89,6 @@ export const EchoScreen: FC<EchoScreenProps> = ({stage, setScreenType, isVertica
 			// Remove from reserve actors and echo slots
 			stage().getSave().reserveActors = (stage().getSave().reserveActors || []).filter(a => a.id !== selected.id);
 			stage().removeActorFromEcho(selected.id, false);
-			// Possibly set other properties on the selected actor as needed
-			selected.birth(stage().getSave().day);
             stage().setSkit({
                     type: SkitType.INTRO_CHARACTER,
                     actorId: selected.id,
