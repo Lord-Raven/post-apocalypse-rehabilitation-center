@@ -62,9 +62,7 @@ class Actor {
     themeColor: string;
     themeFontFamily: string;
     voiceId: string;
-    birthDay: number = -1; // Day they were "born" into the game world
     participations: number = 0; // Number of skits they've participated in
-    isImageLoadingComplete: boolean = false; // Whether all emotion pack images have been generated
     heldRoles: { [key: string]: number } = {}; // Roles ever held by this actor and the number of days spent in each
     decorImageUrls: {[key: string]: string} = {}; // ModuleType to decor image URL mapping
     stats: Record<Stat, number>;
@@ -160,10 +158,6 @@ class Actor {
 
         // Return the emotion image or fallback
         return emotionUrl || fallbackUrl;
-    }
-
-    birth(day: number) {
-        this.birthDay = day;
     }
 }
 
@@ -492,7 +486,6 @@ export async function generateAdditionalActorImages(actor: Actor, stage: Stage):
             }
         }
     }
-    actor.isImageLoadingComplete = true;
 }
 
 export async function generateEmotionImage(actor: Actor, emotion: Emotion, stage: Stage, force: boolean = false): Promise<string> {
@@ -544,9 +537,7 @@ export async function generateActorDecor(actor: Actor, module: Module, stage: St
 export async function commitActorToEcho(actor: Actor, stage: Stage): Promise<void> {
     if (actor.emotionPack['neutral']) {
         // If neutral image exists, start background generation of additional images if not complete
-        if (!actor.isImageLoadingComplete) {
-            generateAdditionalActorImages(actor, stage).catch(console.error);
-        }
+        generateAdditionalActorImages(actor, stage).catch(console.error);
         return; // Neutral image already exists, actor is ready
     }
     

@@ -926,14 +926,6 @@ export const ActorDetailScreen: FC<ActorDetailScreenProps> = ({ actor, stage, on
                                     </div>
                                     <div>
                                         <div style={{ color: 'rgba(0, 255, 136, 0.7)', fontSize: '12px', marginBottom: '4px' }}>
-                                            Birth Day
-                                        </div>
-                                        <div style={{ color: '#e0f0ff', fontSize: '14px' }}>
-                                            {actor.birthDay >= 0 ? `Day ${actor.birthDay}` : 'Not born yet'}
-                                        </div>
-                                    </div>
-                                    <div>
-                                        <div style={{ color: 'rgba(0, 255, 136, 0.7)', fontSize: '12px', marginBottom: '4px' }}>
                                             Participations
                                         </div>
                                         <div style={{ color: '#e0f0ff', fontSize: '14px' }}>
@@ -946,14 +938,6 @@ export const ActorDetailScreen: FC<ActorDetailScreenProps> = ({ actor, stage, on
                                         </div>
                                         <div style={{ color: '#e0f0ff', fontSize: '14px', textTransform: 'capitalize' }}>
                                             {actor.origin}
-                                        </div>
-                                    </div>
-                                    <div>
-                                        <div style={{ color: 'rgba(0, 255, 136, 0.7)', fontSize: '12px', marginBottom: '4px' }}>
-                                            Images Complete
-                                        </div>
-                                        <div style={{ color: '#e0f0ff', fontSize: '14px' }}>
-                                            {actor.isImageLoadingComplete ? 'Yes' : 'No'}
                                         </div>
                                     </div>
                                     {actor.fullPath && (

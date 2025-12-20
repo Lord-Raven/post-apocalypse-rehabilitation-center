@@ -307,7 +307,8 @@ export function generateSkitPrompt(skit: SkitData, stage: Stage, historyLength: 
             const roleModule = stage.getLayout().getModulesWhere((m: any) => 
                 m && m.type !== 'quarters' && m.ownerId === actor.id
             )[0];
-            return `${actor.name}\n  Description: ${actor.description}\n  Profile: ${actor.profile}\n  Character Arc: ${actor.characterArc}\n  Days Aboard: ${save.day - actor.birthDay}\n` +
+            const birthDay = save.timeline?.find(event => event.skit?.actorId === actor.id && event.skit?.type === SkitType.INTRO_CHARACTER)?.day || save.day;
+            return `${actor.name}\n  Description: ${actor.description}\n  Profile: ${actor.profile}\n  Character Arc: ${actor.characterArc}\n  Days Aboard: ${save.day - birthDay}\n` +
             (roleModule ? `  Role: ${roleModule.getAttribute('role') || 'Patient'} (${actor.heldRoles[roleModule.getAttribute('role') || 'Patient'] || 0} days)\n` : '') +
             `  Role Description: ${roleModule?.getAttribute('roleDescription') || 'This character has no assigned role aboard the PARC. They are to focus upon their own needs.'}\n` +
             `  Stats:\n    ${Object.entries(actor.stats).map(([stat, value]) => `${stat}: ${value}`).join(', ')}`}).join('\n')}` +
