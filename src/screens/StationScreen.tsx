@@ -837,7 +837,7 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType, isV
                 className="station-grid-container"
                 style={{
                     width: isVerticalLayout ? '100vw' : '80vw',
-                    height: isVerticalLayout ? '50vh' : '100vh',
+                    height: isVerticalLayout ? '45vh' : '100vh',
                     boxSizing: 'border-box',
                     background: 'linear-gradient(45deg, #001122 0%, #002244 100%)',
                     position: 'relative',
