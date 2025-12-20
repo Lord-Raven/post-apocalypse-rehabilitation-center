@@ -20,7 +20,7 @@ export const ActorDetailScreen: FC<ActorDetailScreenProps> = ({ actor, stage, on
         name: string;
         description: string;
         profile: string;
-        development: string;
+        characterArc: string;
         style: string;
         voiceId: string;
         themeColor: string;
@@ -29,7 +29,7 @@ export const ActorDetailScreen: FC<ActorDetailScreenProps> = ({ actor, stage, on
         name: actor.name,
         description: actor.description,
         profile: actor.profile,
-        development: actor.development || '',
+        characterArc: actor.characterArc || '',
         style: actor.style,
         voiceId: actor.voiceId,
         themeColor: actor.themeColor,
@@ -54,7 +54,7 @@ export const ActorDetailScreen: FC<ActorDetailScreenProps> = ({ actor, stage, on
         actor.name = editedActor.name;
         actor.description = editedActor.description;
         actor.profile = editedActor.profile;
-        actor.development = editedActor.development;
+        actor.characterArc = editedActor.characterArc;
         actor.style = editedActor.style;
         actor.voiceId = editedActor.voiceId;
         actor.themeColor = editedActor.themeColor;
@@ -406,7 +406,7 @@ export const ActorDetailScreen: FC<ActorDetailScreenProps> = ({ actor, stage, on
                                         />
                                     </div>
 
-                                    {/* Development */}
+                                    {/* Character Arc */}
                                     <div>
                                         <label 
                                             style={{
@@ -417,11 +417,11 @@ export const ActorDetailScreen: FC<ActorDetailScreenProps> = ({ actor, stage, on
                                                 marginBottom: '8px',
                                             }}
                                         >
-                                            Development
+                                            Character Arc
                                         </label>
                                         <textarea
-                                            value={editedActor.development}
-                                            onChange={(e) => handleInputChange('development', e.target.value)}
+                                            value={editedActor.characterArc}
+                                            onChange={(e) => handleInputChange('characterArc', e.target.value)}
                                             placeholder="Character arc over this narrative"
                                             style={{
                                                 width: '100%',

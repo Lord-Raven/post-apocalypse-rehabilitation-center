@@ -307,7 +307,7 @@ export function generateSkitPrompt(skit: SkitData, stage: Stage, historyLength: 
             const roleModule = stage.getLayout().getModulesWhere((m: any) => 
                 m && m.type !== 'quarters' && m.ownerId === actor.id
             )[0];
-            return `${actor.name}\n  Description: ${actor.description}\n  Profile: ${actor.profile}\n  Days Aboard: ${save.day - actor.birthDay}\n  Scene Participation: ${actor.participations}\n` +
+            return `${actor.name}\n  Description: ${actor.description}\n  Profile: ${actor.profile}\n  Character Arc: ${actor.characterArc}\n  Days Aboard: ${save.day - actor.birthDay}\n` +
             (roleModule ? `  Role: ${roleModule.getAttribute('role') || 'Patient'} (${actor.heldRoles[roleModule.getAttribute('role') || 'Patient'] || 0} days)\n` : '') +
             `  Role Description: ${roleModule?.getAttribute('roleDescription') || 'This character has no assigned role aboard the PARC. They are to focus upon their own needs.'}\n` +
             `  Stats:\n    ${Object.entries(actor.stats).map(([stat, value]) => `${stat}: ${value}`).join(', ')}`}).join('\n')}` +
@@ -902,6 +902,45 @@ export async function generateSkitScript(skit: SkitData, wrapUp: boolean, stage:
         retries--;
     }
     return { entries: [], endScene: false, statChanges: {} };
+}
+
+export async function updateActorDevelopments(stage: Stage, skit: SkitData, actor: Actor): Promise<void> {
+    const analysisPrompt = generateSkitPrompt(skit, stage, 0,
+        `Scene Script for Analysis:\nSystem: ${buildScriptLog(skit)}` +
+        `${actor.name}'s Current Character Arc:\n${actor.characterArc || 'No established character arc.'}` +
+        `\n\nInstruction:\nAnalyze the preceding scene script ${actor.name}'s character arc, then output a revised character arc paragraph that reflects any significant developments from the latest scene script. ` +
+        `The character arc should be a concise summary of the character's growth, challenges, and changes experienced so far in the PARC. ` +
+        `Focus on key emotional beats, relationships, and personal growth that have occurred up to this point. ` +
+        `The output should be a single paragraph, maintaining the same tone and style as the existing character arc.` +
+        `If there are no significant developments, simply repeat the existing character arc without changes. ` +
+        `\n\nFull Examples:\n` +
+        `System: Revised Character Arc: John Smith has yet to find their footing in the PARC; they can't seem to make friends with the other patients—beyond the StationAide—, and the director hasn't proven trustworthy.\n[END]\n` +
+        `System: Revised Character Arc: Jane Doe has started to open up to others, forming tentative friendships. She feels a bit out of her depth in her role as Custodian, but appreciates the trust the director has placed in her and hopes to prove that faith justified.\n[END]\n`);
+    
+    const requestAnalysis = await stage.generator.textGen({
+        prompt: analysisPrompt,
+        min_tokens: 50,
+        max_tokens: 300,
+        include_history: true,
+        stop: ['[END]']
+    });
+    console.log(`Character arc analysis response for ${actor.name}:`, requestAnalysis?.result);
+    if (requestAnalysis && requestAnalysis.result) {
+        // trim may have a System: and or "Revised Character Arc" or similar prefix; remove these.
+        let analysisText = requestAnalysis.result.trim();
+        if (analysisText.startsWith("System:")) {
+            analysisText = analysisText.substring("System:".length).trim();
+        }
+        // Some prefix ending with "Arc:" may be present; remove it.
+        const arcPrefixMatch = analysisText.match(/^(.*Arc:)/i);
+        if (arcPrefixMatch) {
+            analysisText = analysisText.substring(arcPrefixMatch[1].length).trim();
+        }
+        analysisText = analysisText.replace(/^"|"$/g, '').trim();
+        // Update actor's character arc
+        actor.characterArc = analysisText || actor.characterArc;
+        console.log(`Updated character arc for ${actor.name}: ${actor.characterArc}`);
+    }
 }
 
 

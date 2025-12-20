@@ -5,7 +5,7 @@ import Actor, { loadReserveActor, generateBaseActorImage, commitActorToEcho, Sta
 import Faction, { generateFactionModule, generateFactionRepresentative, loadReserveFaction } from "./factions/Faction";
 import { DEFAULT_GRID_SIZE, Layout, MODULE_TEMPLATES, StationStat, createModule, registerFactionModule } from './Module';
 import { BaseScreen, ScreenType } from "./screens/BaseScreen";
-import { generateSkitScript, SkitData, SkitType } from "./Skit";
+import Skit, { generateSkitScript, SkitData, SkitType, updateActorDevelopments } from "./Skit";
 import { smartRehydrate } from "./SaveRehydration";
 import { Emotion } from "./actors/Emotion";
 import { assignActorToRole } from "./utils";
@@ -934,6 +934,11 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
                         actor.stats[stat] = Math.max(1, Math.min(10, actor.stats[stat] + actorChanges[prop]));
                     }
                 }
+            }
+
+            // Look at all actors involved in the skit, and run updateActorDevelopments on them:
+            for (const actor of Object.values(save.actors).filter(actor => save.currentSkit?.script.some(entry => entry.speaker === actor.id)) || {}) {
+                updateActorDevelopments(this, save.currentSkit ?? {}, actor);
             }
 
 

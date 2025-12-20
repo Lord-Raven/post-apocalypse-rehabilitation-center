@@ -56,7 +56,7 @@ class Actor {
     origin: 'patient' | 'faction' | 'aide' = 'patient';
     description: string;
     profile: string;
-    development?: string;
+    characterArc?: string;
     style: string;
     emotionPack: EmotionPack;
     themeColor: string;
