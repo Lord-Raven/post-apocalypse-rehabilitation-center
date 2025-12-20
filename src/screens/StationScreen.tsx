@@ -71,7 +71,7 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType, isV
     const gridWidth = layout.gridWidth;
     const gridHeight = layout.gridHeight;
     const cellSize = isVerticalLayout ? '8.5vh' : '12vh';
-    const gridEdgeSize = isVerticalLayout ? '10vh' : '0';
+    const gridEdgeSize = isVerticalLayout ? '12vh' : '0';
 
     const openModuleSelector = (x: number, y: number) => {
         setSelectedPosition({x, y});
@@ -837,7 +837,7 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType, isV
                 className="station-grid-container"
                 style={{
                     width: isVerticalLayout ? '100vw' : '80vw',
-                    height: isVerticalLayout ? '70vh' : '100vh',
+                    height: isVerticalLayout ? '50vh' : '100vh',
                     boxSizing: 'border-box',
                     background: 'linear-gradient(45deg, #001122 0%, #002244 100%)',
                     position: 'relative',
