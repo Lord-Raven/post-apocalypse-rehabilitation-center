@@ -87,7 +87,7 @@ export function smartRehydrate(obj: any): any {
     }
 
     // Try to detect Layout by structure
-    if (obj.grid && obj.gridSize && typeof obj.gridSize === 'number') {
+    if (obj.grid && ((obj.gridSize && typeof obj.gridSize === 'number') || (obj.gridWidth && obj.gridHeight && typeof obj.gridWidth === 'number' && typeof obj.gridHeight === 'number'))) {
         return Layout.fromSave(obj);
     }
 
