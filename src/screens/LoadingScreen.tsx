@@ -14,9 +14,9 @@ interface LoadingScreenProps {
 }
 
 const LOADING_PHASES = [
-    { message: "Generating content (this may take a while)", duration: 20000, progress: 25 },
-    { message: "Expanding StationAide details.", duration: 20000, progress: 50 },
-    { message: "Visualizing StationAide.", duration: 20000, progress: 75 },
+    { message: "Generating content (this may take a while)", duration: 15000, progress: 20 },
+    { message: "Expanding StationAide details.", duration: 15000, progress: 50 },
+    { message: "Visualizing StationAide.", duration: 30000, progress: 75 },
     { message: "Wrapping up", duration: Infinity, progress: 90 },
 ];
 

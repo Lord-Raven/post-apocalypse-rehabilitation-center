@@ -67,7 +67,6 @@ export const SettingsScreen: FC<SettingsScreenProps> = ({ stage, onCancel, onCon
         'Fantasy': ['Fantasy'],
         'Sci-Fi': ['Sci-Fi', 'Science Fiction'],
         'Romance': ['Romance', 'Love', 'Drama'],
-        'Villain': ['Villain', 'Evil'],
         'NTR': ['NTR', 'Cuckold', 'Cheating', 'Infidelity', 'Affair', 'Netori', 'Netorare'],
     }
 
