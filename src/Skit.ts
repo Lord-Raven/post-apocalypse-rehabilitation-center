@@ -421,7 +421,8 @@ export async function generateSkitScript(skit: SkitData, wrapUp: boolean, stage:
                 `Character movement tags ("[CHARACTER NAME moves to MODULE NAME]" or "[CHARACTER NAME moves to FACTION NAME]") must be included when a character moves to a different module on the station OR to a different faction (abstractly representing any faction mission or time away). ` +
                 `MODULE NAME should be the name of an existing module type (e.g., 'comms', 'infirmary', 'lounge'), a character's quarters (e.g., 'Susan's quarters' or just 'quarters' for their own), or simply "Here" to move to the scene's location or "Another module" to leave this area. ` +
                 `A faction move is a more significant event, indicating a departure from the PARC itself, typically to visit a faction or engage in a mission or job for that faction (use the faction name as the location, even when the job is not "at" the faction). ` +
-                `The game engine uses [x moves to y] tags to update character locations and visually display character presence in scenes, so it is important to use these tags when introducing Absent Characters or departing Present Characters. ` +
+                `The game engine uses [x moves to y] tags to update character locations and visually display character presence in scenes, so it is essential to use these tags when Absent Characters enter the scene or Present Characters leave. ` +
+                `Absent characters cannot speak or take actions until they have moved into the scene using a [CHARACTER NAME moves to HERE] tag. ` +
                 `The scene itself cannot transition to a new area. The tags are not presented to users, so the content of the script should reflect any included tags and vice-versa. ` +
                 (skit.script.length > 0 ? (`If a scene transition is desired, the current scene must first be summarized. ` +
                     `A "[SUMMARY]" tag (e.g., "[SUMMARY: A paragraph summarizing the scene's events with key details and impacts.]") should be included when the scene has reached a conclusive moment. `) : '') +
@@ -639,7 +640,8 @@ export async function generateSkitScript(skit: SkitData, wrapUp: boolean, stage:
                             `[${Object.values(stage.getSave().actors)[0].name}: lust -1]\n` +
                             
                             `\n#Station Stat Changes:#\n` +
-                            `Identify any changes to PARC station stats implied by the scene. For each change, output a line in the following format:\n` +
+                            `Identify any changes to PARC station stats implied or indicated by the scene. Ignore lines from the scene that simply illustrate the existing stats, ` +
+                            `and instead focus on changes or developments in the PARC's situation or operations. For each change, output a line in the following format:\n` +
                             `[STATION: <stat> +<value>(, ...)]` +
                             `Where <stat> is the name of the station stat to be changed, and <value> is the amount to increase or decrease the stat by (positive or negative). ` +
                             `Multiple stat changes can be included in a single tag, separated by commas.` +
@@ -925,7 +927,6 @@ export async function updateCharacterArc(stage: Stage, skit: SkitData, actor: Ac
         include_history: true,
         stop: ['[END]']
     });
-    console.log(`Character arc analysis response for ${actor.name}:`, requestAnalysis?.result);
     if (requestAnalysis && requestAnalysis.result) {
         // trim may have a System: and or "Revised Character Arc" or similar prefix; remove these.
         let analysisText = requestAnalysis.result.trim();
