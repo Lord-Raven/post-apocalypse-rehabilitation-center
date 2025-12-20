@@ -392,7 +392,6 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType, isV
     const checkAndStartBeginingSkit = () => {
         const save = stage().getSave();
         console.log('Checking for beginning skit conditions...');
-        console.log(save.timeline);
         if (save.day == 1 && save.aide.actorId && !save.timeline?.some(s => s.skit?.type === SkitType.BEGINNING)) {
             console.log('Starting beginning skit...');
             const module = save.layout.getModulesWhere(m => m.type === 'echo chamber')[0];

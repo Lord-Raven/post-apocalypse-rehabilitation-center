@@ -151,8 +151,6 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
         if (!this.saves.length) {
             this.saves.push(this.getFreshSave());
         } else {
-            console.log("Something in saves:");
-            console.log(this.saves);
             // Rehydrate saves with proper class instances
             this.saves = this.saves.map(save => this.rehydrateSave(save));
         }
@@ -285,7 +283,6 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
                 }
                 // Move faction actors to "in" their faction.
                 if (actor.factionId) {
-                    console.log(`Moving faction actor ${actor.name} to faction location ${actor.factionId}`);
                     actor.locationId = actor.factionId;
                 } else if (actor.id == save.aide.actorId) {
                     // Aide goes nowhere by default.
@@ -582,7 +579,6 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
 
     async loadReserveActorFromFullPath(fullPath: string) {
         console.log('Loading reserve actor from fullPath:', fullPath);
-        console.log('reserveActorsLoadPromise:', this.reserveActorsLoadPromise);
         if (this.reserveActorsLoadPromise) return this.reserveActorsLoadPromise;
 
         this.reserveActorsLoadPromise = (async () => {
@@ -599,7 +595,6 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
         })();
 
         this.reserveActorsLoadPromise?.then(() => {
-            console.log('Clearing reserveActorsLoadPromise');
             this.reserveActorsLoadPromise = undefined;
         });
 
@@ -617,7 +612,6 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
                 while (reserveActors.length < this.RESERVE_ACTORS) {
                     // Populate reserveActors; this is loaded with data from a service, calling the characterServiceQuery URL:
                     const exclusions = (this.getSave().bannedTags || []).concat(this.bannedTagsDefault).map(tag => encodeURIComponent(tag)).join('%2C');
-                    console.log('Applying exclusions:', exclusions);
                     const response = await fetch(this.characterSearchQuery
                         .replace('{{PAGE_NUMBER}}', this.actorPageNumber.toString())
                         .replace('{{EXCLUSIONS}}', exclusions ? exclusions + '%2C' : '')
@@ -643,7 +637,6 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
         })();
 
         this.reserveActorsLoadPromise?.then(() => {
-            console.log('Clearing reserveActorsLoadPromise');
             this.reserveActorsLoadPromise = undefined;
         });
 
@@ -662,7 +655,6 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
                     const needed = this.MAX_FACTIONS - eligibleFactions.length;
                     // Populate reserveFactions; this is loaded with data from a service, calling the characterSearchQuery URL:
                     const exclusions = (this.getSave().bannedTags || []).concat(this.bannedTagsDefault).map(tag => encodeURIComponent(tag)).join('%2C');
-                    console.log('Applying exclusions:', exclusions);
                     const response = await fetch(this.characterSearchQuery
                         .replace('{{PAGE_NUMBER}}', this.factionPageNumber.toString())
                         .replace('{{EXCLUSIONS}}', exclusions ? exclusions + '%2C' : '')
@@ -808,7 +800,6 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
             }
             // Save skit to timeline first, so (most) outcomes save afterward.
             this.pushToTimeline(save, `${save.currentSkit.type} skit.`, save.currentSkit);
-            console.log("Ending skit:", save.currentSkit);
 
             // Apply endProperties to actors - find from the final entry with endScene=true
             let endProps: { [actorId: string]: { [stat: string]: number } } = save.currentSkit.endProperties || {};
@@ -955,7 +946,6 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
 
             save.currentSkit = undefined;
             this.incTurn(1, setScreenType);
-            console.log(save.timeline);
         }
     }
 
