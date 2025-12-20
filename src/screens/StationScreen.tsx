@@ -1208,7 +1208,7 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType, isV
                                     }),
                                 }}>
                                     {Object.values(stage().getSave().actors).filter(actor => !actor.factionId && stage().getSave().aide.actorId != actor.id && actor.locationId != 'cryo').length === 0 ? (
-                                        <p style={{ color: '#00ff88', opacity: 0.5, fontStyle: 'italic', fontSize: '0.85rem', fontWeight: 700, margin: 0, ...(isVerticalLayout && { gridColumn: '1 / -1' }) }}>Visit the Echo Chamber to bring on patients!</p>
+                                        <p style={{ color: '#00ff88', opacity: 0.5, fontStyle: 'italic', fontSize: '0.85rem', fontWeight: 700, margin: 0, ...(isVerticalLayout && { gridColumn: '1 / -1' }) }}>Visit the Echo Chamber to bring on new patients!</p>
                                     ) : (
                                         Object.values(stage().getSave().actors).filter(actor => !actor.factionId && stage().getSave().aide.actorId != actor.id && actor.locationId != 'cryo').map((actor: any) => (
                                             <div 
@@ -1416,7 +1416,7 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType, isV
                                 {itemKey === 'patients' && (
                                     <div style={{ padding: '15px', flex: '1 1 auto', overflowY: 'auto', minHeight: 0 }}>
                                         {Object.values(stage().getSave().actors).filter(actor => !actor.factionId && stage().getSave().aide.actorId != actor.id && actor.locationId != 'cryo').length === 0 ? (
-                                            <p style={{ color: '#00ff88', opacity: 0.5, fontStyle: 'italic', fontSize: '0.85rem', fontWeight: 700 }}>No patients currently on station</p>
+                                            <p style={{ color: '#00ff88', opacity: 0.5, fontStyle: 'italic', fontSize: '0.85rem', fontWeight: 700 }}>Visit the Echo Chamber to bring on new patients!</p>
                                         ) : (
                                             Object.values(stage().getSave().actors).filter(actor => !actor.factionId && stage().getSave().aide.actorId != actor.id && actor.locationId != 'cryo').map((actor: any) => (
                                                 <div 
