@@ -808,6 +808,7 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
             }
             // Save skit to timeline first, so (most) outcomes save afterward.
             this.pushToTimeline(save, `${save.currentSkit.type} skit.`, save.currentSkit);
+            console.log("Ending skit:", save.currentSkit);
 
             // Apply endProperties to actors - find from the final entry with endScene=true
             let endProps: { [actorId: string]: { [stat: string]: number } } = save.currentSkit.endProperties || {};
@@ -954,6 +955,7 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
 
             save.currentSkit = undefined;
             this.incTurn(1, setScreenType);
+            console.log(save.timeline);
         }
     }
 
