@@ -64,6 +64,8 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType, isV
     const [justDroppedModuleId, setJustDroppedModuleId] = React.useState<string | null>(null);
     const [hoveredActorId, setHoveredActorId] = React.useState<string | null>(null);
     const [isHoveringDeleteZone, setIsHoveringDeleteZone] = React.useState<boolean>(false);
+    const [currentDragPosition, setCurrentDragPosition] = React.useState<{x: number, y: number} | null>(null);
+    const deleteZoneRef = React.useRef<HTMLDivElement>(null);
 
     // Tooltip context
     const { setTooltip, clearTooltip } = useTooltip();
@@ -389,6 +391,36 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType, isV
         return () => window.removeEventListener('keydown', handleKeyDown);
     }, [setScreenType]);
 
+    // Check if drag position is over delete zone
+    React.useEffect(() => {
+        if (!currentDragPosition || !draggedModule || !deleteZoneRef.current) {
+            if (isHoveringDeleteZone) {
+                setIsHoveringDeleteZone(false);
+                if (draggedModule) {
+                    setTooltip(`Moving ${draggedModule.module.getAttribute('name') || draggedModule.module.type} module`, SwapHoriz);
+                }
+            }
+            return;
+        }
+
+        const deleteZoneRect = deleteZoneRef.current.getBoundingClientRect();
+        const isOverDeleteZone = (
+            currentDragPosition.x >= deleteZoneRect.left &&
+            currentDragPosition.x <= deleteZoneRect.right &&
+            currentDragPosition.y >= deleteZoneRect.top &&
+            currentDragPosition.y <= deleteZoneRect.bottom
+        );
+
+        if (isOverDeleteZone !== isHoveringDeleteZone) {
+            setIsHoveringDeleteZone(isOverDeleteZone);
+            if (isOverDeleteZone) {
+                setTooltip(`Remove ${draggedModule.module.getAttribute('name') || draggedModule.module.type}`, Delete);
+            } else {
+                setTooltip(`Moving ${draggedModule.module.getAttribute('name') || draggedModule.module.type} module`, SwapHoriz);
+            }
+        }
+    }, [currentDragPosition, draggedModule, isHoveringDeleteZone]);
+
     const checkAndStartBeginingSkit = () => {
         const save = stage().getSave();
         console.log('Checking for beginning skit conditions...');
@@ -578,7 +610,14 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType, isV
                                 dragMomentum={false}
                                 dragElastic={0}
                                 dragSnapToOrigin={true}
-                                onDragStart={() => handleModuleDragStart(module, x, y)}
+                                onDragStart={() => {
+                                    handleModuleDragStart(module, x, y);
+                                    setCurrentDragPosition(null);
+                                }}
+                                onDrag={(event, info) => {
+                                    // Track current drag position
+                                    setCurrentDragPosition({ x: info.point.x, y: info.point.y });
+                                }}
                                 onDragOver={(e) => {
                                     if (draggedActor) {
                                         e.preventDefault();
@@ -633,8 +672,12 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType, isV
                                     }
                                 }}
                                 onDragEnd={(event, info) => {
-                                    // If hovering delete zone, don't handle drop here (let delete zone handle it)
+                                    // Clear drag position tracking
+                                    setCurrentDragPosition(null);
+                                    
+                                    // If hovering delete zone, handle deletion
                                     if (isHoveringDeleteZone) {
+                                        handleModuleDelete();
                                         return;
                                     }
                                     
@@ -1035,6 +1078,7 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType, isV
                     {draggedModule && !draggedModule.module.ownerId && 
                      !['echo chamber', 'comms', 'generator'].includes(draggedModule.module.type) && (
                         <motion.div
+                            ref={deleteZoneRef}
                             initial={{ opacity: 0, scale: 0.8 }}
                             animate={{ 
                                 opacity: 1, 
@@ -1042,19 +1086,6 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType, isV
                             }}
                             exit={{ opacity: 0, scale: 0.8 }}
                             transition={{ duration: 0.2 }}
-                            onDragOver={(e) => {
-                                e.preventDefault();
-                                setIsHoveringDeleteZone(true);
-                                setTooltip(`Remove ${draggedModule.module.getAttribute('name') || draggedModule.module.type}`, Delete);
-                            }}
-                            onDragLeave={() => {
-                                setIsHoveringDeleteZone(false);
-                                setTooltip(`Moving ${draggedModule.module.getAttribute('name') || draggedModule.module.type} module`, SwapHoriz);
-                            }}
-                            onDrop={(e) => {
-                                e.preventDefault();
-                                handleModuleDelete();
-                            }}
                             style={{
                                 position: 'absolute',
                                 bottom: isVerticalLayout ? '2vh' : '4vh',
