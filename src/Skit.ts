@@ -303,7 +303,7 @@ export function generateSkitPrompt(skit: SkitData, stage: Stage, historyLength: 
         `\n\n${playerName}'s profile: ${save.player.description}` +
         (stationAide ? (presentActorIds.has(stationAide.id) ? `\n\nThe holographic StationAide™ ${stationAide.name} is active in the scene. Profile: ${stationAide.profile}` : '\n\nThe holographic StationAide™ ${stationAide.name} remains absent from the scene unless summoned by the Director.') : '') +
         // List characters who are here, along with full stat details:
-        `\n\nPresent Characters:\n${presentPatients.map(actor => {
+        `\n\nPresent Characters (Currently in the Scene):\n${presentPatients.map(actor => {
             const roleModule = stage.getLayout().getModulesWhere((m: any) => 
                 m && m.type !== 'quarters' && m.ownerId === actor.id
             )[0];
@@ -312,7 +312,7 @@ export function generateSkitPrompt(skit: SkitData, stage: Stage, historyLength: 
             `  Role Description: ${roleModule?.getAttribute('roleDescription') || 'This character has no assigned role aboard the PARC. They are to focus upon their own needs.'}\n` +
             `  Stats:\n    ${Object.entries(actor.stats).map(([stat, value]) => `${stat}: ${value}`).join(', ')}`}).join('\n')}` +
         // List non-present characters for reference; just need description and profile:
-        `\n\nAbsent Characters:\n${absentPatients.map(actor => {
+        `\n\nAbsent Characters (Aboard the PARC But Not Currently in the Scene):\n${absentPatients.map(actor => {
             // Roll name and current location
             const roleModule = stage.getLayout().getModulesWhere((m: any) => 
                 m && m.type !== 'quarters' && m.ownerId === actor.id
@@ -322,7 +322,7 @@ export function generateSkitPrompt(skit: SkitData, stage: Stage, historyLength: 
             return `${actor.name}\n  Description: ${actor.description}\n  Profile: ${actor.profile}\n  Role: ${roleModule?.getAttribute('role') || 'Patient'}\n  Location: ${locationString}`;
         }).join('\n')}` +
         // List away characters for reference; just need description and profile:
-        `\n\nOff-Station Characters:\n${awayPatients.map(actor => {
+        `\n\nOff-Station Characters (On Assignment Away from the PARC):\n${awayPatients.map(actor => {
             // Just role name and faction on loan to
             const roleModule = stage.getLayout().getModulesWhere((m: any) => 
                 m && m.type !== 'quarters' && m.ownerId === actor.id
@@ -415,18 +415,18 @@ export async function generateSkitScript(skit: SkitData, wrapUp: boolean, stage:
                 `actions are depicted in prose and character dialogue in quotation marks. Character's present their own actions and dialogue, while events within the scene are attributed to a NARRATOR. ` +
                 `Although a loose script format is employed, the actual content should be professionally edited narrative prose. Entries from the player, ${stage.getSave().player.name}, are written in first-person, while other entries consistently refer to ${stage.getSave().player.name} in second-person; all other characters are referred to in third-person, even in their own entries.\n` +
                 `Embedded within this script, you may employ special tags to trigger various game mechanics. ` +
-                `Emotion tags (e.g., "[CHARACTER NAME EXPRESSES JOY]") should be used to indicate visible emotional shifts in a character's appearance using a single-word emotion name. ` +
+                `Emotion tags ("[CHARACTER NAME EXPRESSES JOY]") should be used to indicate visible emotional shifts in a character's appearance using a single-word emotion name. ` +
                 `A [PAUSE] tag can be used to signal a suspension of this excerpt without fully ending the scene, in case the three-to-five-entry quota has already been met. ` +
-                `Character movement tags (e.g., "[CHARACTER NAME moves to MODULE NAME]" or "[CHARACTER NAME moves to FACTION NAME]") should be used to indicate when a character moves to a different module on the station OR to a different faction (abstractly representing any faction mission or time away). ` +
-                `MODULE NAME should be the name of a module type (e.g., 'comms', 'infirmary', 'lounge'), a character's quarters (e.g., 'Susan's quarters' or just 'quarters' for their own), or simply "Here" to move to the scene's location or "Another module" to leave this area. ` +
-                `A faction move is a more significant event, indicating a departure from the PARC itself. ` +
-                `The game engine uses these tags to update character locations and visually display character presence in scenes, so it is important to use these tags when introducing Absent Characters or departing Present Characters. ` +
+                `Character movement tags ("[CHARACTER NAME moves to MODULE NAME]" or "[CHARACTER NAME moves to FACTION NAME]") must be included when a character moves to a different module on the station OR to a different faction (abstractly representing any faction mission or time away). ` +
+                `MODULE NAME should be the name of an existing module type (e.g., 'comms', 'infirmary', 'lounge'), a character's quarters (e.g., 'Susan's quarters' or just 'quarters' for their own), or simply "Here" to move to the scene's location or "Another module" to leave this area. ` +
+                `A faction move is a more significant event, indicating a departure from the PARC itself, typically to visit a faction or engage in a mission or job for that faction (use the faction name as the location, even when the job is not "at" the faction). ` +
+                `The game engine uses [x moves to y] tags to update character locations and visually display character presence in scenes, so it is important to use these tags when introducing Absent Characters or departing Present Characters. ` +
                 `The scene itself cannot transition to a new area. The tags are not presented to users, so the content of the script should reflect any included tags and vice-versa. ` +
                 (skit.script.length > 0 ? (`If a scene transition is desired, the current scene must first be summarized. ` +
-                    `A "[SUMMARY]" tag (e.g., "[SUMMARY: A paragraph summarizing the scene's events with key details and impacts.]") should be included when the scene has fulfilled the current Scene Prompt or reached a conclusive moment. `) : '') +
+                    `A "[SUMMARY]" tag (e.g., "[SUMMARY: A paragraph summarizing the scene's events with key details and impacts.]") should be included when the scene has reached a conclusive moment. `) : '') +
                 `\nThis scene is a brief visual novel skit within a video game; as such, the scene avoids major developments which would fundamentally alter the mechanics or nature of the game, ` +
                 `instead developing content within the existing rules. ` +
-                `Similarly, avoid timelines or keep durations vague; the game's mechanics may by unable to map directly to what is depicted in the skit. ` +
+                `As a result, avoid timelines, using vague durations for upcoming events; the game's mechanics may by unable to map directly to what is depicted in the skit, so ambiguity is preferred. ` +
                 `Generally, focus upon interpersonal dynamics, character growth, faction and patient relationships, and the state of the Station, its capabilities, and its inhabitants.` +
                 (skit.script.length > 0 ? (`\nWhen the script naturally concludes, indicates a scene change, or includes an implied closure, ` +
                 `remember to insert a "[SUMMARY: A paragraph summarizing this scene's key events or impacts.]" tag, so the game engine can store the summary.${wrapupPrompt}`) : '')
@@ -680,13 +680,13 @@ export async function generateSkitScript(skit: SkitData, wrapUp: boolean, stage:
                             `The role name must directly match an existing role defined by the station's current modules (or "None," if a character's role is being removed by this tag).\n` +
 
                             `\n#Character Movement/Departure:#\n` +
-                            `If the scene depicts or implies that a character has departed the PARC or moved to a different faction (or such department is imminent), include any missing movement tags here.` +
-                            `[CHARACTER NAME moves to <module name|FACTION NAME>]\n` +
+                            `If the scene depicts or implies that a character has departed the PARC or moved to a different faction (or such departure appears imminent), include final movement tags here.` +
+                            `[CHARACTER NAME moves to <module name|faction name>]\n` +
                             `Full Example:\n` +
                             `[${Object.values(stage.getSave().actors)[0].name} moves to Stellar Concord]\n` +
                             `[${Object.values(stage.getSave().actors)[0].name} moves to Comms]\n` +
                             `These tags ensure that the gamestate location data reflects the scene's events; it is especially important to include movement tags for any characters leaving on or returning from missions; ` +
-                            `remember that moving 'to' a faction is an abstract location representing a task on that faction's behalf.` +
+                            `remember that moving "to" a faction is an abstract location representing a task on that faction's behalf, whether that task is at the faction location or elsewhere entirely.` +
 
                             (!summary ? 
                                 `\n---\nSummarize Scene:\n` +
@@ -904,7 +904,7 @@ export async function generateSkitScript(skit: SkitData, wrapUp: boolean, stage:
     return { entries: [], endScene: false, statChanges: {} };
 }
 
-export async function updateActorDevelopments(stage: Stage, skit: SkitData, actor: Actor): Promise<void> {
+export async function updateCharacterArc(stage: Stage, skit: SkitData, actor: Actor): Promise<void> {
     const analysisPrompt = generateSkitPrompt(skit, stage, 0,
         `Scene Script for Analysis:\nSystem: ${buildScriptLog(skit)}` +
         `${actor.name}'s Current Character Arc:\n${actor.characterArc || 'No established character arc.'}` +

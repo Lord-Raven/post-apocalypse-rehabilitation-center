@@ -359,7 +359,8 @@ export const SkitScreen: FC<SkitScreenProps> = ({ stage, setScreenType, isVertic
         let closestDistance = Infinity;
 
         actorPositions.forEach(({ actor, xPosition }) => {
-            const distance = Math.abs(mousePosition.x - xPosition);
+            // use 50 as xPosition if the actor is the current speaker
+            const distance = Math.abs(mousePosition.x - (actor === speaker ? 50 : xPosition));
             if (distance < closestDistance && distance <= HOVER_RANGE) {
                 closestDistance = distance;
                 closestActor = actor;
@@ -985,6 +986,7 @@ export const SkitScreen: FC<SkitScreenProps> = ({ stage, setScreenType, isVertic
             setIndex(stageSkit.script.length - 1);
         }
         setInputText('');
+        setFinishTyping(true);
         const oldIndex = stageSkit.script.length;
         stage().continueSkit(wrapUp).then(() => {
             const newIndex = Math.min(oldIndex, (stage().getSave().currentSkit?.script.length || 1) - 1);

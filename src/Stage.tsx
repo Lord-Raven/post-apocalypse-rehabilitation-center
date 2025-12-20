@@ -1,11 +1,11 @@
 import {ReactElement} from "react";
 import {StageBase, StageResponse, InitialData, Message, UpdateBuilder} from "@chub-ai/stages-ts";
 import {LoadResponse} from "@chub-ai/stages-ts/dist/types/load";
-import Actor, { loadReserveActor, generateBaseActorImage, commitActorToEcho, Stat, generateAdditionalActorImages, loadReserveActorFromFullPath, ArtStyle, generateActorDecor } from "./actors/Actor";
+import Actor, { loadReserveActor, generateBaseActorImage, commitActorToEcho, Stat, generateAdditionalActorImages, loadReserveActorFromFullPath, ArtStyle, generateActorDecor, namesMatch } from "./actors/Actor";
 import Faction, { generateFactionModule, generateFactionRepresentative, loadReserveFaction } from "./factions/Faction";
 import { DEFAULT_GRID_WIDTH, DEFAULT_GRID_HEIGHT, Layout, MODULE_TEMPLATES, StationStat, createModule, registerFactionModule } from './Module';
 import { BaseScreen, ScreenType } from "./screens/BaseScreen";
-import { generateSkitScript, SkitData, SkitType, updateActorDevelopments } from "./Skit";
+import { generateSkitScript, SkitData, SkitType, updateCharacterArc } from "./Skit";
 import { smartRehydrate } from "./SaveRehydration";
 import { Emotion } from "./actors/Emotion";
 import { assignActorToRole } from "./utils";
@@ -938,9 +938,9 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
                 }
             }
 
-            // Look at all actors involved in the skit, and run updateActorDevelopments on them:
-            for (const actor of Object.values(save.actors).filter(actor => save.currentSkit?.script.some(entry => entry.speaker === actor.id)) || {}) {
-                updateActorDevelopments(this, save.currentSkit ?? {}, actor);
+            // Look at all actors involved in the skit, and run updateCharacterArc on them:
+            for (const actor of Object.values(save.actors).filter(actor => save.currentSkit?.script.some(entry => namesMatch(entry.speaker, actor.name) || entry.speaker === actor.id)) || {}) {
+                updateCharacterArc(this, save.currentSkit ?? {}, actor);
             }
 
 
