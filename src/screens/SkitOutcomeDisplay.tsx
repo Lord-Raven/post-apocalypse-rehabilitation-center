@@ -247,7 +247,7 @@ const SkitOutcomeDisplay: FC<SkitOutcomeDisplayProps> = ({ skitData, stage, layo
         // Check each actor for off-station changes
         Object.entries(skitData.initialActorLocations).forEach(([actorId, initialLocation]) => {
             const actor = save.actors[actorId];
-            if (!actor) return;
+            if (!actor || actor.factionId !== undefined) return;
             
             // Skip actors who actually changed factions (that's a different display)
             if (skitData.endFactionChanges && skitData.endFactionChanges[actorId] !== undefined) {
@@ -837,7 +837,7 @@ const SkitOutcomeDisplay: FC<SkitOutcomeDisplayProps> = ({ skitData, stage, layo
                                     border: '2px solid rgba(100,180,255,0.4)',
                                     backgroundImage: `url(${roleChange.actor.getEmotionImage(roleChange.actor.getDefaultEmotion())})`,
                                     backgroundSize: 'cover',
-                                    backgroundPosition: '50% -5%',
+                                    backgroundPosition: '50% 15%',
                                     backgroundRepeat: 'no-repeat',
                                     filter: 'brightness(1.1)',
                                     boxShadow: '0 8px 24px rgba(0,0,0,0.6)',
@@ -1063,7 +1063,7 @@ const SkitOutcomeDisplay: FC<SkitOutcomeDisplayProps> = ({ skitData, stage, layo
                                             bottom: 0,
                                             backgroundImage: `url(${factionChange.actor.getEmotionImage(factionChange.actor.getDefaultEmotion())})`,
                                             backgroundSize: 'cover',
-                                            backgroundPosition: '50% -5%',
+                                            backgroundPosition: '50% 15%',
                                             backgroundRepeat: 'no-repeat',
                                             filter: 'brightness(1.1)',
                                             mixBlendMode: 'normal',
@@ -1223,7 +1223,7 @@ const SkitOutcomeDisplay: FC<SkitOutcomeDisplayProps> = ({ skitData, stage, layo
                                         border: isVisiting ? '2px solid rgba(147,51,234,0.4)' : '2px solid rgba(34,197,94,0.4)',
                                         backgroundImage: `url(${offStationChange.actor.getEmotionImage(offStationChange.actor.getDefaultEmotion())})`,
                                         backgroundSize: 'cover',
-                                        backgroundPosition: '50% -5%',
+                                        backgroundPosition: '50% 15%',
                                         backgroundRepeat: 'no-repeat',
                                         filter: 'brightness(1.1)',
                                         boxShadow: '0 8px 24px rgba(0,0,0,0.6)',
