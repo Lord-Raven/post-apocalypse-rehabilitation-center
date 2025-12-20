@@ -650,11 +650,11 @@ export async function generateSkitScript(skit: SkitData, wrapUp: boolean, stage:
                             `[STATION: Security -1]\n` +
 
                             `\n#Faction Reputation Changes:#\n` +
-                            `Identify any changes to faction reputations implied by the scene. For each change, output a line in the following format:\n` +
+                            `Identify any changes to the PARC's reputation with factions implied by the scene. For each change, output a line in the following format:\n` +
                             `[FACTION: <factionName> +<value>]\n` +
-                            `Where <factionName> is the name of the faction whose reputation is changing, and <value> is the amount to increase or decrease the reputation by (positive or negative). ` +
-                            `Reputation is a value between 1 and 10, and changes are incremental. If the faction is cutting ties, provide a large negative value. ` +
-                            `Multiple faction tags can be provided in the output if, for instance, improving the esteem of one faction inherently reduces the opinion of a rival.` +
+                            `Where <factionName> is the name of the faction with whom the PARC's reputation is changing, and <value> is the amount to increase or decrease the reputation by (positive or negative). ` +
+                            `Reputation is a value between 1 and 10, representing the faction's opinion of the PARC, and changes are incremental. If the faction is cutting ties with the PARC, provide a large negative value. ` +
+                            `Multiple faction tags can be provided in the output if, for instance, improving in the esteem of one faction inherently reduces the opinion of a rival.` +
                             `Full Examples:\n` +
                             `[FACTION: Stellar Concord +1]\n` +
                             `[FACTION: Shadow Syndicate -2]\n` +

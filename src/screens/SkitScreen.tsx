@@ -317,6 +317,7 @@ export const SkitScreen: FC<SkitScreenProps> = ({ stage, setScreenType, isVertic
     const [hoveredActor, setHoveredActor] = React.useState<Actor | null>(null);
     const [audioEnabled, setAudioEnabled] = React.useState<boolean>(true);
     const currentAudioRef = React.useRef<HTMLAudioElement | null>(null);
+    const prevIndexRef = React.useRef<number>(index);
     const [mousePosition, setMousePosition] = React.useState<{ x: number; y: number } | null>(null);
 
     // Handle mouse move to update hover state based on proximity to actor positions
@@ -453,7 +454,11 @@ export const SkitScreen: FC<SkitScreenProps> = ({ stage, setScreenType, isVertic
             const isPlayerSpeaker = !matchingActor && playerName && namesMatch(playerName.trim().toLowerCase(), currentSpeakerName.toLowerCase());
             
             // Reset typing state BEFORE setting new message to prevent flash of full content
-            setFinishTyping(false);
+            // Only reset if the index has changed
+            if (prevIndexRef.current !== index) {
+                setFinishTyping(false);
+                prevIndexRef.current = index;
+            }
             setMessageKey(prev => prev + 1); // Increment key to force fresh TypeOut mount
             setSpeaker(matchingActor || null);
             setDisplayName(matchingActor?.name || (isPlayerSpeaker ? playerName : ''));
@@ -986,7 +991,6 @@ export const SkitScreen: FC<SkitScreenProps> = ({ stage, setScreenType, isVertic
             setIndex(stageSkit.script.length - 1);
         }
         setInputText('');
-        setFinishTyping(true);
         const oldIndex = stageSkit.script.length;
         stage().continueSkit(wrapUp).then(() => {
             const newIndex = Math.min(oldIndex, (stage().getSave().currentSkit?.script.length || 1) - 1);
