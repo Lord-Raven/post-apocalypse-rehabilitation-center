@@ -531,10 +531,10 @@ export const SkitScreen: FC<SkitScreenProps> = ({ stage, setScreenType, isVertic
                     actor={actor}
                     emotion={emotion}
                     imageUrl={actor.getEmotionImage(emotion, stage())}
-                    hologram={actor.isHologram(stage().getSave())}
+                    hologram={actor.isHologram(stage().getSave(), module ? module.id || '' : '')}
                     xPosition={xPosition}
                     yPosition={isVerticalLayout ? 20 : 0}
-                    zIndex={55 - Math.abs(xPosition)}
+                    zIndex={50 - Math.abs(xPosition - 50)}
                     heightMultiplier={isVerticalLayout ? (isSpeaking ? 0.9 : 0.7) : 1.0}
                     speaker={isSpeaking}
                     highlightColor={isHovered ? "rgba(255,255,255,0)" : "rgba(225,225,225,0)"}
@@ -918,7 +918,7 @@ export const SkitScreen: FC<SkitScreenProps> = ({ stage, setScreenType, isVertic
                     </Button>
                     <IconButton
                         onClick={handleWrapUp}
-                        disabled={loading || (skit?.script.length || 0) < 6 || sceneEnded}
+                        disabled={loading || (index < 6) || sceneEnded}
                         onMouseEnter={(e) => setTooltip('Wrap up the current scene.')}
                         onMouseLeave={clearTooltip}
                         sx={{

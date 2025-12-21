@@ -939,10 +939,19 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
             }
 
             // Look at all actors involved in the skit, and run updateCharacterArc on them:
-            for (const actor of Object.values(save.actors).filter(actor => save.currentSkit?.script.some(entry => namesMatch(entry.speaker, actor.name) || entry.speaker === actor.id)) || {}) {
-                updateCharacterArc(this, save.currentSkit ?? {}, actor);
+            for (const actor of Object.values(save.actors)) {
+                if (save.currentSkit?.script.some(entry => namesMatch(entry.speaker, actor.name) || entry.speaker === actor.id)) {
+                    updateCharacterArc(this, save.currentSkit ?? {}, actor);
+                }
+                // Apply last location from skit movements:
+                const lastMovementEntry = [...(save.currentSkit?.script || [])].reverse().find(entry => entry.movements && Object.keys(entry.movements).some(moverId => moverId === actor.id));
+                if (lastMovementEntry && lastMovementEntry.movements) {
+                    const newLocationId = lastMovementEntry.movements[actor.id];
+                    if (newLocationId) {
+                        actor.locationId = newLocationId;
+                    }
+                }
             }
-
 
             save.currentSkit = undefined;
             this.incTurn(1, setScreenType);

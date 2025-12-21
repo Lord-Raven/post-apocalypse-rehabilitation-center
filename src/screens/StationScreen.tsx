@@ -788,7 +788,7 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType, isV
                                                                     height: `calc(0.6 * ${cellSize})`,
                                                                     userSelect: 'none',
                                                                     pointerEvents: 'none',
-                                                                    filter: actor.isHologram(stage().getSave()) ? 'sepia(100%) hue-rotate(180deg) saturate(200%) brightness(1.2)' : undefined,
+                                                                    filter: actor.isHologram(stage().getSave(), module ? module.id || '' : '') ? 'sepia(100%) hue-rotate(180deg) saturate(200%) brightness(1.2)' : undefined,
                                                                 }}
                                                             />
                                                         );
