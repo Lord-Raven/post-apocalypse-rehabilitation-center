@@ -281,7 +281,7 @@ export const MenuScreen: FC<MenuScreenProps> = ({ stage, setScreenType }) => {
                         fontSize: 'clamp(10px, 1.5vw, 12px)',
                     }}
                 >
-                    v2025.12.18 (beta) - Improving skit feedback and other details.
+                    v2025.12.22 - Bug fixes.
                 </motion.div>
             </motion.div>
             </div>

@@ -72,7 +72,42 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType, isV
 
     const gridWidth = layout.gridWidth;
     const gridHeight = layout.gridHeight;
-    const cellSize = isVerticalLayout ? '8.5vh' : '12vh';
+    
+    // Reference to grid container for dynamic sizing
+    const gridContainerRef = React.useRef<HTMLDivElement>(null);
+    const [cellSize, setCellSize] = React.useState<string>(isVerticalLayout ? '8.5vh' : '12vh');
+    
+    // Calculate cell size dynamically based on available space
+    React.useEffect(() => {
+        const updateCellSize = () => {
+            if (!gridContainerRef.current) return;
+            
+            const container = gridContainerRef.current;
+            const rect = container.getBoundingClientRect();
+            
+            // Calculate the maximum cell size that fits in the available space
+            // while maintaining the grid dimensions
+            const maxCellWidth = rect.width / gridWidth;
+            const maxCellHeight = rect.height / gridHeight;
+            
+            // Use the smaller of the two to ensure the entire grid fits
+            const cellSizePx = Math.min(maxCellWidth, maxCellHeight);
+            setCellSize(`${cellSizePx}px`);
+        };
+        
+        // Update on mount and window resize
+        updateCellSize();
+        window.addEventListener('resize', updateCellSize);
+        
+        // Also update when layout changes (orientation change)
+        const timeoutId = setTimeout(updateCellSize, 100);
+        
+        return () => {
+            window.removeEventListener('resize', updateCellSize);
+            clearTimeout(timeoutId);
+        };
+    }, [isVerticalLayout, gridWidth, gridHeight]);
+    
     const gridEdgeSize = isVerticalLayout ? '12vh' : '0';
 
     const openModuleSelector = (x: number, y: number) => {
@@ -877,6 +912,7 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType, isV
         }}>
             {/* Main Grid Area */}
             <div
+                ref={gridContainerRef}
                 className="station-grid-container"
                 style={{
                     width: isVerticalLayout ? '100vw' : '80vw',
@@ -885,6 +921,8 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType, isV
                     background: 'linear-gradient(45deg, #001122 0%, #002244 100%)',
                     position: 'relative',
                     overflow: 'hidden',
+                    display: 'flex',
+                    flexDirection: 'column',
                 }}
             >
                 {/* Station Stats Display with Menu Button - Top Bar */}
@@ -893,10 +931,8 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType, isV
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.6, delay: 0.3 }}
                     style={{
-                        position: 'absolute',
-                        top: '1vh',
-                        left: '1vh',
-                        right: '1vh',
+                        flexShrink: 0,
+                        margin: '1vh',
                         display: 'flex',
                         gap: '0',
                         padding: '0.3vmin 0.5vmin',
@@ -1050,27 +1086,36 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType, isV
                         <Menu style={{ fontSize: '28px' }} />
                     </motion.button>
                 </motion.div>
-                {/* Station modules (background grid moved onto this element so it moves with the centered content) */}
-                <div
-                    className="station-modules"
-                    style={{
-                        position: 'absolute',
-                        top: isVerticalLayout ? `${gridEdgeSize}` : '50%',
-                        left: '50%',
-                        transform: isVerticalLayout ? 'translate(-50%, 0)' : 'translate(-50%, -50%)',
-                        width: `calc(${gridWidth} * ${cellSize})`,
-                        height: `calc(${gridHeight} * ${cellSize})`,
-                        // move the subtle grid onto the centered modules container so lines align with cells
-                        backgroundImage: `
-                            linear-gradient(rgba(0, 255, 136, 0.08) 1px, transparent 1px),
-                            linear-gradient(90deg, rgba(0, 255, 136, 0.08) 1px, transparent 1px)
-                        `,
-                        backgroundPosition: '0 0',
-                        backgroundRepeat: 'repeat',
-                        zIndex: 51
-                    }}
-                >
-                    {renderGrid()}
+                
+                {/* Grid wrapper - takes remaining space */}
+                <div style={{
+                    flex: 1,
+                    position: 'relative',
+                    minHeight: 0,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                }}>
+                    {/* Station modules (background grid moved onto this element so it moves with the centered content) */}
+                    <div
+                        className="station-modules"
+                        style={{
+                            width: `calc(${gridWidth} * ${cellSize})`,
+                            height: `calc(${gridHeight} * ${cellSize})`,
+                            // move the subtle grid onto the centered modules container so lines align with cells
+                            backgroundImage: `
+                                linear-gradient(rgba(0, 255, 136, 0.08) 1px, transparent 1px),
+                                linear-gradient(90deg, rgba(0, 255, 136, 0.08) 1px, transparent 1px)
+                            `,
+                            backgroundSize: `${cellSize} ${cellSize}`,
+                            backgroundPosition: '0 0',
+                            backgroundRepeat: 'repeat',
+                            position: 'relative',
+                            zIndex: 51
+                        }}
+                    >
+                        {renderGrid()}
+                    </div>
                 </div>
 
                 {/* Deletion Zone - appears in bottom-right corner when dragging unowned modules */}
