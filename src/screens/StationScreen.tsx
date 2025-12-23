@@ -840,7 +840,7 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType, isV
                                                         bottom: '6px',
                                                         width: '100%',
                                                         background: 'rgba(0,0,0,0.6)',
-                                                        padding: '6px 8px',
+                                                        padding: `calc(${cellSize} * 0.05) calc(${cellSize} * 0.06)`,
                                                         textAlign: 'center',
                                                         pointerEvents: 'none',
                                                         zIndex: 2,
@@ -1210,7 +1210,7 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType, isV
                             alignItems: 'center',
                             justifyContent: 'center',
                             gap: '8px',
-                            padding: '0.8vh 1vh',
+                            padding: '0.3vh 1vh',
                             borderBottom: '1px solid rgba(0, 255, 136, 0.3)',
                         }}>
                             <Typography
@@ -1244,11 +1244,11 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType, isV
                             onChange={(e, newValue) => setExpandedMenu(newValue)}
                             variant="fullWidth"
                             sx={{
-                                minHeight: '48px',
+                                minHeight: '36px',
                                 '& .MuiTab-root': {
-                                    minHeight: '48px',
-                                    height: '48px',
-                                    padding: '12px 16px',
+                                    minHeight: '36px',
+                                    height: '36px',
+                                    padding: '6px 16px',
                                     fontSize: '0.9rem',
                                     fontWeight: 700,
                                     color: '#00ff88',
