@@ -629,7 +629,7 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType, isV
                                         ? '3px solid rgba(255, 200, 0, 0.9)' 
                                         : isInteractable
                                             ? '3px solid rgba(0, 255, 136, 0.9)'
-                                            : '3px solid rgba(0, 255, 136, 0.3)',
+                                            : '3px solid #006644',
                                     borderRadius: 10,
                                     background: `url(${stage().getSave().actors[module.ownerId || '']?.decorImageUrls[module.type] || module.getAttribute('defaultImageUrl')}) center center / contain no-repeat`,
                                     cursor: 'pointer',
@@ -846,12 +846,13 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType, isV
                                                         zIndex: 2,
                                                         fontSize: (() => {
                                                             const labelText = module.getAttribute('name') || module.type;
-                                                            const baseSize = isVerticalLayout ? 1.2 : 1.5;
+                                                            // Scale font size based on cell size (more responsive to small screens)
+                                                            const baseSize = `calc(${cellSize} * 0.12)`;
                                                             // Scale down more aggressively for long labels
-                                                            if (labelText.length > 20) return `${baseSize * 0.65}vh`;
-                                                            if (labelText.length > 15) return `${baseSize * 0.75}vh`;
-                                                            if (labelText.length > 12) return `${baseSize * 0.85}vh`;
-                                                            return `${baseSize}vh`;
+                                                            if (labelText.length > 20) return `calc(${cellSize} * 0.08)`;
+                                                            if (labelText.length > 15) return `calc(${cellSize} * 0.09)`;
+                                                            if (labelText.length > 12) return `calc(${cellSize} * 0.10)`;
+                                                            return baseSize;
                                                         })(),
                                                         opacity: isInteractable ? 1 : 0.4,
                                                         transition: 'opacity 0.3s ease',
@@ -892,7 +893,7 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType, isV
                                     cursor: 'pointer',
                                 }}
                             >
-                                <div style={{ fontSize: isVerticalLayout ? '2.5vh' : '3vh', lineHeight: 1, fontWeight: 800 }}>+</div>
+                                <div style={{ fontSize: isVerticalLayout ? '2.5vh' : '3vh', lineHeight: 1, fontWeight: 800, userSelect: 'none' }}>+</div>
                             </motion.div>
                         )}
                     </div>
