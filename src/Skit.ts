@@ -107,18 +107,18 @@ export function generateSkitTypePrompt(skit: SkitData, stage: Stage, continuing:
     }
 }
 
-function buildScriptLog(skit: SkitData): string {
-        return skit.script && skit.script.length > 0 ?
-        skit.script.map(e => {
-            // Find the best matching emotion key for this speaker
-            const emotionKeys = Object.keys(e.actorEmotions || {});
-            const candidates = emotionKeys.map(key => ({ name: key }));
-            const bestMatch = findBestNameMatch(e.speaker, candidates);
-            const matchingKey = bestMatch?.name;
-            const emotionText = matchingKey ? ` [${matchingKey} EXPRESSES ${e.actorEmotions?.[matchingKey]}]` : '';
-            return `${e.speaker}:${e.message}${emotionText}`;
-        }).join('\n')
-        : '(None so far)';
+function buildScriptLog(skit: SkitData, additionalEntries: ScriptEntry[] = []): string {
+        return ((skit.script && skit.script.length > 0) || additionalEntries.length > 0) ?
+            [...skit.script, ...additionalEntries].map(e => {
+                // Find the best matching emotion key for this speaker
+                const emotionKeys = Object.keys(e.actorEmotions || {});
+                const candidates = emotionKeys.map(key => ({ name: key }));
+                const bestMatch = findBestNameMatch(e.speaker, candidates);
+                const matchingKey = bestMatch?.name;
+                const emotionText = matchingKey ? ` [${matchingKey} EXPRESSES ${e.actorEmotions?.[matchingKey]}]` : '';
+                return `${e.speaker}:${e.message}${emotionText}`;
+            }).join('\n')
+            : '(None so far)';
 }
 
 /**
@@ -627,7 +627,7 @@ export async function generateSkitScript(skit: SkitData, wrapUp: boolean, stage:
 
                     ttsPromises.push((async () => {
                         const analysisPrompt = generateSkitPrompt(skit, stage, 0,
-                            `Scene Script for Analysis:\nSystem: ${buildScriptLog(skit)}` +
+                            `Scene Script for Analysis:\nSystem: ${buildScriptLog(skit, scriptEntries)}` +
                             `\n\nInstruction:\nAnalyze the preceding scene script and output formatted tags in brackets, identifying the following categorical changes to be incorporated into the game as a result of events in this scene. ` +
                             `\n` +
                             `\n#Character Stat Changes:#\n` +
