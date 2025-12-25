@@ -481,7 +481,7 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
                     setScreenType(ScreenType.SKIT);
                 }
             );
-            
+
             // Kick off director module generation
             generateModule(this.getSave().directorModule.name, this, 
                 `This is a module designed specifically around the Director, ${this.getSave().player.name}, and their needs or tastes.\n` +
@@ -514,9 +514,12 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
             this.getSave().reserveActors = [];
         }
 
-        this.loadReserveActors();
-        this.loadReserveFactions();
         this.generateAide();
+        if (!this.generateAidePromise) {
+            // Load these if only a fresh aide is not being generated (trying to reduce concurrent generation requests)
+            this.loadReserveActors();
+            this.loadReserveFactions();
+        }
 
         const save = this.getSave();
         // Initialize stationStats if missing
@@ -634,6 +637,8 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
                     }
                 }
                 this.generateAidePromise = undefined;
+                this.loadReserveActors();
+                this.loadReserveFactions();
             })();
         }
         return this.generateAidePromise;
