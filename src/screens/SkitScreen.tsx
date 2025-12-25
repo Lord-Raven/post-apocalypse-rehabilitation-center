@@ -319,6 +319,27 @@ export const SkitScreen: FC<SkitScreenProps> = ({ stage, setScreenType, isVertic
     const currentAudioRef = React.useRef<HTMLAudioElement | null>(null);
     const prevIndexRef = React.useRef<number>(index);
     const [mousePosition, setMousePosition] = React.useState<{ x: number; y: number } | null>(null);
+    const messageBoxRef = React.useRef<HTMLDivElement>(null);
+    const [messageBoxTopVh, setMessageBoxTopVh] = React.useState<number>(isVerticalLayout ? 50 : 60);
+
+    // Measure message box position
+    React.useEffect(() => {
+        const updateMessageBoxPosition = () => {
+            if (messageBoxRef.current) {
+                const rect = messageBoxRef.current.getBoundingClientRect();
+                const topVh = (rect.top / window.innerHeight) * 100;
+                setMessageBoxTopVh(topVh);
+            }
+        };
+        
+        // Update on mount and layout changes
+        updateMessageBoxPosition();
+        
+        // Update on window resize
+        window.addEventListener('resize', updateMessageBoxPosition);
+        
+        return () => window.removeEventListener('resize', updateMessageBoxPosition);
+    }, [isVerticalLayout, skit]);
 
     // Handle mouse move to update hover state based on proximity to actor positions
     const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
@@ -335,8 +356,7 @@ export const SkitScreen: FC<SkitScreenProps> = ({ stage, setScreenType, isVertic
         }
 
         // Don't show hover when over the message box area (bottom portion of screen)
-        const messageBoxTop = isVerticalLayout ? 50 : 60; // Approximate top of message box in vh
-        if (mousePosition.y > messageBoxTop) {
+        if (mousePosition.y > messageBoxTopVh) {
             setHoveredActor(null);
             return;
         }
@@ -567,7 +587,7 @@ export const SkitScreen: FC<SkitScreenProps> = ({ stage, setScreenType, isVertic
 
             {/* Skit Outcome Display - shown when scene ends */}
             {sceneEnded && index === skit.script.length - 1 && (
-                <SkitOutcomeDisplay skitData={skit} stage={stage()} layout={stage().getSave().layout} />
+                <SkitOutcomeDisplay skitData={skit} stage={stage()} layout={stage().getSave().layout} messageBoxTopVh={messageBoxTopVh} />
             )}
 
             {/* Actor Card - shown when hovering over an actor, only if no outcome is displayed */}
@@ -591,7 +611,8 @@ export const SkitScreen: FC<SkitScreenProps> = ({ stage, setScreenType, isVertic
             )}
 
             {/* Bottom text window */}
-            <Paper 
+            <Paper
+                ref={messageBoxRef}
                 elevation={8}
                 sx={{ 
                     position: 'absolute', 

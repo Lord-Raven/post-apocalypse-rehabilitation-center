@@ -17,6 +17,8 @@ interface SettingsData {
     playerDescription: string;
     aideName: string;
     aideDescription: string;
+    directorModuleName: string;
+    directorModuleRoleName: string;
     disableTextToSpeech: boolean;
     disableEmotionImages: boolean;
     characterArtStyle: ArtStyle;
@@ -80,6 +82,8 @@ export const SettingsScreen: FC<SettingsScreenProps> = ({ stage, onCancel, onCon
             `Your StationAide™ comes pre-programmed with a friendly and non-condescending demeanor that will leave you feeling empowered but never patronized; ` +
             `your bespoke projection comes with an industry-leading feminine form in a pleasing shade of default blue, but, as always, StationAide™ remains infinitely customizable to suit your tastes.\n\n` +
             `StationAide™. "When life gives you space stations..."`),
+        directorModuleName: stage().getSave().directorModule?.name || 'Director\'s Cabin',
+        directorModuleRoleName: stage().getSave().directorModule?.roleName || 'Maid',
         disableTextToSpeech: stage().getSave().disableTextToSpeech ?? false,
         disableEmotionImages: stage().getSave().disableEmotionImages ?? false,
         characterArtStyle: stage().getSave().characterArtStyle ?? 'original',
@@ -264,58 +268,113 @@ export const SettingsScreen: FC<SettingsScreenProps> = ({ stage, onCancel, onCon
                             </div>
 
                             {/* StationAide™ Name */}
-                            <div>
-                                <label 
-                                    htmlFor="aide-name"
-                                    style={{
-                                        display: 'block',
-                                        color: '#00ff88',
-                                        fontSize: '14px',
-                                        fontWeight: 'bold',
-                                        marginBottom: '8px',
-                                    }}
-                                >
-                                    StationAide™ Name
-                                </label>
-                                <TextInput
-                                    id="aide-name"
-                                    fullWidth
-                                    value={settings.aideName}
-                                    onChange={(e) => handleInputChange('aideName', e.target.value)}
-                                    placeholder="Enter StationAide™ name"
-                                    style={{ fontSize: '16px' }}
-                                />
-                            </div>
+                            {isNewGame && (
+                                <div>
+                                    <label 
+                                        htmlFor="aide-name"
+                                        style={{
+                                            display: 'block',
+                                            color: '#00ff88',
+                                            fontSize: '14px',
+                                            fontWeight: 'bold',
+                                            marginBottom: '8px',
+                                        }}
+                                    >
+                                        StationAide™ Name
+                                    </label>
+                                    <TextInput
+                                        id="aide-name"
+                                        fullWidth
+                                        value={settings.aideName}
+                                        onChange={(e) => handleInputChange('aideName', e.target.value)}
+                                        placeholder="Enter StationAide™ name"
+                                        style={{ fontSize: '16px' }}
+                                    />
+                                </div>
+                            )}
 
                             {/* StationAide™ Description */}
-                            <div>
-                                <label 
-                                    htmlFor="aide-description"
-                                    style={{
-                                        display: 'block',
-                                        color: '#00ff88',
-                                        fontSize: '14px',
-                                        fontWeight: 'bold',
-                                        marginBottom: '8px',
-                                    }}
-                                >
-                                    StationAide™ Description
-                                </label>
-                                <textarea
-                                    id="aide-description"
-                                    className="text-input-primary"
-                                    value={settings.aideDescription}
-                                    onChange={(e) => handleInputChange('aideDescription', e.target.value)}
-                                    placeholder="Describe your StationAide™..."
-                                    rows={4}
-                                    style={{
-                                        width: '100%',
-                                        padding: '12px',
-                                        fontSize: '14px',
-                                        resize: 'vertical',
-                                    }}
-                                />
-                            </div>
+                            {isNewGame && (
+                                <div>
+                                    <label 
+                                        htmlFor="aide-description"
+                                        style={{
+                                            display: 'block',
+                                            color: '#00ff88',
+                                            fontSize: '14px',
+                                            fontWeight: 'bold',
+                                            marginBottom: '8px',
+                                        }}
+                                    >
+                                        StationAide™ Description
+                                    </label>
+                                    <textarea
+                                        id="aide-description"
+                                        className="text-input-primary"
+                                        value={settings.aideDescription}
+                                        onChange={(e) => handleInputChange('aideDescription', e.target.value)}
+                                        placeholder="Describe your StationAide™..."
+                                        rows={4}
+                                        style={{
+                                            width: '100%',
+                                            padding: '12px',
+                                            fontSize: '14px',
+                                            resize: 'vertical',
+                                        }}
+                                    />
+                                </div>
+                            )}
+                            
+                            {/* Director's Module Name */}
+                            {stage().betaMode && isNewGame && (
+                                <div>
+                                    <label 
+                                        htmlFor="director-module-name"
+                                        style={{
+                                            display: 'block',
+                                            color: '#00ff88',
+                                            fontSize: '14px',
+                                            fontWeight: 'bold',
+                                            marginBottom: '8px',
+                                        }}
+                                    >
+                                        Director's Module Name
+                                    </label>
+                                    <TextInput
+                                        id="director-module-name"
+                                        fullWidth
+                                        value={settings.directorModuleName}
+                                        onChange={(e) => handleInputChange('directorModuleName', e.target.value)}
+                                        placeholder="Enter Director's Module Name"
+                                        style={{ fontSize: '16px' }}
+                                    />
+                                </div>
+                            )}
+                            {/* Director's Module Job Title */}
+                            {stage().betaMode && isNewGame && (
+                                <div>
+                                    <label 
+                                        htmlFor="director-room-role-name"
+                                        style={{
+                                            display: 'block',
+                                            color: '#00ff88',
+                                            fontSize: '14px',
+                                            fontWeight: 'bold',
+                                            marginBottom: '8px',
+                                        }}
+                                    >
+                                        Director's Module Job Title
+                                    </label>
+                                    <TextInput
+                                        id="director-module-role-name"
+                                        fullWidth
+                                        value={settings.directorModuleRoleName}
+                                        onChange={(e) => handleInputChange('directorModuleRoleName', e.target.value)}
+                                        placeholder="Enter Director's Module Job Title"
+                                        style={{ fontSize: '16px' }}
+                                    />
+                                </div>
+                            )}
 
                             {/* Generation Settings */}
                             <div>

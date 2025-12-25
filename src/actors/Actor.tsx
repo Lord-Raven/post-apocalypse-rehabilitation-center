@@ -507,6 +507,10 @@ export async function generateEmotionImage(actor: Actor, emotion: Emotion, stage
 }
 
 export async function generateActorDecor(actor: Actor, module: Module, stage: Stage, force: boolean = false): Promise<string> {
+    if (module.type === 'director module') {
+        // Director modules don't get decor images
+        return '';
+    }
     if (!force && (Object.keys(actor.decorImageUrls).includes(module.type) && actor.decorImageUrls[module.type] && actor.decorImageUrls[module.type] !== module.getAttribute('baseImageUrl'))) {
         return actor.decorImageUrls[module.type];
     }

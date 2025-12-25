@@ -49,9 +49,13 @@ interface SkitOutcomeDisplayProps {
     skitData: SkitData;
     stage: Stage;
     layout?: any;
+    messageBoxTopVh?: number;
 }
 
-const SkitOutcomeDisplay: FC<SkitOutcomeDisplayProps> = ({ skitData, stage, layout }) => {
+const SkitOutcomeDisplay: FC<SkitOutcomeDisplayProps> = ({ skitData, stage, layout, messageBoxTopVh = 60 }) => {
+    // Calculate bottom position based on message box top
+    const bottomVh = Math.max(100 - messageBoxTopVh + 2, 15); // At least 15vh from bottom, 2vh padding above message box
+    
     // Process stat changes from skitData.endProperties
     const processStatChanges = (): CharacterStatChanges[] => {
         if (!skitData.endProperties) return [];
@@ -303,7 +307,7 @@ const SkitOutcomeDisplay: FC<SkitOutcomeDisplayProps> = ({ skitData, stage, layo
                 position: 'absolute',
                 top: '3%',
                 right: '3%',
-                bottom: '20vh',
+                bottom: `${bottomVh}vh`,
                 zIndex: 3,
                 display: 'flex',
                 flexDirection: 'row-reverse',

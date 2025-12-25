@@ -3,7 +3,7 @@ import {StageBase, StageResponse, InitialData, Message, UpdateBuilder} from "@ch
 import {LoadResponse} from "@chub-ai/stages-ts/dist/types/load";
 import Actor, { loadReserveActor, generateBaseActorImage, commitActorToEcho, Stat, generateAdditionalActorImages, loadReserveActorFromFullPath, ArtStyle, generateActorDecor, namesMatch } from "./actors/Actor";
 import Faction, { generateFactionModule, generateFactionRepresentative, loadReserveFaction } from "./factions/Faction";
-import { DEFAULT_GRID_WIDTH, DEFAULT_GRID_HEIGHT, Layout, MODULE_TEMPLATES, StationStat, createModule, registerFactionModule } from './Module';
+import { DEFAULT_GRID_WIDTH, DEFAULT_GRID_HEIGHT, Layout, MODULE_TEMPLATES, StationStat, createModule, registerFactionModule, ModuleIntrinsic, generateModule, Module, registerModule } from './Module';
 import { BaseScreen, ScreenType } from "./screens/BaseScreen";
 import { generateSkitScript, SkitData, SkitType, updateCharacterArc } from "./Skit";
 import { smartRehydrate } from "./SaveRehydration";
@@ -30,6 +30,7 @@ type Timeline = TimelineEvent[];
 export type SaveType = {
     player: {name: string, description: string};
     aide: {name: string, description: string, actorId?: string};
+    directorModule: {name: string, roleName: string, module?: ModuleIntrinsic};
     echoes: (Actor | null)[]; // actors currently in echo slots (can be null for empty slots)
     actors: {[key: string]: Actor};
     factions: {[key: string]: Faction};
@@ -54,6 +55,7 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
     private currentSave: SaveType;
     private saves: (SaveType | undefined)[];
     private saveSlot: number = 0;
+    public betaMode: boolean = false;
     // Flag/promise to avoid redundant concurrent requests for reserve actors
     public reserveActorsLoadPromise?: Promise<void>;
     private reserveFactionsLoadPromise?: Promise<void>;
@@ -126,6 +128,7 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
         this.saves = chatState?.saves || [];
         this.saveSlot = chatState?.lastSaveSlot || 0;
 
+        this.betaMode = config?.beta_mode === "True";
         this.characterId = Object.keys(characters)[0];
 
         const layout = new Layout();
@@ -134,12 +137,17 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
         // For 5 tall: center is row 2, so use 1, 2, and 3
         const centerX = Math.floor(DEFAULT_GRID_WIDTH / 2);
         const centerY = Math.floor(DEFAULT_GRID_HEIGHT / 2);
+        if (this.betaMode) {
+            layout.setModuleAt(centerX, centerY + 1, createModule('director module', { id: `director-${centerX}-${centerY + 1}`, attributes: {} }));
+            layout.setModuleAt(centerX - 1, centerY + 1, createModule('quarters', { id: `quarters-${centerX - 1}-${centerY + 1}`, attributes: {} }));
+        }
         layout.setModuleAt(centerX, centerY, createModule('echo chamber', { id: `echo-${centerX}-${centerY}`, attributes: {} }));
-        layout.setModuleAt(centerX - 1, centerY, createModule("quarters", { id: `quarters-${centerX - 1}-${centerY}`, attributes: {} }));
-        layout.setModuleAt(centerX, centerY - 1, createModule("generator", { id: `generator-${centerX}-${centerY - 1}`, attributes: {} }));
-        layout.setModuleAt(centerX - 1, centerY - 1, createModule("comms", { id: `comms-${centerX - 1}-${centerY - 1}`, attributes: {} }));
+        layout.setModuleAt(centerX - 1, centerY, createModule('quarters', { id: `quarters-${centerX - 1}-${centerY}`, attributes: {} }));
+        layout.setModuleAt(centerX, centerY - 1, createModule('generator', { id: `generator-${centerX}-${centerY - 1}`, attributes: {} }));
+        layout.setModuleAt(centerX - 1, centerY - 1, createModule('comms', { id: `comms-${centerX - 1}-${centerY - 1}`, attributes: {} }));
         this.userId = Object.values(users)[0].anonymizedId;
         this.freshSave = { player: {name: Object.values(users)[0].name, description: Object.values(users)[0].chatProfile || ''}, 
+            directorModule: {name: 'Director\'s Cabin', roleName: 'Maid'},
             aide: {
                 name: 'Soji', 
                 description: `Your holographic assistant is acutely familiar with the technical details of your Post-Apocalypse Rehabilitation Center, so you don't have to be! ` +
@@ -443,6 +451,34 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
             this.getSave().actors[this.getSave().aide.actorId || ''].origin = 'aide';
         }
 
+        if (this.betaMode && !this.getSave().directorModule) {
+            this.getSave().directorModule = {...this.freshSave.directorModule};
+        }
+
+        if (this.betaMode && !this.getSave().directorModule.module) {
+            // Kick off director module generation
+            generateModule(this.getSave().directorModule.name, this, 
+                `This is a module designed specifically around the Director, ${this.getSave().player.name}, and their needs or tastes.\n` +
+                `About the Director, ${this.getSave().player.name}:\n${this.getSave().player.description}`,
+                this.getSave().directorModule.roleName).then(module => {
+                    if (module) {
+                        this.getSave().directorModule.module = module;
+                        registerModule('director module', module,
+                            (module: Module, stage: Stage, setScreenType: (type: ScreenType) => void) => {
+                                stage.setSkit({
+                                    type: SkitType.DIRECTOR_MODULE,
+                                    moduleId: module.id,
+                                    script: [],
+                                    generating: true,
+                                    context: {},
+                                });
+                                setScreenType(ScreenType.SKIT);
+                            });
+                        this.saveGame();
+                    }
+            });
+        }
+
         if (!this.getSave().characterArtStyle) {
             this.getSave().characterArtStyle = 'original';
         }
@@ -627,7 +663,7 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
                         return loadReserveActorFromFullPath(fullPath, this);
                     }));
 
-                    this.getSave().reserveActors = [...reserveActors, ...newActors.filter(a => a !== null)];
+                    this.getSave().reserveActors = [...this.getSave().reserveActors || [], ...newActors.filter(a => a !== null)];
                     reserveActors = this.getSave().reserveActors || [];
                 }
                 this.saveGame();

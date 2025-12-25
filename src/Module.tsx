@@ -1,3 +1,4 @@
+import { AspectRatio } from '@chub-ai/stages-ts';
 import { SkitType } from './Skit';
 import { SaveType, Stage } from "./Stage";
 import Actor from './actors/Actor';
@@ -6,11 +7,13 @@ import { ScreenType } from './screens/BaseScreen';
 import { Build, Hotel, Restaurant, Security, AttachMoney, Favorite } from '@mui/icons-material';
 
 export type ModuleType = 'echo chamber' | 'comms' | 'generator' | 'quarters' | 'commons' | 'infirmary' | 'gym' | 'lounge' | 'armory' 
-    | 'cryo bank' | 'aperture' | string; // Allow string for modded modules
+    | 'cryo bank' | 'aperture' | 'director module'
+    
+    | string; // Allow string for modded modules
     /*| 'hydroponics' | 'laboratory' | 'observatory' | 'security' | 'storage' | 'market' |
     'brig' | 'showers' | 'conservatory' |
     // Administration pack:
-    'directors suite' | 'office' | 'vault' | 'archives' |
+    'office' | 'vault' | 'archives' |
     // Tourism pack:
     'guest wing' | 'shuttle bay' | 'restaurant' | 'casino' | 'spa' |
     // Spirituality/arcana pack:
@@ -139,7 +142,6 @@ const randomAction = (module: Module, stage: Stage, setScreenType: (type: Screen
                 if (owner && !owner.isOffSite(stage.getSave()) && Math.random() < 0.5) {
                     owner.locationId = module.id;
                 }
-                console.log("Opening skit.");
 
                 stage.setSkit({
                     type: SkitType.RANDOM_ENCOUNTER,
@@ -405,14 +407,18 @@ export function registerFactionModule(faction: Faction,
     type: string,
     intrinsic: ModuleIntrinsic
 ): void {
+    registerModule(type, intrinsic, randomAction, (stage: Stage) => {
+        // Custom modules can only be built once and require minimum reputation with the faction
+        const factionRep = stage.getSave().factions[faction.id]?.reputation || 0;
+        const existingCount = stage.getLayout().getModulesWhere(m => m.type === intrinsic.name).length;
+        return existingCount === 0 && factionRep >= 6;
+    });
+}
+
+export function registerModule(type: string, intrinsic: ModuleIntrinsic, action: (module: Module, stage: Stage, setScreenType: (type: ScreenType) => void) => void, available?: (stage: Stage) => boolean): void {
     MODULE_TEMPLATES[type] = {...intrinsic,
-        action: randomAction, // Use the default random action
-        available: (stage: Stage) => {
-            // Custom modules can only be built once and require minimum reputation with the faction
-            const factionRep = stage.getSave().factions[faction.id]?.reputation || 0;
-            const existingCount = stage.getLayout().getModulesWhere(m => m.type === intrinsic.name).length;
-            return existingCount === 0 && factionRep >= 6;
-        }
+        action: action,
+        available: available || ((stage: Stage) => {return stage.getLayout().getModulesWhere(m => m.type === 'cryo bank').length === 0})
     };
 }
 
@@ -660,5 +666,129 @@ export class Layout {
             console.log(`Removed module ${module.id} at (${x}, ${y})`);
         }
         return module;
+    }
+}
+
+export async function generateModule(name: string, stage: Stage, additionalInformation?: string, role?: string): Promise<ModuleIntrinsic|null> {
+    // Generate a module from a module name, some arbitrary details, and a role title
+    const generatedResponse = await stage.generator.textGen({
+        prompt: `{{messages}}This is preparatory request for structured and formatted game content. ` +
+            `The goal is to define a module/room for a space station management game, based primarily upon the name, and potentially some other information, ` +
+            `while generally avoiding duplicating existing content below. ` +
+            `\n\nExisting Modules:\n${Object.entries(MODULE_TEMPLATES).map(([type, mod]) => `- ${type}: Role - ${mod.role || 'N/A'}`).join('\n')}` +
+            `\n\nNew Module Name: ${name}\n` +
+            (role ? `New Role Name: ${role}\n` : '') +
+            (additionalInformation ? `Additional Information: ${additionalInformation || 'N/A'}\n` : '') +
+            `\nBackground: This game is a futuristic multiverse setting that pulls characters from across eras and timelines and settings. ` +
+            `The player of this game, ${stage.getSave().player.name}, manages a space station called the Post-Apocalypse Rehabilitation Center, or PARC, which resurrects victims of a multiversal calamity and helps them adapt to a new life, ` +
+            `with the goal of placing these characters into a new role in this universe. ` +
+            `Modules are rooms and facilities that make up the PARC station; each module has a function varying between utility and entertainment or anything inbetween, and serve as a backdrop for various interactions and events. ` +
+            `Every module offers a crew-assignable role with an associated responsibility or purpose, which can again vary wildly between practical and whimsical.\n\n` +
+            `Instructions: After carefully considering the provided details, generate a formatted definition for a distinct and inspired station module that suits the prompt, outputting it in the following strict format:\n` +
+            `MODULE NAME: The module's simple name (1-2 words)\n` +
+            `PURPOSE: A brief summary of the module's function and role on the station, as well as how that role might affect the station's patients or inform skits at this location.\n` +
+            `DESCRIPTION: A vivid visual description of the module's appearance, to be fed into image generation.\n` +
+            `ROLE NAME: The simple title of the role associated with this module (1-2 words).\n` +
+            `ROLE DESCRIPTION: A brief summary of the responsibilities and duties associated with this role.\n` +
+            `#END#\n\n` +
+            `Example Response:\n` +
+            `MODULE NAME: Cryo Bank\n` +
+            `PURPOSE: The cryo bank is where patients are placed in cryogenic stasis for long-term preservation. Scenes in this room often involve the ethical dilemmas of cryo-sleep, emergencies during stasis, or interactions with newly awakened patients.\n` +
+            `DESCRIPTION: A futuristic lab with a bank of cryo pods along the left wall and some advanced computer systems against the right wall.\n` +
+            `ROLE NAME: Keeper\n` +
+            `ROLE DESCRIPTION: Responsible for managing the cryo bank, overseeing patient stasis, and ensuring the proper functioning of cryogenic equipment.\n` +
+            `#END#`,
+        stop: ['#END'],
+        include_history: true,
+        max_tokens: 350,
+    });
+
+    console.log('Generated module distillation:');
+    console.log(generatedResponse);
+
+    if (!generatedResponse?.result) {
+        console.error('Failed to generate module');
+        return null;
+    }
+
+    // Parse the generated response
+    const text = generatedResponse.result;
+    const lines = text.split('\n').map((l: string) => l.trim()).filter((l: string) => l.length > 0);
+    
+    let moduleName = '';
+    let purpose = '';
+    let description = '';
+    let roleName = '';
+    let roleDescription = '';
+
+    for (const line of lines) {
+        if (line.startsWith('MODULE NAME:')) {
+            moduleName = line.substring('MODULE NAME:'.length).trim().toLowerCase();
+        } else if (line.startsWith('PURPOSE:')) {
+            purpose = line.substring('PURPOSE:'.length).trim();
+        } else if (line.startsWith('DESCRIPTION:')) {
+            description = line.substring('DESCRIPTION:'.length).trim();
+        } else if (line.startsWith('ROLE NAME:')) {
+            roleName = line.substring('ROLE NAME:'.length).trim();
+        } else if (line.startsWith('ROLE DESCRIPTION:')) {
+            roleDescription = line.substring('ROLE DESCRIPTION:'.length).trim();
+        }
+    }
+
+    // Validation
+    if (!moduleName || !purpose || !description || !roleName || !roleDescription) {
+        console.error('Failed to parse required fields from generated module', {
+            moduleName, purpose, description, roleName, roleDescription
+        });
+        return null;
+    }
+    
+    if (moduleName.length < 2 || moduleName.length > 30) {
+        console.error('Module name has invalid length:', moduleName);
+        return null;
+    }
+
+    const module: ModuleIntrinsic = {
+        name: moduleName,
+        skitPrompt: purpose,
+        imagePrompt: description,
+        role: roleName,
+        roleDescription: roleDescription,
+        baseImageUrl: '',
+        defaultImageUrl: '',
+        cost: {
+            Wealth: 3 // Default cost for custom modules
+        },
+    };
+
+    await generateModuleImage(module, stage);
+
+    if (!module.baseImageUrl || !module.defaultImageUrl) {
+        console.error('Failed to generate images for module');
+        return null;
+    }
+
+    return module;
+}
+
+export async function generateModuleImage(module: ModuleIntrinsic, stage: Stage): Promise<void> {
+    // Start with a base image:
+    const baseImageUrl = await stage.makeImage({
+        prompt: `The detailed interior of an unoccupied futuristic space station module/room. The design should reflect the following description: ${module.imagePrompt}. ` +
+            `Regardless of aesthetic, the image is rendered in a vibrant, painterly style with thick smudgy lines.`,
+        aspect_ratio: AspectRatio.SQUARE
+    }, '');
+    if (!baseImageUrl) {
+        return;
+    }
+    // Next, create a default variant with Qwen's image-to-image:
+    const defaultImageUrl = await stage.makeImageFromImage({
+        image: baseImageUrl,
+        prompt: `Apply a visual novel art style to this sci-fi space station room (${module.imagePrompt}). Remove any characters from the scene.`,
+        transfer_type: 'edit'
+    }, '');
+    if (baseImageUrl && defaultImageUrl) {
+        module.baseImageUrl = baseImageUrl;
+        module.defaultImageUrl = defaultImageUrl;
     }
 }

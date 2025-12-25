@@ -14,6 +14,7 @@ export enum SkitType {
     RANDOM_ENCOUNTER = 'RANDOM ENCOUNTER',
     ENTER_CRYO = 'ENTER CRYO',
     EXIT_CRYO = 'EXIT CRYO',
+    DIRECTOR_MODULE = 'DIRECTOR MODULE',
 }
 
 export interface ScriptEntry {
@@ -102,6 +103,8 @@ export function generateSkitTypePrompt(skit: SkitData, stage: Stage, continuing:
         case SkitType.EXIT_CRYO:
             return `This scene depicts the Director's decision to awaken ${actor.name} from cryogenic stasis after ${skit.context.days} days. ` +
                 `Explore ${actor.name}'s thoughts and feelings about this process and their absence, as well as any initial exchanges with the player or other characters present. `;
+        case SkitType.DIRECTOR_MODULE:
+            return `This scene takes place in the Director's personal module. This scene could encompass all manner of interactions, from introspective moments alone to exchanges with other characters. `;
         default:
             return '';
     }

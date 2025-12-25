@@ -3,30 +3,6 @@ import { v4 as generateUuid } from 'uuid';
 import Actor, { generateBaseActorImage, loadReserveActor } from "../actors/Actor";
 import { AspectRatio } from "@chub-ai/stages-ts";
 import { Module, MODULE_TEMPLATES, ModuleIntrinsic, registerFactionModule } from "../Module";
-import { SkitType } from "../Skit";
-import { ScreenType } from "../screens/BaseScreen";
-
-// Default action for custom modules
-const randomAction = (module: Module, stage: Stage, setScreenType: (type: ScreenType) => void) => {
-    // If there are actors here, open a skit with them:
-    if (Object.values(stage.getSave().actors).some(a => a.locationId === module.id)) {
-        // Maybe move the module's owner (if any) here (make sure they aren't located at a faction):
-        const owner = module.ownerId ? stage.getSave().actors[module.ownerId] : undefined;
-        if (owner && !owner.isOffSite(stage.getSave()) && Math.random() < 0.5) {
-            owner.locationId = module.id;
-        }
-        console.log("Opening skit.");
-
-        stage.setSkit({
-            type: SkitType.RANDOM_ENCOUNTER,
-            moduleId: module.id,
-            script: [],
-            generating: true,
-            context: {},
-        });
-        setScreenType(ScreenType.SKIT);
-    }
-};
 
 class Faction {
     id: string;
