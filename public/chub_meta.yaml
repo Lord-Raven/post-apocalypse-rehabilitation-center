@@ -44,7 +44,7 @@ config_schema:
       title: Beta Mode
       description: Enable experimental beta features.
       type: string
-      default: "True"
+      default: "False"
       enum: ["True", "False"]
 
 # The schema of the state that you store.
