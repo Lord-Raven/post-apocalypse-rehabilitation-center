@@ -555,7 +555,7 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType, isV
         if (module.type === 'quarters' && module.ownerId && !stage().getSave().actors[module.ownerId].isOffSite(stage().getSave())) return true;
         
         // Check for rooms with dedicated screens
-        const dedicatedScreenRooms = ['echo chamber', 'cryo bank', 'aperture'];
+        const dedicatedScreenRooms = ['echo chamber', 'cryo bank', 'aperture', 'director module'];
         if (dedicatedScreenRooms.includes(module.type)) return true;
         
         return false;
@@ -1122,7 +1122,7 @@ export const StationScreen: FC<StationScreenProps> = ({stage, setScreenType, isV
                 {/* Deletion Zone - appears in bottom-right corner when dragging unowned modules */}
                 <AnimatePresence>
                     {draggedModule && !draggedModule.module.ownerId && 
-                     !['echo chamber', 'comms', 'generator'].includes(draggedModule.module.type) && (
+                     !['echo chamber', 'comms', 'generator', 'director module'].includes(draggedModule.module.type) && (
                         <motion.div
                             ref={deleteZoneRef}
                             initial={{ opacity: 0, scale: 0.8 }}
