@@ -456,6 +456,32 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
         }
 
         if (this.betaMode && !this.getSave().directorModule.module) {
+            // Register placeholder:
+            registerModule('director module',
+                {
+                    name: this.getSave().directorModule.name,
+                    skitPrompt: 'Crew quarters are personal living spaces for station inhabitants. Scenes here often involve personal interactions:  revelations, troubles, interests, or relaxation.',
+                    imagePrompt: 'A sci-fi living quarters with a bed, personal storage, and ambient lighting, reflecting the occupant\'s personality.',
+                    baseImageUrl: 'https://media.charhub.io/5e39db53-9d66-459d-8926-281b3b089b36/8ff20bdb-b719-4cf7-bf53-3326d6f9fcaa.png', 
+                    defaultImageUrl: 'https://media.charhub.io/99ffcdf5-a01b-43cf-81e5-e7098d8058f5/d1ec2e67-9124-4b8b-82d9-9685cfb973d2.png',
+                    role: this.getSave().directorModule.roleName,
+                    roleDescription: '',
+                    cost: {
+                        Wealth: 3,
+                    }
+                },
+                (module: Module, stage: Stage, setScreenType: (type: ScreenType) => void) => {
+                    stage.setSkit({
+                        type: SkitType.DIRECTOR_MODULE,
+                        moduleId: module.id,
+                        script: [],
+                        generating: true,
+                        context: {},
+                    });
+                    setScreenType(ScreenType.SKIT);
+                }
+            );
+            
             // Kick off director module generation
             generateModule(this.getSave().directorModule.name, this, 
                 `This is a module designed specifically around the Director, ${this.getSave().player.name}, and their needs or tastes.\n` +
