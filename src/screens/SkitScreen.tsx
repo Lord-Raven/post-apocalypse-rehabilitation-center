@@ -374,6 +374,7 @@ export const SkitScreen: FC<SkitScreenProps> = ({ stage, setScreenType, isVertic
                                 layout="inline"
                             />;
                         }}
+                        typingSpeed={stage().getSave().typeOutSpeed || 0}
                         setTooltip={setTooltip}
                         isVerticalLayout={isVerticalLayout}
                         actors={actors}
