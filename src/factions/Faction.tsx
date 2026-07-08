@@ -195,7 +195,7 @@ export async function loadReserveFaction(fullPath: string, stage: Stage): Promis
         
         const newFaction = new Faction(
             generateUuid(),
-            parsedData['name'] || data.name,
+            (parsedData['name'] || data.name).replace(/["“”]/g, "'").replace(/\[.*?\]/g, '').trim(),
             data.fullPath || '',
             parsedData['description'] || '',
             parsedData['visualstyle'] || '',

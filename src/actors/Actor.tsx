@@ -495,7 +495,8 @@ export async function loadReserveActor(data: any, stage: Stage, includeHistory: 
     const newActor = new Actor(
         generateUuid(),
         // Replace name quotation marks with single-quotes to avoid issues where nicknames are highlighted as dialogue:
-        (parsedData['name'] || data.name).replace(/["“”]/g, "'"),
+        // Replace brackets and their contents with nothing:
+        (parsedData['name'] || data.name).replace(/["“”]/g, "'").replace(/\[.*?\]/g, '').trim(),
         data.fullPath || '',
         data.avatar || '',
         parsedData['description'] || '',
@@ -521,14 +522,15 @@ export async function loadReserveActor(data: any, stage: Stage, includeHistory: 
     );
     console.log(`Loaded new actor: ${newActor.name} (ID: ${newActor.id})`);
     console.log(newActor);
+    const similarNameMatch = findBestNameMatch(newActor.name, [{name: 'Their Simplified Name'}, {name: stage.getSave().player.name},...Object.values(stage.getSave().actors), ...stage.getSave().reserveActors || [], ...stage.getSave().echoes.map(e => ({name: e?.name || ''})).filter(e => e.name) || []]);
     // If name, description, or profile are missing, or banned words are present or the attributes are all defaults (unlikely to have been set at all) or description is non-english, discard this actor by returning null
     // Rewrite discard reasons to log which reason applied:
     if (!newActor.name) {
-        console.log(`Discarding actor due to missing name: ${newActor.name}`);
+        console.log(`Discarding actor due to missing name`);
         return null;
     // if there's a best name match, discard this (too similar to existing characters or to the placeholder name):
-    } else if (findBestNameMatch(newActor.name, [{name: 'Their Simplified Name'}, {name: stage.getSave().player.name},...Object.values(stage.getSave().actors), ...stage.getSave().reserveActors || [], ...stage.getSave().echoes.map(e => ({name: e?.name || ''})).filter(e => e.name) || []])) {
-        console.log(`Discarding actor due to name similarity: ${newActor.name}`);
+    } else if (similarNameMatch) {
+        console.log(`Discarding actor due to name similarity: ${newActor.name} (similar to: ${similarNameMatch.name})`);
         return null;
     } else if (!newActor.getDescription()) {
         console.log(`Discarding actor due to missing description: ${newActor.name}`);
