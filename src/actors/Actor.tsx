@@ -820,8 +820,8 @@ export function namesMatch(name: string, possibleName: string): boolean {
  * @returns A similarity score between 0 and 1
  */
 export function getNameSimilarity(name: string, possibleName: string): number {
-    name = name.toLowerCase();
-    possibleName = possibleName.toLowerCase();
+    name = name.toLowerCase().trim();
+    possibleName = possibleName.toLowerCase().trim();
 
     // Exact match gets perfect score
     if (name === possibleName) {
