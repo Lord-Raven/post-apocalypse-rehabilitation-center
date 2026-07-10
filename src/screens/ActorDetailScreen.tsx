@@ -1054,7 +1054,7 @@ export const ActorDetailScreen: FC<ActorDetailScreenProps> = ({ actor, stage, on
                                             />
                                         <input
                                             type="color"
-                                            value={getPickerColor(settings.themeColor)}
+                                            value={getPickerColor(editedActor.themeColor)}
                                             onChange={(e) => handleInputChange('themeColor', e.target.value)}
                                             aria-label="Pick theme color"
                                             style={{
