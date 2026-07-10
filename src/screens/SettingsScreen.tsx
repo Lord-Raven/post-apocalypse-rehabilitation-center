@@ -43,23 +43,6 @@ export const SettingsScreen: FC<SettingsScreenProps> = ({ stage, onCancel, onCon
     const maxTypeOutSpeed = 50;
     const defaultTypeOutSpeed = stage().DEFAULT_TYPE_OUT_SPEED;
 
-    const themeColorOptions = [
-        { label: 'Default Slate', value: '#718096' },
-        { label: 'PARC Green', value: '#00ff88' },
-        { label: 'Sky Blue', value: '#87ceeb' },
-        { label: 'Amber', value: '#f6ad55' },
-        { label: 'Rose', value: '#f56565' },
-        { label: 'Violet', value: '#9f7aea' },
-    ];
-
-    const themeFontFamilyOptions = [
-        { label: 'Geologica', value: `'Geologica', sans-serif` },
-        { label: 'Segoe UI', value: `'Segoe UI', 'Helvetica Neue', Arial, sans-serif` },
-        { label: 'Trebuchet', value: `'Trebuchet MS', 'Helvetica Neue', Arial, sans-serif` },
-        { label: 'Georgia', value: `Georgia, 'Times New Roman', serif` },
-        { label: 'Courier New', value: `'Courier New', monospace` },
-    ];
-
     const clampTypeOutSpeed = (value: number) => {
         if (Number.isNaN(value)) {
             return defaultTypeOutSpeed;
@@ -444,9 +427,8 @@ export const SettingsScreen: FC<SettingsScreenProps> = ({ stage, onCancel, onCon
                             </div>
 
                             {/* Player Theme Color */}
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                                <label
-                                    htmlFor="player-theme-color"
+                            <div>
+                                <label 
                                     style={{
                                         display: 'block',
                                         color: '#00ff88',
@@ -455,50 +437,30 @@ export const SettingsScreen: FC<SettingsScreenProps> = ({ stage, onCancel, onCon
                                         marginBottom: '8px',
                                     }}
                                 >
-                                    Player Theme Color
+                                    Theme Color
                                 </label>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                                    <select
-                                        id="player-theme-color"
+                                <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+                                    <TextInput
                                         value={settings.themeColor}
-                                        onChange={(e) => setSettings(prev => ({ ...prev, themeColor: e.target.value }))}
-                                        style={{
-                                            flex: 1,
-                                            padding: '10px',
-                                            background: 'rgba(0, 20, 40, 0.7)',
-                                            border: '2px solid rgba(0, 255, 136, 0.3)',
-                                            borderRadius: '8px',
-                                            color: '#00ff88',
-                                            fontSize: '13px',
-                                            fontWeight: 'bold',
-                                            cursor: 'pointer',
-                                            outline: 'none',
-                                        }}
-                                    >
-                                        {themeColorOptions.map((option) => (
-                                            <option key={option.value} value={option.value} style={{ background: '#001520', color: '#00ff88' }}>
-                                                {option.label}
-                                            </option>
-                                        ))}
-                                    </select>
+                                        onChange={(e) => handleInputChange('themeColor', e.target.value)}
+                                        placeholder="#RRGGBB"
+                                        style={{ flex: 1 }}
+                                    />
                                     <div
                                         style={{
-                                            width: '42px',
+                                            width: '50px',
                                             height: '38px',
-                                            borderRadius: '8px',
-                                            border: '2px solid rgba(0, 255, 136, 0.3)',
                                             backgroundColor: settings.themeColor,
-                                            flexShrink: 0,
+                                            border: '2px solid rgba(0, 255, 136, 0.3)',
+                                            borderRadius: '5px',
                                         }}
-                                        aria-label={`Theme color preview: ${settings.themeColor}`}
                                     />
                                 </div>
                             </div>
 
-                            {/* Player Theme Font */}
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                                <label
-                                    htmlFor="player-theme-font"
+                            {/* Player Font Family */}
+                            <div style={{ gridColumn: '1 / -1' }}>
+                                <label 
                                     style={{
                                         display: 'block',
                                         color: '#00ff88',
@@ -507,39 +469,14 @@ export const SettingsScreen: FC<SettingsScreenProps> = ({ stage, onCancel, onCon
                                         marginBottom: '8px',
                                     }}
                                 >
-                                    Player Theme Font
+                                    Player Font Family
                                 </label>
-                                <select
-                                    id="player-theme-font"
+                                <TextInput
+                                    fullWidth
                                     value={settings.themeFontFamily}
-                                    onChange={(e) => setSettings(prev => ({ ...prev, themeFontFamily: e.target.value }))}
-                                    style={{
-                                        padding: '10px',
-                                        background: 'rgba(0, 20, 40, 0.7)',
-                                        border: '2px solid rgba(0, 255, 136, 0.3)',
-                                        borderRadius: '8px',
-                                        color: '#00ff88',
-                                        fontSize: '13px',
-                                        fontWeight: 'bold',
-                                        cursor: 'pointer',
-                                        outline: 'none',
-                                    }}
-                                >
-                                    {themeFontFamilyOptions.map((option) => (
-                                        <option key={option.value} value={option.value} style={{ background: '#001520', color: '#00ff88' }}>
-                                            {option.label}
-                                        </option>
-                                    ))}
-                                </select>
-                                <div
-                                    style={{
-                                        color: 'rgba(255, 255, 255, 0.75)',
-                                        fontSize: '13px',
-                                        fontFamily: settings.themeFontFamily,
-                                    }}
-                                >
-                                    Preview: The Director speaks with this voice.
-                                </div>
+                                    onChange={(e) => handleInputChange('themeFontFamily', e.target.value)}
+                                    placeholder="Font stack (e.g., Arial, sans-serif)"
+                                />
                             </div>
 
                             {/* StationAide™ Name */}
