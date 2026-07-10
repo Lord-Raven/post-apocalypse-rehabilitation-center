@@ -1034,9 +1034,27 @@ export const ActorDetailScreen: FC<ActorDetailScreenProps> = ({ actor, stage, on
 
                                     {/* Theme Color */}
                                     <div>
+                                        <label 
+                                            style={{
+                                                display: 'block',
+                                                color: '#00ff88',
+                                                fontSize: '14px',
+                                                fontWeight: 'bold',
+                                                marginBottom: '8px',
+                                            }}
+                                        >
+                                            Theme Color
+                                        </label>
+                                        <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+                                            <TextInput
+                                                value={editedActor.themeColor}
+                                                onChange={(e) => handleInputChange('themeColor', e.target.value)}
+                                                placeholder="#RRGGBB"
+                                                style={{ flex: 1 }}
+                                            />
                                         <input
                                             type="color"
-                                            value={getPickerColor(editedActor.themeColor)}
+                                            value={getPickerColor(settings.themeColor)}
                                             onChange={(e) => handleInputChange('themeColor', e.target.value)}
                                             aria-label="Pick theme color"
                                             style={{
@@ -1049,17 +1067,7 @@ export const ActorDetailScreen: FC<ActorDetailScreenProps> = ({ actor, stage, on
                                                 cursor: 'pointer',
                                             }}
                                         />
-                                        <label 
-                                            style={{
-                                                display: 'block',
-                                                color: '#00ff88',
-                                                fontSize: '14px',
-                                                fontWeight: 'bold',
-                                                marginBottom: '8px',
-                                            }}
-                                        >
-                                            Theme Color
-                                        </label>
+                                        </div>
                                     </div>
 
                                     {/* Font Family */}
