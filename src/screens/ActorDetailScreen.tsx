@@ -263,6 +263,15 @@ export const ActorDetailScreen: FC<ActorDetailScreenProps> = ({ actor, stage, on
         }));
     };
 
+    const isHexColor = (value: string) => /^#([0-9a-fA-F]{6})$/.test(value);
+
+    const getPickerColor = (value: string) => {
+        if (isHexColor(value)) {
+            return value;
+        }
+        return '#00ff88';
+    };
+
     const handleOutfitChange = (field: 'name' | 'description', value: string) => {
         if (!selectedOutfitId) return;
         setEditedOutfits((prev) => prev.map((outfit) => (
@@ -1025,6 +1034,21 @@ export const ActorDetailScreen: FC<ActorDetailScreenProps> = ({ actor, stage, on
 
                                     {/* Theme Color */}
                                     <div>
+                                        <input
+                                            type="color"
+                                            value={getPickerColor(editedActor.themeColor)}
+                                            onChange={(e) => handleInputChange('themeColor', e.target.value)}
+                                            aria-label="Pick theme color"
+                                            style={{
+                                                width: '50px',
+                                                height: '38px',
+                                                padding: '0',
+                                                border: '2px solid rgba(0, 255, 136, 0.3)',
+                                                borderRadius: '5px',
+                                                background: 'transparent',
+                                                cursor: 'pointer',
+                                            }}
+                                        />
                                         <label 
                                             style={{
                                                 display: 'block',
@@ -1036,23 +1060,6 @@ export const ActorDetailScreen: FC<ActorDetailScreenProps> = ({ actor, stage, on
                                         >
                                             Theme Color
                                         </label>
-                                        <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-                                            <TextInput
-                                                value={editedActor.themeColor}
-                                                onChange={(e) => handleInputChange('themeColor', e.target.value)}
-                                                placeholder="#RRGGBB"
-                                                style={{ flex: 1 }}
-                                            />
-                                            <div
-                                                style={{
-                                                    width: '50px',
-                                                    height: '38px',
-                                                    backgroundColor: editedActor.themeColor,
-                                                    border: '2px solid rgba(0, 255, 136, 0.3)',
-                                                    borderRadius: '5px',
-                                                }}
-                                            />
-                                        </div>
                                     </div>
 
                                     {/* Font Family */}

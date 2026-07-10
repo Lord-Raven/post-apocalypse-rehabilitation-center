@@ -449,6 +449,12 @@ export const SettingsScreen: FC<SettingsScreenProps> = ({ stage, onCancel, onCon
                                     Theme Color
                                 </label>
                                 <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+                                    <TextInput
+                                        value={settings.themeColor}
+                                        onChange={(e) => handleInputChange('themeColor', e.target.value)}
+                                        placeholder="#RRGGBB"
+                                        style={{ flex: 1 }}
+                                    />
                                     <input
                                         type="color"
                                         value={getPickerColor(settings.themeColor)}
@@ -462,21 +468,6 @@ export const SettingsScreen: FC<SettingsScreenProps> = ({ stage, onCancel, onCon
                                             borderRadius: '5px',
                                             background: 'transparent',
                                             cursor: 'pointer',
-                                        }}
-                                    />
-                                    <TextInput
-                                        value={settings.themeColor}
-                                        onChange={(e) => handleInputChange('themeColor', e.target.value)}
-                                        placeholder="#RRGGBB"
-                                        style={{ flex: 1 }}
-                                    />
-                                    <div
-                                        style={{
-                                            width: '50px',
-                                            height: '38px',
-                                            backgroundColor: settings.themeColor,
-                                            border: '2px solid rgba(0, 255, 136, 0.3)',
-                                            borderRadius: '5px',
                                         }}
                                     />
                                 </div>
