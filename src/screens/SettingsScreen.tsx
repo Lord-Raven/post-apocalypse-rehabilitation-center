@@ -233,6 +233,15 @@ export const SettingsScreen: FC<SettingsScreenProps> = ({ stage, onCancel, onCon
         }));
     };
 
+    const isHexColor = (value: string) => /^#([0-9a-fA-F]{6})$/.test(value);
+
+    const getPickerColor = (value: string) => {
+        if (isHexColor(value)) {
+            return value;
+        }
+        return playerThemeColorDefault;
+    };
+
     const handleLanguageChange = (value: string) => {
         setSettings(prev => ({ ...prev, language: value }));
         
@@ -440,6 +449,21 @@ export const SettingsScreen: FC<SettingsScreenProps> = ({ stage, onCancel, onCon
                                     Theme Color
                                 </label>
                                 <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+                                    <input
+                                        type="color"
+                                        value={getPickerColor(settings.themeColor)}
+                                        onChange={(e) => handleInputChange('themeColor', e.target.value)}
+                                        aria-label="Pick theme color"
+                                        style={{
+                                            width: '50px',
+                                            height: '38px',
+                                            padding: '0',
+                                            border: '2px solid rgba(0, 255, 136, 0.3)',
+                                            borderRadius: '5px',
+                                            background: 'transparent',
+                                            cursor: 'pointer',
+                                        }}
+                                    />
                                     <TextInput
                                         value={settings.themeColor}
                                         onChange={(e) => handleInputChange('themeColor', e.target.value)}
