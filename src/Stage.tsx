@@ -872,8 +872,10 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
                     reserveActors = this.getSave().reserveActors || [];
                 }
                 this.saveGame();
+                return true;
             } catch (err) {
                 console.error('Error loading reserve actors', err);
+                return false;
             }
         })();
 
