@@ -8,7 +8,7 @@ import { GlassPanel, Title, Button } from '../components/UIComponents';
 import { Close, Person, Groups, Domain } from '@mui/icons-material';
 import { ActorDetailScreen } from './ActorDetailScreen';
 import { FactionDetailScreen } from './FactionDetailScreen';
-import { ModuleDetailScreen } from './ModuleDetailScreen';
+import { ModuleDetailScreen, ModuleSource } from './ModuleDetailScreen';
 
 interface ContentManagementScreenProps {
     stage: () => Stage;
@@ -16,12 +16,16 @@ interface ContentManagementScreenProps {
 }
 
 type TabType = 'actors' | 'factions' | 'modules';
+type SelectedModule = {
+    moduleId: string;
+    source: ModuleSource;
+};
 
 export const ContentManagementScreen: FC<ContentManagementScreenProps> = ({ stage, onClose }) => {
     const [activeTab, setActiveTab] = useState<TabType>('actors');
     const [selectedActor, setSelectedActor] = useState<Actor | null>(null);
     const [selectedFaction, setSelectedFaction] = useState<Faction | null>(null);
-    const [selectedModuleId, setSelectedModuleId] = useState<string | null>(null);
+    const [selectedModule, setSelectedModule] = useState<SelectedModule | null>(null);
 
     // Get all actors from the save
     const actors = Object.values(stage().getSave().actors);
@@ -30,7 +34,27 @@ export const ContentManagementScreen: FC<ContentManagementScreenProps> = ({ stag
     const factions = Object.values(stage().getSave().factions);
 
     // Get all custom modules from the save
-    const customModules = Object.entries(stage().getSave().customModules || {});
+    const save = stage().getSave();
+    const customModules = Object.entries(save.customModules || {});
+    const directorModule: [string, ModuleIntrinsic] | null = save.directorModule
+        ? [
+            'director module',
+            save.directorModule.module || {
+                name: save.directorModule.name || 'Director\'s Cabin',
+                skitPrompt: '',
+                imagePrompt: '',
+                role: save.directorModule.roleName || 'Maid',
+                roleDescription: '',
+                baseImageUrl: '',
+                defaultImageUrl: '',
+                cost: {},
+            },
+        ]
+        : null;
+    const factionModules = factions
+        .filter((faction) => !!faction.module)
+        .map((faction) => [faction.id, faction.module as ModuleIntrinsic, faction.name] as const);
+    const allModulesCount = customModules.length + (directorModule ? 1 : 0) + factionModules.length;
 
     const handleActorClick = (actor: Actor) => {
         setSelectedActor(actor);
@@ -40,15 +64,41 @@ export const ContentManagementScreen: FC<ContentManagementScreenProps> = ({ stag
         setSelectedFaction(faction);
     };
 
-    const handleModuleClick = (moduleId: string) => {
-        setSelectedModuleId(moduleId);
+    const handleModuleClick = (moduleId: string, source: ModuleSource) => {
+        setSelectedModule({ moduleId, source });
     };
 
     const handleCloseDetail = () => {
         setSelectedActor(null);
         setSelectedFaction(null);
-        setSelectedModuleId(null);
+        setSelectedModule(null);
     };
+
+    const selectedModuleIntrinsic = React.useMemo(() => {
+        if (!selectedModule) {
+            return null;
+        }
+
+        if (selectedModule.source.kind === 'custom') {
+            return stage().getSave().customModules?.[selectedModule.moduleId] || null;
+        }
+
+        if (selectedModule.source.kind === 'director') {
+            const currentSave = stage().getSave();
+            return currentSave.directorModule?.module || {
+                name: currentSave.directorModule?.name || 'Director\'s Cabin',
+                skitPrompt: '',
+                imagePrompt: '',
+                role: currentSave.directorModule?.roleName || 'Maid',
+                roleDescription: '',
+                baseImageUrl: '',
+                defaultImageUrl: '',
+                cost: {},
+            };
+        }
+
+        return stage().getSave().factions?.[selectedModule.source.factionId]?.module || null;
+    }, [selectedModule, stage]);
 
     return (
         <>
@@ -176,7 +226,7 @@ export const ContentManagementScreen: FC<ContentManagementScreenProps> = ({ stag
                                     }}
                                 >
                                     <Domain />
-                                    Modules ({customModules.length})
+                                    Modules ({allModulesCount})
                                 </Button>
                             </div>
 
@@ -401,7 +451,7 @@ export const ContentManagementScreen: FC<ContentManagementScreenProps> = ({ stag
                                         gap: '15px',
                                         padding: '10px',
                                     }}>
-                                        {customModules.length === 0 ? (
+                                        {allModulesCount === 0 ? (
                                             <div style={{
                                                 gridColumn: '1 / -1',
                                                 textAlign: 'center',
@@ -409,17 +459,97 @@ export const ContentManagementScreen: FC<ContentManagementScreenProps> = ({ stag
                                                 color: 'rgba(224, 240, 255, 0.6)',
                                                 fontSize: '16px',
                                             }}>
-                                                No custom modules found in the current save.
+                                                No editable modules found in the current save.
                                             </div>
                                         ) : (
-                                            customModules.map(([moduleId, module]) => {
-                                                const moduleIntrinsic = module as ModuleIntrinsic;
-                                                return (
+                                            <>
+                                                {directorModule && (() => {
+                                                    const [moduleId, moduleIntrinsic] = directorModule;
+                                                    return (
+                                                        <motion.div
+                                                            key={moduleId}
+                                                            whileHover={{ scale: 1.05, y: -5 }}
+                                                            whileTap={{ scale: 0.95 }}
+                                                            onClick={() => handleModuleClick(moduleId, { kind: 'director' })}
+                                                            style={{
+                                                                cursor: 'pointer',
+                                                                backgroundColor: 'rgba(0, 20, 40, 0.6)',
+                                                                border: '2px solid rgba(0, 255, 136, 0.3)',
+                                                                borderRadius: '8px',
+                                                                padding: '15px',
+                                                                display: 'flex',
+                                                                flexDirection: 'column',
+                                                                gap: '10px',
+                                                                transition: 'border-color 0.2s',
+                                                                minHeight: '220px',
+                                                            }}
+                                                            onMouseEnter={(e) => {
+                                                                e.currentTarget.style.borderColor = 'rgba(0, 255, 136, 0.6)';
+                                                            }}
+                                                            onMouseLeave={(e) => {
+                                                                e.currentTarget.style.borderColor = 'rgba(0, 255, 136, 0.3)';
+                                                            }}
+                                                        >
+                                                            {moduleIntrinsic.defaultImageUrl && (
+                                                                <div
+                                                                    style={{
+                                                                        width: '100%',
+                                                                        height: '110px',
+                                                                        borderRadius: '5px',
+                                                                        backgroundColor: 'rgba(0, 20, 40, 0.8)',
+                                                                        border: '2px solid rgba(0, 255, 136, 0.35)',
+                                                                        backgroundImage: `url(${moduleIntrinsic.defaultImageUrl})`,
+                                                                        backgroundSize: 'cover',
+                                                                        backgroundPosition: 'center',
+                                                                    }}
+                                                                />
+                                                            )}
+
+                                                            <div
+                                                                style={{
+                                                                    color: '#00ff88',
+                                                                    fontSize: '18px',
+                                                                    fontWeight: 'bold',
+                                                                    textAlign: 'center',
+                                                                }}
+                                                            >
+                                                                {moduleIntrinsic.name || moduleId}
+                                                            </div>
+
+                                                            <div
+                                                                style={{
+                                                                    color: 'rgba(224, 240, 255, 0.75)',
+                                                                    fontSize: '12px',
+                                                                    textAlign: 'center',
+                                                                    lineHeight: 1.4,
+                                                                }}
+                                                            >
+                                                                {moduleIntrinsic.role
+                                                                    ? `${moduleIntrinsic.role}: ${moduleIntrinsic.roleDescription || 'No role description.'}`
+                                                                    : (moduleIntrinsic.skitPrompt || 'No module details yet.')}
+                                                            </div>
+
+                                                            <div
+                                                                style={{
+                                                                    marginTop: 'auto',
+                                                                    color: 'rgba(224, 240, 255, 0.5)',
+                                                                    fontSize: '11px',
+                                                                    textAlign: 'center',
+                                                                    fontFamily: 'monospace',
+                                                                }}
+                                                            >
+                                                                Director Module
+                                                            </div>
+                                                        </motion.div>
+                                                    );
+                                                })()}
+
+                                                {factionModules.map(([moduleId, moduleIntrinsic, factionName]) => (
                                                     <motion.div
                                                         key={moduleId}
                                                         whileHover={{ scale: 1.05, y: -5 }}
                                                         whileTap={{ scale: 0.95 }}
-                                                        onClick={() => handleModuleClick(moduleId)}
+                                                        onClick={() => handleModuleClick(moduleId, { kind: 'faction', factionId: moduleId })}
                                                         style={{
                                                             cursor: 'pointer',
                                                             backgroundColor: 'rgba(0, 20, 40, 0.6)',
@@ -487,11 +617,92 @@ export const ContentManagementScreen: FC<ContentManagementScreenProps> = ({ stag
                                                                 fontFamily: 'monospace',
                                                             }}
                                                         >
-                                                            {moduleId}
+                                                            Faction: {factionName}
                                                         </div>
                                                     </motion.div>
-                                                );
-                                            })
+                                                ))}
+
+                                                {customModules.map(([moduleId, module]) => {
+                                                    const moduleIntrinsic = module as ModuleIntrinsic;
+                                                    return (
+                                                        <motion.div
+                                                            key={moduleId}
+                                                            whileHover={{ scale: 1.05, y: -5 }}
+                                                            whileTap={{ scale: 0.95 }}
+                                                            onClick={() => handleModuleClick(moduleId, { kind: 'custom' })}
+                                                            style={{
+                                                                cursor: 'pointer',
+                                                                backgroundColor: 'rgba(0, 20, 40, 0.6)',
+                                                                border: '2px solid rgba(0, 255, 136, 0.3)',
+                                                                borderRadius: '8px',
+                                                                padding: '15px',
+                                                                display: 'flex',
+                                                                flexDirection: 'column',
+                                                                gap: '10px',
+                                                                transition: 'border-color 0.2s',
+                                                                minHeight: '220px',
+                                                            }}
+                                                            onMouseEnter={(e) => {
+                                                                e.currentTarget.style.borderColor = 'rgba(0, 255, 136, 0.6)';
+                                                            }}
+                                                            onMouseLeave={(e) => {
+                                                                e.currentTarget.style.borderColor = 'rgba(0, 255, 136, 0.3)';
+                                                            }}
+                                                        >
+                                                            {moduleIntrinsic.defaultImageUrl && (
+                                                                <div
+                                                                    style={{
+                                                                        width: '100%',
+                                                                        height: '110px',
+                                                                        borderRadius: '5px',
+                                                                        backgroundColor: 'rgba(0, 20, 40, 0.8)',
+                                                                        border: '2px solid rgba(0, 255, 136, 0.35)',
+                                                                        backgroundImage: `url(${moduleIntrinsic.defaultImageUrl})`,
+                                                                        backgroundSize: 'cover',
+                                                                        backgroundPosition: 'center',
+                                                                    }}
+                                                                />
+                                                            )}
+
+                                                            <div
+                                                                style={{
+                                                                    color: '#00ff88',
+                                                                    fontSize: '18px',
+                                                                    fontWeight: 'bold',
+                                                                    textAlign: 'center',
+                                                                }}
+                                                            >
+                                                                {moduleIntrinsic.name || moduleId}
+                                                            </div>
+
+                                                            <div
+                                                                style={{
+                                                                    color: 'rgba(224, 240, 255, 0.75)',
+                                                                    fontSize: '12px',
+                                                                    textAlign: 'center',
+                                                                    lineHeight: 1.4,
+                                                                }}
+                                                            >
+                                                                {moduleIntrinsic.role
+                                                                    ? `${moduleIntrinsic.role}: ${moduleIntrinsic.roleDescription || 'No role description.'}`
+                                                                    : (moduleIntrinsic.skitPrompt || 'No module details yet.')}
+                                                            </div>
+
+                                                            <div
+                                                                style={{
+                                                                    marginTop: 'auto',
+                                                                    color: 'rgba(224, 240, 255, 0.5)',
+                                                                    fontSize: '11px',
+                                                                    textAlign: 'center',
+                                                                    fontFamily: 'monospace',
+                                                                }}
+                                                            >
+                                                                Custom Module
+                                                            </div>
+                                                        </motion.div>
+                                                    );
+                                                })}
+                                            </>
                                         )}
                                     </div>
                                 )}
@@ -520,10 +731,11 @@ export const ContentManagementScreen: FC<ContentManagementScreenProps> = ({ stag
             )}
 
             {/* Module Detail Modal */}
-            {selectedModuleId && stage().getSave().customModules?.[selectedModuleId] && (
+            {selectedModule && selectedModuleIntrinsic && (
                 <ModuleDetailScreen
-                    moduleId={selectedModuleId}
-                    module={stage().getSave().customModules![selectedModuleId]}
+                    moduleId={selectedModule.moduleId}
+                    module={selectedModuleIntrinsic}
+                    moduleSource={selectedModule.source}
                     stage={stage}
                     onClose={handleCloseDetail}
                 />

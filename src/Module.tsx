@@ -716,7 +716,7 @@ export async function generateModule(name: string, stage: Stage, additionalInfor
 
     for (const line of lines) {
         if (line.startsWith('MODULE NAME:')) {
-            moduleName = line.substring('MODULE NAME:'.length).trim().toLowerCase();
+            moduleName = line.substring('MODULE NAME:'.length).toLowerCase().replace(/["“”]/g, "'").replace(/\[.*?\]/g, '').trim();
         } else if (line.startsWith('PURPOSE:')) {
             purpose = line.substring('PURPOSE:'.length).trim();
         } else if (line.startsWith('DESCRIPTION:')) {

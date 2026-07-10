@@ -185,8 +185,8 @@ export const SkitScreen: FC<SkitScreenProps> = ({ stage, setScreenType, isVertic
         decorImageUrls: {},
         outfitId: '',
         getEmotionImage: () => '', // Player doesn't have an image, but this prevents errors when trying to access it.
-        themeColor: '#718096',
-        themeFontFamily: `'Geologica', sans-serif`, // Player needs some nice default font.
+        themeColor: stage().getSave().player.themeColor || '#718096',
+        themeFontFamily: stage().getSave().player.themeFontFamily || `'Geologica', sans-serif`, // Player needs some nice default font.
     }};
 
     
@@ -241,7 +241,6 @@ export const SkitScreen: FC<SkitScreenProps> = ({ stage, setScreenType, isVertic
             : visibleScriptEntries;
 
         const outcomes = accumulateOutcomes(visibleEntries, stage()) || [];
-        console.log('Skit outcomes:', skit.outcomes);
         setAccumulatedOutcomes(outcomes);
         stage().testEndSkit();
 
@@ -431,6 +430,7 @@ export const SkitScreen: FC<SkitScreenProps> = ({ stage, setScreenType, isVertic
                         enableAudio={isTextToSpeechEnabled && isAudioEnabled}
                         enablePopInSpeakers={true}
                         enableTalkingAnimation={true}
+                        allowFontEffects={!(stage().getSave().disableFontEffects)}
                         responsiveOverlay={(skit, actor) => {
                             return (
                                 <div>

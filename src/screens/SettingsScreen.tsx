@@ -15,6 +15,8 @@ interface SettingsScreenProps {
 interface SettingsData {
     playerName: string;
     playerDescription: string;
+    themeColor: string;
+    themeFontFamily: string;
     aideName: string;
     aideDescription: string;
     directorModuleName: string;
@@ -23,6 +25,7 @@ interface SettingsData {
     disableEmotionImages: boolean;
     disableDecorImages: boolean;
     disableImpersonation: boolean;
+    disableFontEffects: boolean;
     typeOutSpeed: number;
     characterArtStyle: ArtStyle;
     characterArtist: string;
@@ -34,9 +37,28 @@ interface SettingsData {
 
 export const SettingsScreen: FC<SettingsScreenProps> = ({ stage, onCancel, onConfirm, isNewGame = false }) => {
     const CUSTOM_TONE_KEY = 'Custom';
+    const playerThemeColorDefault = '#718096';
+    const playerThemeFontFamilyDefault = `'Geologica', sans-serif`;
     const minTypeOutSpeed = 0;
     const maxTypeOutSpeed = 50;
     const defaultTypeOutSpeed = stage().DEFAULT_TYPE_OUT_SPEED;
+
+    const themeColorOptions = [
+        { label: 'Default Slate', value: '#718096' },
+        { label: 'PARC Green', value: '#00ff88' },
+        { label: 'Sky Blue', value: '#87ceeb' },
+        { label: 'Amber', value: '#f6ad55' },
+        { label: 'Rose', value: '#f56565' },
+        { label: 'Violet', value: '#9f7aea' },
+    ];
+
+    const themeFontFamilyOptions = [
+        { label: 'Geologica', value: `'Geologica', sans-serif` },
+        { label: 'Segoe UI', value: `'Segoe UI', 'Helvetica Neue', Arial, sans-serif` },
+        { label: 'Trebuchet', value: `'Trebuchet MS', 'Helvetica Neue', Arial, sans-serif` },
+        { label: 'Georgia', value: `Georgia, 'Times New Roman', serif` },
+        { label: 'Courier New', value: `'Courier New', monospace` },
+    ];
 
     const clampTypeOutSpeed = (value: number) => {
         if (Number.isNaN(value)) {
@@ -138,6 +160,8 @@ export const SettingsScreen: FC<SettingsScreenProps> = ({ stage, onCancel, onCon
     const [settings, setSettings] = useState<SettingsData>({
         playerName: saveFromStage.player?.name || 'Director',
         playerDescription: saveFromStage.player?.description || 'The PARC\'s enigmatic Director is the station\'s sole authority.',
+        themeColor: saveFromStage.player?.themeColor || playerThemeColorDefault,
+        themeFontFamily: saveFromStage.player?.themeFontFamily || playerThemeFontFamilyDefault,
         aideName: saveFromStage.aide?.name || 'Soji',
         aideDescription: saveFromStage.aide?.description ||
             (`Your holographic aide is acutely familiar with the technical details of your Post-Apocalypse Rehabilitation Center, so you don't have to be! ` +
@@ -150,6 +174,7 @@ export const SettingsScreen: FC<SettingsScreenProps> = ({ stage, onCancel, onCon
         disableEmotionImages: saveFromStage.disableEmotionImages ?? false,
         disableDecorImages: saveFromStage.disableDecorImages ?? saveFromStage.disableEmotionImages ?? false,
         disableImpersonation: saveFromStage.disableImpersonation ?? false,
+        disableFontEffects: saveFromStage.disableFontEffects ?? false,
         typeOutSpeed: clampTypeOutSpeed(saveFromStage.typeOutSpeed ?? defaultTypeOutSpeed),
         characterArtStyle: saveFromStage.characterArtStyle ?? 'original',
         characterArtist: saveFromStage.characterArtist ?? '',
@@ -176,6 +201,8 @@ export const SettingsScreen: FC<SettingsScreenProps> = ({ stage, onCancel, onCon
         const save = stage().getSave();
         save.player.name = settings.playerName;
         save.player.description = settings.playerDescription;
+        save.player.themeColor = settings.themeColor;
+        save.player.themeFontFamily = settings.themeFontFamily;
         save.aide.name = settings.aideName;
         save.aide.description = settings.aideDescription;
         save.directorModule = save.directorModule || {};
@@ -195,6 +222,7 @@ export const SettingsScreen: FC<SettingsScreenProps> = ({ stage, onCancel, onCon
         save.disableEmotionImages = settings.disableEmotionImages;
         save.disableDecorImages = settings.disableDecorImages;
         save.disableImpersonation = settings.disableImpersonation;
+        save.disableFontEffects = settings.disableFontEffects;
         save.typeOutSpeed = clampTypeOutSpeed(settings.typeOutSpeed);
         save.characterArtStyle = settings.characterArtStyle;
         save.characterArtist = settings.characterArtist;
@@ -413,6 +441,105 @@ export const SettingsScreen: FC<SettingsScreenProps> = ({ stage, onCancel, onCon
                                         resize: 'vertical',
                                     }}
                                 />
+                            </div>
+
+                            {/* Player Theme Color */}
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                                <label
+                                    htmlFor="player-theme-color"
+                                    style={{
+                                        display: 'block',
+                                        color: '#00ff88',
+                                        fontSize: '14px',
+                                        fontWeight: 'bold',
+                                        marginBottom: '8px',
+                                    }}
+                                >
+                                    Player Theme Color
+                                </label>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                    <select
+                                        id="player-theme-color"
+                                        value={settings.themeColor}
+                                        onChange={(e) => setSettings(prev => ({ ...prev, themeColor: e.target.value }))}
+                                        style={{
+                                            flex: 1,
+                                            padding: '10px',
+                                            background: 'rgba(0, 20, 40, 0.7)',
+                                            border: '2px solid rgba(0, 255, 136, 0.3)',
+                                            borderRadius: '8px',
+                                            color: '#00ff88',
+                                            fontSize: '13px',
+                                            fontWeight: 'bold',
+                                            cursor: 'pointer',
+                                            outline: 'none',
+                                        }}
+                                    >
+                                        {themeColorOptions.map((option) => (
+                                            <option key={option.value} value={option.value} style={{ background: '#001520', color: '#00ff88' }}>
+                                                {option.label}
+                                            </option>
+                                        ))}
+                                    </select>
+                                    <div
+                                        style={{
+                                            width: '42px',
+                                            height: '38px',
+                                            borderRadius: '8px',
+                                            border: '2px solid rgba(0, 255, 136, 0.3)',
+                                            backgroundColor: settings.themeColor,
+                                            flexShrink: 0,
+                                        }}
+                                        aria-label={`Theme color preview: ${settings.themeColor}`}
+                                    />
+                                </div>
+                            </div>
+
+                            {/* Player Theme Font */}
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                                <label
+                                    htmlFor="player-theme-font"
+                                    style={{
+                                        display: 'block',
+                                        color: '#00ff88',
+                                        fontSize: '14px',
+                                        fontWeight: 'bold',
+                                        marginBottom: '8px',
+                                    }}
+                                >
+                                    Player Theme Font
+                                </label>
+                                <select
+                                    id="player-theme-font"
+                                    value={settings.themeFontFamily}
+                                    onChange={(e) => setSettings(prev => ({ ...prev, themeFontFamily: e.target.value }))}
+                                    style={{
+                                        padding: '10px',
+                                        background: 'rgba(0, 20, 40, 0.7)',
+                                        border: '2px solid rgba(0, 255, 136, 0.3)',
+                                        borderRadius: '8px',
+                                        color: '#00ff88',
+                                        fontSize: '13px',
+                                        fontWeight: 'bold',
+                                        cursor: 'pointer',
+                                        outline: 'none',
+                                    }}
+                                >
+                                    {themeFontFamilyOptions.map((option) => (
+                                        <option key={option.value} value={option.value} style={{ background: '#001520', color: '#00ff88' }}>
+                                            {option.label}
+                                        </option>
+                                    ))}
+                                </select>
+                                <div
+                                    style={{
+                                        color: 'rgba(255, 255, 255, 0.75)',
+                                        fontSize: '13px',
+                                        fontFamily: settings.themeFontFamily,
+                                    }}
+                                >
+                                    Preview: The Director speaks with this voice.
+                                </div>
                             </div>
 
                             {/* StationAide™ Name */}
@@ -778,6 +905,67 @@ export const SettingsScreen: FC<SettingsScreenProps> = ({ stage, onCancel, onCon
                                         </span>
                                     </motion.div>
 
+                                    {/* Disable Font Effects Toggle */}
+                                    <motion.div
+                                        whileHover={{ scale: 1.01 }}
+                                        whileTap={{ scale: 0.99 }}
+                                        onClick={() => setSettings(prev => ({ ...prev, disableFontEffects: !prev.disableFontEffects }))}
+                                        style={{
+                                            padding: '12px',
+                                            background: settings.disableFontEffects
+                                                ? 'rgba(0, 255, 136, 0.15)'
+                                                : 'rgba(0, 20, 40, 0.7)',
+                                            border: settings.disableFontEffects
+                                                ? '2px solid rgba(0, 255, 136, 0.5)'
+                                                : '2px solid rgba(255, 255, 255, 0.1)',
+                                            borderRadius: '8px',
+                                            cursor: 'pointer',
+                                            transition: 'all 0.2s ease',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            gap: '8px',
+                                        }}
+                                    >
+                                        <div
+                                            style={{
+                                                width: '20px',
+                                                height: '20px',
+                                                borderRadius: '4px',
+                                                background: settings.disableFontEffects ? '#00ff88' : 'rgba(255, 255, 255, 0.1)',
+                                                border: '2px solid ' + (settings.disableFontEffects ? '#00ff88' : 'rgba(255, 255, 255, 0.3)'),
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                justifyContent: 'center',
+                                                flexShrink: 0,
+                                                transition: 'all 0.2s ease',
+                                            }}
+                                        >
+                                            {settings.disableFontEffects && (
+                                                <motion.span
+                                                    initial={{ scale: 0 }}
+                                                    animate={{ scale: 1 }}
+                                                    style={{
+                                                        color: '#002210',
+                                                        fontSize: '14px',
+                                                        fontWeight: 'bold',
+                                                    }}
+                                                >
+                                                    ✓
+                                                </motion.span>
+                                            )}
+                                        </div>
+                                        <span
+                                            style={{
+                                                color: settings.disableFontEffects ? '#00ff88' : 'rgba(255, 255, 255, 0.7)',
+                                                fontSize: '13px',
+                                                fontWeight: settings.disableFontEffects ? 'bold' : 'normal',
+                                            }}
+                                        >
+                                            Disable Font Effects
+                                        </span>
+                                    </motion.div>
+
+                                    {/* Type-Out Speed Slider */}
                                     <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                                         <label
                                             htmlFor="type-out-speed"

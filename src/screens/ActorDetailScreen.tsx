@@ -50,6 +50,7 @@ export const ActorDetailScreen: FC<ActorDetailScreenProps> = ({ actor, stage, on
         themeColor: string;
         themeFontFamily: string;
         locationId: string;
+        factionId: string;
     }>({
         name: actor.name,
         profile: actor.profile,
@@ -59,6 +60,7 @@ export const ActorDetailScreen: FC<ActorDetailScreenProps> = ({ actor, stage, on
         themeColor: actor.themeColor,
         themeFontFamily: actor.themeFontFamily,
         locationId: actor.locationId || '',
+        factionId: actor.factionId || '',
     });
     const [editedOutfits, setEditedOutfits] = useState<Outfit[]>(() => getClonedOutfits());
     const [selectedOutfitId, setSelectedOutfitId] = useState<string>(() => {
@@ -233,6 +235,7 @@ export const ActorDetailScreen: FC<ActorDetailScreenProps> = ({ actor, stage, on
         actor.themeColor = editedActor.themeColor;
         actor.themeFontFamily = editedActor.themeFontFamily;
         actor.locationId = editedActor.locationId;
+        actor.factionId = editedActor.factionId;
         actor.outfits = nextOutfits.map((outfit) => ({
             ...outfit,
             prompts: { ...(outfit.prompts || {}) },
@@ -625,6 +628,19 @@ export const ActorDetailScreen: FC<ActorDetailScreenProps> = ({ actor, stage, on
         return options;
     };
 
+    const getFactionOptions = (): Array<{ value: string; label: string }> => {
+        const save = stage().getSave();
+        const options: Array<{ value: string; label: string }> = [{ value: '', label: 'PARC' }];
+
+        Object.values(save.factions).forEach((faction: any) => {
+            if (faction && faction.id && faction.name) {
+                options.push({ value: faction.id, label: faction.name });
+            }
+        });
+
+        return options;
+    };
+
     return (
         <AnimatePresence>
             <motion.div
@@ -797,6 +813,42 @@ export const ActorDetailScreen: FC<ActorDetailScreenProps> = ({ actor, stage, on
                                             <option value="">-- Select Location --</option>
                                             {getLocationOptions().map((option) => (
                                                 <option key={option.value} value={option.value}>
+                                                    {option.label}
+                                                </option>
+                                            ))}
+                                        </select>
+                                    </div>
+
+                                    {/* Faction */}
+                                    <div>
+                                        <label 
+                                            style={{
+                                                display: 'block',
+                                                color: '#00ff88',
+                                                fontSize: '14px',
+                                                fontWeight: 'bold',
+                                                marginBottom: '8px',
+                                            }}
+                                        >
+                                            Faction
+                                        </label>
+                                        <select
+                                            value={editedActor.factionId}
+                                            onChange={(e) => handleInputChange('factionId', e.target.value)}
+                                            style={{
+                                                width: '100%',
+                                                padding: '12px',
+                                                fontSize: '14px',
+                                                backgroundColor: 'rgba(0, 20, 40, 0.6)',
+                                                border: '2px solid rgba(0, 255, 136, 0.3)',
+                                                borderRadius: '5px',
+                                                color: '#e0f0ff',
+                                                fontFamily: 'inherit',
+                                                cursor: 'pointer',
+                                            }}
+                                        >
+                                            {getFactionOptions().map((option) => (
+                                                <option key={option.value || 'parc'} value={option.value}>
                                                     {option.label}
                                                 </option>
                                             ))}

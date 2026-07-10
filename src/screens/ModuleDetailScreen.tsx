@@ -3,17 +3,23 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Dialog, DialogTitle, DialogContent, DialogActions } from '@mui/material';
 import { Close, Save, Domain, Image as ImageIcon } from '@mui/icons-material';
 import { Stage } from '../Stage';
-import { ModuleIntrinsic, generateModuleImage, registerModule } from '../Module';
+import { ModuleIntrinsic, generateModuleImage, getModuleTemplate, registerFactionModule, registerModule } from '../Module';
 import { GlassPanel, Title, Button, TextInput } from '../components/UIComponents';
+
+export type ModuleSource =
+    | { kind: 'custom' }
+    | { kind: 'director' }
+    | { kind: 'faction'; factionId: string };
 
 interface ModuleDetailScreenProps {
     moduleId: string;
     module: ModuleIntrinsic;
+    moduleSource: ModuleSource;
     stage: () => Stage;
     onClose: () => void;
 }
 
-export const ModuleDetailScreen: FC<ModuleDetailScreenProps> = ({ moduleId, module, stage, onClose }) => {
+export const ModuleDetailScreen: FC<ModuleDetailScreenProps> = ({ moduleId, module, moduleSource, stage, onClose }) => {
     const [editedModule, setEditedModule] = useState<{
         name: string;
         skitPrompt: string;
@@ -51,16 +57,22 @@ export const ModuleDetailScreen: FC<ModuleDetailScreenProps> = ({ moduleId, modu
 
     const handleSave = () => {
         const save = stage().getSave();
-        const existing = save.customModules?.[moduleId];
-        if (!existing) {
-            stage().showPriorityMessage('Could not find this custom module in the active save.');
-            return;
+
+        let existing: ModuleIntrinsic | undefined;
+        if (moduleSource.kind === 'custom') {
+            existing = save.customModules?.[moduleId];
+        } else if (moduleSource.kind === 'director') {
+            existing = save.directorModule?.module;
+        } else {
+            existing = save.factions?.[moduleSource.factionId]?.module;
         }
+
+        const fallbackExisting = existing || module;
 
         setIsSaving(true);
 
         const updatedModule: ModuleIntrinsic = {
-            ...existing,
+            ...fallbackExisting,
             name: editedModule.name,
             skitPrompt: editedModule.skitPrompt,
             imagePrompt: editedModule.imagePrompt,
@@ -70,12 +82,30 @@ export const ModuleDetailScreen: FC<ModuleDetailScreenProps> = ({ moduleId, modu
             defaultImageUrl: editedModule.defaultImageUrl,
         };
 
-        save.customModules = {
-            ...(save.customModules || {}),
-            [moduleId]: updatedModule,
-        };
+        if (moduleSource.kind === 'custom') {
+            save.customModules = {
+                ...(save.customModules || {}),
+                [moduleId]: updatedModule,
+            };
+            registerModule(moduleId, updatedModule);
+        } else if (moduleSource.kind === 'director') {
+            save.directorModule = save.directorModule || { name: 'Director\'s Cabin', roleName: 'Maid' };
+            save.directorModule.module = updatedModule;
+            save.directorModule.name = updatedModule.name || save.directorModule.name;
+            save.directorModule.roleName = updatedModule.role || save.directorModule.roleName;
+            const currentDirectorAction = getModuleTemplate('director module')?.action;
+            registerModule('director module', updatedModule, currentDirectorAction);
+        } else {
+            const faction = save.factions?.[moduleSource.factionId];
+            if (!faction) {
+                stage().showPriorityMessage('Could not find this faction in the active save.');
+                setIsSaving(false);
+                return;
+            }
+            faction.module = updatedModule;
+            registerFactionModule(faction, faction.id, updatedModule);
+        }
 
-        registerModule(moduleId, updatedModule);
         stage().saveGame();
 
         setTimeout(() => {
@@ -238,7 +268,7 @@ export const ModuleDetailScreen: FC<ModuleDetailScreenProps> = ({ moduleId, modu
                                         }}
                                     >
                                         <Domain />
-                                        Custom Module
+                                        Module Details
                                     </h2>
 
                                     <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>

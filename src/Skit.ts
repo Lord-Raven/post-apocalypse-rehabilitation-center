@@ -1328,9 +1328,13 @@ export async function generateSkitScript(skit: SkitData, stage: Stage): Promise<
                     // Prepare list of all actors (not just present)
                     const allActors: Actor[] = Object.values(stage.getSave().actors);
                     
+                    // Remove leading or trailing spaces inside tags []:
+                    trimmed = trimmed.replace(/\[\s*(.*?)\s*\]/g, '[$1]');
+
                     // Process tags in the line
                     for (const tag of trimmed.match(/\[[^\]]+\]/g) || []) {
                         const raw = tag.slice(1, -1).trim();
+
                         if (!raw) continue;
 
                         console.log(`Processing tag: ${raw}`);

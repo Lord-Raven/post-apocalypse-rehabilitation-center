@@ -29,7 +29,7 @@ type TimelineEvent = {
 type Timeline = TimelineEvent[];
 
 export type SaveType = {
-    player: {name: string, description: string};
+    player: {name: string, description: string, themeColor?: string, themeFontFamily?: string};
     aide: {name: string, description: string, actorId?: string};
     directorModule: {name: string, roleName: string, module?: ModuleIntrinsic};
     echoes: (Actor | null)[]; // actors currently in echo slots (can be null for empty slots)
@@ -47,6 +47,7 @@ export type SaveType = {
     disableTextToSpeech?: boolean;
     disableEmotionImages?: boolean;
     disableDecorImages?: boolean;
+    disableFontEffects?: boolean;
     characterArtStyle?: ArtStyle;
     characterArtist?: string;
     attenuation?: string;
@@ -440,7 +441,7 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
 
         // Move a random faction rep to comms room, if any factions exist:
         const commsModule = save.layout.getModulesWhere(m => m.type === 'comms')[0];
-        const eligibleFactions = Object.values(save.factions).filter(faction => faction.reputation > 0 && faction.representativeId && save.actors[faction.representativeId]);
+        const eligibleFactions = Object.values(save.factions).filter(faction => faction.reputation > 0 && faction.representativeId && save.actors[faction.representativeId] && save.factions[save.actors[faction.representativeId].locationId]);
         // If there are eligible factions and a comms module, and there is at least one non-remote actor other than the aide:
         save.commsVisitors = []; // Clear visitors.
         if (eligibleFactions.length > 0 && commsModule && Object.values(save.actors).filter(a => !a.factionId && a.id !== save.aide.actorId).length > 0) {
