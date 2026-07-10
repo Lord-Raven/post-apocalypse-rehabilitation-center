@@ -430,7 +430,7 @@ export const SkitScreen: FC<SkitScreenProps> = ({ stage, setScreenType, isVertic
                         enableAudio={isTextToSpeechEnabled && isAudioEnabled}
                         enablePopInSpeakers={true}
                         enableTalkingAnimation={true}
-                        allowFontEffects={!(stage().getSave().disableFontEffects)}
+                        enableFontEffects={!(stage().getSave().disableFontEffects)}
                         responsiveOverlay={(skit, actor) => {
                             return (
                                 <div>
