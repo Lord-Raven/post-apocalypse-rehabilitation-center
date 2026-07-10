@@ -66,7 +66,7 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
     private saveSlot: number = 0;
     public betaMode: boolean = false;
     // Flag/promise to avoid redundant concurrent requests for reserve actors
-    public reserveActorsLoadPromise?: Promise<void>;
+    public reserveActorsLoadPromise?: Promise<boolean>;
     private reserveFactionsLoadPromise?: Promise<void>;
     private generateAidePromise?: Promise<void>;
     public imageGenerationPromises: {[key: string]: Promise<string>} = {};
@@ -819,11 +819,14 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
                 if (newActor !== null) {
                     this.getSave().reserveActors = [...(this.getSave().reserveActors || []), newActor];
                     this.saveGame();
+                    return true;
                 } else {
                     this.showPriorityMessage(`Failed to load character ${fullPath}.`);
+                    return false;
                 }
             } catch (err) {
                 console.error('Error loading reserve actors', err);
+                return false;
             }
         })();
 

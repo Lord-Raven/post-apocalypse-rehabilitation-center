@@ -75,13 +75,23 @@ export const AttenuationScreen: FC<AttenuationScreenProps> = ({stage, setScreenT
 	const handleAttenuate = () => {
 
         if (actorUrl.trim() !== '') {
-            stage().loadReserveActorFromFullPath(actorUrl.trim());
+			// actorURL is freeform. It could be "http://something.com/characters/author/character-resource" or just "characters/author/character-resource" or "author/character-resource".
+			// Drop any trailing "/" and get just the "author/character-resource" portion of the URL for loading.
+			const fullPath = actorUrl.trim().replace(/\/+$/, '').split('/').slice(-2).join('/');
+            stage().loadReserveActorFromFullPath(fullPath).then((result) => {
+				if (result) {
+					// Only clear the input if loading was successful
+					setActorUrl('');
+				}
+				setRefreshKey(refreshKey + 1);
+			});
         } else {
             // Kick off actor loading; this will populate remaining reserve slots. The generation process will pull attenuation modifiers from stage().
-            stage().loadReserveActors();
+            stage().loadReserveActors().then(() => {
+				setRefreshKey(refreshKey + 1);
+			});
         }
 		console.log('Attenuate clicked with:', { actorUrl, modifierText });
-		setActorUrl('');
 		setRefreshKey(refreshKey + 1);
 	};
 
