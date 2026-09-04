@@ -1,11 +1,11 @@
-import React, { FC } from 'react';
+import React, { FC, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { Stage, SaveType } from '../Stage';
 import { BlurredBackground } from '../components/BlurredBackground';
 import { Title, Button } from '../components/UIComponents';
 import { useTooltip } from '../contexts/TooltipContext';
 import { scoreToGrade } from '../utils';
-import { Save, FolderOpen, Close, Delete } from '@mui/icons-material';
+import { Save, FolderOpen, Close, Delete, Upload, Download } from '@mui/icons-material';
 import { ScreenType } from './BaseScreen';
 import { STATION_STAT_ICONS, StationStat } from '../Module';
 
@@ -20,6 +20,7 @@ export const SaveLoadScreen: FC<SaveLoadScreenProps> = ({ stage, mode, onClose, 
     const { setTooltip, clearTooltip } = useTooltip();
     const [hoveredSlot, setHoveredSlot] = React.useState<number | null>(null);
     const [deleteConfirmSlot, setDeleteConfirmSlot] = React.useState<number | null>(null);
+    const fileInputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
     const handleSlotClick = (slotIndex: number) => {
         if (mode === 'save') {
@@ -28,6 +29,10 @@ export const SaveLoadScreen: FC<SaveLoadScreenProps> = ({ stage, mode, onClose, 
             setTooltip('Game saved!', Save, undefined, 2000);
             onClose();
         } else {
+            const save = stage().getAllSaves()[slotIndex];
+            const isEmpty = !save;
+            if (isEmpty)
+            { return }
             // Load from this slot
             stage().loadSave(slotIndex);
             setTooltip('Game loaded!', FolderOpen, undefined, 2000);
@@ -43,6 +48,70 @@ export const SaveLoadScreen: FC<SaveLoadScreenProps> = ({ stage, mode, onClose, 
         stage().deleteSave(slotIndex);
         setDeleteConfirmSlot(null);
         setTooltip('Save deleted', Delete, undefined, 2000);
+    };
+
+    const handleImport = async (slotIndex: number, saveFile: File) => {
+        // Could use a 'confirm to overwrite' popup
+        try {
+            const jsonText = await saveFile.text();
+            stage().importSave(slotIndex, jsonText);
+            setTooltip('Save imported successfully!', Upload, undefined, 2000);
+        } catch (error) {
+            console.error('Import failed:', error);
+            setTooltip('Import failed: invalid save file', Upload, undefined, 2000);
+        }
+    };
+
+    const handleExport = (slotIndex: number) => {
+        const saveData = stage().exportSave(slotIndex);
+        if (!saveData) {
+            setTooltip('No save data to export', Download, undefined, 2000);
+            return;
+        }
+
+        const jsonString = typeof saveData === 'string' ? saveData : JSON.stringify(saveData);
+
+        const canDownload = (): boolean => {
+            if (typeof Blob === 'undefined' || typeof URL?.createObjectURL !== 'function') return false;
+            if (typeof document === 'undefined') return false;
+            // Sandboxed iframes block downloads; cross-origin sandbox throws, same-origin doesn't
+            // Check for the `download` attribute support as a rough proxy
+            const a = document.createElement('a');
+            if (!('download' in a)) return false;
+            // If we're in an iframe, assume sandboxed unless we can confirm otherwise
+            if (window.self !== window.top) {
+                try {
+                    void window.top?.location.href; // throws if cross-origin/sandboxed
+                } catch {
+                    return false;
+                }
+            }
+            return true;
+        };
+
+        // Try file download first
+        if (canDownload()) {
+            try {
+                const blob = new Blob([jsonString], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `save_slot_${slotIndex + 1}.json`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                setTimeout(() => URL.revokeObjectURL(url), 100);
+                setTooltip('Save exported successfully!', Download, undefined, 2000);
+                return;
+            } catch {
+                // fall through to clipboard
+            }
+        }
+
+        // Fallback: copy to clipboard
+        navigator.clipboard.writeText(jsonString)
+            .then(() => setTooltip('Copied to clipboard (download unavailable)', Download, undefined, 3000))
+            .catch(() => setTooltip('Export failed: download and clipboard both unavailable', Download, undefined, 3000));
     };
 
     const formatTimestamp = (timestamp?: number): string => {
@@ -99,12 +168,12 @@ export const SaveLoadScreen: FC<SaveLoadScreenProps> = ({ stage, mode, onClose, 
                         clearTooltip();
                     }}
                     onClick={() => handleSlotClick(slotIndex)}
-                    disabled={mode === 'load' && isEmpty}
                     style={{
                         width: '100%',
                         height: '85px',
                         padding: '8px 12px',
                         paddingRight: isEmpty ? '12px' : '50px',
+                        paddingLeft: '50px',
                         display: 'flex',
                         flexDirection: 'column',
                         alignItems: 'stretch',
@@ -119,6 +188,115 @@ export const SaveLoadScreen: FC<SaveLoadScreenProps> = ({ stage, mode, onClose, 
                         overflow: 'hidden'
                     }}
                 >
+                    {/* Left action buttons (Import / Export) – only for filled slots */}
+                    {(
+                        <div
+                            style={{
+                                position: 'absolute',
+                                top: 0,
+                                left: 0,
+                                bottom: 0,
+                                width: '40px',
+                                display: 'flex',
+                                flexDirection: 'column',
+                                borderRight: '1px solid rgba(0, 255, 136, 0.3)',
+                                borderRadius: '4px 0 0 4px',
+                                overflow: 'hidden'
+                            }}
+                        >
+                            {/* Import button (top half) */}
+                            <input
+                                ref={(el) => {
+                                    fileInputRefs.current[slotIndex] = el;
+                                }}
+                                type="file"
+                                accept=".json,application/json"
+                                style={{ display: 'none' }}
+                                onChange={(e) => {
+                                    const file = e.target.files?.[0];
+                                    if (!file || file.type !== 'application/json') return;
+                                    handleImport(slotIndex, file);
+                                }}
+                            />
+
+                            <button
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    fileInputRefs.current[slotIndex]?.click();
+                                }}
+                                onMouseEnter={(e) => {
+                                    e.stopPropagation();
+                                    setTooltip('Import save from file', Upload);
+                                }}
+                                onMouseLeave={(e) => {
+                                    e.stopPropagation();
+                                    clearTooltip();
+                                }}
+                                style={{
+                                    flex: 1,
+                                    background: 'rgba(0, 200, 100, 0.2)',
+                                    border: 'none',
+                                    borderBottom: '1px solid rgba(0, 255, 136, 0.3)',
+                                    color: 'rgba(0, 255, 136, 0.9)',
+                                    cursor: 'pointer',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    transition: 'all 0.2s',
+                                    fontSize: '14px'
+                                }}
+                                onMouseOver={(e) => {
+                                    e.currentTarget.style.background = 'rgba(0, 200, 100, 0.4)';
+                                    e.currentTarget.style.color = 'rgba(0, 255, 136, 1)';
+                                }}
+                                onMouseOut={(e) => {
+                                    e.currentTarget.style.background = 'rgba(0, 200, 100, 0.2)';
+                                    e.currentTarget.style.color = 'rgba(0, 255, 136, 0.9)';
+                                }}
+                            >
+                                <Upload fontSize="small" />
+                            </button>
+
+                            {/* Export button (bottom half) */}
+                            <button
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleExport(slotIndex);
+                                }}
+                                onMouseEnter={(e) => {
+                                    e.stopPropagation();
+                                    setTooltip('Export save to file', Download);
+                                }}
+                                onMouseLeave={(e) => {
+                                    e.stopPropagation();
+                                    clearTooltip();
+                                }}
+                                style={{
+                                    flex: 1,
+                                    background: 'rgba(0, 150, 255, 0.2)',
+                                    border: 'none',
+                                    color: 'rgba(100, 200, 255, 0.9)',
+                                    cursor: 'pointer',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    transition: 'all 0.2s',
+                                    fontSize: '14px'
+                                }}
+                                onMouseOver={(e) => {
+                                    e.currentTarget.style.background = 'rgba(0, 150, 255, 0.4)';
+                                    e.currentTarget.style.color = 'rgba(100, 200, 255, 1)';
+                                }}
+                                onMouseOut={(e) => {
+                                    e.currentTarget.style.background = 'rgba(0, 150, 255, 0.2)';
+                                    e.currentTarget.style.color = 'rgba(100, 200, 255, 0.9)';
+                                }}
+                            >
+                                <Download fontSize="small" />
+                            </button>
+                        </div>
+                    )}
+
                     {/* Delete button for filled slots */}
                     {!isEmpty && (
                         <button
@@ -371,7 +549,21 @@ export const SaveLoadScreen: FC<SaveLoadScreenProps> = ({ stage, mode, onClose, 
                     overflowY: 'auto',
                     paddingRight: '10px'
                 }}>
-                    {Array.from({ length: 10 }, (_, i) => renderSaveSlot(i))}
+                {Array.from({ length: 10 }, (_, i) => {
+                    try {
+                        return renderSaveSlot(i);
+                    } catch (e) {
+                        // TODO: a nice failsafe, perhaps
+                        console.error(`Slot ${i}: corrupt save`, e);
+                        return (
+                            <div key={i}>
+                                <span>Slot {i + 1}: corrupt save</span>
+                                <button onClick={() => handleDelete(i)}>Delete</button>
+                                <button onClick={() => handleExport(i)}>Export</button>
+                            </div>
+                        );
+                    }
+                })}
                 </div>
             </motion.div>
 

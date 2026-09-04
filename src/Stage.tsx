@@ -548,6 +548,17 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
         this.startGame();
     }
 
+    importSave(slotIndex: number, jsonText: string)
+    {
+        // Could use save validation
+        this.saves[slotIndex] = this.rehydrateSave(JSON.parse(jsonText))
+    }
+
+    exportSave(slotIndex: number)
+    {
+        return JSON.stringify(this.saves[slotIndex])
+    }
+
     saveToSlot(slotIndex: number) {
         // Copy current save to target slot
         this.saves[slotIndex] = JSON.parse(JSON.stringify(this.currentSave));
