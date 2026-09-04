@@ -20,6 +20,8 @@ export const SaveLoadScreen: FC<SaveLoadScreenProps> = ({ stage, mode, onClose, 
     const { setTooltip, clearTooltip } = useTooltip();
     const [hoveredSlot, setHoveredSlot] = React.useState<number | null>(null);
     const [deleteConfirmSlot, setDeleteConfirmSlot] = React.useState<number | null>(null);
+    const [exportData, setExportData] = React.useState<{ slotIndex: number; json: string } | null>(null);
+    const exportTextAreaRef = useRef<HTMLTextAreaElement | null>(null);
     const fileInputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
     const handleSlotClick = (slotIndex: number) => {
@@ -70,19 +72,15 @@ export const SaveLoadScreen: FC<SaveLoadScreenProps> = ({ stage, mode, onClose, 
         }
 
         const jsonString = typeof saveData === 'string' ? saveData : JSON.stringify(saveData);
-
-        const dataUrl = `data:application/json;charset=utf-8,${encodeURIComponent(jsonString)}`;
-        const exportWindow = window.open(dataUrl, '_blank', 'noopener,noreferrer');
-
-        if (exportWindow) {
-            setTooltip('Save opened in a new tab. Use the browser Save option.', Download, undefined, 4000);
-            return;
-        }
-
-        // A blocked popup still leaves the JSON available for manual saving.
-        window.prompt('Download blocked by the host. Copy this JSON into a file named save_slot_' + (slotIndex + 1) + '.json:', jsonString);
-        setTooltip('Download was blocked. Save the JSON from the dialog.', Download, undefined, 4000);
+        setExportData({ slotIndex, json: jsonString });
     };
+
+    React.useEffect(() => {
+        if (exportData) {
+            exportTextAreaRef.current?.focus();
+            exportTextAreaRef.current?.select();
+        }
+    }, [exportData]);
 
     const formatTimestamp = (timestamp?: number): string => {
         if (!timestamp) return 'No Date';
@@ -627,6 +625,109 @@ export const SaveLoadScreen: FC<SaveLoadScreenProps> = ({ stage, mode, onClose, 
                                 Delete
                             </Button>
                         </div>
+                    </motion.div>
+                </motion.div>
+            )}
+
+            {/* Export modal for hosts that block downloads and clipboard access */}
+            {exportData !== null && (
+                <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    style={{
+                        position: 'fixed',
+                        top: 0,
+                        left: 0,
+                        right: 0,
+                        bottom: 0,
+                        background: 'rgba(0, 0, 0, 0.7)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        zIndex: 1001
+                    }}
+                    onClick={(e) => {
+                        if (e.target === e.currentTarget) {
+                            setExportData(null);
+                        }
+                    }}
+                >
+                    <motion.div
+                        initial={{ scale: 0.9, opacity: 0 }}
+                        animate={{ scale: 1, opacity: 1 }}
+                        className="glass-panel-bright"
+                        style={{
+                            padding: '30px',
+                            maxWidth: '700px',
+                            width: '90%',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            gap: '15px'
+                        }}
+                    >
+                        <div style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'space-between'
+                        }}>
+                            <Title variant="glow" style={{ fontSize: '20px', margin: 0 }}>
+                                Export Save
+                            </Title>
+                            <button
+                                onClick={() => setExportData(null)}
+                                onMouseEnter={() => setTooltip('Close', Close)}
+                                onMouseLeave={() => clearTooltip()}
+                                aria-label="Close export dialog"
+                                style={{
+                                    background: 'transparent',
+                                    border: 'none',
+                                    color: 'rgba(0, 255, 136, 0.7)',
+                                    cursor: 'pointer',
+                                    padding: '4px',
+                                    display: 'flex'
+                                }}
+                            >
+                                <Close />
+                            </button>
+                        </div>
+                        <div style={{
+                            color: 'rgba(0, 255, 136, 0.8)',
+                            fontSize: '14px'
+                        }}>
+                            Select all of the text below, copy it, and save it as{' '}
+                            <strong>save_slot_{exportData.slotIndex + 1}.json</strong>.
+                        </div>
+                        <textarea
+                            ref={exportTextAreaRef}
+                            value={exportData.json}
+                            readOnly
+                            aria-label="Exported save JSON"
+                            spellCheck={false}
+                            style={{
+                                width: '100%',
+                                minHeight: '280px',
+                                resize: 'vertical',
+                                padding: '12px',
+                                background: 'rgba(0, 10, 20, 0.8)',
+                                border: '1px solid rgba(0, 255, 136, 0.5)',
+                                color: 'rgba(220, 255, 235, 0.95)',
+                                fontFamily: 'monospace',
+                                fontSize: '12px',
+                                lineHeight: 1.4
+                            }}
+                        />
+                        <Button
+                            variant="menu"
+                            onClick={() => setExportData(null)}
+                            style={{
+                                alignSelf: 'flex-end',
+                                padding: '10px 24px',
+                                background: 'rgba(0, 255, 136, 0.1)'
+                            }}
+                        >
+                            Done
+                        </Button>
                     </motion.div>
                 </motion.div>
             )}
