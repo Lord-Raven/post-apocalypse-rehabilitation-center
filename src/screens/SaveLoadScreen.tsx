@@ -695,8 +695,7 @@ export const SaveLoadScreen: FC<SaveLoadScreenProps> = ({ stage, mode, onClose, 
                             color: 'rgba(0, 255, 136, 0.8)',
                             fontSize: '14px'
                         }}>
-                            Select all of the text below, copy it, and save it as{' '}
-                            <strong>save_slot_{exportData.slotIndex + 1}.json</strong>.
+                            Select and save the text below for later import.
                         </div>
                         <textarea
                             ref={exportTextAreaRef}
