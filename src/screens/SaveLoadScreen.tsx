@@ -127,11 +127,11 @@ export const SaveLoadScreen: FC<SaveLoadScreenProps> = ({ stage, mode, onClose, 
         });
     };
 
-    const renderSaveSlot = (slotIndex: number) => {
+    const renderSaveSlot = (slotIndex: number, isCorrupt = false) => {
 
-        const save = stage().getAllSaves()[slotIndex];
+        const save = isCorrupt ? undefined : stage().getAllSaves()[slotIndex];
         const isEmpty = !save;
-        const isCurrentSlot = stage().getCurrentSlot() === slotIndex;
+        const isCurrentSlot = !isCorrupt && stage().getCurrentSlot() === slotIndex;
 
         // Get non-faction actors
         const actors = !isEmpty ? Object.values(save.actors).filter(actor => !actor.factionId && save.aide.actorId !== actor.id) : [];
@@ -155,7 +155,9 @@ export const SaveLoadScreen: FC<SaveLoadScreenProps> = ({ stage, mode, onClose, 
                     onMouseEnter={() => {
                         setHoveredSlot(slotIndex);
                         setTooltip(
-                            mode === 'save' 
+                                    isCorrupt
+                                ? 'Corrupt save'
+                                : mode === 'save' 
                                 ? `Save game to slot ${slotIndex + 1}` 
                                 : isEmpty 
                                     ? 'Empty slot' 
@@ -167,7 +169,11 @@ export const SaveLoadScreen: FC<SaveLoadScreenProps> = ({ stage, mode, onClose, 
                         setHoveredSlot(null);
                         clearTooltip();
                     }}
-                    onClick={() => handleSlotClick(slotIndex)}
+                    onClick={() => {
+                        if (!isCorrupt) {
+                            handleSlotClick(slotIndex);
+                        }
+                    }}
                     style={{
                         width: '100%',
                         height: '85px',
@@ -297,8 +303,8 @@ export const SaveLoadScreen: FC<SaveLoadScreenProps> = ({ stage, mode, onClose, 
                         </div>
                     )}
 
-                    {/* Delete button for filled slots */}
-                    {!isEmpty && (
+                    {/* Delete button for filled and corrupt slots */}
+                    {(!isEmpty || isCorrupt) && (
                         <button
                             onClick={(e) => {
                                 e.stopPropagation();
@@ -349,7 +355,19 @@ export const SaveLoadScreen: FC<SaveLoadScreenProps> = ({ stage, mode, onClose, 
                         </button>
                     )}
 
-                    {isEmpty ? (
+                    {isCorrupt ? (
+                        <div style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            height: '100%',
+                            color: 'rgba(255, 100, 100, 0.9)',
+                            fontSize: '16px',
+                            fontWeight: 'bold'
+                        }}>
+                            Cottupt
+                        </div>
+                    ) : isEmpty ? (
                         <div style={{
                             display: 'flex',
                             alignItems: 'center',
@@ -553,15 +571,8 @@ export const SaveLoadScreen: FC<SaveLoadScreenProps> = ({ stage, mode, onClose, 
                     try {
                         return renderSaveSlot(i);
                     } catch (e) {
-                        // TODO: a nice failsafe, perhaps
                         console.error(`Slot ${i}: corrupt save`, e);
-                        return (
-                            <div key={i}>
-                                <span>Slot {i + 1}: corrupt save</span>
-                                <button onClick={() => handleDelete(i)}>Delete</button>
-                                <button onClick={() => handleExport(i)}>Export</button>
-                            </div>
-                        );
+                        return renderSaveSlot(i, true);
                     }
                 })}
                 </div>
