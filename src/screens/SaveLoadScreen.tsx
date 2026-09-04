@@ -71,26 +71,17 @@ export const SaveLoadScreen: FC<SaveLoadScreenProps> = ({ stage, mode, onClose, 
 
         const jsonString = typeof saveData === 'string' ? saveData : JSON.stringify(saveData);
 
-        try {
-            const blob = new Blob([jsonString], { type: 'application/json' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `save_slot_${slotIndex + 1}.json`;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            setTimeout(() => URL.revokeObjectURL(url), 100);
-            setTooltip('Save exported successfully!', Download, undefined, 2000);
+        const dataUrl = `data:application/json;charset=utf-8,${encodeURIComponent(jsonString)}`;
+        const exportWindow = window.open(dataUrl, '_blank', 'noopener,noreferrer');
+
+        if (exportWindow) {
+            setTooltip('Save opened in a new tab. Use the browser Save option.', Download, undefined, 4000);
             return;
-        } catch {
-            // fall through to clipboard
         }
 
-        // Fallback: copy to clipboard
-        navigator.clipboard.writeText(jsonString)
-            .then(() => setTooltip('Copied to clipboard (download unavailable)', Download, undefined, 3000))
-            .catch(() => setTooltip('Export failed: download and clipboard both unavailable', Download, undefined, 3000));
+        // A blocked popup still leaves the JSON available for manual saving.
+        window.prompt('Download blocked by the host. Copy this JSON into a file named save_slot_' + (slotIndex + 1) + '.json:', jsonString);
+        setTooltip('Download was blocked. Save the JSON from the dialog.', Download, undefined, 4000);
     };
 
     const formatTimestamp = (timestamp?: number): string => {
