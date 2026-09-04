@@ -71,41 +71,20 @@ export const SaveLoadScreen: FC<SaveLoadScreenProps> = ({ stage, mode, onClose, 
 
         const jsonString = typeof saveData === 'string' ? saveData : JSON.stringify(saveData);
 
-        const canDownload = (): boolean => {
-            if (typeof Blob === 'undefined' || typeof URL?.createObjectURL !== 'function') return false;
-            if (typeof document === 'undefined') return false;
-            // Sandboxed iframes block downloads; cross-origin sandbox throws, same-origin doesn't
-            // Check for the `download` attribute support as a rough proxy
+        try {
+            const blob = new Blob([jsonString], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
-            if (!('download' in a)) return false;
-            // If we're in an iframe, assume sandboxed unless we can confirm otherwise
-            if (window.self !== window.top) {
-                try {
-                    void window.top?.location.href; // throws if cross-origin/sandboxed
-                } catch {
-                    return false;
-                }
-            }
-            return true;
-        };
-
-        // Try file download first
-        if (canDownload()) {
-            try {
-                const blob = new Blob([jsonString], { type: 'application/json' });
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = `save_slot_${slotIndex + 1}.json`;
-                document.body.appendChild(a);
-                a.click();
-                document.body.removeChild(a);
-                setTimeout(() => URL.revokeObjectURL(url), 100);
-                setTooltip('Save exported successfully!', Download, undefined, 2000);
-                return;
-            } catch {
-                // fall through to clipboard
-            }
+            a.href = url;
+            a.download = `save_slot_${slotIndex + 1}.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            setTimeout(() => URL.revokeObjectURL(url), 100);
+            setTooltip('Save exported successfully!', Download, undefined, 2000);
+            return;
+        } catch {
+            // fall through to clipboard
         }
 
         // Fallback: copy to clipboard
