@@ -247,6 +247,15 @@ export const ActorDetailScreen: FC<ActorDetailScreenProps> = ({ actor, stage, on
             emotionPack: { ...(outfit.emotionPack || {}) },
         }));
 
+        // Free up room assignments for "dead" characters.
+        if (editedActor.locationId === 'dead') {
+            const save = stage().getSave();
+            const modules = save.layout.getModulesWhere((m: any) => m?.ownerId === actor.id);
+            modules.forEach((q: any) => {
+                q.ownerId = '';
+            });
+        }
+
         // Save the game
         stage().saveGame();
         
