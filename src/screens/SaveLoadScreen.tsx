@@ -1,11 +1,11 @@
-import React, { FC } from 'react';
+import React, { FC, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { Stage, SaveType } from '../Stage';
 import { BlurredBackground } from '../components/BlurredBackground';
 import { Title, Button } from '../components/UIComponents';
 import { useTooltip } from '../contexts/TooltipContext';
 import { scoreToGrade } from '../utils';
-import { Save, FolderOpen, Close, Delete } from '@mui/icons-material';
+import { Save, FolderOpen, Close, Delete, Upload, Download } from '@mui/icons-material';
 import { ScreenType } from './BaseScreen';
 import { STATION_STAT_ICONS, StationStat } from '../Module';
 
@@ -20,6 +20,9 @@ export const SaveLoadScreen: FC<SaveLoadScreenProps> = ({ stage, mode, onClose, 
     const { setTooltip, clearTooltip } = useTooltip();
     const [hoveredSlot, setHoveredSlot] = React.useState<number | null>(null);
     const [deleteConfirmSlot, setDeleteConfirmSlot] = React.useState<number | null>(null);
+    const [exportData, setExportData] = React.useState<{ slotIndex: number; json: string } | null>(null);
+    const exportTextAreaRef = useRef<HTMLTextAreaElement | null>(null);
+    const fileInputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
     const handleSlotClick = (slotIndex: number) => {
         if (mode === 'save') {
@@ -28,6 +31,10 @@ export const SaveLoadScreen: FC<SaveLoadScreenProps> = ({ stage, mode, onClose, 
             setTooltip('Game saved!', Save, undefined, 2000);
             onClose();
         } else {
+            const save = stage().getAllSaves()[slotIndex];
+            const isEmpty = !save;
+            if (isEmpty)
+            { return }
             // Load from this slot
             stage().loadSave(slotIndex);
             setTooltip('Game loaded!', FolderOpen, undefined, 2000);
@@ -45,6 +52,36 @@ export const SaveLoadScreen: FC<SaveLoadScreenProps> = ({ stage, mode, onClose, 
         setTooltip('Save deleted', Delete, undefined, 2000);
     };
 
+    const handleImport = async (slotIndex: number, saveFile: File) => {
+        // Could use a 'confirm to overwrite' popup
+        try {
+            const jsonText = await saveFile.text();
+            stage().importSave(slotIndex, jsonText);
+            setTooltip('Save imported successfully!', Upload, undefined, 2000);
+        } catch (error) {
+            console.error('Import failed:', error);
+            setTooltip('Import failed: invalid save file', Upload, undefined, 2000);
+        }
+    };
+
+    const handleExport = (slotIndex: number) => {
+        const saveData = stage().exportSave(slotIndex);
+        if (!saveData) {
+            setTooltip('No save data to export', Download, undefined, 2000);
+            return;
+        }
+
+        const jsonString = typeof saveData === 'string' ? saveData : JSON.stringify(saveData);
+        setExportData({ slotIndex, json: jsonString });
+    };
+
+    React.useEffect(() => {
+        if (exportData) {
+            exportTextAreaRef.current?.focus();
+            exportTextAreaRef.current?.select();
+        }
+    }, [exportData]);
+
     const formatTimestamp = (timestamp?: number): string => {
         if (!timestamp) return 'No Date';
         const date = new Date(timestamp);
@@ -58,11 +95,11 @@ export const SaveLoadScreen: FC<SaveLoadScreenProps> = ({ stage, mode, onClose, 
         });
     };
 
-    const renderSaveSlot = (slotIndex: number) => {
+    const renderSaveSlot = (slotIndex: number, isCorrupt = false) => {
 
-        const save = stage().getAllSaves()[slotIndex];
+        const save = isCorrupt ? undefined : stage().getAllSaves()[slotIndex];
         const isEmpty = !save;
-        const isCurrentSlot = stage().getCurrentSlot() === slotIndex;
+        const isCurrentSlot = !isCorrupt && stage().getCurrentSlot() === slotIndex;
 
         // Get non-faction actors
         const actors = !isEmpty ? Object.values(save.actors).filter(actor => !actor.factionId && save.aide.actorId !== actor.id) : [];
@@ -86,7 +123,9 @@ export const SaveLoadScreen: FC<SaveLoadScreenProps> = ({ stage, mode, onClose, 
                     onMouseEnter={() => {
                         setHoveredSlot(slotIndex);
                         setTooltip(
-                            mode === 'save' 
+                                    isCorrupt
+                                ? 'Corrupt save'
+                                : mode === 'save' 
                                 ? `Save game to slot ${slotIndex + 1}` 
                                 : isEmpty 
                                     ? 'Empty slot' 
@@ -98,13 +137,17 @@ export const SaveLoadScreen: FC<SaveLoadScreenProps> = ({ stage, mode, onClose, 
                         setHoveredSlot(null);
                         clearTooltip();
                     }}
-                    onClick={() => handleSlotClick(slotIndex)}
-                    disabled={mode === 'load' && isEmpty}
+                    onClick={() => {
+                        if (!isCorrupt) {
+                            handleSlotClick(slotIndex);
+                        }
+                    }}
                     style={{
                         width: '100%',
                         height: '85px',
                         padding: '8px 12px',
                         paddingRight: isEmpty ? '12px' : '50px',
+                        paddingLeft: '50px',
                         display: 'flex',
                         flexDirection: 'column',
                         alignItems: 'stretch',
@@ -119,8 +162,117 @@ export const SaveLoadScreen: FC<SaveLoadScreenProps> = ({ stage, mode, onClose, 
                         overflow: 'hidden'
                     }}
                 >
-                    {/* Delete button for filled slots */}
-                    {!isEmpty && (
+                    {/* Left action buttons (Import / Export) – only for filled slots */}
+                    {(
+                        <div
+                            style={{
+                                position: 'absolute',
+                                top: 0,
+                                left: 0,
+                                bottom: 0,
+                                width: '40px',
+                                display: 'flex',
+                                flexDirection: 'column',
+                                borderRight: '1px solid rgba(0, 255, 136, 0.3)',
+                                borderRadius: '4px 0 0 4px',
+                                overflow: 'hidden'
+                            }}
+                        >
+                            {/* Import button (top half) */}
+                            <input
+                                ref={(el) => {
+                                    fileInputRefs.current[slotIndex] = el;
+                                }}
+                                type="file"
+                                accept=".json,application/json"
+                                style={{ display: 'none' }}
+                                onChange={(e) => {
+                                    const file = e.target.files?.[0];
+                                    if (!file || file.type !== 'application/json') return;
+                                    handleImport(slotIndex, file);
+                                }}
+                            />
+
+                            <button
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    fileInputRefs.current[slotIndex]?.click();
+                                }}
+                                onMouseEnter={(e) => {
+                                    e.stopPropagation();
+                                    setTooltip('Import save from file', Upload);
+                                }}
+                                onMouseLeave={(e) => {
+                                    e.stopPropagation();
+                                    clearTooltip();
+                                }}
+                                style={{
+                                    flex: 1,
+                                    background: 'rgba(0, 200, 100, 0.2)',
+                                    border: 'none',
+                                    borderBottom: '1px solid rgba(0, 255, 136, 0.3)',
+                                    color: 'rgba(0, 255, 136, 0.9)',
+                                    cursor: 'pointer',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    transition: 'all 0.2s',
+                                    fontSize: '14px'
+                                }}
+                                onMouseOver={(e) => {
+                                    e.currentTarget.style.background = 'rgba(0, 200, 100, 0.4)';
+                                    e.currentTarget.style.color = 'rgba(0, 255, 136, 1)';
+                                }}
+                                onMouseOut={(e) => {
+                                    e.currentTarget.style.background = 'rgba(0, 200, 100, 0.2)';
+                                    e.currentTarget.style.color = 'rgba(0, 255, 136, 0.9)';
+                                }}
+                            >
+                                <Upload fontSize="small" />
+                            </button>
+
+                            {/* Export button (bottom half) */}
+                            <button
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleExport(slotIndex);
+                                }}
+                                onMouseEnter={(e) => {
+                                    e.stopPropagation();
+                                    setTooltip('Export save to file', Download);
+                                }}
+                                onMouseLeave={(e) => {
+                                    e.stopPropagation();
+                                    clearTooltip();
+                                }}
+                                style={{
+                                    flex: 1,
+                                    background: 'rgba(0, 150, 255, 0.2)',
+                                    border: 'none',
+                                    color: 'rgba(100, 200, 255, 0.9)',
+                                    cursor: 'pointer',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    transition: 'all 0.2s',
+                                    fontSize: '14px'
+                                }}
+                                onMouseOver={(e) => {
+                                    e.currentTarget.style.background = 'rgba(0, 150, 255, 0.4)';
+                                    e.currentTarget.style.color = 'rgba(100, 200, 255, 1)';
+                                }}
+                                onMouseOut={(e) => {
+                                    e.currentTarget.style.background = 'rgba(0, 150, 255, 0.2)';
+                                    e.currentTarget.style.color = 'rgba(100, 200, 255, 0.9)';
+                                }}
+                            >
+                                <Download fontSize="small" />
+                            </button>
+                        </div>
+                    )}
+
+                    {/* Delete button for filled and corrupt slots */}
+                    {(!isEmpty || isCorrupt) && (
                         <button
                             onClick={(e) => {
                                 e.stopPropagation();
@@ -171,7 +323,19 @@ export const SaveLoadScreen: FC<SaveLoadScreenProps> = ({ stage, mode, onClose, 
                         </button>
                     )}
 
-                    {isEmpty ? (
+                    {isCorrupt ? (
+                        <div style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            height: '100%',
+                            color: 'rgba(255, 100, 100, 0.9)',
+                            fontSize: '16px',
+                            fontWeight: 'bold'
+                        }}>
+                            Cottupt
+                        </div>
+                    ) : isEmpty ? (
                         <div style={{
                             display: 'flex',
                             alignItems: 'center',
@@ -371,7 +535,14 @@ export const SaveLoadScreen: FC<SaveLoadScreenProps> = ({ stage, mode, onClose, 
                     overflowY: 'auto',
                     paddingRight: '10px'
                 }}>
-                    {Array.from({ length: 10 }, (_, i) => renderSaveSlot(i))}
+                {Array.from({ length: 10 }, (_, i) => {
+                    try {
+                        return renderSaveSlot(i);
+                    } catch (e) {
+                        console.error(`Slot ${i}: corrupt save`, e);
+                        return renderSaveSlot(i, true);
+                    }
+                })}
                 </div>
             </motion.div>
 
@@ -454,6 +625,108 @@ export const SaveLoadScreen: FC<SaveLoadScreenProps> = ({ stage, mode, onClose, 
                                 Delete
                             </Button>
                         </div>
+                    </motion.div>
+                </motion.div>
+            )}
+
+            {/* Export modal for hosts that block downloads and clipboard access */}
+            {exportData !== null && (
+                <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    style={{
+                        position: 'fixed',
+                        top: 0,
+                        left: 0,
+                        right: 0,
+                        bottom: 0,
+                        background: 'rgba(0, 0, 0, 0.7)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        zIndex: 1001
+                    }}
+                    onClick={(e) => {
+                        if (e.target === e.currentTarget) {
+                            setExportData(null);
+                        }
+                    }}
+                >
+                    <motion.div
+                        initial={{ scale: 0.9, opacity: 0 }}
+                        animate={{ scale: 1, opacity: 1 }}
+                        className="glass-panel-bright"
+                        style={{
+                            padding: '30px',
+                            maxWidth: '700px',
+                            width: '90%',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            gap: '15px'
+                        }}
+                    >
+                        <div style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'space-between'
+                        }}>
+                            <Title variant="glow" style={{ fontSize: '20px', margin: 0 }}>
+                                Export Save
+                            </Title>
+                            <button
+                                onClick={() => setExportData(null)}
+                                onMouseEnter={() => setTooltip('Close', Close)}
+                                onMouseLeave={() => clearTooltip()}
+                                aria-label="Close export dialog"
+                                style={{
+                                    background: 'transparent',
+                                    border: 'none',
+                                    color: 'rgba(0, 255, 136, 0.7)',
+                                    cursor: 'pointer',
+                                    padding: '4px',
+                                    display: 'flex'
+                                }}
+                            >
+                                <Close />
+                            </button>
+                        </div>
+                        <div style={{
+                            color: 'rgba(0, 255, 136, 0.8)',
+                            fontSize: '14px'
+                        }}>
+                            Select and save the text below for later import.
+                        </div>
+                        <textarea
+                            ref={exportTextAreaRef}
+                            value={exportData.json}
+                            readOnly
+                            aria-label="Exported save JSON"
+                            spellCheck={false}
+                            style={{
+                                width: '100%',
+                                minHeight: '280px',
+                                resize: 'vertical',
+                                padding: '12px',
+                                background: 'rgba(0, 10, 20, 0.8)',
+                                border: '1px solid rgba(0, 255, 136, 0.5)',
+                                color: 'rgba(220, 255, 235, 0.95)',
+                                fontFamily: 'monospace',
+                                fontSize: '12px',
+                                lineHeight: 1.4
+                            }}
+                        />
+                        <Button
+                            variant="menu"
+                            onClick={() => setExportData(null)}
+                            style={{
+                                alignSelf: 'flex-end',
+                                padding: '10px 24px',
+                                background: 'rgba(0, 255, 136, 0.1)'
+                            }}
+                        >
+                            Done
+                        </Button>
                     </motion.div>
                 </motion.div>
             )}

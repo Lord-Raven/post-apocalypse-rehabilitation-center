@@ -549,6 +549,17 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
         this.startGame();
     }
 
+    importSave(slotIndex: number, jsonText: string)
+    {
+        // Could use save validation
+        this.saves[slotIndex] = this.rehydrateSave(JSON.parse(jsonText))
+    }
+
+    exportSave(slotIndex: number)
+    {
+        return JSON.stringify(this.saves[slotIndex])
+    }
+
     saveToSlot(slotIndex: number) {
         // Copy current save to target slot
         this.saves[slotIndex] = JSON.parse(JSON.stringify(this.currentSave));
@@ -1301,10 +1312,8 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
             }
 
             // Look at all actors involved in the skit, and run updateCharacterArc on them:
-            console.log(save.currentSkit.script);
             for (const actor of Object.values(save.actors)) {
                 if (save.currentSkit?.script.some(entry => entry.speaker && namesMatch(entry.speaker, actor.name) || entry.speakerId === actor.id)) {
-                    console.log(save.currentSkit.script.filter(entry => entry.speaker && namesMatch(entry.speaker, actor.name) || entry.speakerId === actor.id).map(entry => `'${entry.speaker}' was matched to '${actor.name}'?`));
                     console.log(`Need to update this character arc: ${actor.name}/${actor.id}`);
                     updateCharacterArc(this, save.currentSkit ?? {}, actor);
                 }
