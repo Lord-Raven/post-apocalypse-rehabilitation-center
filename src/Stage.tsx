@@ -48,6 +48,7 @@ export type SaveType = {
     disableEmotionImages?: boolean;
     disableDecorImages?: boolean;
     disableFontEffects?: boolean;
+    disableHaptics?: boolean;
     characterArtStyle?: ArtStyle;
     characterArtist?: string;
     attenuation?: string;

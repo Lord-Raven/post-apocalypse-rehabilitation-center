@@ -17,7 +17,6 @@ import { colors } from './Theme';
 
 import {
     Send,
-    LastPage,
     PlayArrow,
     Menu as MenuIcon,
     EditNote,
@@ -430,6 +429,7 @@ export const SkitScreen: FC<SkitScreenProps> = ({ stage, setScreenType, isVertic
                         enableAudio={isTextToSpeechEnabled && isAudioEnabled}
                         enablePopInSpeakers={true}
                         enableTalkingAnimation={true}
+                        enableHaptics={!stage().getSave().disableHaptics}
                         enableFontEffects={!(stage().getSave().disableFontEffects)}
                         responsiveOverlay={(skit, actor) => {
                             return (

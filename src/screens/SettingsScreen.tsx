@@ -26,6 +26,7 @@ interface SettingsData {
     disableDecorImages: boolean;
     disableImpersonation: boolean;
     disableFontEffects: boolean;
+    disableHaptics: boolean;
     typeOutSpeed: number;
     characterArtStyle: ArtStyle;
     characterArtist: string;
@@ -158,6 +159,7 @@ export const SettingsScreen: FC<SettingsScreenProps> = ({ stage, onCancel, onCon
         disableDecorImages: saveFromStage.disableDecorImages ?? saveFromStage.disableEmotionImages ?? false,
         disableImpersonation: saveFromStage.disableImpersonation ?? false,
         disableFontEffects: saveFromStage.disableFontEffects ?? false,
+        disableHaptics: saveFromStage.disableHaptics ?? false,
         typeOutSpeed: clampTypeOutSpeed(saveFromStage.typeOutSpeed ?? defaultTypeOutSpeed),
         characterArtStyle: saveFromStage.characterArtStyle ?? 'original',
         characterArtist: saveFromStage.characterArtist ?? '',
@@ -206,6 +208,7 @@ export const SettingsScreen: FC<SettingsScreenProps> = ({ stage, onCancel, onCon
         save.disableDecorImages = settings.disableDecorImages;
         save.disableImpersonation = settings.disableImpersonation;
         save.disableFontEffects = settings.disableFontEffects;
+        save.disableHaptics = settings.disableHaptics;
         save.typeOutSpeed = clampTypeOutSpeed(settings.typeOutSpeed);
         save.characterArtStyle = settings.characterArtStyle;
         save.characterArtist = settings.characterArtist;
@@ -914,6 +917,66 @@ export const SettingsScreen: FC<SettingsScreenProps> = ({ stage, onCancel, onCon
                                             }}
                                         >
                                             Disable Font Effects
+                                        </span>
+                                    </motion.div>
+
+                                    {/* Disable Haptics Toggle */}
+                                    <motion.div
+                                        whileHover={{ scale: 1.01 }}
+                                        whileTap={{ scale: 0.99 }}
+                                        onClick={() => setSettings(prev => ({ ...prev, disableHaptics: !prev.disableHaptics }))}
+                                        style={{
+                                            padding: '12px',
+                                            background: settings.disableHaptics
+                                                ? 'rgba(0, 255, 136, 0.15)'
+                                                : 'rgba(0, 20, 40, 0.7)',
+                                            border: settings.disableHaptics
+                                                ? '2px solid rgba(0, 255, 136, 0.5)'
+                                                : '2px solid rgba(255, 255, 255, 0.1)',
+                                            borderRadius: '8px',
+                                            cursor: 'pointer',
+                                            transition: 'all 0.2s ease',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            gap: '8px',
+                                        }}
+                                    >
+                                        <div
+                                            style={{
+                                                width: '20px',
+                                                height: '20px',
+                                                borderRadius: '4px',
+                                                background: settings.disableHaptics ? '#00ff88' : 'rgba(255, 255, 255, 0.1)',
+                                                border: '2px solid ' + (settings.disableHaptics ? '#00ff88' : 'rgba(255, 255, 255, 0.3)'),
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                justifyContent: 'center',
+                                                flexShrink: 0,
+                                                transition: 'all 0.2s ease',
+                                            }}
+                                        >
+                                            {settings.disableHaptics && (
+                                                <motion.span
+                                                    initial={{ scale: 0 }}
+                                                    animate={{ scale: 1 }}
+                                                    style={{
+                                                        color: '#002210',
+                                                        fontSize: '14px',
+                                                        fontWeight: 'bold',
+                                                    }}
+                                                >
+                                                    ✓
+                                                </motion.span>
+                                            )}
+                                        </div>
+                                        <span
+                                            style={{
+                                                color: settings.disableHaptics ? '#00ff88' : 'rgba(255, 255, 255, 0.7)',
+                                                fontSize: '13px',
+                                                fontWeight: settings.disableHaptics ? 'bold' : 'normal',
+                                            }}
+                                        >
+                                            Disable Haptics
                                         </span>
                                     </motion.div>
 
