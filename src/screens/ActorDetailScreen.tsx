@@ -1015,7 +1015,16 @@ export const ActorDetailScreen: FC<ActorDetailScreenProps> = ({ actor, stage, on
                                                     cursor: 'pointer',
                                                 }}
                                             >
-                                                {ACTOR_VOICES.map((voice) => (
+                                                {/* Sort by gender, then accent, then description */}
+                                                {ACTOR_VOICES.sort((a, b) => {
+                                                    if (a.gender !== b.gender) {
+                                                        return a.gender.localeCompare(b.gender);
+                                                    } else if (a.accent !== b.accent) {
+                                                        return a.accent.localeCompare(b.accent);
+                                                    } else {
+                                                        return a.description.localeCompare(b.description);
+                                                    }
+                                                }).map((voice) => (
                                                     <option key={voice.id} value={voice.id}>
                                                         {voice.gender} - {voice.accent} - {voice.description}
                                                     </option>
