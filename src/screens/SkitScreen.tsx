@@ -26,7 +26,7 @@ import {
     VolumeOff
 } from '@mui/icons-material';
 import { IconButton } from '@mui/material';
-import { NovelVisualizer } from '@lord-raven/novel-visualizer';
+import {getActorVoiceVolume, NovelVisualizer} from '@lord-raven/novel-visualizer';
 import { AnimatePresence, motion } from 'framer-motion';
 
 interface SkitScreenProps {
@@ -396,6 +396,8 @@ export const SkitScreen: FC<SkitScreenProps> = ({ stage, setScreenType, isVertic
                             const outfitId = getActorOutfitsAtIndex(_script, index, stage().getSave().actors)[actor.id] || actor.outfitId;
                             return actor.getEmotionImage(emotion, stage(), outfitId);
                         }}
+                        getActorVoiceModulation={(actor) => ({...actor.voiceModulation, volume: getActorVoiceVolume(actor.voiceId)})}
+                        getActorTheme={(actor) => ({ color: actor.themeColor ?? 'default', fontFamily: actor.themeFontFamily ?? 'default'})}
                         getActorFilter={(actor, _script, index) => {
                             const actorLocationId = (() => {
                                 const locations = _script.initialActorLocations || {};

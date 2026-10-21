@@ -3,11 +3,12 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Dialog, DialogTitle, DialogContent, DialogActions, CircularProgress } from '@mui/material';
 import { Stage } from '../Stage';
 import { v4 as generateUuid } from 'uuid';
-import Actor, { Stat, ACTOR_STAT_ICONS, generateBaseActorImage, generateEmotionImage, generateActorDecor, generateOutfitEmotionPrompt, VOICE_MAP, Outfit, ORIGINAL_OUTFIT_NAME } from '../actors/Actor';
+import Actor, { Stat, ACTOR_STAT_ICONS, generateBaseActorImage, generateEmotionImage, generateActorDecor, generateOutfitEmotionPrompt, Outfit, ORIGINAL_OUTFIT_NAME } from '../actors/Actor';
 import { Emotion } from '../actors/Emotion';
 import { GlassPanel, Title, Button, TextInput, Chip } from '../components/UIComponents';
 import { Close, Save, Image as ImageIcon, PlayArrow } from '@mui/icons-material';
 import { scoreToGrade } from '../utils';
+import {ACTOR_VOICES, ActorVoice} from "@lord-raven/novel-visualizer";
 
 interface ActorDetailScreenProps {
     actor: Actor;
@@ -1014,9 +1015,9 @@ export const ActorDetailScreen: FC<ActorDetailScreenProps> = ({ actor, stage, on
                                                     cursor: 'pointer',
                                                 }}
                                             >
-                                                {Object.entries(VOICE_MAP).map(([id, description]) => (
-                                                    <option key={id} value={id}>
-                                                        {description}
+                                                {ACTOR_VOICES.map((voice) => (
+                                                    <option key={voice.id} value={voice.id}>
+                                                        {voice.gender} - {voice.accent} - {voice.description}
                                                     </option>
                                                 ))}
                                             </select>

@@ -8,6 +8,7 @@ import { FlashOn, Forum,
     Whatshot, SentimentVerySatisfied, Handshake 
 } from '@mui/icons-material';
 import { buildEventHistory, buildPromptSegment } from "../Skit";
+import {ACTOR_VOICES, formatActorVoiceLabel} from "@lord-raven/novel-visualizer";
 
 // Core character stats as an enum so other parts of the app can reference them safely
 // Using single-syllable words, each starting with a different letter
@@ -298,33 +299,11 @@ export async function loadReserveActorFromFullPath(fullPath: string, stage: Stag
         fullPath: item.node.fullPath,
         personality: item.node.definition.personality.replaceAll('{{char}}', dataName).replaceAll('{{user}}', 'Individual X'),
         avatar: item.node.max_res_url,
-        // If the voice ID is not in the VOICE_MAP, it is a custom voice and should be preserved
-        voiceId: !VOICE_MAP[item.node.definition.voice_id] ? item.node.definition.voice_id : ''
+        // If the voice ID is not in the ACTOR_VOICES, it is a custom voice and should be preserved
+        voiceId: ACTOR_VOICES.some(voice => voice.id === item.node.definition.voice_id) ? item.node.definition.voice_id : ''
     };
     return loadReserveActor(data, stage, true);
 }
-
-// Mapping of voice IDs to a description of the voice, so the AI can choose an ID based on the character profile.
-export const VOICE_MAP: {[key: string]: string} = {
-    '05261898-ccd1-4270-bfb2-78e8ecba225d': 'feminine - low, posh, and petulent',
-    '98bcf0b0-a0f7-4828-8686-4f8692293d68': 'feminine - high, refined, and warm',
-    '751212e5-a871-45c7-b10b-6f42a5785954': 'feminine - high, posh, and catty',
-    '03a438b7-ebfa-4f72-9061-f086d8f1fca6': 'feminine - calm and soothing', // HQ Female Lowrange
-    'a2533977-83cb-4c10-9955-0277e047538f': 'feminine - energetic and lively', // LQ Female Midrange
-    '057d53b3-bb28-47f1-9c19-a85a79851863': 'feminine - low and warm', // HQ Female Midrange
-    '6e6619ba-4880-4cf3-a5df-d0697ba46656': 'feminine - high and soft', // LQ Female Highrange
-    'd6e05564-eea9-4181-aee9-fa0d7315f67d': 'masculine - cool and confident', // HQ Male Lowrange
-    'e6b74abb-f4b2-4a84-b9ef-c390512f2f47': 'masculine - posh and articulate', // HQ Male Midrange
-    'bright_female_20s': 'feminine - bright and cheerful',
-    'resonant_male_40s': 'masculine - resonant and mature',
-    'gentle_female_30s': 'feminine - gentle and caring',
-    'whispery_female_40s': 'feminine - whispery and mysterious',
-    'formal_female_30s': 'feminine - formal and refined',
-    'professional_female_30s': 'feminine - professional and direct',
-    'calm_female_20s': 'feminine - calm and soothing',
-    'light_male_20s': 'masculine - light and thoughtful',
-    'animated_male_20s': 'masculine - hip and lively',
-};
 
 export async function loadReserveActor(data: any, stage: Stage, includeHistory: boolean): Promise<Actor|null> {
     console.log('Loading reserve actor:', data.name);
@@ -416,7 +395,7 @@ export async function loadReserveActor(data: any, stage: Stage, includeHistory: 
                 `Bear in mind the character's current, diminished state—as a newly reconstituted and relatively powerless individual—and not their original potential when scoring these traits (but omit your reasons from the response structure); ` +
                 `some characters may not respond well to being essentially resurrected into a new timeline, losing much of what they once had. Others may be grateful for a new beginning.\n\n` +
             buildPromptSegment(`Original Details about ${data.name}`, `${data.personality}`) +
-            buildPromptSegment(`Available Voices`, `${Object.entries(VOICE_MAP).map(([voiceId, voiceDesc]) => '  - ' + voiceId + ': ' + voiceDesc).join('\n')}`) +
+            buildPromptSegment(`Available Voices`, ACTOR_VOICES.map(voice => ' - ' + voice.id + ': ' + formatActorVoiceLabel(voice)).join('\n')) +
             buildPromptSegment(`Instructions`, `After carefully considering this description and the rules provided, the System will generate a concise breakdown for a character based upon these details in the following strict format:\n` +
                 `DESCRIPTION: A vivid description of the character's physical appearance, attire, and any distinguishing features.\n` +
                 `OUTFIT: A one- to two-word name for the character's current outfit that matches the description.\n` +
